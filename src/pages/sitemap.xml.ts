@@ -3,12 +3,16 @@ import { LOCALES, LOCALE_META, DEFAULT_LOCALE } from '../i18n/locales';
 import { absoluteUrl, localePath } from '../lib/urls';
 import { CATEGORY_IDS } from '../tools/categories';
 import { TOOL_DATA } from '../tools/data';
+import { STATIC_PAGE_IDS, STATIC_PAGES } from '../static-pages/content';
 
 /** Sitemap with hreflang alternates for every page in every locale. */
 export const GET: APIRoute = () => {
   const pages: { segments: string[]; lastmod?: string }[] = [{ segments: [] }];
   for (const id of CATEGORY_IDS) {
     if (TOOL_DATA.some((d) => d.meta.category === id)) pages.push({ segments: ['c', id] });
+  }
+  for (const id of STATIC_PAGE_IDS) {
+    pages.push({ segments: [id], lastmod: STATIC_PAGES[id][DEFAULT_LOCALE].updated });
   }
   for (const { meta } of TOOL_DATA) {
     pages.push({ segments: [meta.slug], lastmod: meta.updated });

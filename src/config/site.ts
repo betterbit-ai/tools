@@ -10,6 +10,12 @@ export const SITE_NAME = 'Betterbit Tools';
 export const ORG_NAME = 'Betterbit';
 
 /**
+ * Placeholder inbox for the contact page. Follow-up: a human needs to set this
+ * up as a Cloudflare Email Routing destination before launch.
+ */
+export const CONTACT_EMAIL = 'hello@betterbit.org';
+
+/**
  * Search-engine ownership verification <meta> tags. Paste only the `content` value.
  * Google: prefer the DNS (domain property) method; use this only for a URL-prefix property.
  */

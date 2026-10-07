@@ -28,6 +28,7 @@ const RESERVED_SLUGS = new Set<string>([
   'about',
   'privacy',
   'terms',
+  'contact',
   'sitemap',
   'robots',
   'llms',
