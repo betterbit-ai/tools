@@ -1,0 +1,28 @@
+---
+import type { Locale } from '../../i18n/locales';
+import { localePath } from '../../lib/urls';
+import type { ToolData } from '../../tools/data';
+import Icon from './Icon.astro';
+
+interface Props {
+  tool: ToolData;
+  locale: Locale;
+}
+const { tool, locale } = Astro.props;
+const c = tool.content[locale];
+---
+
+<a
+  href={localePath(locale, tool.meta.slug)}
+  data-tool-card
+  data-search={[c.name, c.h1, ...c.keywords].join(' ').toLowerCase()}
+  class="group flex gap-3 rounded-lg border border-line bg-surface p-4 shadow-card transition hover:border-line-strong hover:-translate-y-0.5"
+>
+  <span class="inline-grid place-items-center size-10 shrink-0 rounded-md bg-accent-soft text-accent">
+    <Icon name={tool.meta.icon} size={20} />
+  </span>
+  <span class="min-w-0">
+    <span class="block font-medium text-fg group-hover:text-accent">{c.name}</span>
+    <span class="block text-sm text-muted line-clamp-2">{c.tagline}</span>
+  </span>
+</a>

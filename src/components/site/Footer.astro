@@ -1,0 +1,37 @@
+---
+import { SITE_NAME } from '../../config/site';
+import { type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/ui';
+import { localePath } from '../../lib/urls';
+import { CATEGORIES, CATEGORY_IDS } from '../../tools/categories';
+import { TOOL_DATA } from '../../tools/data';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const categoriesWithTools = CATEGORY_IDS.filter((id) => TOOL_DATA.some((d) => d.meta.category === id));
+---
+
+<footer class="border-t border-line mt-20">
+  <div class="mx-auto max-w-5xl px-4 py-10 grid gap-8 sm:grid-cols-[1fr_auto]">
+    <div class="max-w-sm">
+      <p class="font-semibold">{SITE_NAME}</p>
+      <p class="mt-2 text-sm text-muted flex gap-2">
+        <Icon name="shield" size={16} class="shrink-0 mt-0.5" />
+        {t(locale, 'footer.privacy')}
+      </p>
+    </div>
+    <nav class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+      {categoriesWithTools.map((id) => (
+        <a href={localePath(locale, 'c', id)} class="text-muted hover:text-fg">
+          {CATEGORIES[id].name[locale]}
+        </a>
+      ))}
+    </nav>
+  </div>
+  <div class="mx-auto max-w-5xl px-4 pb-8 text-xs text-subtle">
+    {t(locale, 'footer.rights', { year: new Date().getFullYear(), name: SITE_NAME })}
+  </div>
+</footer>

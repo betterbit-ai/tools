@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens — the ONLY place colors, radii and shadows are defined.
+ * Components use the Tailwind utilities generated from these tokens
+ * (bg-bg, bg-surface, text-fg, text-muted, border-line, bg-accent, …).
+ * Never use raw palette classes (bg-blue-500) or hex values in components.
+ * See docs/DESIGN_SYSTEM.md.
+ */
+
+:root {
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --surface-2: #f3f3f1;
+  --line: #e4e4e0;
+  --line-strong: #cfcfc9;
+  --fg: #18181b;
+  --muted: #5f5f66;
+  --subtle: #8b8b93;
+  --accent: #2f5bea;
+  --accent-hover: #2149cf;
+  --accent-soft: #e8eeff;
+  --on-accent: #ffffff;
+  --success: #15803d;
+  --success-soft: #e7f6ec;
+  --danger: #c62828;
+  --danger-soft: #fdecec;
+  --warning: #a16207;
+  --focus: #2f5bea;
+  --shadow-color: 20 20 30;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0e0e10;
+    --surface: #17171a;
+    --surface-2: #1f1f23;
+    --line: #2a2a2f;
+    --line-strong: #3a3a41;
+    --fg: #ededef;
+    --muted: #a1a1aa;
+    --subtle: #71717a;
+    --accent: #6d8dff;
+    --accent-hover: #8aa3ff;
+    --accent-soft: #1c2440;
+    --on-accent: #0b0b0d;
+    --success: #4ade80;
+    --success-soft: #11291a;
+    --danger: #f87171;
+    --danger-soft: #2d1414;
+    --warning: #facc15;
+    --focus: #8aa3ff;
+    --shadow-color: 0 0 0;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Hiragino Sans',
+    'Noto Sans JP', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-card: 0 1px 2px rgb(var(--shadow-color) / 0.04), 0 4px 16px rgb(var(--shadow-color) / 0.04);
+  --shadow-pop: 0 8px 32px rgb(var(--shadow-color) / 0.12);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    font-feature-settings: 'tnum' 0;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Long-form text below the tool (sections, FAQ answers). */
+  .prose-tool {
+    @apply text-[15px] leading-7 text-muted;
+  }
+  .prose-tool p + p {
+    @apply mt-4;
+  }
+  .prose-tool h2 {
+    @apply text-fg text-xl font-semibold tracking-tight mb-3;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

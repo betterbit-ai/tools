@@ -1,0 +1,159 @@
+---
+/**
+ * The single template for every tool page and tool-variant page.
+ * Order is fixed (see docs/DESIGN_SYSTEM.md → "Tool page anatomy"):
+ *   breadcrumb → H1 + tagline → edge badges → TOOL → presets → how-to → sections → FAQ → related
+ * Tools customise only their Tool.tsx and content.ts — never this layout.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+import ToolCard from './ToolCard.astro';
+import Icon from './Icon.astro';
+import type { Locale } from '../../i18n/locales';
+import { t, type UiKey } from '../../i18n/ui';
+import { localePath } from '../../lib/urls';
+import { breadcrumbLd, faqLd, webAppLd } from '../../lib/seo';
+import { CATEGORIES } from '../../tools/categories';
+import { getToolData } from '../../tools/data';
+import type { ToolModule, ToolVariant } from '../../tools/types';
+
+interface Props {
+  tool: ToolModule;
+  locale: Locale;
+  variant?: ToolVariant;
+}
+const { tool, locale, variant } = Astro.props;
+const { meta } = tool;
+const c = tool.content[locale];
+const v = variant?.content[locale];
+
+const segments = variant ? [meta.slug, variant.slug] : [meta.slug];
+const path = localePath(locale, ...segments);
+const title = v?.title ?? c.title;
+const description = v?.description ?? c.description;
+const h1 = v?.h1 ?? c.h1;
+const category = CATEGORIES[meta.category];
+
+const crumbs = [
+  { name: t(locale, 'breadcrumb.home'), path: localePath(locale) },
+  { name: category.name[locale], path: localePath(locale, 'c', meta.category) },
+  { name: c.name, path: localePath(locale, meta.slug) },
+  ...(variant && v ? [{ name: v.h1, path }] : []),
+];
+
+const related = meta.related.map(getToolData).filter((x) => x !== undefined);
+const Island = tool.Island;
+
+const jsonLd = [
+  webAppLd({
+    name: h1,
+    description,
+    path,
+    locale,
+    category: 'UtilitiesApplication',
+    features: meta.edges.map((e) => t(locale, `edge.${e}` as UiKey)),
+    updated: meta.updated,
+  }),
+  breadcrumbLd(crumbs),
+  faqLd(c.faq),
+];
+---
+
+<BaseLayout locale={locale} title={title} description={description} segments={segments} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-5xl px-4 pt-6">
+    <Breadcrumbs crumbs={crumbs} />
+
+    <header class="mt-6 max-w-3xl">
+      <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-balance">{h1}</h1>
+      <p class="mt-3 text-lg text-muted text-pretty">{v?.intro ?? c.tagline}</p>
+      <ul class="mt-4 flex flex-wrap gap-2" aria-label={t(locale, 'tool.whyBetter')}>
+        {meta.edges.map((e) => (
+          <li class="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted">
+            <Icon name="check" size={14} class="text-success" />
+            {t(locale, `edge.${e}` as UiKey)}
+          </li>
+        ))}
+      </ul>
+    </header>
+
+    <section class="mt-8" aria-label={c.name}>
+      <Island locale={locale} ui={c.ui} preset={variant?.preset} />
+    </section>
+
+    {meta.variants && meta.variants.length > 0 && (
+      <nav class="mt-6" aria-label={t(locale, 'tool.variants')}>
+        <h2 class="text-sm font-medium text-muted mb-2">{t(locale, 'tool.variants')}</h2>
+        <ul class="flex flex-wrap gap-2">
+          {meta.variants.map((vr) => (
+            <li>
+              <a
+                href={localePath(locale, meta.slug, vr.slug)}
+                aria-current={vr.slug === variant?.slug ? 'page' : undefined}
+                class:list={[
+                  'inline-block rounded-md border px-3 py-1.5 text-sm transition-colors',
+                  vr.slug === variant?.slug
+                    ? 'border-accent bg-accent-soft text-accent'
+                    : 'border-line bg-surface text-muted hover:text-fg hover:border-line-strong',
+                ]}
+              >
+                {vr.content[locale].h1}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+
+    <div class="mt-16 grid gap-12 max-w-3xl">
+      <section class="prose-tool">
+        <h2>{t(locale, 'tool.howTo')}</h2>
+        <ol class="list-decimal pl-5 space-y-1.5">
+          {c.howTo.map((step) => (
+            <li>{step}</li>
+          ))}
+        </ol>
+      </section>
+
+      {c.sections.map((s) => (
+        <section class="prose-tool">
+          <h2>{s.heading}</h2>
+          {s.body.split('\n\n').map((p) => (
+            <p>{p}</p>
+          ))}
+        </section>
+      ))}
+
+      <section class="prose-tool">
+        <h2>{t(locale, 'tool.faq')}</h2>
+        <div class="divide-y divide-line border-y border-line">
+          {c.faq.map((f) => (
+            <details class="group py-3">
+              <summary class="cursor-pointer list-none flex items-center justify-between gap-4 font-medium text-fg">
+                {f.q}
+                <Icon
+                  name="chevron-right"
+                  size={16}
+                  class="shrink-0 transition-transform group-open:rotate-90 text-subtle"
+                />
+              </summary>
+              <p class="mt-2">{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    {related.length > 0 && (
+      <section class="mt-16">
+        <h2 class="text-xl font-semibold tracking-tight mb-4">{t(locale, 'tool.related')}</h2>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {related.map((r) => (
+            <ToolCard tool={r} locale={locale} />
+          ))}
+        </div>
+      </section>
+    )}
+
+    <p class="mt-10 text-xs text-subtle">{t(locale, 'tool.updated', { date: meta.updated })}</p>
+  </div>
+</BaseLayout>
