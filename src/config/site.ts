@@ -15,6 +15,6 @@ export const ORG_NAME = 'Betterbit';
  */
 export const SITE_VERIFICATION = {
   google: '',
-  naver: '',
+  naver: 'e126fa845033397c49b7682d6c1d8fe7e82329d8',
   bing: '',
 };
