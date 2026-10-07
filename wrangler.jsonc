@@ -6,6 +6,9 @@
   "compatibility_date": "2026-10-01",
   // Production domain. Keep in sync with SITE_URL in src/config/site.ts.
   "routes": [{ "pattern": "betterbit.org", "custom_domain": true }],
+  // Declaring routes turns workers.dev off by default; keep it on (canonical points to betterbit.org).
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "directory": "./dist",
     // build.format 'file' emits /timer.html; serve it at /timer and redirect /timer/ → /timer.
