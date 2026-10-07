@@ -9,6 +9,8 @@
   // Declaring routes turns workers.dev off by default; keep it on (canonical points to betterbit.org).
   "workers_dev": true,
   "preview_urls": true,
+  // Required by `wrangler preview`, which Cloudflare Workers Builds runs for non-production branches (PR previews).
+  "previews": {},
   "assets": {
     "directory": "./dist",
     // build.format 'file' emits /timer.html; serve it at /timer and redirect /timer/ → /timer.
