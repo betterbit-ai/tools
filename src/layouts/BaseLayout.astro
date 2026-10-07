@@ -49,7 +49,10 @@ const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
         <link rel="alternate" hreflang="x-default" href={alts.find((a) => a.locale === DEFAULT_LOCALE)!.href} />
       </>
     )}
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content="website" />
@@ -58,7 +61,10 @@ const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={LOCALE_META[locale].ogLocale} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={absoluteUrl('/og-default.png')} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     {SITE_VERIFICATION.google && <meta name="google-site-verification" content={SITE_VERIFICATION.google} />}
     {SITE_VERIFICATION.naver && <meta name="naver-site-verification" content={SITE_VERIFICATION.naver} />}
     {SITE_VERIFICATION.bing && <meta name="msvalidate.01" content={SITE_VERIFICATION.bing} />}
