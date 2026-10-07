@@ -59,6 +59,7 @@ for (const file of pages) {
   const body = html.slice(html.indexOf('<body'));
 
   if (!/<html[^>]+lang="[a-z-]+"/i.test(html)) fail(page, 'missing <html lang>');
+  const noindex = /<meta name="robots" content="[^"]*noindex/.test(head);
 
   const h1s = body.match(/<h1[\s>]/g) ?? [];
   if (h1s.length !== 1) fail(page, `expected exactly 1 <h1>, found ${h1s.length}`);
@@ -75,9 +76,11 @@ for (const file of pages) {
   if (!desc) fail(page, 'missing meta description');
   else if ([...desc].length < 40 || [...desc].length > 200) warn(page, `meta description length ${[...desc].length}`);
 
-  const canonical = head.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
-  if (!canonical?.startsWith('https://')) fail(page, 'missing absolute canonical');
-  if (!/hreflang="x-default"/.test(head)) fail(page, 'missing hreflang x-default');
+  if (!noindex) {
+    const canonical = head.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+    if (!canonical?.startsWith('https://')) fail(page, 'missing absolute canonical');
+    if (!/hreflang="x-default"/.test(head)) fail(page, 'missing hreflang x-default');
+  }
 
   for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
     try {

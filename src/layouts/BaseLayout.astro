@@ -21,9 +21,11 @@ interface Props {
   jsonLd?: object[];
   /** Append " | Site name" to <title>. Off for the home page. */
   brandTitle?: boolean;
+  /** Error/utility pages: emit robots noindex and no canonical/hreflang. */
+  noindex?: boolean;
 }
 
-const { locale, title, description, segments, jsonLd = [], brandTitle = true } = Astro.props;
+const { locale, title, description, segments, jsonLd = [], brandTitle = true, noindex = false } = Astro.props;
 const canonical = absoluteUrl(localePath(locale, ...segments));
 const alts = alternates(segments);
 const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
@@ -36,11 +38,17 @@ const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-    {alts.map((a) => (
-      <link rel="alternate" hreflang={LOCALE_META[a.locale].htmlLang} href={a.href} />
-    ))}
-    <link rel="alternate" hreflang="x-default" href={alts.find((a) => a.locale === DEFAULT_LOCALE)!.href} />
+    {noindex ? (
+      <meta name="robots" content="noindex" />
+    ) : (
+      <>
+        <link rel="canonical" href={canonical} />
+        {alts.map((a) => (
+          <link rel="alternate" hreflang={LOCALE_META[a.locale].htmlLang} href={a.href} />
+        ))}
+        <link rel="alternate" hreflang="x-default" href={alts.find((a) => a.locale === DEFAULT_LOCALE)!.href} />
+      </>
+    )}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)" />

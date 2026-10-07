@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { LOCALES, LOCALE_META } from '../i18n/locales';
+import { t } from '../i18n/ui';
+import { localePath } from '../lib/urls';
+---
+
+<BaseLayout
+  locale="en"
+  title="Page not found"
+  description="This page does not exist. Browse all free online tools instead."
+  segments={[]}
+  noindex
+>
+  <div class="mx-auto max-w-5xl px-4 py-24 text-center">
+    <p class="text-sm font-medium text-accent">404</p>
+    <h1 class="mt-2 text-3xl font-semibold tracking-tight">Page not found · 페이지를 찾을 수 없습니다</h1>
+    <ul class="mt-8 flex flex-wrap justify-center gap-3">
+      {LOCALES.map((l) => (
+        <li>
+          <a
+            href={localePath(l)}
+            lang={LOCALE_META[l].htmlLang}
+            class="inline-flex h-10 items-center rounded-md border border-line bg-surface px-4 text-[15px] font-medium hover:border-line-strong"
+          >
+            {t(l, 'nav.allTools')}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>

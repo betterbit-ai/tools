@@ -1,0 +1,13 @@
+// Cloudflare Workers static-assets deploy (no server code).
+// Build: `npm run build` → deploy: `npx wrangler deploy`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tools",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // build.format 'file' emits /timer.html; serve it at /timer and redirect /timer/ → /timer.
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+  },
+}
