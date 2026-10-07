@@ -5,6 +5,8 @@
  *   /c/<category>         category hub    /ko/c/<category>
  *   /<tool>               tool            /ko/<tool>
  *   /<tool>/<variant>     tool preset     /ko/<tool>/<variant>
+ *   /about /privacy       static page     /ko/about /ko/privacy
+ *   /terms /contact                       /ko/terms /ko/contact
  */
 import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -16,14 +18,18 @@ import { DEFAULT_LOCALE, LOCALES, type Locale } from '../i18n/locales';
 import { t } from '../i18n/ui';
 import { localePath } from '../lib/urls';
 import { breadcrumbLd, websiteLd } from '../lib/seo';
+import { CONTACT_EMAIL } from '../config/site';
 import { CATEGORIES, CATEGORY_IDS, type CategoryId } from '../tools/categories';
 import { TOOLS } from '../tools/registry';
 import type { ToolModule, ToolVariant } from '../tools/types';
+import { STATIC_PAGE_IDS, STATIC_PAGES } from '../static-pages/content';
+import type { StaticPageId } from '../static-pages/types';
 
 type PageProps =
   | { kind: 'home'; locale: Locale }
   | { kind: 'category'; locale: Locale; category: CategoryId }
-  | { kind: 'tool'; locale: Locale; tool: ToolModule; variant?: ToolVariant };
+  | { kind: 'tool'; locale: Locale; tool: ToolModule; variant?: ToolVariant }
+  | { kind: 'static'; locale: Locale; page: StaticPageId };
 
 export const getStaticPaths = (() => {
   const paths: { params: { path: string | undefined }; props: PageProps }[] = [];
@@ -51,6 +57,10 @@ export const getStaticPaths = (() => {
           props: { kind: 'tool', locale, tool, variant },
         });
       }
+    }
+
+    for (const page of STATIC_PAGE_IDS) {
+      paths.push({ params: { path: toPath(locale, page) }, props: { kind: 'static', locale, page } });
     }
   }
   return paths;
@@ -142,6 +152,74 @@ const categoriesWithTools = CATEGORY_IDS.filter((id) => TOOLS.some((tool) => too
     </div>
   </BaseLayout>
 )}
+
+{props.kind === 'static' &&
+  (() => {
+    const page = props.page;
+    const content = STATIC_PAGES[page][locale];
+    const crumbs = [
+      { name: t(locale, 'breadcrumb.home'), path: localePath(locale) },
+      { name: content.h1, path: localePath(locale, page) },
+    ];
+    const legalLabel: Record<StaticPageId, 'footer.about' | 'footer.privacyLink' | 'footer.terms' | 'footer.contact'> =
+      {
+        about: 'footer.about',
+        privacy: 'footer.privacyLink',
+        terms: 'footer.terms',
+        contact: 'footer.contact',
+      };
+    return (
+      <BaseLayout
+        locale={locale}
+        title={content.title}
+        description={content.description}
+        segments={[page]}
+        jsonLd={[breadcrumbLd(crumbs)]}
+      >
+        <div class="mx-auto max-w-5xl px-4 pt-6">
+          <Breadcrumbs crumbs={crumbs} />
+          <header class="mt-6 max-w-3xl">
+            <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-balance">{content.h1}</h1>
+            <p class="mt-3 text-lg text-muted text-pretty">{content.intro}</p>
+          </header>
+
+          {page === 'contact' && (
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              class="mt-6 inline-flex h-11 items-center gap-2 rounded-md border border-line bg-surface px-4 text-[15px] font-medium hover:border-line-strong"
+            >
+              <Icon name="mail" size={18} class="text-accent" />
+              {CONTACT_EMAIL}
+            </a>
+          )}
+
+          <div class="mt-12 grid gap-10 max-w-3xl">
+            {content.sections.map((s) => (
+              <section class="prose-tool">
+                <h2>{s.heading}</h2>
+                {s.body.split('\n\n').map((p) => (
+                  <p>{p}</p>
+                ))}
+              </section>
+            ))}
+          </div>
+
+          <p class="mt-10 text-xs text-subtle">{t(locale, 'tool.updated', { date: content.updated })}</p>
+
+          <nav
+            class="mt-10 pt-8 border-t border-line flex flex-wrap gap-4 text-sm"
+            aria-label={t(locale, 'page.moreLinks')}
+          >
+            {STATIC_PAGE_IDS.filter((id) => id !== page).map((id) => (
+              <a href={localePath(locale, id)} class="text-muted hover:text-fg">
+                {t(locale, legalLabel[id])}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </BaseLayout>
+    );
+  })()}
 
 <script>
   const input = document.getElementById('tool-search') as HTMLInputElement | null;

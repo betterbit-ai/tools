@@ -33,7 +33,14 @@ const en = {
   'edge.no-signup': 'No sign-up, no limits',
   'footer.privacy': 'Everything runs locally in your browser. We never see your files or text.',
   'footer.rights': '© {year} {name}',
+  'footer.legalNav': 'About & legal',
+  'footer.about': 'About',
+  'footer.privacyLink': 'Privacy Policy',
+  'footer.terms': 'Terms of Use',
+  'footer.contact': 'Contact',
   'breadcrumb.home': 'Home',
+  'page.moreLinks': 'More pages',
+  'page.email': 'Email us',
 };
 
 export type UiKey = keyof typeof en;
@@ -67,7 +74,14 @@ const ko: Record<UiKey, string> = {
   'edge.no-signup': '회원가입·사용 제한 없음',
   'footer.privacy': '모든 처리는 브라우저 안에서 이루어집니다. 파일과 텍스트는 서버로 전송되지 않습니다.',
   'footer.rights': '© {year} {name}',
+  'footer.legalNav': '소개 및 법적 정보',
+  'footer.about': '소개',
+  'footer.privacyLink': '개인정보처리방침',
+  'footer.terms': '이용약관',
+  'footer.contact': '문의',
   'breadcrumb.home': '홈',
+  'page.moreLinks': '다른 페이지',
+  'page.email': '이메일 보내기',
 };
 
 const dictionaries: Record<Locale, Record<UiKey, string>> = { en, ko };
