@@ -1,0 +1,78 @@
+name: New tool
+description: Propose a new tool. Written so an agent can build it end-to-end with the new-tool skill.
+title: '[tool] <slug>: <short name>'
+labels: ['type:new-tool', 'agent:proposed']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Agents: follow `.claude/skills/new-tool/SKILL.md`. Standards: `CLAUDE.md`, `docs/TOOL_PLAYBOOK.md`, `docs/DESIGN_SYSTEM.md`.
+        Move the label `agent:proposed` → `agent:ready` once a human has approved the scope.
+  - type: input
+    id: slug
+    attributes:
+      label: Slug
+      description: English kebab-case, primary keyword. Permanent once launched.
+      placeholder: qr-code-generator
+    validations: { required: true }
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        [image, pdf, text, time, calculator, converter, developer, generator, device (new), color (new), media (new)]
+    validations: { required: true }
+  - type: textarea
+    id: keywords
+    attributes:
+      label: Primary search queries (per locale)
+      placeholder: |
+        en: qr code generator, free qr code
+        ko: qr코드 만들기, qr코드 생성
+    validations: { required: true }
+  - type: textarea
+    id: competitors
+    attributes:
+      label: Competitors and their concrete weaknesses
+      description: Top results you actually opened. Upload? Ads? Limits? Missing features? What do they do better?
+      placeholder: |
+        - qr-code-generator.com — dynamic QR codes expire after 14-day trial; sign-up wall for SVG
+        - …
+    validations: { required: true }
+  - type: checkboxes
+    id: edges
+    attributes:
+      label: Edge (must be true — at least one)
+      options:
+        - label: privacy (no upload)
+        - label: no-ads
+        - label: performance
+        - label: usability
+        - label: design
+        - label: features (competitors lack/paywall)
+        - label: accuracy
+        - label: offline
+        - label: no-signup
+  - type: textarea
+    id: features
+    attributes:
+      label: Features (MVP)
+      description: What the tool does, defaults, inputs/outputs, keyboard shortcuts, persistence.
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] `npm run verify` passes
+        - [ ] Logic in `logic.ts` with tests (boundaries, unicode)
+        - [ ] UI only from `src/components/ui` primitives + tokens
+        - [ ] All locales written natively; facts verified
+        - [ ] Checked in browser: desktop, 375px mobile, dark mode, keyboard-only
+        - [ ] `docs/CATALOG.md` status → live; `related` linked both ways
+    validations: { required: true }
+  - type: textarea
+    id: variants
+    attributes:
+      label: Variants (optional)
+      description: High-volume sub-queries that deserve their own preset URL, e.g. /timer/5-minutes.

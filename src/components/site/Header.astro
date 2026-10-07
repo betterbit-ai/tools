@@ -1,0 +1,42 @@
+---
+import { SITE_NAME } from '../../config/site';
+import { LOCALES, LOCALE_META, type Locale } from '../../i18n/locales';
+import { t } from '../../i18n/ui';
+import { localePath } from '../../lib/urls';
+import Icon from './Icon.astro';
+
+interface Props {
+  locale: Locale;
+  /** Current page's locale-independent segments, for the language switcher. */
+  segments: string[];
+}
+const { locale, segments } = Astro.props;
+---
+
+<header class="border-b border-line bg-bg/80 backdrop-blur sticky top-0 z-40">
+  <div class="mx-auto max-w-5xl px-4 h-14 flex items-center justify-between gap-4">
+    <a href={localePath(locale)} class="flex items-center gap-2 font-semibold tracking-tight">
+      <span class="inline-grid place-items-center size-7 rounded-md bg-accent text-on-accent">
+        <Icon name="zap" size={16} />
+      </span>
+      {SITE_NAME}
+    </a>
+    <nav class="flex items-center gap-1 text-sm" aria-label={t(locale, 'nav.language')}>
+      <Icon name="globe" size={16} class="text-subtle mr-1" />
+      {LOCALES.map((l) => (
+        <a
+          href={localePath(l, ...segments)}
+          hreflang={LOCALE_META[l].htmlLang}
+          lang={LOCALE_META[l].htmlLang}
+          aria-current={l === locale ? 'true' : undefined}
+          class:list={[
+            'px-2 py-1 rounded-md transition-colors',
+            l === locale ? 'text-fg bg-surface-2' : 'text-muted hover:text-fg',
+          ]}
+        >
+          {LOCALE_META[l].label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>

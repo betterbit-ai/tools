@@ -1,0 +1,71 @@
+---
+/**
+ * Every page goes through this layout. It owns <head>: title, description,
+ * canonical, hreflang, Open Graph, JSON-LD. Pages never write <head> tags themselves.
+ */
+import '../styles/global.css';
+import Header from '../components/site/Header.astro';
+import Footer from '../components/site/Footer.astro';
+import { SITE_NAME } from '../config/site';
+import { DEFAULT_LOCALE, LOCALE_META, type Locale } from '../i18n/locales';
+import { t } from '../i18n/ui';
+import { absoluteUrl, localePath } from '../lib/urls';
+import { alternates } from '../lib/seo';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  /** Locale-independent path segments, e.g. ['timer', '5-minutes']. */
+  segments: string[];
+  jsonLd?: object[];
+  /** Append " | Site name" to <title>. Off for the home page. */
+  brandTitle?: boolean;
+}
+
+const { locale, title, description, segments, jsonLd = [], brandTitle = true } = Astro.props;
+const canonical = absoluteUrl(localePath(locale, ...segments));
+const alts = alternates(segments);
+const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
+---
+
+<!doctype html>
+<html lang={LOCALE_META[locale].htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {alts.map((a) => (
+      <link rel="alternate" hreflang={LOCALE_META[a.locale].htmlLang} href={a.href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={alts.find((a) => a.locale === DEFAULT_LOCALE)!.href} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={LOCALE_META[locale].ogLocale} />
+    <meta name="twitter:card" content="summary" />
+    {jsonLd.map((ld) => (
+      <script type="application/ld+json" set:html={JSON.stringify(ld)}></script>
+    ))}
+  </head>
+  <body class="min-h-dvh flex flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-surface focus:px-3 focus:py-2 focus:rounded-md"
+    >
+      {t(locale, 'nav.skip')}
+    </a>
+    <Header locale={locale} segments={segments} />
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+    <Footer locale={locale} />
+  </body>
+</html>

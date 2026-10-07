@@ -1,0 +1,37 @@
+name: Improve a tool
+description: Feature, fix, content or SEO improvement for an existing tool.
+title: '[improve] <slug>: <what>'
+labels: ['type:improve', 'agent:proposed']
+body:
+  - type: input
+    id: slug
+    attributes:
+      label: Tool slug
+      placeholder: image-resizer
+    validations: { required: true }
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options: [feature, bug, content/SEO, performance, design/UX, new locale, new variant]
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Evidence — user feedback, Search Console data (query/CTR/position), competitor feature, bug repro.
+    validations: { required: true }
+  - type: textarea
+    id: what
+    attributes:
+      label: What to change
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ] `npm run verify` passes
+        - [ ] Regression test added for bugs / new logic
+        - [ ] `meta.updated` bumped if user-visible
+    validations: { required: true }

@@ -1,0 +1,167 @@
+---
+/**
+ * One route file generates every page for every locale:
+ *   /                     home            /ko
+ *   /c/<category>         category hub    /ko/c/<category>
+ *   /<tool>               tool            /ko/<tool>
+ *   /<tool>/<variant>     tool preset     /ko/<tool>/<variant>
+ */
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolPage from '../components/site/ToolPage.astro';
+import ToolCard from '../components/site/ToolCard.astro';
+import Breadcrumbs from '../components/site/Breadcrumbs.astro';
+import Icon from '../components/site/Icon.astro';
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '../i18n/locales';
+import { t } from '../i18n/ui';
+import { localePath } from '../lib/urls';
+import { breadcrumbLd, websiteLd } from '../lib/seo';
+import { CATEGORIES, CATEGORY_IDS, type CategoryId } from '../tools/categories';
+import { TOOLS } from '../tools/registry';
+import type { ToolModule, ToolVariant } from '../tools/types';
+
+type PageProps =
+  | { kind: 'home'; locale: Locale }
+  | { kind: 'category'; locale: Locale; category: CategoryId }
+  | { kind: 'tool'; locale: Locale; tool: ToolModule; variant?: ToolVariant };
+
+export const getStaticPaths = (() => {
+  const paths: { params: { path: string | undefined }; props: PageProps }[] = [];
+  const toPath = (locale: Locale, ...segments: string[]) => {
+    const parts = locale === DEFAULT_LOCALE ? segments : [locale, ...segments];
+    return parts.length ? parts.join('/') : undefined;
+  };
+
+  for (const locale of LOCALES) {
+    paths.push({ params: { path: toPath(locale) }, props: { kind: 'home', locale } });
+
+    for (const category of CATEGORY_IDS) {
+      if (!TOOLS.some((tool) => tool.meta.category === category)) continue;
+      paths.push({
+        params: { path: toPath(locale, 'c', category) },
+        props: { kind: 'category', locale, category },
+      });
+    }
+
+    for (const tool of TOOLS) {
+      paths.push({ params: { path: toPath(locale, tool.meta.slug) }, props: { kind: 'tool', locale, tool } });
+      for (const variant of tool.meta.variants ?? []) {
+        paths.push({
+          params: { path: toPath(locale, tool.meta.slug, variant.slug) },
+          props: { kind: 'tool', locale, tool, variant },
+        });
+      }
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const props = Astro.props as PageProps;
+const { locale } = props;
+
+const categoriesWithTools = CATEGORY_IDS.filter((id) => TOOLS.some((tool) => tool.meta.category === id));
+---
+
+{props.kind === 'tool' && <ToolPage tool={props.tool} locale={locale} variant={props.variant} />}
+
+{props.kind === 'home' && (
+  <BaseLayout
+    locale={locale}
+    title={`${t(locale, 'home.h1')} — ${t(locale, 'site.tagline')}`}
+    description={t(locale, 'site.description')}
+    segments={[]}
+    brandTitle={false}
+    jsonLd={[websiteLd(locale, t(locale, 'site.description'))]}
+  >
+    <div class="mx-auto max-w-5xl px-4">
+      <section class="pt-14 pb-10 max-w-2xl">
+        <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight text-balance">{t(locale, 'home.h1')}</h1>
+        <p class="mt-4 text-lg text-muted text-pretty">{t(locale, 'site.description')}</p>
+        <label class="mt-8 flex items-center gap-2 rounded-lg border border-line bg-surface px-4 h-12 shadow-card focus-within:border-accent">
+          <Icon name="search" size={18} class="text-subtle" />
+          <span class="sr-only">{t(locale, 'home.searchLabel')}</span>
+          <input
+            id="tool-search"
+            type="search"
+            autocomplete="off"
+            placeholder={t(locale, 'home.searchPlaceholder')}
+            class="flex-1 bg-transparent outline-none text-base placeholder:text-subtle"
+          />
+        </label>
+        <p class="mt-3 text-sm text-subtle">{t(locale, 'home.toolCount', { count: TOOLS.length })}</p>
+      </section>
+
+      {categoriesWithTools.map((id) => (
+        <section class="mt-10" data-category-section>
+          <h2 class="flex items-center gap-2 text-lg font-semibold tracking-tight mb-4">
+            <a href={localePath(locale, 'c', id)} class="hover:text-accent">
+              {CATEGORIES[id].name[locale]}
+            </a>
+          </h2>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {TOOLS.filter((tool) => tool.meta.category === id).map((tool) => (
+              <ToolCard tool={tool} locale={locale} />
+            ))}
+          </div>
+        </section>
+      ))}
+      <p id="no-results" hidden class="mt-10 text-muted">
+        {t(locale, 'home.noResults')}
+      </p>
+    </div>
+  </BaseLayout>
+)}
+
+{props.kind === 'category' && (
+  <BaseLayout
+    locale={locale}
+    title={CATEGORIES[props.category].name[locale]}
+    description={CATEGORIES[props.category].description[locale]}
+    segments={['c', props.category]}
+    jsonLd={[
+      breadcrumbLd([
+        { name: t(locale, 'breadcrumb.home'), path: localePath(locale) },
+        { name: CATEGORIES[props.category].name[locale], path: localePath(locale, 'c', props.category) },
+      ]),
+    ]}
+  >
+    <div class="mx-auto max-w-5xl px-4 pt-6">
+      <Breadcrumbs
+        crumbs={[
+          { name: t(locale, 'breadcrumb.home'), path: localePath(locale) },
+          { name: CATEGORIES[props.category].name[locale], path: localePath(locale, 'c', props.category) },
+        ]}
+      />
+      <h1 class="mt-6 text-3xl sm:text-4xl font-semibold tracking-tight">{CATEGORIES[props.category].name[locale]}</h1>
+      <p class="mt-3 text-lg text-muted">{CATEGORIES[props.category].description[locale]}</p>
+      <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {TOOLS.filter((tool) => tool.meta.category === props.category).map((tool) => (
+          <ToolCard tool={tool} locale={locale} />
+        ))}
+      </div>
+    </div>
+  </BaseLayout>
+)}
+
+<script>
+  const input = document.getElementById('tool-search') as HTMLInputElement | null;
+  if (input) {
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-tool-card]'));
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-category-section]'));
+    const empty = document.getElementById('no-results');
+    input.addEventListener('input', () => {
+      const terms = input.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      for (const card of cards) {
+        const hay = card.dataset.search ?? '';
+        card.hidden = !terms.every((term) => hay.includes(term));
+      }
+      let visible = 0;
+      for (const section of sections) {
+        const any = Array.from(section.querySelectorAll<HTMLElement>('[data-tool-card]')).some((c) => !c.hidden);
+        section.hidden = !any;
+        if (any) visible++;
+      }
+      if (empty) empty.hidden = visible > 0;
+    });
+  }
+</script>
