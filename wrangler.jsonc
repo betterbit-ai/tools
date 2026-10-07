@@ -4,6 +4,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tools",
   "compatibility_date": "2026-10-01",
+  // Production domain. Keep in sync with SITE_URL in src/config/site.ts.
+  "routes": [{ "pattern": "betterbit.org", "custom_domain": true }],
   "assets": {
     "directory": "./dist",
     // build.format 'file' emits /timer.html; serve it at /timer and redirect /timer/ → /timer.

@@ -34,7 +34,7 @@ npm test               # Vitest만
 - **Preact islands**: 도구 UI만 하이드레이션한다(`client:load`). 콘텐츠와 레이아웃은 순수 HTML이다.
 - **Tailwind CSS 4** + CSS 변수 토큰(라이트/다크 자동).
 - **Vitest**: 로직 단위 테스트 + 레지스트리 품질 게이트(`tests/registry.test.ts`).
-- 배포: 정적 호스팅(Cloudflare Pages 권장). `build.format: 'file'` → `/timer.html`이 `/timer`로 서빙된다.
+- 배포: Cloudflare Workers 정적 에셋 (`wrangler.jsonc`), 도메인 https://betterbit.org. `main`에 push하면 자동 배포된다. `build.format: 'file'` → `/timer.html`이 `/timer`로 서빙된다.
 
 ## 구조
 

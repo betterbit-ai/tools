@@ -21,5 +21,4 @@ npm run new-tool -- <slug> <category>
 
 ## Deploy
 
-Any static host. Recommended: Cloudflare Pages — build `npm run build`, output `dist`.
-Set `SITE_URL` (e.g. `https://tools.example.com`) so canonical URLs, hreflang and the sitemap are correct.
+Production: https://betterbit.org (Cloudflare Workers static assets, `wrangler.jsonc`). Pushing to `main` deploys automatically.
