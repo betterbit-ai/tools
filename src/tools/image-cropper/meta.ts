@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         'Is a full online photo-editor suite (layers, effects, AI tools) with a prominent "Log in" prompt on the crop page, so a one-off crop pulls in a much heavier editor than needed. Only offers 1:1/4:3/16:9-style presets and freeform — no circular crop.',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-converter', 'heic-to-jpg'],
+  related: ['image-resizer', 'image-compressor', 'image-converter', 'heic-to-jpg', 'image-to-pdf'],
 };
