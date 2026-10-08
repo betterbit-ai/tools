@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         'Already compresses on-device with no upload, matching our privacy edge — but its "compress to 1MB/2MB" pages are a manual quality slider: the FAQ tells you to "drag the slider down until the live size readout hits the number you need." There is no automatic search, so hitting an exact KB target is trial and error.',
     },
   ],
-  related: ['image-resizer', 'word-counter', 'timer'],
+  related: ['image-resizer', 'image-converter', 'word-counter', 'timer'],
 };
