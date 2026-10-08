@@ -24,6 +24,7 @@
     "astro": "^7.3.6",
     "fflate": "^0.8.3",
     "libheif-js": "^1.23.5",
+    "pdf-lib": "^1.17.1",
     "preact": "^10.29.8",
     "tailwindcss": "^4.3.3"
   },
