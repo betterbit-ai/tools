@@ -21,5 +21,5 @@ export const meta: ToolMeta = {
         'Only with/without-space chars and bytes; no line-break-excluded count, word count, reading time or limit tracker; buried in a heavy job-portal page. (Strength: built-in spell check — consider later.)',
     },
   ],
-  related: ['timer', 'image-resizer', 'image-compressor'],
+  related: ['timer', 'image-resizer', 'image-compressor', 'image-converter'],
 };
