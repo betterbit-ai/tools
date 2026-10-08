@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'resize',
   added: '2026-10-07',
-  updated: '2026-10-07',
+  updated: '2026-10-08',
   edges: ['privacy', 'no-ads', 'performance', 'features', 'no-signup'],
   competitors: [
     {
@@ -24,5 +24,5 @@ export const meta: ToolMeta = {
       weakness: 'Private and high quality, but one image at a time and no social-media presets or crop-to-fill.',
     },
   ],
-  related: ['image-compressor', 'image-converter', 'heic-to-jpg', 'word-counter'],
+  related: ['image-cropper', 'image-compressor', 'image-converter', 'heic-to-jpg', 'word-counter'],
 };
