@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         '병합할 PDF 개수와 페이지 수는 제한이 없다고 안내하지만, 파일당 크기는 "최대 30MB"로 제한되어 있어 스캔한 문서처럼 용량이 큰 PDF 한 장이 그 자체로 한도를 넘을 수 있다. (Strength: 파일 개수·페이지 수 제한이 없다는 점은 이 도구와 동일하다.)',
     },
   ],
-  related: ['image-to-pdf', 'image-compressor', 'heic-to-jpg'],
+  related: ['split-pdf', 'image-to-pdf', 'image-compressor', 'heic-to-jpg'],
 };

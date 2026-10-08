@@ -33,5 +33,13 @@ export const meta: ToolMeta = {
         'Uploads to Adobe servers, and without logging in it caps you at a single free conversion with one download — further use requires an account.',
     },
   ],
-  related: ['image-converter', 'image-compressor', 'image-resizer', 'image-cropper', 'heic-to-jpg', 'merge-pdf'],
+  related: [
+    'image-converter',
+    'image-compressor',
+    'image-resizer',
+    'image-cropper',
+    'heic-to-jpg',
+    'merge-pdf',
+    'split-pdf',
+  ],
 };
