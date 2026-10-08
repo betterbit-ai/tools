@@ -88,6 +88,6 @@ export const meta: ToolMeta = {
       weakness: 'Lost when the tab is closed or refreshed; no keyboard shortcuts; no tab-title countdown.',
     },
   ],
-  related: ['word-counter', 'image-resizer'],
+  related: ['word-counter', 'image-resizer', 'image-compressor'],
   variants,
 };
