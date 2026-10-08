@@ -9,10 +9,7 @@ export const SITE_NAME = 'Betterbit Tools';
 /** Shown in JSON-LD `publisher` / `author`. */
 export const ORG_NAME = 'Betterbit';
 
-/**
- * Placeholder inbox for the contact page. Follow-up: a human needs to set this
- * up as a Cloudflare Email Routing destination before launch.
- */
+/** Contact inbox. Forwarded by Cloudflare Email Routing (rule: hello@ → owner's inbox). */
 export const CONTACT_EMAIL = 'hello@betterbit.org';
 
 /**
