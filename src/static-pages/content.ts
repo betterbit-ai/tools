@@ -15,7 +15,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
       description: `${SITE_NAME} is a growing collection of small, fast, private web tools. No sign-up, no uploads, no ads — everything runs in your browser.`,
       h1: `About ${SITE_NAME}`,
       intro: 'Simple tools, done right — fast, private, and built to actually be better than the alternative.',
-      updated: '2026-10-07',
+      updated: '2026-10-08',
       sections: [
         {
           heading: 'Our mission',
@@ -27,7 +27,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Who publishes this site',
-          body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts, no analytics, and no advertising today; see our Privacy Policy for the full, current picture and what would change first if that ever changes.`,
+          body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts and no advertising. We use Cloudflare Web Analytics — cookieless, aggregate page-view statistics — to learn which tools people find useful; see our Privacy Policy for exactly what that means.`,
         },
       ],
     },
@@ -36,7 +36,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
       description: `${SITE_NAME}는 가입·업로드·광고 없이 브라우저에서 바로 실행되는 단순하고 빠른 웹 도구 모음입니다.`,
       h1: `${SITE_NAME} 소개`,
       intro: '단순한 도구를 제대로 만듭니다 — 빠르고, 안전하고, 기존 도구보다 실제로 나은 것만 올립니다.',
-      updated: '2026-10-07',
+      updated: '2026-10-08',
       sections: [
         {
           heading: '미션',
@@ -48,7 +48,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '운영 주체',
-          body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 현재 이 사이트에는 회원가입, 애널리틱스, 광고가 전혀 없습니다. 정확한 현재 상태와 앞으로 바뀔 경우 가장 먼저 어떤 절차를 거치는지는 개인정보처리방침에서 확인할 수 있습니다.`,
+          body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 이 사이트에는 회원가입과 광고가 없습니다. 어떤 도구가 실제로 쓰이는지 알기 위해 쿠키를 쓰지 않는 집계형 방문 통계인 Cloudflare Web Analytics를 사용하며, 자세한 내용은 개인정보처리방침에서 확인할 수 있습니다.`,
         },
       ],
     },
@@ -58,10 +58,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
     en: {
       title: `Privacy Policy — ${SITE_NAME}`,
       description:
-        'How Betterbit Tools handles your data: everything runs locally in your browser, no accounts, no cookies, and no analytics or ads today.',
+        'How Betterbit Tools handles your data: tools run locally in your browser, no accounts, no cookies, no ads — only cookieless, aggregate visit statistics.',
       h1: 'Privacy Policy',
       intro: 'In short: your files and text never leave your browser. We built the site this way on purpose.',
-      updated: '2026-10-07',
+      updated: '2026-10-08',
       sections: [
         {
           heading: 'What we collect',
@@ -77,11 +77,11 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Hosting and server logs',
-          body: `${SITE_NAME} is a static site hosted on Cloudflare. Like any web host, Cloudflare's network generates standard server logs for requests (such as IP address, user agent, and requested URL) to keep the service running and secure. We don't run our own analytics or tracking scripts, and we don't add anything to what Cloudflare logs by default.`,
+          body: `${SITE_NAME} is a static site hosted on Cloudflare. Like any web host, Cloudflare's network generates standard server logs for requests (such as IP address, user agent, and requested URL) to keep the service running and secure. We don't run our own server-side tracking, and apart from the visit statistics described below we don't add anything to what Cloudflare logs by default.`,
         },
         {
-          heading: 'Analytics and advertising — none yet',
-          body: `As of this writing, ${SITE_NAME} has no analytics and no advertising of any kind. If that ever changes, we will update this page first, describe plainly what's being added and why, and give it a clear mention here before it goes live — not after.`,
+          heading: 'Visit statistics (added October 8, 2026)',
+          body: `To learn which tools are actually useful, ${SITE_NAME} uses Cloudflare Web Analytics. It is privacy-first by design: it sets no cookies, uses no localStorage, and does not fingerprint or track individual visitors across sites or visits. It reports aggregate numbers only — pages viewed, referring site, browser and device type, country, and page-load performance. It never sees the files or text you use in our tools.\n\n${SITE_NAME} shows no advertising. If that ever changes, we will update this page first and say plainly what is being added and why — before it goes live, not after.`,
         },
         {
           heading: 'Changes to this policy',
@@ -96,10 +96,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
     ko: {
       title: `개인정보처리방침 — ${SITE_NAME}`,
       description:
-        '모든 처리는 브라우저에서 로컬로 이루어지며, 회원가입·쿠키·애널리틱스·광고가 없습니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
+        '도구는 브라우저에서 로컬로 동작하며 회원가입·쿠키·광고가 없습니다. 쿠키 없는 집계형 방문 통계만 사용합니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
       h1: '개인정보처리방침',
       intro: '요약하면 이렇습니다: 파일과 텍스트는 브라우저 밖으로 나가지 않습니다. 처음부터 그렇게 만들었습니다.',
-      updated: '2026-10-07',
+      updated: '2026-10-08',
       sections: [
         {
           heading: '수집하는 정보',
@@ -115,11 +115,11 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '호스팅과 서버 로그',
-          body: `${SITE_NAME}는 Cloudflare에서 호스팅하는 정적 사이트입니다. 다른 웹 호스팅과 마찬가지로 Cloudflare 네트워크는 서비스 운영과 보안을 위해 요청에 대한 표준 서버 로그(IP 주소, 사용자 에이전트, 요청한 URL 등)를 생성합니다. 저희는 별도의 애널리틱스나 추적 스크립트를 운영하지 않으며, Cloudflare가 기본적으로 남기는 로그 외에 추가로 수집하는 것이 없습니다.`,
+          body: `${SITE_NAME}는 Cloudflare에서 호스팅하는 정적 사이트입니다. 다른 웹 호스팅과 마찬가지로 Cloudflare 네트워크는 서비스 운영과 보안을 위해 요청에 대한 표준 서버 로그(IP 주소, 사용자 에이전트, 요청한 URL 등)를 생성합니다. 저희는 자체 서버 측 추적을 운영하지 않으며, 아래의 방문 통계를 제외하면 Cloudflare가 기본적으로 남기는 로그 외에 추가로 수집하는 것이 없습니다.`,
         },
         {
-          heading: '애널리틱스와 광고 — 아직 없습니다',
-          body: `이 글을 쓰는 현재, ${SITE_NAME}에는 어떠한 애널리틱스나 광고도 없습니다. 앞으로 이를 추가하게 된다면, 적용 전에 먼저 이 페이지를 업데이트해 무엇을 왜 추가하는지 명확히 밝히겠습니다. 조용히 바꾸는 일은 없습니다.`,
+          heading: '방문 통계 (2026년 10월 8일 추가)',
+          body: `어떤 도구가 실제로 쓸모 있는지 알기 위해 ${SITE_NAME}는 Cloudflare Web Analytics를 사용합니다. 개인정보 보호를 우선하도록 설계된 도구로, 쿠키나 localStorage를 사용하지 않고, 개별 방문자를 식별하거나 사이트·방문 간에 추적하지 않습니다. 조회된 페이지, 유입 경로, 브라우저와 기기 종류, 국가, 페이지 로딩 성능 같은 집계 수치만 보고하며, 도구에서 사용하는 파일이나 텍스트는 전혀 보지 못합니다.\n\n${SITE_NAME}에는 광고가 없습니다. 앞으로 광고를 추가하게 된다면, 적용 전에 먼저 이 페이지를 업데이트해 무엇을 왜 추가하는지 명확히 밝히겠습니다.`,
         },
         {
           heading: '방침 변경',
