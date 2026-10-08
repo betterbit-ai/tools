@@ -57,5 +57,5 @@ export const meta: ToolMeta = {
         'Also converts fully in-browser with WebAssembly, batches up to 500 files, zips them and exposes EXIF/GPS controls and a quality slider (Strength: the closest match to this tool on both privacy and features) — but it is funded by advertising partnerships, so the page carries ads, and it documents no guarantee about maker notes or HDR gain maps either.',
     },
   ],
-  related: ['image-cropper', 'image-converter', 'image-compressor', 'image-resizer'],
+  related: ['image-cropper', 'image-converter', 'image-compressor', 'image-resizer', 'image-to-pdf'],
 };
