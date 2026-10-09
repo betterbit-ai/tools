@@ -52,7 +52,7 @@ jobs:
           node-version: 24
 
       - name: Install Claude Code
-        run: npm install -g @anthropic-ai/claude-code@2.1.270
+        run: npm install -g --allow-scripts=@anthropic-ai/claude-code @anthropic-ai/claude-code@2.1.270
 
       # Pushes go through the PAT (not GITHUB_TOKEN) so that agent PRs trigger CI and Cloudflare previews.
       - name: Git auth via FACTORY_GH_TOKEN
