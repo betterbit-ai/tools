@@ -1,0 +1,64 @@
+{
+  "repos": [
+    {
+      "name": "tools",
+      "slug": "betterbit-ai/tools",
+      "baseBranch": "main",
+      "allowedAuthors": ["betterbit-ai", "joelonsw"],
+      "installCommand": "npm ci --no-audit --no-fund",
+      "verifyCommand": "npm run verify",
+      "planner": {
+        "catalogPath": "docs/CATALOG.md",
+        "queueMin": 5,
+        "queueTarget": 15,
+        "expandCatalogBelow": 25
+      }
+    }
+  ],
+  "session": {
+    "timeoutMinutes": 90,
+    "maxFixAttempts": 2,
+    "model": "sonnet"
+  },
+  "allowedTools": [
+    "Read",
+    "Edit",
+    "Write",
+    "Glob",
+    "Grep",
+    "WebSearch",
+    "WebFetch",
+    "Skill",
+    "Agent",
+    "TodoWrite",
+    "Bash(npm *)",
+    "Bash(npx *)",
+    "Bash(node *)",
+    "Bash(ls *)",
+    "Bash(mkdir *)",
+    "Bash(rm src/*)",
+    "Bash(mv src/*)",
+    "Bash(git status*)",
+    "Bash(git diff*)",
+    "Bash(git log*)",
+    "Bash(git show*)",
+    "Bash(git add *)",
+    "Bash(git commit *)",
+    "Bash(git restore *)",
+    "Bash(git fetch*)",
+    "Bash(git rebase *)",
+    "Bash(git merge *)",
+    "Bash(cat *)",
+    "Bash(head *)",
+    "Bash(tail *)",
+    "Bash(grep *)",
+    "Bash(wc *)",
+    "Bash(sed -n *)",
+    "Bash(find src *)",
+    "Bash(find dist *)"
+  ],
+  "gitIdentity": {
+    "name": "betterbit-ai",
+    "email": "169157038+betterbit-ai@users.noreply.github.com"
+  }
+}

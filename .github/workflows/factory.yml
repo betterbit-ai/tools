@@ -1,0 +1,112 @@
+# The factory: every 30 min, advance the in-flight agent PR (merge when green / fix when red),
+# keep the issue queue filled from docs/CATALOG.md, and run one Claude Code session on the next issue.
+# Code: .factory/  ·  Setup: .factory/README.md
+name: Factory
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: 'Work on this issue number only (optional)'
+        required: false
+        default: ''
+      no_work:
+        description: 'Only merge/fix PRs and refill the queue — no new Claude session'
+        type: boolean
+        default: false
+
+# Exactly one factory run at a time; a new trigger waits instead of cancelling a session mid-way.
+concurrency:
+  group: factory
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    # Scheduled runs only when switched on (Settings → Variables → FACTORY_ENABLED = true).
+    if: github.event_name == 'workflow_dispatch' || vars.FACTORY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      TZ: Asia/Seoul # usage-limit messages say "resets 2am (Asia/Seoul)"
+      FACTORY_HOME: /home/runner/factory
+      GH_TOKEN: ${{ secrets.FACTORY_GH_TOKEN }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::error::Missing secret FACTORY_GH_TOKEN (see .factory/README.md)"; exit 1; fi
+          if [ -z "$CLAUDE_CODE_OAUTH_TOKEN$ANTHROPIC_API_KEY" ]; then echo "::error::Missing secret CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY)"; exit 1; fi
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.270
+
+      # Pushes go through the PAT (not GITHUB_TOKEN) so that agent PRs trigger CI and Cloudflare previews.
+      - name: Git auth via FACTORY_GH_TOKEN
+        run: gh auth setup-git
+
+      # Cooldown/resume state and Claude transcripts survive between runs so a session cut off
+      # by the usage limit resumes where it stopped.
+      - name: Restore factory state
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /home/runner/factory/locks
+            ~/.claude/projects
+          key: factory-state-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: factory-state-
+
+      - name: Run factory
+        env:
+          ISSUE: ${{ inputs.issue }}
+          NO_WORK: ${{ inputs.no_work }}
+        run: |
+          args=()
+          if [[ "$ISSUE" =~ ^[0-9]+$ ]]; then args+=(--issue "$ISSUE"); fi
+          if [ "$NO_WORK" = "true" ]; then args+=(--no-work); fi
+          node .factory/dispatch.mjs "${args[@]}"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo '### Factory log'
+            echo '```'
+            tail -n 40 "$FACTORY_HOME/logs/factory.log" 2>/dev/null || echo '(no log)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prune old transcripts
+        if: always()
+        run: find ~/.claude/projects -type f -mtime +3 -delete 2>/dev/null || true
+
+      - name: Save factory state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /home/runner/factory/locks
+            ~/.claude/projects
+          key: factory-state-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factory-logs
+          path: /home/runner/factory/logs/
+          retention-days: 14
+          if-no-files-found: ignore
