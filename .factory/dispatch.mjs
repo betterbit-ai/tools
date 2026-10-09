@@ -141,6 +141,24 @@ function prWorktree(repo, clone, issue, branch) {
   return wt;
 }
 
+/**
+ * Push the branch after replaying it on the latest base branch. Without this, a branch cut before
+ * main changed a workflow file looks like a workflow edit, which the PAT may not push.
+ * A conflicting rebase is aborted; the PR then shows the conflict and gets a fix session.
+ */
+function pushBranch(repo, wt, branch, { allowFail = false, force = false } = {}) {
+  sh('git', ['-C', wt, 'fetch', '-q', 'origin', repo.baseBranch], { allowFail: true });
+  if (!sh('git', ['-C', wt, 'rebase', '-q', '--autostash', `origin/${repo.baseBranch}`], { allowFail: true }).ok) {
+    sh('git', ['-C', wt, 'rebase', '--abort'], { allowFail: true });
+    log(`[${repo.name}] ${branch} conflicts with ${repo.baseBranch}; pushing without rebase`);
+  }
+  return sh(
+    'git',
+    ['-C', wt, 'push', '-q', '-u', force ? '--force' : '--force-with-lease', 'origin', `${branch}:${branch}`],
+    { allowFail },
+  );
+}
+
 function removeWorktree(repo, clone, issue) {
   const wt = worktreePath(repo, issue);
   if (existsSync(wt)) sh('git', ['-C', clone, 'worktree', 'remove', '--force', wt], { allowFail: true });
@@ -434,7 +452,7 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
   const after = sh('git', ['-C', wt, 'rev-parse', 'HEAD']).out;
 
   if (after !== before) {
-    sh('git', ['-C', wt, 'push', '--force-with-lease', 'origin', `${branch}:${branch}`]);
+    pushBranch(repo, wt, branch);
     log(`[${repo.name}] pushed fix for PR #${pr.number}`);
   }
   const summary = (session.result || '(no summary)').slice(0, 3000);
@@ -582,7 +600,7 @@ function startNextIssue(repo, clone) {
     if (CI && session.sessionId) {
       sh('git', ['-C', wt, 'add', '-A'], { allowFail: true });
       sh('git', ['-C', wt, 'commit', '-q', '-m', `wip: paused by usage limit (#${n})`], { allowFail: true });
-      pushed = sh('git', ['-C', wt, 'push', '-q', '--force', 'origin', `${branch}:${branch}`], { allowFail: true }).ok;
+      pushed = pushBranch(repo, wt, branch, { allowFail: true, force: true }).ok;
     }
     if (session.sessionId) saveResume(repo, n, { sessionId: session.sessionId, pushed, at: new Date().toISOString() });
     gh(
@@ -619,7 +637,8 @@ function startNextIssue(repo, clone) {
   const commits = Number(sh('git', ['-C', wt, 'rev-list', '--count', `origin/${repo.baseBranch}..HEAD`]).out);
   if (!commits) return fail(session.timedOut ? 'session timed out without commits' : 'no commits', session.result);
 
-  sh('git', ['-C', wt, 'push', '-u', '--force-with-lease', 'origin', `${branch}:${branch}`]);
+  const pushed = pushBranch(repo, wt, branch, { allowFail: true });
+  if (!pushed.ok) return fail('push failed', pushed.err);
   const bodyFile = join(DIRS.logs, `pr-body-${n}-${stamp()}.md`);
   const report = session.result.includes('## Summary')
     ? session.result.slice(session.result.indexOf('## Summary'))
