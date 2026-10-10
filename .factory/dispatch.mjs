@@ -34,6 +34,7 @@ import {
   CONFIG,
   DIRS,
   ENGINE,
+  HOME,
   HOST,
   ROLE,
   WORKER,
@@ -78,7 +79,11 @@ function runRepo(repo) {
     if (ROLE === 'full') planRepo(repo);
     if (NO_WORK) return;
     if (open > 0) return log(`[${repo.name}] ${ENGINE} PR still open — next run continues`);
-    if (Date.now() - started > budgetMs) return log(`[${repo.name}] run budget used — next run continues`);
+    if (Date.now() - started > budgetMs) {
+      // Work is left: ask the scheduler for an immediate follow-up run (see factory.yml).
+      writeFileSync(CONTINUE_FILE, new Date().toISOString());
+      return log(`[${repo.name}] run budget used — next run continues`);
+    }
     const outcome = startNextIssue(repo, clone);
     if (outcome === 'failed' && ++failures >= 2) return log(`[${repo.name}] two failed sessions in a row — stopping`);
     if (outcome === 'opened') failures = 0;
@@ -86,6 +91,7 @@ function runRepo(repo) {
   }
 }
 
+const CONTINUE_FILE = join(HOME, 'continue');
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 const engineOf = (pr) => pr.labels.find((l) => l.name.startsWith('engine:'))?.name.slice(7) ?? 'claude';
 
@@ -710,6 +716,8 @@ function startNextIssue(repo, clone) {
 }
 
 /* ───────────── main (last, so every const above is initialized) ───────────── */
+
+rmSync(CONTINUE_FILE, { force: true });
 
 for (const repo of CONFIG.repos) {
   const release = acquireLock(repo.name);

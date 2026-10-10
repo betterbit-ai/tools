@@ -24,16 +24,20 @@ concurrency:
 
 permissions:
   contents: read
+  actions: write # lets a run that used its budget start the next run (workflow_dispatch)
 
 jobs:
   run:
     # Scheduled runs only when switched on (Settings → Variables → FACTORY_ENABLED = true).
     if: github.event_name == 'workflow_dispatch' || vars.FACTORY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    # Scheduled runs are often hours late, so one run keeps building for FACTORY_BUDGET_MIN and then
+    # chains the next run itself. Budget + one session (90) + CI wait (25) must fit the timeout.
+    timeout-minutes: 330
     env:
       TZ: Asia/Seoul # usage-limit messages say "resets 2am (Asia/Seoul)"
       FACTORY_HOME: /home/runner/factory
+      FACTORY_BUDGET_MIN: 200
       GH_TOKEN: ${{ secrets.FACTORY_GH_TOKEN }}
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -101,6 +105,15 @@ jobs:
             /home/runner/factory/locks
             ~/.claude/projects
           key: factory-state-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Continue in a new run
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f "$FACTORY_HOME/continue" ]; then
+            gh workflow run factory.yml -R "$GITHUB_REPOSITORY" --ref main
+          fi
 
       - name: Upload logs
         if: always()
