@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its published guide includes a Korean-versus-WHO reference table, but the calculator description centres on a Korean adult result and a Korean 18.5–23 range rather than presenting two named category results and two height-specific healthy-weight ranges together. Betterbit makes that comparison part of the immediate result. (장점: 키 170cm 등 구체적인 기준표 예시를 설명 콘텐츠에 제공한다.)',
     },
   ],
-  related: ['percentage-calculator', 'age-calculator'],
+  related: ['percentage-calculator', 'age-calculator', 'loan-calculator'],
 };
