@@ -98,6 +98,7 @@ export const meta: ToolMeta = {
     'countdown',
     'date-calculator',
     'age-calculator',
+    'time-zone-converter',
   ],
   variants,
 };
