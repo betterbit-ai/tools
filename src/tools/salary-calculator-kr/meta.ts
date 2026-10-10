@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its landing result is fixed to one dependent, no non-taxable pay, and 12 equal months before directing the visitor to a separate calculation flow; it also surrounds the result with company-salary matching. Betterbit starts with editable non-taxable pay, dependent, and child inputs beside the deduction result. (장점: 공개 국민연금 자료를 이용한 회사별 급여 참고 정보를 함께 제공한다.)',
     },
   ],
-  related: ['loan-calculator', 'percentage-calculator'],
+  related: ['loan-calculator', 'percentage-calculator', 'compound-interest'],
 };
