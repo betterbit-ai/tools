@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         'Its Korean page directs the user to upload a PDF to start an online operation, while its description only promises to keep visual quality “as much as possible” without exposing a numerical image-recompression level. (Strength: it offers other optimization tools such as Fast Web View.)',
     },
   ],
-  related: ['merge-pdf', 'split-pdf', 'image-compressor'],
+  related: ['merge-pdf', 'split-pdf', 'sign-pdf', 'image-compressor'],
 };
