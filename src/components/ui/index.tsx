@@ -320,6 +320,22 @@ export function Stat(props: { label: string; value: string | number; emphasis?: 
   );
 }
 
+/** A compact, token-based bar chart for a small series of labelled numeric values. */
+export function BarChart(props: { items: { label: string; value: number }[]; ariaLabel: string }) {
+  const max = Math.max(1, ...props.items.map((item) => item.value));
+  return (
+    <div role="img" aria-label={props.ariaLabel} class="h-36 rounded-md border border-line bg-surface-2 p-3">
+      <div class="flex h-full items-end gap-1" aria-hidden="true">
+        {props.items.map((item) => (
+          <div class="flex h-full min-w-0 flex-1 items-end" title={item.label}>
+            <div class="w-full rounded-sm bg-accent" style={{ height: `${Math.max(3, (item.value / max) * 100)}%` }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Inline status message. */
 export function Notice(props: { tone?: 'info' | 'success' | 'danger'; children: ComponentChildren }) {
   const tone = props.tone ?? 'info';

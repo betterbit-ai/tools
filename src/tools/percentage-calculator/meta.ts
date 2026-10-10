@@ -46,5 +46,6 @@ export const meta: ToolMeta = {
     'bmi-calculator',
     'loan-calculator',
     'salary-calculator-kr',
+    'compound-interest',
   ],
 };
