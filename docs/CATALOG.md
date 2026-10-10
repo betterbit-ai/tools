@@ -64,7 +64,7 @@
 | case-converter         | 대소문자 변환     | case converter / 대소문자 변환       | Title Case 규칙(AP/Chicago), camelCase 등 개발 케이스 | P0  | live |
 | remove-line-breaks     | 줄바꿈 제거       | remove line breaks / 줄바꿈 없애기   | PDF 복사 텍스트 정리 모드                             | P1  | todo |
 | remove-duplicate-lines | 중복 줄 제거      | remove duplicate lines               | 정렬, 공백 무시 옵션                                  | P1  | todo |
-| text-diff              | 텍스트 비교       | text compare / 텍스트 비교           | 단어·글자 단위 diff, 한글 자모 정확                   | P0  | todo |
+| text-diff              | 텍스트 비교       | text compare / 텍스트 비교           | 단어·글자 단위 diff, 한글 자모 정확                   | P0  | live |
 | sort-lines             | 줄 정렬           | sort lines alphabetically            | 자연 정렬, 한글 가나다순, 역순, 셔플                  | P2  | todo |
 | find-and-replace       | 찾아 바꾸기       | find and replace text                | 정규식, 대소문자 옵션                                 | P2  | todo |
 | lorem-ipsum            | 더미 텍스트       | lorem ipsum generator / 더미 텍스트  | 한국어 더미 텍스트                                    | P1  | todo |
