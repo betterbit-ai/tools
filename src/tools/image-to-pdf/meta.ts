@@ -41,5 +41,6 @@ export const meta: ToolMeta = {
     'heic-to-jpg',
     'merge-pdf',
     'split-pdf',
+    'pdf-to-jpg',
   ],
 };

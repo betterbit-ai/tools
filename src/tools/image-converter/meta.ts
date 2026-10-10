@@ -99,6 +99,6 @@ export const meta: ToolMeta = {
         '브라우저에서 처리해 업로드가 없는 점은 같지만(Strength: 개인정보 보호 방식이 동일함), 배너 광고가 붙어 있고 JPG·PNG·WebP 세 형식만 지원해 GIF나 BMP 원본은 변환할 수 없습니다.',
     },
   ],
-  related: ['image-cropper', 'heic-to-jpg', 'image-resizer', 'image-compressor', 'image-to-pdf'],
+  related: ['image-cropper', 'heic-to-jpg', 'image-resizer', 'image-compressor', 'image-to-pdf', 'pdf-to-jpg'],
   variants,
 };
