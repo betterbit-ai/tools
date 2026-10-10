@@ -28,7 +28,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ENGINE_LABEL, coolingDown, runAgent } from './engines.mjs';
+import { ENGINE_LABEL, cooldownEnd, coolingDown, runAgent } from './engines.mjs';
 import {
   CI,
   CONFIG,
@@ -80,8 +80,8 @@ function runRepo(repo) {
     if (NO_WORK) return;
     if (open > 0) return log(`[${repo.name}] ${ENGINE} PR still open — next run continues`);
     if (Date.now() - started > budgetMs) {
-      // Work is left: ask the scheduler for an immediate follow-up run (see factory.yml).
-      writeFileSync(CONTINUE_FILE, new Date().toISOString());
+      // Work is left: ask for an immediate follow-up run (see factory.yml).
+      writeFileSync(CONTINUE_FILE, String(Date.now()));
       return log(`[${repo.name}] run budget used — next run continues`);
     }
     const outcome = startNextIssue(repo, clone);
@@ -91,7 +91,13 @@ function runRepo(repo) {
   }
 }
 
+/**
+ * Written when work is left over: holds the epoch ms at which the next run should start
+ * (now, or when the usage limit resets). factory.yml waits until then and dispatches a run.
+ */
 const CONTINUE_FILE = join(HOME, 'continue');
+/** The PR this run just opened. `gh pr list` can lag behind, so it's settled explicitly. */
+let justOpened = null;
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 const engineOf = (pr) => pr.labels.find((l) => l.name.startsWith('engine:'))?.name.slice(7) ?? 'claude';
 
@@ -273,6 +279,10 @@ function advanceInFlight(repo, clone) {
     '--json',
     PR_FIELDS,
   ]).filter((p) => p.headRefName.startsWith('agent/issue-'));
+  if (justOpened && !prs.some((p) => p.number === justOpened)) {
+    prs.push(ghJson(['pr', 'view', String(justOpened), '-R', repo.slug, '--json', PR_FIELDS]));
+  }
+  justOpened = null;
 
   let open = 0;
   for (const listed of prs) {
@@ -711,6 +721,7 @@ function startNextIssue(repo, clone) {
     { allowFail: true },
   );
   log(`[${repo.name}] opened ${pr.out} for issue #${n}`);
+  justOpened = Number(pr.out.trim().split('/').pop());
   notify('Factory: PR opened', `${repo.name} #${n} ${issue.title}`.slice(0, 120));
   return 'opened';
 }
@@ -734,3 +745,6 @@ for (const repo of CONFIG.repos) {
     release();
   }
 }
+
+// Stopped by the usage limit with work left: resume right after the reset.
+if (cooldownEnd() && !existsSync(CONTINUE_FILE)) writeFileSync(CONTINUE_FILE, String(cooldownEnd()));

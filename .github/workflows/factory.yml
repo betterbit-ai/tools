@@ -44,6 +44,7 @@ jobs:
     steps:
       - name: Check secrets
         run: |
+          echo "JOB_STARTED=$(date +%s)" >> "$GITHUB_ENV"
           if [ -z "$GH_TOKEN" ]; then echo "::error::Missing secret FACTORY_GH_TOKEN (see .factory/README.md)"; exit 1; fi
           if [ -z "$CLAUDE_CODE_OAUTH_TOKEN$ANTHROPIC_API_KEY" ]; then echo "::error::Missing secret CLAUDE_CODE_OAUTH_TOKEN (or ANTHROPIC_API_KEY)"; exit 1; fi
 
@@ -106,15 +107,6 @@ jobs:
             ~/.claude/projects
           key: factory-state-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Continue in a new run
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ -f "$FACTORY_HOME/continue" ]; then
-            gh workflow run factory.yml -R "$GITHUB_REPOSITORY" --ref main
-          fi
-
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -123,3 +115,18 @@ jobs:
           path: /home/runner/factory/logs/
           retention-days: 14
           if-no-files-found: ignore
+
+      # Work left over (budget used, or paused by the usage limit): wait until it can resume —
+      # as long as this job may — then start the next run. That run waits again if still early.
+      - name: Continue in a new run
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f "$FACTORY_HOME/continue" ] || exit 0
+          resume=$(( $(cat "$FACTORY_HOME/continue") / 1000 ))
+          left=$(( JOB_STARTED + 320 * 60 - $(date +%s) ))
+          wait=$(( resume - $(date +%s) ))
+          [ "$wait" -gt "$left" ] && wait=$left
+          if [ "$wait" -gt 0 ]; then echo "Waiting ${wait}s for the usage limit to reset"; sleep "$wait"; fi
+          gh workflow run factory.yml -R "$GITHUB_REPOSITORY" --ref main

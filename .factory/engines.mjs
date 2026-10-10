@@ -208,6 +208,13 @@ export function startCooldown(message) {
   notify('Factory paused', `${ENGINE} usage limit — resumes ${new Date(until).toLocaleTimeString()}`);
 }
 
+/** When this engine's cooldown ends (epoch ms), or 0 if it isn't cooling down. */
+export function cooldownEnd() {
+  if (!existsSync(COOLDOWN_FILE)) return 0;
+  const until = Number(readFileSync(COOLDOWN_FILE, 'utf8'));
+  return until > Date.now() ? until : 0;
+}
+
 export function coolingDown() {
   if (!existsSync(COOLDOWN_FILE)) return false;
   const until = Number(readFileSync(COOLDOWN_FILE, 'utf8'));
