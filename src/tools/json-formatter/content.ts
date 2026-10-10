@@ -1,0 +1,228 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  inputLabel: 'JSON input',
+  placeholder: 'Paste or type JSON here…',
+  openFile: 'Open .json file',
+  openFileHint: 'Drop a file, click to browse, or paste with Ctrl/Cmd+V',
+  indentLabel: 'Indent',
+  indent2: '2 spaces',
+  indent4: '4 spaces',
+  indentTab: 'Tab',
+  sortKeys: 'Sort keys A–Z',
+  viewLabel: 'View',
+  viewPretty: 'Formatted',
+  viewMinified: 'Minified',
+  viewTree: 'Tree',
+  copy: 'Copy',
+  copied: 'Copied',
+  download: 'Download .json',
+  clear: 'Clear',
+  autosaved: 'Saved in this browser only',
+  valid: 'Valid JSON',
+  errorLabel: 'Syntax error',
+  jumpToError: 'Jump to error',
+  position: 'Line {line}, column {column}',
+  statBytes: 'Size (UTF-8)',
+  statCharacters: 'Characters',
+  statDepth: 'Max depth',
+  statKeys: 'Keys',
+  statValues: 'Values',
+  expand: 'Expand',
+  collapse: 'Collapse',
+  showMore: 'Show {n} more',
+  emptyOutput: 'Formatted JSON will appear here.',
+  errorEmpty: 'Enter some JSON to format.',
+  errorUnexpectedEnd: 'Unexpected end of input — a value, key or closing bracket is missing.',
+  errorUnexpectedToken: 'Unexpected character "{token}". Keys and string values need double quotes.',
+  errorExpectedKey: 'Expected a property name in double quotes, like "key".',
+  errorExpectedColon: 'Expected a ":" after the property name.',
+  errorExpectedCommaOrBrace: 'Expected a "," or a closing "}".',
+  errorExpectedCommaOrBracket: 'Expected a "," or a closing "]".',
+  errorTrailingComma: 'Trailing comma is not allowed before "}" or "]".',
+  errorUnterminatedString: 'This string is never closed with a matching ".',
+  errorInvalidEscape: 'Invalid escape sequence "\\{token}" inside a string.',
+  errorInvalidUnicodeEscape: 'Invalid \\u escape — it needs exactly 4 hex digits.',
+  errorControlCharacter:
+    'Strings can’t contain a raw control character (e.g. a literal line break) — escape it as \\n instead.',
+  errorInvalidNumber: 'Invalid number — JSON forbids leading zeros and requires a digit after "." or "e".',
+  errorTrailingData: 'Extra content found after the JSON value ended.',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'JSON Formatter — Validate, Beautify & Tree View',
+    description:
+      'Format, validate and explore JSON with a tree view and exact error line/column. Nothing is uploaded — it all runs in your browser, with no ads.',
+    h1: 'JSON Formatter',
+    tagline:
+      'Pretty-print, minify and explore JSON in a tree view — with the exact line and column of any syntax error.',
+    name: 'JSON Formatter',
+    keywords: ['json validator', 'json beautifier', 'json pretty print', 'json tree viewer', 'json minifier'],
+    howTo: [
+      'Paste or type JSON into the box, or drop a .json file onto it.',
+      'Read live size, depth and key stats, and switch the right panel between Formatted, Minified and Tree.',
+      'Pick 2-space, 4-space or tab indent for the formatted view.',
+      'Turn on “Sort keys A–Z” for an alphabetically sorted, diff-friendly copy.',
+      'If the JSON is invalid, read the plain-language error and click “Jump to error” to select the exact character.',
+      'Copy or download the result — your JSON never leaves this tab.',
+    ],
+    sections: [
+      {
+        heading: 'Why error messages differ from your browser console',
+        body: 'JavaScript engines don’t agree on JSON error messages: V8 (Chrome, Edge, Node) reports a character position and sometimes a line/column, while older Safari and Firefox builds often give only a vague description with no location at all. This tool runs its own parser that follows the JSON grammar from RFC 8259 character by character, so the line, column and plain-language reason are identical and precise no matter which browser you use.\n\nThe parser checks the same rules a strict JSON reader checks: property names and strings must use double quotes, commas may not trail before a closing bracket, and numbers may not have a leading zero (01) or a bare decimal point (1. or .5).',
+      },
+      {
+        heading: 'Common reasons JSON fails to parse',
+        body: 'Trailing comma: {"a": 1, "b": 2,} — remove the comma before }. Single quotes: {\'a\': 1} — JSON requires double quotes for both keys and string values. Unquoted keys: {a: 1} — wrap the key in quotes. Comments: JSON has no // or /* */ syntax at all; if your data has comments it is JSON5 or JSONC, not plain JSON, and needs a different parser. Values that only exist in JavaScript — a missing property, an infinite number, or "not a number" — are also not valid JSON; use null or a string instead.',
+      },
+      {
+        heading: 'Formatted, minified or tree — which to use',
+        body: 'Formatted (pretty-printed) JSON is easiest to read and review in a pull request. Minified JSON strips all whitespace, which typically shrinks a response by 10–20% and is what you’d actually send over a network or store in a database. Tree view is best for exploring a deeply nested API response: collapse branches you don’t care about, and large arrays load the first 50 items with a “Show more” button so a 10,000-item array doesn’t freeze the tab.',
+      },
+      {
+        heading: 'Nothing is uploaded, and there is no artificial size cap',
+        body: 'Parsing, sorting, formatting and the tree view all run with your browser’s built-in JSON engine — the same native code used by JSON.parse in your DevTools console — so performance matches what the browser itself can do, typically tens of megabytes before memory becomes the limit. No file or text is ever sent to a server, so pasting a real API response with tokens or personal data in it is safe.',
+      },
+    ],
+    faq: [
+      {
+        q: 'Why do I get a trailing comma error?',
+        a: 'Standard JSON (RFC 8259) does not allow a comma right before a closing "}" or "]". {"a": 1, "b": 2,} is invalid; remove the last comma so it reads {"a": 1, "b": 2}. Some languages (like JavaScript object literals) allow trailing commas, which is a common source of confusion.',
+      },
+      {
+        q: 'Is it safe to paste an API response that contains a token or personal data?',
+        a: 'Yes. This tool runs entirely in your browser using JavaScript’s built-in JSON engine — nothing you paste, drop or type is ever sent to a server. You can verify this yourself in your browser’s network tab: no requests fire while you use the tool.',
+      },
+      {
+        q: 'What is the difference between JSON and JSON5 or JSONC?',
+        a: 'Plain JSON (RFC 8259) has no comments, no trailing commas, and requires double-quoted keys. JSON5 and JSONC (used by some config files, like VS Code’s settings.json) relax those rules to allow comments, trailing commas and unquoted keys. This tool validates strict JSON; a JSON5/JSONC file will need its comments removed first.',
+      },
+      {
+        q: 'Can I sort JSON object keys alphabetically?',
+        a: 'Yes — turn on “Sort keys A–Z”. It recursively sorts every object’s keys (ordinal, A–Z) while leaving array order untouched, which is useful for producing a stable, diff-friendly copy of two JSON files that only differ in key order.',
+      },
+      {
+        q: 'How large a JSON file can this handle?',
+        a: 'Parsing and formatting use the browser’s native JSON engine, so it scales to tens of megabytes on a typical laptop before memory becomes the limiting factor. The tree view renders large arrays and objects in batches of 50 items with a “Show more” button, so even a 100,000-item array stays scrollable instead of freezing the tab.',
+      },
+      {
+        q: 'Does JSON support comments?',
+        a: 'No. The JSON specification (RFC 8259 / ECMA-404) has no comment syntax. If you need comments, you are likely working with JSON5 or JSONC (a superset used by tools like VS Code and TypeScript’s tsconfig.json), which require a different, more permissive parser.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: 'JSON 포맷터 — JSON 정렬·검증·트리 뷰',
+    description:
+      'JSON을 정렬(pretty print)하고 검증하고 트리 뷰로 살펴보세요. 오류 위치(줄·열)를 정확히 보여줍니다. 서버 업로드 없음, 광고 없음, 모두 브라우저에서 처리됩니다.',
+    h1: 'JSON 포맷터',
+    tagline: 'JSON을 정렬·압축하고 트리 뷰로 탐색합니다. 오류가 있으면 정확한 줄·열 번호를 알려줍니다.',
+    name: 'JSON 포맷터',
+    keywords: ['json 정렬', 'json 검증', 'json 뷰어', 'json 압축', 'json 트리'],
+    howTo: [
+      '입력창에 JSON을 붙여넣거나 직접 입력합니다. .json 파일을 끌어다 놓아도 됩니다.',
+      '오른쪽에서 크기·깊이·키 개수 통계를 실시간으로 확인하고, 정렬·압축·트리 보기를 전환합니다.',
+      '정렬 보기에서는 들여쓰기를 2칸, 4칸, 탭 중에서 선택합니다.',
+      '"키 정렬(A-Z)"을 켜면 키를 알파벳순으로 정렬한 사본을 만들어 두 JSON을 비교하기 쉽게 만듭니다.',
+      'JSON이 잘못됐다면 이해하기 쉬운 오류 설명을 읽고 "오류로 이동"을 눌러 문제 글자로 바로 이동합니다.',
+      '결과를 복사하거나 다운로드합니다. 입력한 JSON은 이 탭을 벗어나지 않습니다.',
+    ],
+    sections: [
+      {
+        heading: '왜 브라우저 콘솔의 오류 메시지와 다를까',
+        body: '자바스크립트 엔진마다 JSON 오류 메시지가 다릅니다. V8(크롬, 엣지, Node.js)은 문자 위치나 줄·열을 알려주지만, 일부 사파리·파이어폭스 버전은 위치 정보 없이 모호한 설명만 보여줍니다. 이 도구는 RFC 8259 JSON 문법을 한 글자씩 직접 검사하는 자체 파서를 사용하므로, 어떤 브라우저에서 써도 정확히 같은 줄·열 번호와 이해하기 쉬운 이유를 보여줍니다.\n\n이 파서는 엄격한 JSON 리더와 동일한 규칙을 검사합니다: 키와 문자열 값은 반드시 큰따옴표를 써야 하고, 닫는 괄호 앞에 쉼표가 남아 있으면 안 되며, 숫자는 앞에 0을 붙이거나(01) 소수점만 단독으로 쓸 수(1. 또는 .5) 없습니다.',
+      },
+      {
+        heading: 'JSON 파싱이 실패하는 흔한 이유',
+        body: '쉼표가 남은 경우: {"a": 1, "b": 2,} — 닫는 중괄호 앞의 쉼표를 지워야 합니다. 작은따옴표: {\'a\': 1} — JSON은 키와 문자열 값 모두 큰따옴표만 허용합니다. 따옴표 없는 키: {a: 1} — 키를 따옴표로 감싸야 합니다. 주석: 표준 JSON에는 // 나 /* */ 같은 주석 문법이 전혀 없습니다. 데이터에 주석이 있다면 그것은 JSON5나 JSONC이지 순수 JSON이 아니므로 다른 파서가 필요합니다. "속성 없음", "무한대", "숫자 아님" 같은 자바스크립트 전용 값도 JSON으로는 유효하지 않으며, 대신 null이나 문자열을 써야 합니다.',
+      },
+      {
+        heading: '정렬, 압축, 트리 중 무엇을 써야 할까',
+        body: '정렬된(pretty-print) JSON은 코드 리뷰나 읽기에 가장 편합니다. 압축된 JSON은 모든 공백을 제거해 보통 용량을 10~20% 줄이는데, 이것이 실제로 네트워크 전송이나 데이터베이스 저장에 쓰이는 형태입니다. 트리 뷰는 깊게 중첩된 API 응답을 탐색할 때 가장 유용합니다. 관심 없는 가지는 접어두고, 큰 배열은 처음 50개 항목만 불러온 뒤 "더 보기" 버튼으로 이어서 불러오므로 10,000개짜리 배열도 탭을 멈추게 하지 않습니다.',
+      },
+      {
+        heading: '업로드 없음, 임의의 용량 제한 없음',
+        body: '파싱, 정렬, 포맷팅, 트리 뷰 모두 브라우저에 내장된 JSON 엔진으로 처리됩니다. 개발자도구 콘솔에서 JSON.parse를 실행할 때와 같은 네이티브 코드를 쓰므로, 성능은 메모리가 한계에 이르기 전까지(보통 수십 메가바이트) 브라우저 자체의 처리 속도와 같습니다. 어떤 파일이나 텍스트도 서버로 전송되지 않으므로, 토큰이나 개인정보가 담긴 실제 API 응답을 붙여넣어도 안전합니다.',
+      },
+    ],
+    faq: [
+      {
+        q: '쉼표 관련 오류(trailing comma)는 왜 나오나요?',
+        a: '표준 JSON(RFC 8259)은 닫는 "}" 나 "]" 바로 앞에 쉼표를 허용하지 않습니다. {"a": 1, "b": 2,}는 유효하지 않으며, 마지막 쉼표를 지워 {"a": 1, "b": 2}로 써야 합니다. 자바스크립트 객체 리터럴 등 일부 언어는 이런 쉼표를 허용하기 때문에 자주 헷갈리는 부분입니다.',
+      },
+      {
+        q: '토큰이나 개인정보가 담긴 API 응답을 붙여넣어도 안전한가요?',
+        a: '네. 이 도구는 자바스크립트에 내장된 JSON 엔진을 사용해 전적으로 브라우저 안에서 동작합니다. 붙여넣거나 입력한 내용은 어디에도 전송되지 않으며, 브라우저 개발자도구의 네트워크 탭을 열어 직접 확인할 수 있습니다.',
+      },
+      {
+        q: 'JSON과 JSON5·JSONC는 무엇이 다른가요?',
+        a: '표준 JSON(RFC 8259)은 주석이나 쉼표 남김을 허용하지 않고, 키는 반드시 큰따옴표로 감싸야 합니다. JSON5와 JSONC(VS Code의 settings.json 등에서 사용)는 이 규칙을 완화해 주석, 남는 쉼표, 따옴표 없는 키를 허용합니다. 이 도구는 엄격한 표준 JSON을 검사하므로, JSON5·JSONC 파일은 먼저 주석을 지워야 합니다.',
+      },
+      {
+        q: 'JSON 키를 알파벳순으로 정렬할 수 있나요?',
+        a: '네. "키 정렬(A-Z)"을 켜면 모든 객체의 키를 재귀적으로 알파벳순(A-Z)으로 정렬하고 배열 순서는 그대로 둡니다. 키 순서만 다른 두 JSON 파일을 비교할 때, 안정적이고 diff하기 쉬운 사본을 만드는 데 유용합니다.',
+      },
+      {
+        q: '얼마나 큰 JSON 파일까지 처리할 수 있나요?',
+        a: '파싱과 포맷팅은 브라우저의 네이티브 JSON 엔진을 사용하므로 일반적인 노트북에서 메모리가 한계에 이르기 전까지(보통 수십 메가바이트) 처리할 수 있습니다. 트리 뷰는 큰 배열과 객체를 50개 단위로 나눠 "더 보기" 버튼으로 불러오므로, 항목이 100,000개인 배열도 탭이 멈추지 않고 계속 스크롤할 수 있습니다.',
+      },
+      {
+        q: 'JSON에 주석을 쓸 수 있나요?',
+        a: '아니요. JSON 표준(RFC 8259 / ECMA-404)에는 주석 문법이 전혀 없습니다. 주석이 필요하다면 VS Code나 TypeScript의 tsconfig.json처럼 JSON을 확장한 JSON5나 JSONC를 쓰는 것이며, 이런 파일은 더 관대한 별도의 파서가 필요합니다.',
+      },
+    ],
+    ui: {
+      inputLabel: '입력할 JSON',
+      placeholder: '여기에 JSON을 입력하거나 붙여넣으세요…',
+      openFile: '.json 파일 열기',
+      openFileHint: '파일을 끌어다 놓거나 클릭하세요. Ctrl/Cmd+V로 붙여넣기도 됩니다',
+      indentLabel: '들여쓰기',
+      indent2: '2칸',
+      indent4: '4칸',
+      indentTab: '탭',
+      sortKeys: '키 정렬 (A-Z)',
+      viewLabel: '보기',
+      viewPretty: '정렬',
+      viewMinified: '압축',
+      viewTree: '트리',
+      copy: '복사',
+      copied: '복사됨',
+      download: '.json 다운로드',
+      clear: '지우기',
+      autosaved: '이 브라우저에만 저장됨',
+      valid: '유효한 JSON',
+      errorLabel: '구문 오류',
+      jumpToError: '오류로 이동',
+      position: '{line}번째 줄, {column}번째 칸',
+      statBytes: '크기 (UTF-8)',
+      statCharacters: '글자수',
+      statDepth: '최대 깊이',
+      statKeys: '키 개수',
+      statValues: '값 개수',
+      expand: '펼치기',
+      collapse: '접기',
+      showMore: '{n}개 더 보기',
+      emptyOutput: '정렬된 JSON이 여기에 표시됩니다.',
+      errorEmpty: 'JSON을 입력하세요.',
+      errorUnexpectedEnd: '입력이 예기치 않게 끝났습니다 — 값, 키 또는 닫는 괄호가 빠졌습니다.',
+      errorUnexpectedToken: '예기치 않은 문자 "{token}"입니다. 키와 문자열 값은 큰따옴표를 써야 합니다.',
+      errorExpectedKey: '큰따옴표로 감싼 속성 이름이 필요합니다. 예: "key"',
+      errorExpectedColon: '속성 이름 뒤에 ":"가 와야 합니다.',
+      errorExpectedCommaOrBrace: '","나 닫는 "}"가 와야 합니다.',
+      errorExpectedCommaOrBracket: '","나 닫는 "]"가 와야 합니다.',
+      errorTrailingComma: '"}"나 "]" 바로 앞에는 쉼표를 쓸 수 없습니다.',
+      errorUnterminatedString: '이 문자열이 짝이 되는 "로 닫히지 않았습니다.',
+      errorInvalidEscape: '문자열 안의 이스케이프 시퀀스 "\\{token}"이 올바르지 않습니다.',
+      errorInvalidUnicodeEscape: '\\u 이스케이프가 올바르지 않습니다 — 16진수 4자리가 정확히 필요합니다.',
+      errorControlCharacter:
+        '문자열에는 줄바꿈 같은 제어 문자를 그대로 쓸 수 없습니다 — \\n처럼 이스케이프해야 합니다.',
+      errorInvalidNumber:
+        '숫자가 올바르지 않습니다 — JSON은 앞자리 0이나 "."·"e" 뒤에 숫자가 없는 형식을 허용하지 않습니다.',
+      errorTrailingData: 'JSON 값이 끝난 뒤에 남은 내용이 있습니다.',
+    },
+  },
+};

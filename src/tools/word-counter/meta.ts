@@ -24,6 +24,7 @@ export const meta: ToolMeta = {
   related: [
     'case-converter',
     'text-diff',
+    'json-formatter',
     'timer',
     'image-resizer',
     'image-compressor',
