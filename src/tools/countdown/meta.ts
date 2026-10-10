@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its FAQ states that it ignores hours and minutes and does not save events, so it cannot show time remaining to a specific moment or reopen a selected event from a link. Betterbit includes optional local time and a URL-based event state. (Strength: its date-only explanation is concise.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'pomodoro-timer'],
+  related: ['timer', 'stopwatch', 'pomodoro-timer', 'date-calculator'],
 };
