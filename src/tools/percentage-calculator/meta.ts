@@ -49,5 +49,6 @@ export const meta: ToolMeta = {
     'compound-interest',
     'scientific-calculator',
     'length-converter',
+    'weight-converter',
   ],
 };
