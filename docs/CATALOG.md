@@ -131,7 +131,7 @@
 
 | slug                    | 도구           | 핵심 키워드                                 | Edge 아이디어                 | P   | 상태 |
 | ----------------------- | -------------- | ------------------------------------------- | ----------------------------- | --- | ---- |
-| length-converter        | 길이 변환      | cm to inches, feet to meters / cm 인치 변환 | 키(ft'in") 입력, 빠른 표      | P0  | todo |
+| length-converter        | 길이 변환      | cm to inches, feet to meters / cm 인치 변환 | 키(ft'in") 입력, 빠른 표      | P0  | live |
 | weight-converter        | 무게 변환      | kg to lbs / kg 파운드                       | 근, 돈 등 한국 단위           | P0  | todo |
 | temperature-converter   | 온도 변환      | celsius to fahrenheit / 섭씨 화씨           | 요리 온도 표                  | P0  | todo |
 | area-converter          | 넓이 변환      | sq ft to m2 / 평 계산                       | 평 ↔ ㎡ 강조                  | P1  | todo |

@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its form requires a separate “변환” action and renders the destination as a template result; the visible interface does not surface a date-change label or DST-transition warning. Betterbit updates results live and shows both of those scheduling checks. (Strength: it offers a multilingual IANA-zone reference.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'countdown', 'pomodoro-timer'],
+  related: ['timer', 'stopwatch', 'countdown', 'pomodoro-timer', 'length-converter'],
 };
