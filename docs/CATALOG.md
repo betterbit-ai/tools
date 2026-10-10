@@ -45,7 +45,7 @@
 | merge-pdf        | PDF 합치기       | merge pdf / pdf 합치기         | 업로드 없음(기밀 문서), 드래그 순서 정렬, 무제한 | P0  | live |
 | split-pdf        | PDF 나누기       | split pdf / pdf 분할           | 범위 지정, 페이지별 추출, ZIP                    | P0  | live |
 | compress-pdf     | PDF 압축         | compress pdf / pdf 용량 줄이기 | 이미지 재압축 수준 선택, 업로드 없음             | P0  | live |
-| pdf-to-jpg       | PDF → 이미지     | pdf to jpg / pdf jpg 변환      | 해상도 선택, 페이지 선택, ZIP                    | P0  | todo |
+| pdf-to-jpg       | PDF → 이미지     | pdf to jpg / pdf jpg 변환      | 해상도 선택, 페이지 선택, ZIP                    | P0  | live |
 | rotate-pdf       | PDF 회전         | rotate pdf                     | 페이지별 회전 썸네일                             | P1  | todo |
 | delete-pdf-pages | PDF 페이지 삭제  | delete pages from pdf          | 썸네일 클릭 삭제                                 | P1  | todo |
 | reorder-pdf      | PDF 페이지 순서  | rearrange pdf pages            | 드래그 정렬                                      | P1  | todo |
