@@ -121,6 +121,12 @@ export function NumberInput(
   );
 }
 
+/** Single-line text input using the shared token-based input treatment. */
+export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  const { class: className, type = 'text', ...rest } = props;
+  return <input type={type} class={cx(inputClass, className as string)} {...rest} />;
+}
+
 export function Select<T extends string>(props: {
   value: T;
   onValue: (v: T) => void;
