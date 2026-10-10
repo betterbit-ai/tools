@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         'Uploads to a server in Germany and auto-deletes copies only after one hour, meaning the file is held remotely in the meantime even though the site is ad-supported rather than paywalled.',
     },
   ],
-  related: ['merge-pdf', 'image-to-pdf'],
+  related: ['merge-pdf', 'compress-pdf', 'image-to-pdf'],
 };
