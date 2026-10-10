@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its guide describes an .xlsx lap download and a 1/100-second display; Betterbit offers an interoperable CSV download and visibly shows 1/1,000-second digits. (Strength: it has theme choices and fastest/slowest-lap highlighting.)',
     },
   ],
-  related: ['timer', 'word-counter', 'pomodoro-timer'],
+  related: ['timer', 'word-counter', 'pomodoro-timer', 'countdown'],
 };
