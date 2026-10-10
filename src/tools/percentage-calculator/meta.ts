@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         '네 가지 유형을 한 화면에 보여주지만 계산식이 "기준값 × (1 - 할인율)"처럼 짧은 수식 한 줄로만 표기돼 내가 입력한 숫자가 어디에 대입됐는지 바로 보이지 않고, 용도가 불분명한 "Payment options" 섹션이 계산기 사이에 끼어 있다. Betterbit는 입력한 숫자를 그대로 대입한 계산식을 각 결과 아래에 보여준다. (장점: 할인가 계산을 같은 화면에서 바로 이어서 보여준다.)',
     },
   ],
-  related: ['date-calculator', 'age-calculator', 'word-counter'],
+  related: ['date-calculator', 'age-calculator', 'word-counter', 'bmi-calculator'],
 };
