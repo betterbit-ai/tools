@@ -61,18 +61,33 @@ const CLAIM_TTL_MS = 12 * 3_600_000;
 const PROTECTED_PATHS = ['.factory/', '.github/', '.claude/settings'];
 const LOG_HINT = CI ? 'Logs: see the `factory-logs` artifact of the run above.' : '';
 
+/**
+ * One run keeps going until it runs out of work, budget or usage: settle this engine's PR
+ * (wait for CI → merge, or fix), then build the next issue, and repeat.
+ * The budget only gates *starting* a session; a session already running may finish.
+ */
 function runRepo(repo) {
+  const started = Date.now();
+  const budgetMs = Number(process.env.FACTORY_BUDGET_MIN || CONFIG.session.runBudgetMinutes || 30) * 60_000;
   let clone = syncClone(repo);
   recoverInterrupted(repo, clone);
-  if (ROLE === 'full') {
-    advanceInFlight(repo, clone);
+  let failures = 0;
+  for (;;) {
+    const open = advanceInFlight(repo, clone);
     clone = syncClone(repo); // pick up anything merged above
-    planRepo(repo);
+    if (ROLE === 'full') planRepo(repo);
+    if (NO_WORK) return;
+    if (open > 0) return log(`[${repo.name}] ${ENGINE} PR still open — next run continues`);
+    if (Date.now() - started > budgetMs) return log(`[${repo.name}] run budget used — next run continues`);
+    const outcome = startNextIssue(repo, clone);
+    if (outcome === 'failed' && ++failures >= 2) return log(`[${repo.name}] two failed sessions in a row — stopping`);
+    if (outcome === 'opened') failures = 0;
+    if (outcome === 'stop') return;
   }
-  if (NO_WORK) return;
-  if (hasOpenPr(repo)) return log(`[${repo.name}] ${ENGINE} already has a PR in flight — waiting`);
-  startNextIssue(repo, clone);
 }
+
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const engineOf = (pr) => pr.labels.find((l) => l.name.startsWith('engine:'))?.name.slice(7) ?? 'claude';
 
 /** The most recent factory claim on an issue: { worker, at } or null. */
 function claimOf(comments) {
@@ -87,15 +102,6 @@ function claimOf(comments) {
 function claimedByOther(comments) {
   const c = claimOf(comments);
   return Boolean(c && c.worker !== WORKER && Date.now() - c.at < CLAIM_TTL_MS);
-}
-
-/** Open agent PR built by this engine (PRs from before engine labels count as claude). */
-function hasOpenPr(repo) {
-  const prs = ghJson(['pr', 'list', '-R', repo.slug, '--state', 'open', '--label', 'agent:review', '--json', 'labels']);
-  return prs.some((p) => {
-    const engine = p.labels.find((l) => l.name.startsWith('engine:'))?.name.slice(7) ?? 'claude';
-    return engine === ENGINE;
-  });
 }
 
 /**
@@ -236,6 +242,16 @@ function clearResume(repo, issue) {
 
 /* ───────────── in-flight PRs ───────────── */
 
+const PR_FIELDS = 'number,headRefName,mergeable,statusCheckRollup,createdAt,comments,title,labels';
+/** How long a run waits for CI on its own PR before leaving it to the next run. */
+const CHECKS_WAIT_MS = 25 * 60_000;
+/** The full factory also settles other engines' PRs left this long (e.g. the laptop went to sleep). */
+const ORPHAN_PR_MS = 2 * 3_600_000;
+
+/**
+ * Settle open agent PRs: this engine's (waiting for CI), plus orphaned ones if we're the full
+ * factory. Returns how many of this engine's PRs are still open afterwards.
+ */
 function advanceInFlight(repo, clone) {
   const prs = ghJson([
     'pr',
@@ -249,82 +265,57 @@ function advanceInFlight(repo, clone) {
     '--limit',
     '20',
     '--json',
-    'number,headRefName,mergeable,statusCheckRollup,createdAt,comments,title',
+    PR_FIELDS,
   ]).filter((p) => p.headRefName.startsWith('agent/issue-'));
 
-  let waiting = false;
-  for (const pr of prs) {
-    const issue = Number(pr.headRefName.split('-').pop());
-    const checks = pr.statusCheckRollup ?? [];
-    const pending = checks.some(
-      (c) => (c.status && c.status !== 'COMPLETED') || c.state === 'PENDING' || c.state === 'EXPECTED',
-    );
-    const failed = checks.filter((c) =>
-      ['FAILURE', 'TIMED_OUT', 'CANCELLED', 'ACTION_REQUIRED', 'STARTUP_FAILURE', 'ERROR'].includes(
-        c.conclusion || c.state,
-      ),
-    );
-    const ageMin = (Date.now() - new Date(pr.createdAt).getTime()) / 60_000;
-
-    if ((checks.length === 0 && ageMin < 15) || pending || pr.mergeable === 'UNKNOWN') {
-      log(
-        `[${repo.name}] PR #${pr.number} waiting (checks=${checks.length}, pending=${pending}, mergeable=${pr.mergeable})`,
-      );
-      waiting = true;
-      continue;
-    }
-
-    if (failed.length === 0 && pr.mergeable === 'MERGEABLE' && checks.length > 0) {
-      const files = gh(['pr', 'diff', String(pr.number), '-R', repo.slug, '--name-only']).out.split('\n');
-      const protectedHits = files.filter((f) => PROTECTED_PATHS.some((p) => f.startsWith(p)));
-      if (protectedHits.length) {
-        log(`[${repo.name}] PR #${pr.number} touches protected paths → agent:human`);
-        gh(
-          [
-            'pr',
-            'edit',
-            String(pr.number),
-            '-R',
-            repo.slug,
-            '--remove-label',
-            'agent:review',
-            '--add-label',
-            'agent:human',
-          ],
-          { allowFail: true },
-        );
-        gh(
-          [
-            'pr',
-            'comment',
-            String(pr.number),
-            '-R',
-            repo.slug,
-            '--body',
-            `🏭 Not auto-merging: this PR changes automation files (${protectedHits.map((f) => `\`${f}\``).join(', ')}). A human must review and merge it.`,
-          ],
-          { allowFail: true },
-        );
-        notify('Factory: needs human', `${repo.name} PR #${pr.number} touches automation files`);
+  let open = 0;
+  for (const listed of prs) {
+    const own = engineOf(listed) === ENGINE;
+    const orphan = ROLE === 'full' && Date.now() - Date.parse(listed.createdAt) > ORPHAN_PR_MS;
+    if (!own && !orphan) continue;
+    const deadline = own ? Date.now() + CHECKS_WAIT_MS : Date.now();
+    log(`[${repo.name}] settling PR #${listed.number}${own ? '' : ' (orphaned)'}`);
+    let outcome;
+    for (;;) {
+      const pr = ghJson(['pr', 'view', String(listed.number), '-R', repo.slug, '--json', PR_FIELDS]);
+      outcome = stepPr(repo, clone, pr);
+      if ((outcome === 'waiting' || outcome === 'fixed') && Date.now() < deadline) {
+        sleep(30_000);
         continue;
       }
-      const merged = gh(['pr', 'merge', String(pr.number), '-R', repo.slug, '--squash', '--delete-branch'], {
-        allowFail: true,
-      });
-      if (merged.ok) {
-        log(`[${repo.name}] merged PR #${pr.number} (issue #${issue})`);
-        gh(['issue', 'edit', String(issue), '-R', repo.slug, '--remove-label', 'agent:review'], { allowFail: true });
-        removeWorktree(repo, clone, issue);
-        notify('Factory: merged', `${repo.name} #${pr.number} ${pr.title}`.slice(0, 120));
-        continue;
-      }
-      log(`[${repo.name}] merge of PR #${pr.number} failed: ${merged.err}`);
+      break;
     }
+    if (own && ['waiting', 'fixed', 'limited'].includes(outcome)) open++;
+  }
+  return open;
+}
 
-    // Needs a fix: failed checks, conflict, or no checks reported at all.
-    const attempts = pr.comments.filter((c) => c.body.includes(FIX_MARKER)).length;
-    if (attempts >= CONFIG.session.maxFixAttempts) {
-      log(`[${repo.name}] PR #${pr.number} exhausted fix attempts → agent:failed`);
+/**
+ * One look at a PR: 'waiting' (CI running), 'merged', 'human' / 'failed' (handed off),
+ * 'fixed' (a fix session ran) or 'limited' (needs a fix but the engine is cooling down).
+ */
+function stepPr(repo, clone, pr) {
+  const issue = Number(pr.headRefName.split('-').pop());
+  const checks = pr.statusCheckRollup ?? [];
+  const pending = checks.some(
+    (c) => (c.status && c.status !== 'COMPLETED') || c.state === 'PENDING' || c.state === 'EXPECTED',
+  );
+  const failed = checks.filter((c) =>
+    ['FAILURE', 'TIMED_OUT', 'CANCELLED', 'ACTION_REQUIRED', 'STARTUP_FAILURE', 'ERROR'].includes(
+      c.conclusion || c.state,
+    ),
+  );
+  const ageMin = (Date.now() - new Date(pr.createdAt).getTime()) / 60_000;
+
+  if ((checks.length === 0 && ageMin < 15) || pending || pr.mergeable === 'UNKNOWN') {
+    return 'waiting';
+  }
+
+  if (failed.length === 0 && pr.mergeable === 'MERGEABLE' && checks.length > 0) {
+    const files = gh(['pr', 'diff', String(pr.number), '-R', repo.slug, '--name-only']).out.split('\n');
+    const protectedHits = files.filter((f) => PROTECTED_PATHS.some((p) => f.startsWith(p)));
+    if (protectedHits.length) {
+      log(`[${repo.name}] PR #${pr.number} touches protected paths → agent:human`);
       gh(
         [
           'pr',
@@ -335,43 +326,88 @@ function advanceInFlight(repo, clone) {
           '--remove-label',
           'agent:review',
           '--add-label',
-          'agent:failed',
+          'agent:human',
         ],
         { allowFail: true },
       );
       gh(
         [
-          'issue',
-          'edit',
-          String(issue),
-          '-R',
-          repo.slug,
-          '--remove-label',
-          'agent:review',
-          '--add-label',
-          'agent:failed',
-        ],
-        { allowFail: true },
-      );
-      gh(
-        [
-          'issue',
+          'pr',
           'comment',
-          String(issue),
+          String(pr.number),
           '-R',
           repo.slug,
           '--body',
-          `🏭 Factory gave up on PR #${pr.number} after ${attempts} fix attempts. A human should take a look, then relabel \`agent:ready\` (and close the PR) to retry from scratch.`,
+          `🏭 Not auto-merging: this PR changes automation files (${protectedHits.map((f) => `\`${f}\``).join(', ')}). A human must review and merge it.`,
         ],
         { allowFail: true },
       );
-      notify('Factory: needs human', `${repo.name} PR #${pr.number}`);
-      continue;
+      notify('Factory: needs human', `${repo.name} PR #${pr.number} touches automation files`);
+      return 'human';
     }
-    if (!coolingDown()) fixPr(repo, clone, pr, issue, failed, attempts);
-    waiting = true;
+    const merged = gh(['pr', 'merge', String(pr.number), '-R', repo.slug, '--squash', '--delete-branch'], {
+      allowFail: true,
+    });
+    if (merged.ok) {
+      log(`[${repo.name}] merged PR #${pr.number} (issue #${issue})`);
+      gh(['issue', 'edit', String(issue), '-R', repo.slug, '--remove-label', 'agent:review'], { allowFail: true });
+      removeWorktree(repo, clone, issue);
+      notify('Factory: merged', `${repo.name} #${pr.number} ${pr.title}`.slice(0, 120));
+      return 'merged';
+    }
+    log(`[${repo.name}] merge of PR #${pr.number} failed: ${merged.err}`);
   }
-  return waiting ? 'waiting' : 'idle';
+
+  // Needs a fix: failed checks, conflict, or no checks reported at all.
+  const attempts = pr.comments.filter((c) => c.body.includes(FIX_MARKER)).length;
+  if (attempts >= CONFIG.session.maxFixAttempts) {
+    log(`[${repo.name}] PR #${pr.number} exhausted fix attempts → agent:failed`);
+    gh(
+      [
+        'pr',
+        'edit',
+        String(pr.number),
+        '-R',
+        repo.slug,
+        '--remove-label',
+        'agent:review',
+        '--add-label',
+        'agent:failed',
+      ],
+      { allowFail: true },
+    );
+    gh(
+      [
+        'issue',
+        'edit',
+        String(issue),
+        '-R',
+        repo.slug,
+        '--remove-label',
+        'agent:review',
+        '--add-label',
+        'agent:failed',
+      ],
+      { allowFail: true },
+    );
+    gh(
+      [
+        'issue',
+        'comment',
+        String(issue),
+        '-R',
+        repo.slug,
+        '--body',
+        `🏭 Factory gave up on PR #${pr.number} after ${attempts} fix attempts. A human should take a look, then relabel \`agent:ready\` (and close the PR) to retry from scratch.`,
+      ],
+      { allowFail: true },
+    );
+    notify('Factory: needs human', `${repo.name} PR #${pr.number}`);
+    return 'failed';
+  }
+  if (coolingDown()) return 'limited';
+  log(`[${repo.name}] PR #${pr.number} needs a fix (attempt ${attempts + 1})`);
+  return fixPr(repo, clone, pr, issue, failed, attempts) ? 'fixed' : 'limited';
 }
 
 function fixPr(repo, clone, pr, issue, failed, attempts) {
@@ -421,7 +457,10 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
     DETAILS: details || '(none)',
   });
   const session = runAgent(text, wt, logFile, { gitDir: join(clone, '.git') });
-  if (session.limited) return log(`[${repo.name}] fix for PR #${pr.number} paused by usage limit`);
+  if (session.limited) {
+    log(`[${repo.name}] fix for PR #${pr.number} paused by usage limit`);
+    return false;
+  }
   const after = sh('git', ['-C', wt, 'rev-parse', 'HEAD']).out;
 
   if (after !== before) {
@@ -441,6 +480,7 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
     ],
     { allowFail: true },
   );
+  return true;
 }
 
 /* ───────────── new work ───────────── */
@@ -487,13 +527,16 @@ function startNextIssue(repo, clone) {
     .sort((a, b) => priorityOf(a.labels) - priorityOf(b.labels) || a.number - b.number);
 
   const issue = issues[0];
-  if (!issue) return log(`[${repo.name}] no ready issues`);
-  if (coolingDown()) return;
+  if (!issue) {
+    log(`[${repo.name}] no ready issues`);
+    return 'stop';
+  }
+  if (coolingDown()) return 'stop';
 
   const n = issue.number;
   const branch = `agent/issue-${n}`;
   const logFile = join(DIRS.logs, `${repo.name}-issue${n}-${stamp()}.log`);
-  if (!claim(repo, n)) return;
+  if (!claim(repo, n)) return 'stop';
   log(`[${repo.name}] starting issue #${n} with ${ENGINE_LABEL}: ${issue.title}`);
   gh([
     'issue',
@@ -537,6 +580,7 @@ function startNextIssue(repo, clone) {
     );
     removeWorktree(repo, clone, n);
     notify('Factory: failed', `${repo.name} #${n} ${why}`.slice(0, 120));
+    return 'failed';
   };
 
   const saved = loadResume(repo, n);
@@ -614,7 +658,8 @@ function startNextIssue(repo, clone) {
       ],
       { allowFail: true },
     );
-    return log(`[${repo.name}] issue #${n} paused (usage limit), will resume`);
+    log(`[${repo.name}] issue #${n} paused (usage limit), will resume`);
+    return 'stop';
   }
   clearResume(repo, n);
 
@@ -661,6 +706,7 @@ function startNextIssue(repo, clone) {
   );
   log(`[${repo.name}] opened ${pr.out} for issue #${n}`);
   notify('Factory: PR opened', `${repo.name} #${n} ${issue.title}`.slice(0, 120));
+  return 'opened';
 }
 
 /* ───────────── main (last, so every const above is initialized) ───────────── */

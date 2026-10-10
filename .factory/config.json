@@ -17,7 +17,8 @@
   ],
   "session": {
     "timeoutMinutes": 90,
-    "maxFixAttempts": 2
+    "maxFixAttempts": 2,
+    "runBudgetMinutes": 30
   },
   "allowedTools": [
     "Read",
