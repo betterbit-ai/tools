@@ -133,6 +133,12 @@ export const meta: ToolMeta = {
         '페이지 제목은 "즉시 환산"이라고 안내하지만 실제로는 값 입력 → 단위 선택 → "변환하기" 버튼 클릭까지 3단계가 필요하고, 실용 팁에서 "한약재 1근 = 375g(약 1냥×10)"이라고 언급하면서도 변환 표에는 근을 600g 한 가지로만 제공한다. Betterbit는 버튼 없이 입력 즉시 변환되고, 두 근 값을 모두 단위로 제공한다.',
     },
   ],
-  related: ['length-converter', 'bmi-calculator', 'percentage-calculator', 'scientific-calculator'],
+  related: [
+    'length-converter',
+    'bmi-calculator',
+    'percentage-calculator',
+    'scientific-calculator',
+    'temperature-converter',
+  ],
   variants,
 };
