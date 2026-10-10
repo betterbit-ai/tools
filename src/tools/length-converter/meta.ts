@@ -133,6 +133,12 @@ export const meta: ToolMeta = {
         '피트+인치 조합 변환이 메인 변환기와 분리된 "Combined Unit Conversion" 섹션과 정적 표로만 제공되어, 하나의 입력창에서 cm·m·km·인치·피트 등 다른 단위로 바로 전환할 수 없다. Betterbit는 같은 패널에서 단위를 바로 바꾸고 키(피트+인치) 변환도 함께 보여준다. (Strength: 변환표를 PDF/JPG로 내려받을 수 있다.)',
     },
   ],
-  related: ['bmi-calculator', 'time-zone-converter', 'scientific-calculator', 'percentage-calculator'],
+  related: [
+    'bmi-calculator',
+    'time-zone-converter',
+    'scientific-calculator',
+    'percentage-calculator',
+    'weight-converter',
+  ],
   variants,
 };
