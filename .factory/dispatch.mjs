@@ -11,7 +11,14 @@
  *   2. Refill the queue from docs/CATALOG.md if it's low (plan.mjs).
  *   3. Take the highest-priority `agent:ready` issue → worktree → Claude session → push → PR.
  *
- * Only one PR is in flight per repo, so changes land sequentially and rarely conflict.
+ * Each engine keeps at most one PR in flight, so changes land in order and rarely conflict.
+ *
+ * Several factories can share a repo (e.g. Claude in GitHub Actions + Codex on a laptop):
+ *   FACTORY_ENGINE=claude|codex  which coding agent this process drives (engines.mjs)
+ *   FACTORY_ROLE=full|worker     `full` does everything above; a `worker` only builds new issues
+ *                                and leaves merging, fixing and planning to the full factory.
+ * Each issue gets a claim comment naming the worker, so factories never take or recover
+ * each other's issues.
  * Merging happens only after every check on the PR has passed, and never for PRs that touch
  * the automation itself (PROTECTED_PATHS) — those go to a human.
  *
@@ -21,12 +28,15 @@
  */
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { ENGINE_LABEL, coolingDown, runAgent } from './engines.mjs';
 import {
   CI,
-  CLAUDE_ENV,
   CONFIG,
   DIRS,
+  ENGINE,
   HOST,
+  ROLE,
+  WORKER,
   acquireLock,
   gh,
   ghJson,
@@ -44,6 +54,9 @@ const ONLY_ISSUE = args.includes('--issue') ? Number(args[args.indexOf('--issue'
 const NO_WORK = args.includes('--no-work');
 const FIX_MARKER = '<!-- factory:fix-attempt -->';
 const INTERRUPT_MARKER = '<!-- factory:interrupted -->';
+const CLAIM_RE = /<!-- factory:claim worker=(\S+) -->/;
+/** A claim older than this is considered abandoned by whoever made it. */
+const CLAIM_TTL_MS = 12 * 3_600_000;
 /** Agent PRs touching these are never auto-merged: the factory must not rewrite its own rules or CI. */
 const PROTECTED_PATHS = ['.factory/', '.github/', '.claude/settings'];
 const LOG_HINT = CI ? 'Logs: see the `factory-logs` artifact of the run above.' : '';
@@ -51,14 +64,44 @@ const LOG_HINT = CI ? 'Logs: see the `factory-logs` artifact of the run above.' 
 function runRepo(repo) {
   let clone = syncClone(repo);
   recoverInterrupted(repo, clone);
-  const state = advanceInFlight(repo, clone);
-  if (state === 'waiting') return;
-  clone = syncClone(repo); // pick up anything merged above
-  planRepo(repo);
-  if (!NO_WORK) startNextIssue(repo, clone);
+  if (ROLE === 'full') {
+    advanceInFlight(repo, clone);
+    clone = syncClone(repo); // pick up anything merged above
+    planRepo(repo);
+  }
+  if (NO_WORK) return;
+  if (hasOpenPr(repo)) return log(`[${repo.name}] ${ENGINE} already has a PR in flight — waiting`);
+  startNextIssue(repo, clone);
 }
 
-/** We hold the repo lock, so any issue still `agent:in-progress` belongs to a dead session (sleep, crash, reboot). */
+/** The most recent factory claim on an issue: { worker, at } or null. */
+function claimOf(comments) {
+  for (let i = comments.length - 1; i >= 0; i--) {
+    const m = comments[i].body.match(CLAIM_RE);
+    if (m) return { worker: m[1], at: Date.parse(comments[i].createdAt) };
+  }
+  return null;
+}
+
+/** Issues another live factory claimed recently are not ours to take or recover. */
+function claimedByOther(comments) {
+  const c = claimOf(comments);
+  return Boolean(c && c.worker !== WORKER && Date.now() - c.at < CLAIM_TTL_MS);
+}
+
+/** Open agent PR built by this engine (PRs from before engine labels count as claude). */
+function hasOpenPr(repo) {
+  const prs = ghJson(['pr', 'list', '-R', repo.slug, '--state', 'open', '--label', 'agent:review', '--json', 'labels']);
+  return prs.some((p) => {
+    const engine = p.labels.find((l) => l.name.startsWith('engine:'))?.name.slice(7) ?? 'claude';
+    return engine === ENGINE;
+  });
+}
+
+/**
+ * We hold this factory's lock, so an issue still `agent:in-progress` under our claim belongs to a
+ * dead session (sleep, crash, reboot). Issues claimed by another factory are left alone.
+ */
 function recoverInterrupted(repo, clone) {
   const stuck = ghJson([
     'issue',
@@ -73,6 +116,9 @@ function recoverInterrupted(repo, clone) {
     'number,comments',
   ]);
   for (const issue of stuck) {
+    const claim = claimOf(issue.comments);
+    // Legacy issues without a claim belong to the full factory.
+    if (claim ? claimedByOther(issue.comments) : ROLE !== 'full') continue;
     const interruptions = issue.comments.filter((c) => c.body.includes(INTERRUPT_MARKER)).length;
     const next = interruptions + 1 >= 3 ? 'agent:failed' : 'agent:ready';
     log(`[${repo.name}] issue #${issue.number} was interrupted → ${next}`);
@@ -167,79 +213,6 @@ function removeWorktree(repo, clone, issue) {
 function install(repo, wt, logFile) {
   const [cmd, ...rest] = repo.installCommand.split(' ');
   sh(cmd, rest, { cwd: wt, logFile, timeoutMs: 10 * 60_000 });
-}
-
-/* ───────────── Claude session ───────────── */
-
-function runClaude(promptText, cwd, logFile, { resume } = {}) {
-  const s = CONFIG.session;
-  const claudeArgs = ['-p', promptText];
-  if (resume) claudeArgs.push('--resume', resume);
-  claudeArgs.push(
-    '--permission-mode',
-    'acceptEdits',
-    '--output-format',
-    'stream-json',
-    '--verbose',
-    '--allowedTools',
-    ...CONFIG.allowedTools,
-  );
-  if (s.model) claudeArgs.push('--model', s.model);
-  log(`claude session start (cwd=${cwd}${resume ? `, resume=${resume}` : ''}, log=${logFile})`);
-  const res = sh('claude', claudeArgs, { cwd, allowFail: true, timeoutMs: s.timeoutMinutes * 60_000, env: CLAUDE_ENV });
-  writeFileSync(logFile, res.out + '\n' + res.err);
-  let result = '';
-  let sessionId = resume ?? null;
-  let isError = false;
-  for (const line of res.out.split('\n')) {
-    try {
-      const ev = JSON.parse(line);
-      if (ev.session_id) sessionId = ev.session_id;
-      if (ev.type === 'result') {
-        result = ev.result ?? '';
-        isError = !!ev.is_error;
-      }
-    } catch {
-      /* not JSON */
-    }
-  }
-  const limited = isError && LIMIT_RE.test(result);
-  if (limited) startCooldown(result);
-  log(`claude session end (ok=${res.ok}, timedOut=${res.timedOut}, limited=${limited}, resultChars=${result.length})`);
-  return { ok: res.ok, timedOut: res.timedOut, result, sessionId, limited };
-}
-
-/* ───────────── usage-limit cooldown ───────────── */
-
-const LIMIT_RE = /hit your .*limit|usage limit|limit reached|rate limit/i;
-const COOLDOWN_FILE = join(DIRS.locks, 'cooldown-until');
-
-/** "You've hit your session limit · resets 2am (Asia/Seoul)" → pause until 2am (+5 min). Fallback: 60 min. */
-function startCooldown(message) {
-  let until = Date.now() + 60 * 60_000;
-  const m = message.match(/resets\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
-  if (m) {
-    let h = Number(m[1]) % 12;
-    if (m[3].toLowerCase() === 'pm') h += 12;
-    const d = new Date();
-    d.setHours(h, Number(m[2] ?? 0) + 5, 0, 0);
-    if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
-    until = d.getTime();
-  }
-  writeFileSync(COOLDOWN_FILE, String(until));
-  log(`usage limit hit → cooling down until ${new Date(until).toLocaleString()}`);
-  notify('Factory paused', `Claude usage limit — resumes ${new Date(until).toLocaleTimeString()}`);
-}
-
-function coolingDown() {
-  if (!existsSync(COOLDOWN_FILE)) return false;
-  const until = Number(readFileSync(COOLDOWN_FILE, 'utf8'));
-  if (Date.now() < until) {
-    log(`cooling down (usage limit) until ${new Date(until).toLocaleString()} — no Claude sessions`);
-    return true;
-  }
-  rmSync(COOLDOWN_FILE, { force: true });
-  return false;
 }
 
 /* ───────────── resumable sessions ───────────── */
@@ -447,7 +420,7 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
     PROBLEM: problem,
     DETAILS: details || '(none)',
   });
-  const session = runClaude(text, wt, logFile);
+  const session = runAgent(text, wt, logFile, { gitDir: join(clone, '.git') });
   if (session.limited) return log(`[${repo.name}] fix for PR #${pr.number} paused by usage limit`);
   const after = sh('git', ['-C', wt, 'rev-parse', 'HEAD']).out;
 
@@ -472,6 +445,24 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
 
 /* ───────────── new work ───────────── */
 
+/**
+ * Post a claim comment, then make sure no other factory claimed the issue just before us.
+ * The earliest recent claim wins; a loser deletes its comment and backs off.
+ */
+function claim(repo, n) {
+  const body = `<!-- factory:claim worker=${WORKER} -->\n🏭 ${ENGINE_LABEL} started a session (${HOST}) at ${new Date().toISOString()}.`;
+  gh(['issue', 'comment', String(n), '-R', repo.slug, '--body', body]);
+  const { comments } = ghJson(['issue', 'view', String(n), '-R', repo.slug, '--json', 'comments']);
+  const recent = comments.filter((c) => CLAIM_RE.test(c.body) && Date.now() - Date.parse(c.createdAt) < 10 * 60_000);
+  const winner = recent[0]?.body.match(CLAIM_RE)[1];
+  if (!winner || winner === WORKER) return true;
+  log(`[${repo.name}] issue #${n} was just claimed by ${winner} — backing off`);
+  const mine = [...recent].reverse().find((c) => c.body.includes(`worker=${WORKER} `));
+  const id = mine?.url?.match(/issuecomment-(\d+)/)?.[1];
+  if (id) gh(['api', '-X', 'DELETE', `repos/${repo.slug}/issues/comments/${id}`], { allowFail: true });
+  return false;
+}
+
 function startNextIssue(repo, clone) {
   let issues = ghJson([
     'issue',
@@ -485,11 +476,13 @@ function startNextIssue(repo, clone) {
     '--limit',
     '200',
     '--json',
-    'number,title,body,author,labels',
+    'number,title,body,author,labels,comments',
   ]);
   issues = issues
     .filter((i) => repo.allowedAuthors.includes(i.author.login))
     .filter((i) => !i.labels.some((l) => ['agent:human', 'agent:in-progress', 'agent:review'].includes(l.name)))
+    // e.g. paused by another factory's usage limit: that factory resumes it.
+    .filter((i) => !claimedByOther(i.comments))
     .filter((i) => !ONLY_ISSUE || i.number === ONLY_ISSUE)
     .sort((a, b) => priorityOf(a.labels) - priorityOf(b.labels) || a.number - b.number);
 
@@ -500,7 +493,8 @@ function startNextIssue(repo, clone) {
   const n = issue.number;
   const branch = `agent/issue-${n}`;
   const logFile = join(DIRS.logs, `${repo.name}-issue${n}-${stamp()}.log`);
-  log(`[${repo.name}] starting issue #${n}: ${issue.title}`);
+  if (!claim(repo, n)) return;
+  log(`[${repo.name}] starting issue #${n} with ${ENGINE_LABEL}: ${issue.title}`);
   gh([
     'issue',
     'edit',
@@ -512,18 +506,6 @@ function startNextIssue(repo, clone) {
     '--add-label',
     'agent:in-progress',
   ]);
-  gh(
-    [
-      'issue',
-      'comment',
-      String(n),
-      '-R',
-      repo.slug,
-      '--body',
-      `🏭 Factory started a session on \`${HOST}\` at ${new Date().toISOString()}.`,
-    ],
-    { allowFail: true },
-  );
 
   const fail = (why, detail = '') => {
     log(`[${repo.name}] issue #${n} failed: ${why}`);
@@ -591,7 +573,10 @@ function startNextIssue(repo, clone) {
         ISSUE_BODY: issue.body,
         ISSUE_LABELS: issue.labels.map((l) => l.name).join(', '),
       });
-  const session = runClaude(text, wt, logFile, { resume: resuming ? saved.sessionId : undefined });
+  const session = runAgent(text, wt, logFile, {
+    resume: resuming ? saved.sessionId : undefined,
+    gitDir: join(clone, '.git'),
+  });
 
   if (session.limited) {
     // Not the issue's fault: keep the work, remember the session, re-queue.
@@ -625,7 +610,7 @@ function startNextIssue(repo, clone) {
         '-R',
         repo.slug,
         '--body',
-        '🏭 Paused by the Claude usage limit — the session will resume automatically after the limit resets.',
+        `🏭 Paused by the ${ENGINE} usage limit — this factory resumes the session after the limit resets.`,
       ],
       { allowFail: true },
     );
@@ -645,7 +630,7 @@ function startNextIssue(repo, clone) {
     : session.result;
   writeFileSync(
     bodyFile,
-    `${report || '_No summary from the session._'}\n\nCloses #${n}\n\n---\n🏭 Built by the factory (\`${HOST}\`). Merges automatically once all checks pass.\n`,
+    `${report || '_No summary from the session._'}\n\nCloses #${n}\n\n---\n🏭 Built by the factory with **${ENGINE_LABEL}** (${HOST}). Merges automatically once all checks pass.\n`,
   );
   const pr = gh(
     [
@@ -663,6 +648,8 @@ function startNextIssue(repo, clone) {
       bodyFile,
       '--label',
       'agent:review',
+      '--label',
+      `engine:${ENGINE}`,
     ],
     { allowFail: true },
   );

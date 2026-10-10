@@ -17,8 +17,7 @@
   ],
   "session": {
     "timeoutMinutes": 90,
-    "maxFixAttempts": 2,
-    "model": "sonnet"
+    "maxFixAttempts": 2
   },
   "allowedTools": [
     "Read",
@@ -60,5 +59,14 @@
   "gitIdentity": {
     "name": "betterbit-ai",
     "email": "169157038+betterbit-ai@users.noreply.github.com"
+  },
+  "engines": {
+    "claude": {
+      "model": "sonnet"
+    },
+    "codex": {
+      "model": "gpt-5.6-terra",
+      "effort": "high"
+    }
   }
 }

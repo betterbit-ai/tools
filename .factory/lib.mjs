@@ -13,6 +13,10 @@ export const ROOT = dirname(fileURLToPath(import.meta.url));
 export const HOME = process.env.FACTORY_HOME || ROOT;
 export const CI = process.env.GITHUB_ACTIONS === 'true';
 export const CONFIG = JSON.parse(readFileSync(join(ROOT, 'config.json'), 'utf8'));
+/** Which coding agent this process drives, and whether it runs the whole loop or only builds. */
+export const ENGINE = process.env.FACTORY_ENGINE || 'claude';
+export const ROLE = process.env.FACTORY_ROLE || 'full'; // 'full' | 'worker'
+
 export const DIRS = {
   logs: join(HOME, 'logs'),
   clones: join(HOME, 'clones'),
@@ -130,10 +134,11 @@ export function prompt(name, vars) {
   return fill(readFileSync(join(ROOT, 'prompts', `${name}.md`), 'utf8'), vars);
 }
 
-/** Where this run happens, for issue/PR comments. */
+/** Where this run happens, for issue/PR comments. WORKER identifies this factory in issue claims. */
 export const HOST = CI
   ? `GitHub Actions run ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
   : hostname();
+export const WORKER = `${ENGINE}@${CI ? 'actions' : hostname().split('.')[0]}`;
 
 export function stamp() {
   return new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
