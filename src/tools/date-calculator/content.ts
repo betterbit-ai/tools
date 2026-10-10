@@ -1,0 +1,216 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  modeLabel: 'Calculation mode',
+  diffTab: 'Difference',
+  addTab: 'Add or subtract',
+  autosaved: 'Saved in this browser',
+  startDate: 'Start date',
+  endDate: 'End date',
+  includeStart: 'Include the start date',
+  holidayCountry: 'Holiday calendar',
+  holidayHint: 'Always excludes weekends; also excludes this country’s public holidays when selected.',
+  countryNone: 'None (weekends only)',
+  countryUs: 'United States',
+  countryKr: 'South Korea',
+  holidayUnsupported:
+    'The South Korea holiday table covers 2024–2026. Outside those years, only weekends were excluded.',
+  invalidDate: 'Choose a valid calendar date.',
+  totalDays: 'Total days',
+  businessDays: 'Business days',
+  calendarSpan: 'Years, months, days',
+  yearUnit: 'y',
+  monthUnit: 'm',
+  dayUnit: 'd',
+  weeksDays: 'Weeks + days',
+  weekUnit: 'w',
+  weekendDays: 'Weekend days',
+  holidayDays: 'Holidays excluded',
+  copy: 'Copy result',
+  copied: 'Copied',
+  diffSummary: '{start} to {end}: {days} days ({business} business days)',
+  baseDate: 'Base date',
+  direction: 'Direction',
+  addOp: 'Add',
+  subtractOp: 'Subtract',
+  useBusinessDays: 'Count in business days instead of calendar time',
+  businessDaysAmount: 'Business days',
+  years: 'Years',
+  months: 'Months',
+  weeks: 'Weeks',
+  days: 'Days',
+  presetWeek: '1 week',
+  presetMonth: '1 month',
+  preset100Days: '100 days',
+  presetYear: '1 year',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'Date Calculator — Days Between Dates & Business Days',
+    description:
+      'Find days between two dates, add or subtract days/months/years, and count business days with US or South Korean holidays built in — nothing leaves your browser, no ads.',
+    h1: 'Date Calculator',
+    tagline:
+      'Compare two dates or shift one by a calendar or business-day amount, with US and Korean public holidays built in.',
+    name: 'Date Calculator',
+    keywords: [
+      'date calculator',
+      'days between dates',
+      'add days to date',
+      'business days calculator',
+      'working days calculator',
+      'date difference calculator',
+    ],
+    howTo: [
+      'Pick “Difference” to compare two dates, or “Add or subtract” to shift one date.',
+      'In Difference, set a start and end date to see total days, weeks, and the calendar years/months/days between them.',
+      'Turn on a holiday calendar (United States or South Korea) to also see business days with that country’s public holidays excluded.',
+      'In Add or subtract, set a base date and direction, then enter years/months/weeks/days — or switch to a business-day count.',
+      'Copy the result with one click; your inputs are saved only in this browser so they are there next time.',
+    ],
+    sections: [
+      {
+        heading: 'Why business-day counts need a holiday calendar, not just weekends',
+        body: 'Excluding Saturdays and Sundays gets you close to a working-day count, but it still overcounts by one for every public holiday that falls on a weekday. This calculator computes the 11 US federal holidays directly from their official rules — fixed dates like Independence Day (July 4) and Christmas (December 25) shift to the nearest weekday when they land on a Saturday or Sunday, and floating dates like Memorial Day (last Monday of May) and Thanksgiving (fourth Thursday of November) are derived for any year, so US holidays never go stale. South Korean public holidays follow the lunar calendar for Seollal and Chuseok, and the government decides substitute holidays (대체공휴일) year by year, so this calculator uses a verified table covering 2024–2026; outside that range it still excludes weekends but shows a note that holidays were not subtracted.',
+      },
+      {
+        heading: 'How the years/months/days span is calculated',
+        body: 'A plain day count (like 30 days) is exact but not how people talk about durations, so this calculator also walks whole calendar months from the earlier date and keeps the leftover days. From January 31 to March 1 of the same year, for example, adding one whole month to January 31 lands on February 28 (or 29 in a leap year) because February has no 31st, and the single remaining day to March 1 is counted separately — so the result reads as 1 month, 1 day rather than a confusing "1 month, 29 days." The same clamping applies to Add or subtract: January 31 plus one month becomes February 28 in a non-leap year.',
+      },
+      {
+        heading: 'What “include the start date” changes',
+        body: 'By default, the gap from October 1 to October 3 is counted as 2 days — the nights between them. Turning on "include the start date" counts both endpoints, so the same dates read as 3 days, matching how people describe a 3-day trip that starts on the 1st and ends on the 3rd. This toggle affects both the total-day count and the business-day count the same way, so the two numbers stay consistent with each other.',
+      },
+    ],
+    faq: [
+      {
+        q: 'How many days are there between two dates?',
+        a: 'Enter both dates in Difference mode. The Total days stat is the exact calendar-day gap; turn on "include the start date" if you want both endpoints counted instead of just the nights between them.',
+      },
+      {
+        q: 'Does this tool calculate business days, including holidays?',
+        a: 'Yes. The Business days stat always excludes Saturdays and Sundays, and excludes United States or South Korean public holidays too once you select that country from the holiday calendar.',
+      },
+      {
+        q: 'How do I add 90 days, or 3 months, to a date?',
+        a: 'Switch to "Add or subtract," pick a base date and "Add," then type 90 into the Days field (or 3 into Months). The resulting date and its weekday appear immediately, with no calculate button to press.',
+      },
+      {
+        q: 'Why does January 31 plus one month show February 28?',
+        a: 'February has no 31st day, so the result is clamped to the last day of February — the 28th in a common year or the 29th in a leap year — which matches how most calendar software handles month-end overflow.',
+      },
+      {
+        q: 'Which countries’ public holidays are supported?',
+        a: 'United States federal holidays are computed from their official rules for any year. South Korean public holidays, including lunar-calendar and substitute holidays, are supported for 2024–2026; a notice appears if a chosen date falls outside that range.',
+      },
+      {
+        q: 'Is any date I enter sent to a server?',
+        a: 'No. Every calculation runs in your browser with plain JavaScript, and your last inputs are saved only in this browser’s local storage, not on a server or in any account.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '날짜 계산기 — 날짜 차이·영업일 계산',
+    description:
+      '두 날짜 사이의 일수를 구하고, 날짜에 일·주·개월·년을 더하거나 빼고, 미국·대한민국 공휴일을 제외한 영업일까지 계산합니다. 모든 계산은 브라우저에서 처리되고 광고가 없습니다.',
+    h1: '날짜 계산기',
+    tagline:
+      '두 날짜의 차이를 구하거나 날짜에 기간을 더하고 빼며, 미국·대한민국 공휴일을 자동으로 제외한 영업일도 함께 보여줍니다.',
+    name: '날짜 계산기',
+    keywords: ['날짜 계산기', '날짜 차이 계산', '디데이 계산', '영업일 계산기', '근무일 계산', '날짜 더하기 빼기'],
+    howTo: [
+      '상단에서 "날짜 차이"를 고르면 두 날짜를, "날짜 더하기·빼기"를 고르면 한 날짜를 계산합니다.',
+      '날짜 차이에서는 시작일과 종료일을 고르면 총 일수, 주+일, 연·월·일 차이를 바로 보여줍니다.',
+      '공휴일 달력에서 미국 또는 대한민국을 선택하면 해당 공휴일을 제외한 영업일 수도 함께 확인할 수 있습니다.',
+      '날짜 더하기·빼기에서는 기준일과 더하기/빼기를 고른 뒤 년·개월·주·일을 입력하거나, 영업일 기준으로 전환합니다.',
+      '결과 복사 버튼으로 바로 복사할 수 있고, 입력한 값은 이 브라우저에만 저장되어 다시 열어도 남아 있습니다.',
+    ],
+    sections: [
+      {
+        heading: '주말만 빼면 영업일이 틀리는 이유',
+        body: '토요일과 일요일만 빼면 실제 근무일보다 공휴일 수만큼 더 많이 나옵니다. 이 계산기는 미국 연방 공휴일 11개를 공식 규정대로 직접 계산합니다. 독립기념일(7월 4일), 크리스마스(12월 25일)처럼 날짜가 고정된 공휴일은 토요일이면 금요일로, 일요일이면 월요일로 당겨지는 대체 규정을 그대로 적용하고, 현충일 성격의 메모리얼 데이는 5월 마지막 월요일처럼 매년 계산해 날짜가 바뀌어도 정확합니다. 대한민국 공휴일은 설날·추석이 음력 기준이고 대체공휴일도 해마다 정부가 정하기 때문에, 2024~2026년은 직접 확인한 날짜표를 쓰고 그 범위를 벗어나면 주말만 제외했다는 안내를 보여줍니다.',
+      },
+      {
+        heading: '연·월·일 차이는 어떻게 계산하나요',
+        body: '단순히 일수만 보여주면 "30일"처럼 정확하지만 사람이 기간을 말하는 방식과는 다릅니다. 그래서 이 계산기는 앞선 날짜에서 달을 통째로 채워 나가고 남는 날만 일수로 셉니다. 예를 들어 1월 31일에서 3월 1일까지는 1월 31일에 한 달을 더하면 2월에는 31일이 없어 2월 28일(윤년이면 29일)이 되고, 거기서 3월 1일까지 남은 1일을 따로 세어 "1개월 1일"로 표시합니다. 날짜 더하기·빼기에서도 같은 규칙이 적용되어 1월 31일에 1개월을 더하면 평년에는 2월 28일이 됩니다.',
+      },
+      {
+        heading: '"시작일 포함해서 계산"은 무엇을 바꾸나요',
+        body: '기본값에서는 10월 1일부터 10월 3일까지를 "2일"로 셉니다. 두 날짜 사이에 지나는 밤의 수를 세는 방식입니다. "시작일 포함해서 계산"을 켜면 시작일과 종료일을 모두 세어 같은 기간이 "3일"이 되며, 1일부터 3일까지 떠나는 "3일 여행"을 말할 때와 같은 방식입니다. 이 설정은 총 일수와 영업일 수 모두에 똑같이 적용되어 두 숫자가 서로 어긋나지 않습니다.',
+      },
+    ],
+    faq: [
+      {
+        q: '두 날짜 사이의 일수는 어떻게 계산하나요?',
+        a: '날짜 차이 모드에서 시작일과 종료일을 고르면 총 일수가 바로 나옵니다. 시작일도 포함해서 세고 싶다면 "시작일 포함해서 계산"을 켜면 됩니다.',
+      },
+      {
+        q: '공휴일을 제외한 영업일도 계산할 수 있나요?',
+        a: '네. 영업일 통계는 토요일·일요일을 항상 제외하고, 공휴일 달력에서 미국이나 대한민국을 선택하면 그 나라 공휴일도 함께 제외합니다.',
+      },
+      {
+        q: '특정 날짜에 90일이나 3개월을 더하려면 어떻게 하나요?',
+        a: '"날짜 더하기·빼기"로 바꾸고 기준일과 "더하기"를 고른 뒤 일 칸에 90, 또는 개월 칸에 3을 입력하면 결과 날짜와 요일이 바로 나옵니다.',
+      },
+      {
+        q: '1월 31일에 한 달을 더하면 왜 2월 28일이 되나요?',
+        a: '2월에는 31일이 없기 때문에 그 달의 마지막 날로 맞춰서 계산합니다. 평년에는 2월 28일, 윤년에는 2월 29일이 되며 대부분의 캘린더 앱과 같은 방식입니다.',
+      },
+      {
+        q: '어느 나라의 공휴일을 지원하나요?',
+        a: '미국 연방 공휴일은 공식 규정대로 어떤 해든 계산합니다. 대한민국 공휴일은 음력 명절과 대체공휴일까지 포함해 2024~2026년을 지원하며, 그 밖의 해를 고르면 안내 문구가 나타납니다.',
+      },
+      {
+        q: '입력한 날짜가 서버로 전송되나요?',
+        a: '아니요. 모든 계산은 브라우저 안에서 자바스크립트로 처리되고, 마지막 입력값은 이 브라우저의 로컬 저장소에만 남으며 서버나 계정에는 저장되지 않습니다.',
+      },
+    ],
+    ui: {
+      modeLabel: '계산 모드',
+      diffTab: '날짜 차이',
+      addTab: '날짜 더하기·빼기',
+      autosaved: '이 브라우저에 자동 저장',
+      startDate: '시작일',
+      endDate: '종료일',
+      includeStart: '시작일 포함해서 계산',
+      holidayCountry: '공휴일 달력',
+      holidayHint: '주말은 항상 제외하고, 선택하면 해당 국가의 공휴일도 제외합니다.',
+      countryNone: '없음(주말만 제외)',
+      countryUs: '미국',
+      countryKr: '대한민국',
+      holidayUnsupported: '대한민국 공휴일 데이터는 2024~2026년만 지원해 그 밖의 해는 주말만 제외했습니다.',
+      invalidDate: '올바른 날짜를 선택하세요.',
+      totalDays: '총 일수',
+      businessDays: '영업일',
+      calendarSpan: '연·월·일',
+      yearUnit: '년',
+      monthUnit: '개월',
+      dayUnit: '일',
+      weeksDays: '주+일',
+      weekUnit: '주',
+      weekendDays: '주말',
+      holidayDays: '제외된 공휴일',
+      copy: '결과 복사',
+      copied: '복사됨',
+      diffSummary: '{start} ~ {end}: {days}일 (영업일 {business}일)',
+      baseDate: '기준일',
+      direction: '연산',
+      addOp: '더하기',
+      subtractOp: '빼기',
+      useBusinessDays: '영업일 기준으로 계산',
+      businessDaysAmount: '영업일 수',
+      years: '년',
+      months: '개월',
+      weeks: '주',
+      days: '일',
+      presetWeek: '1주',
+      presetMonth: '1개월',
+      preset100Days: '100일',
+      presetYear: '1년',
+    },
+  },
+};
