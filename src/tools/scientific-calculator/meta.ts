@@ -33,5 +33,12 @@ export const meta: ToolMeta = {
         '키보드 입력과 Deg/Rad 전환은 되지만 과거 계산을 다시 볼 수 있는 기록 기능이 없어서, 계산할 때마다 이전 값을 직접 다시 입력해야 한다. Betterbit는 최근 30개 계산을 기록에 남기고 탭으로 바로 불러올 수 있다. (장점: 설치 없이 모바일에서 바로 쓸 수 있도록 가볍게 만들어졌다.)',
     },
   ],
-  related: ['percentage-calculator', 'date-calculator', 'age-calculator', 'length-converter', 'weight-converter'],
+  related: [
+    'percentage-calculator',
+    'date-calculator',
+    'age-calculator',
+    'length-converter',
+    'weight-converter',
+    'temperature-converter',
+  ],
 };

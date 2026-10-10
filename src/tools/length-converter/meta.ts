@@ -139,6 +139,7 @@ export const meta: ToolMeta = {
     'scientific-calculator',
     'percentage-calculator',
     'weight-converter',
+    'temperature-converter',
   ],
   variants,
 };
