@@ -147,7 +147,7 @@ export function Select<T extends string>(props: {
 
 /** Mutually exclusive options shown inline (radio group). Use for ≤ 5 short options. */
 export function Segmented<T extends string>(props: {
-  value: T;
+  value: T | null;
   onValue: (v: T) => void;
   options: { value: T; label: string }[];
   label: string;
@@ -156,7 +156,7 @@ export function Segmented<T extends string>(props: {
     <div
       role="radiogroup"
       aria-label={props.label}
-      class="inline-flex rounded-md border border-line bg-surface-2 p-0.5"
+      class="inline-flex max-w-full flex-wrap rounded-md border border-line bg-surface-2 p-0.5"
     >
       {props.options.map((o) => {
         const active = o.value === props.value;
