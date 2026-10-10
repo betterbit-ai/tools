@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         '디데이와 날짜 차이만 계산하며 영업일·공휴일 제외는 지원하지 않아 별도의 영업일 계산기로 이동해야 한다고 안내한다. 쿠팡 핫딜 등 제휴 광고 영역도 있다. Betterbit은 한 화면에서 날짜 차이, 날짜 더하기/빼기, 공휴일 제외 영업일 계산을 모두 처리하고 광고가 없다. (장점: 당일 포함/제외 방식을 명확히 구분해서 보여준다.)',
     },
   ],
-  related: ['countdown', 'timer', 'stopwatch', 'pomodoro-timer'],
+  related: ['countdown', 'timer', 'stopwatch', 'pomodoro-timer', 'age-calculator'],
 };
