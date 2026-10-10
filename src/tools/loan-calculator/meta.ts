@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         '대출 종류, 금액, 기간, 금리, 거치기간을 고른 뒤 “대출 계산하기”를 눌러야 결과가 나온다. Betterbit는 필수 네 값과 상환방식만으로 첫 달·마지막 달·총이자·총상환액을 즉시 보여주고, 각 회차의 원금·이자를 확인할 수 있다. (장점: 주택담보·전월세·신용 등 대출 종류별 빠른 선택과 금리 설명을 제공한다.)',
     },
   ],
-  related: ['percentage-calculator', 'bmi-calculator'],
+  related: ['percentage-calculator', 'bmi-calculator', 'salary-calculator-kr'],
 };
