@@ -86,7 +86,7 @@
 | timer               | 타이머            | timer, 5 minute timer / 타이머    | 백그라운드 정확, 새로고침 유지, 단축키, variants    | P0  | live |
 | stopwatch           | 스톱워치          | stopwatch / 스톱워치              | 랩 기록 CSV, 밀리초, 새로고침 유지                  | P0  | live |
 | pomodoro-timer      | 뽀모도로          | pomodoro timer / 뽀모도로         | 세션 기록, 작업 목록, 알림                          | P0  | live |
-| countdown           | 디데이 카운트다운 | countdown to date / 디데이 계산기 | 공유 링크(URL 파라미터), 이벤트 프리셋              | P0  | todo |
+| countdown           | 디데이 카운트다운 | countdown to date / 디데이 계산기 | 공유 링크(URL 파라미터), 이벤트 프리셋              | P0  | live |
 | alarm-clock         | 온라인 알람       | online alarm clock / 알람         | 탭 유지 알람, 여러 알람                             | P1  | todo |
 | world-clock         | 세계 시계         | world clock / 세계 시간           | 회의 시간 플래너(시간대 겹침)                       | P1  | todo |
 | time-zone-converter | 시간대 변환       | time zone converter / 시차 계산   | 도시 검색, DST 정확                                 | P0  | todo |
