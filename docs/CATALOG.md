@@ -103,7 +103,7 @@
 
 | slug                    | 도구             | 핵심 키워드                                | Edge 아이디어                           | P   | 상태 |
 | ----------------------- | ---------------- | ------------------------------------------ | --------------------------------------- | --- | ---- |
-| percentage-calculator   | 퍼센트 계산기    | percentage calculator / 퍼센트 계산        | 4가지 유형 동시 표시, 계산식 노출       | P0  | todo |
+| percentage-calculator   | 퍼센트 계산기    | percentage calculator / 퍼센트 계산        | 4가지 유형 동시 표시, 계산식 노출       | P0  | live |
 | scientific-calculator   | 공학용 계산기    | scientific calculator / 공학용 계산기      | 키보드 입력, 히스토리                   | P0  | todo |
 | bmi-calculator          | BMI 계산기       | bmi calculator / bmi 계산                  | 아시아 기준(대한비만학회) 병기          | P0  | todo |
 | loan-calculator         | 대출 이자 계산기 | loan calculator / 대출 이자 계산기         | 원리금균등, 원금균등, 만기일시, 상환표  | P0  | todo |
