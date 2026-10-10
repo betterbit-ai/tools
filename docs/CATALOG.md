@@ -61,7 +61,7 @@
 | slug                   | 도구              | 핵심 키워드                          | Edge 아이디어                                         | P   | 상태 |
 | ---------------------- | ----------------- | ------------------------------------ | ----------------------------------------------------- | --- | ---- |
 | word-counter           | 글자수 세기       | word counter / 글자수 세기           | CJK 정확, 2byte/UTF-8, 제한 추적, 광고 없음           | P0  | live |
-| case-converter         | 대소문자 변환     | case converter / 대소문자 변환       | Title Case 규칙(AP/Chicago), camelCase 등 개발 케이스 | P0  | todo |
+| case-converter         | 대소문자 변환     | case converter / 대소문자 변환       | Title Case 규칙(AP/Chicago), camelCase 등 개발 케이스 | P0  | live |
 | remove-line-breaks     | 줄바꿈 제거       | remove line breaks / 줄바꿈 없애기   | PDF 복사 텍스트 정리 모드                             | P1  | todo |
 | remove-duplicate-lines | 중복 줄 제거      | remove duplicate lines               | 정렬, 공백 무시 옵션                                  | P1  | todo |
 | text-diff              | 텍스트 비교       | text compare / 텍스트 비교           | 단어·글자 단위 diff, 한글 자모 정확                   | P0  | todo |
