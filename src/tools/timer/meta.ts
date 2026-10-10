@@ -88,6 +88,6 @@ export const meta: ToolMeta = {
       weakness: 'Lost when the tab is closed or refreshed; no keyboard shortcuts; no tab-title countdown.',
     },
   ],
-  related: ['case-converter', 'word-counter', 'image-resizer', 'stopwatch', 'pomodoro-timer', 'countdown'],
+  related: ['case-converter', 'word-counter', 'text-diff', 'image-resizer', 'stopwatch', 'pomodoro-timer', 'countdown'],
   variants,
 };
