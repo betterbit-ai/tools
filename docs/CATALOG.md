@@ -106,7 +106,7 @@
 | percentage-calculator   | 퍼센트 계산기    | percentage calculator / 퍼센트 계산        | 4가지 유형 동시 표시, 계산식 노출       | P0  | live |
 | scientific-calculator   | 공학용 계산기    | scientific calculator / 공학용 계산기      | 키보드 입력, 히스토리                   | P0  | todo |
 | bmi-calculator          | BMI 계산기       | bmi calculator / bmi 계산                  | 아시아 기준(대한비만학회) 병기          | P0  | live |
-| loan-calculator         | 대출 이자 계산기 | loan calculator / 대출 이자 계산기         | 원리금균등, 원금균등, 만기일시, 상환표  | P0  | todo |
+| loan-calculator         | 대출 이자 계산기 | loan calculator / 대출 이자 계산기         | 원리금균등, 원금균등, 만기일시, 상환표  | P0  | live |
 | salary-calculator-kr    | 연봉 실수령액    | 연봉 실수령액 계산기                       | 2026년 4대보험 요율, 비과세 반영        | P0  | todo |
 | compound-interest       | 복리 계산기      | compound interest calculator / 복리 계산기 | 적립식, 그래프                          | P0  | todo |
 | tip-calculator          | 팁 계산기        | tip calculator                             | 인원 분할, 국가별 팁 관행               | P1  | todo |
