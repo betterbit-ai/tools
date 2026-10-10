@@ -39,5 +39,13 @@ export const meta: ToolMeta = {
         '생년월일을 바꾸면 자동으로 결과가 갱신되고 "살아온 일수"도 보여주지만, 다음 생일까지 며칠 남았는지는 전혀 표시하지 않는다. Betterbit은 다음 생일 D-day 카운트다운을 추가로 보여준다. (장점: 해당 나이에서 법적으로 가능한 일/불가능한 일을 항목별로 안내한다.)',
     },
   ],
-  related: ['date-calculator', 'countdown', 'timer', 'stopwatch', 'percentage-calculator', 'bmi-calculator'],
+  related: [
+    'date-calculator',
+    'countdown',
+    'timer',
+    'stopwatch',
+    'percentage-calculator',
+    'bmi-calculator',
+    'scientific-calculator',
+  ],
 };

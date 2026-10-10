@@ -47,5 +47,6 @@ export const meta: ToolMeta = {
     'loan-calculator',
     'salary-calculator-kr',
     'compound-interest',
+    'scientific-calculator',
   ],
 };
