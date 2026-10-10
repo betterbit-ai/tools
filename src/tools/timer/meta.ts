@@ -97,6 +97,7 @@ export const meta: ToolMeta = {
     'pomodoro-timer',
     'countdown',
     'date-calculator',
+    'age-calculator',
   ],
   variants,
 };
