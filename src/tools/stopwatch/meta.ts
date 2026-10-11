@@ -47,6 +47,7 @@ export const meta: ToolMeta = {
   ],
   related: [
     'mic-test',
+    'keyboard-tester',
     'timer',
     'word-counter',
     'pomodoro-timer',

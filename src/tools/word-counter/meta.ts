@@ -23,6 +23,7 @@ export const meta: ToolMeta = {
   ],
   related: [
     'case-converter',
+    'keyboard-tester',
     'text-diff',
     'json-formatter',
     'timer',
