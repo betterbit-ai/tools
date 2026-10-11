@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean page presents start controls, level/waveform feedback and a fixed 5-second local sample, but no visible input-device selection. Betterbit offers a device picker and a 10-second sample with direct playback. (Strength: it explains the browser permission request clearly.)',
     },
   ],
-  related: ['keyboard-tester', 'timer', 'stopwatch'],
+  related: ['keyboard-tester', 'timer', 'stopwatch', 'typing-test'],
 };

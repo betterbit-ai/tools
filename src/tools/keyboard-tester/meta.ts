@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         'Bundled into a multi-device suite (mic, webcam, sound, mouse, controller) with a QWERTY-only key diagram, no layout selector and no rollover/simultaneous-key detail.',
     },
   ],
-  related: ['mic-test', 'word-counter', 'stopwatch', 'timer'],
+  related: ['mic-test', 'word-counter', 'stopwatch', 'timer', 'typing-test'],
 };
