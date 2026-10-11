@@ -127,6 +127,12 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input type={type} class={cx(inputClass, className as string)} {...rest} />;
 }
 
+/** Multi-line text input using the shared token-based input treatment. */
+export function Textarea(props: InputHTMLAttributes<HTMLTextAreaElement>) {
+  const { class: className, ...rest } = props;
+  return <textarea class={cx(inputClass, 'min-h-32 resize-y leading-6', className as string)} {...rest} />;
+}
+
 export function Select<T extends string>(props: {
   value: T;
   onValue: (v: T) => void;
