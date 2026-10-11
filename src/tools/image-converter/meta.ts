@@ -100,6 +100,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'background-remover',
     'image-rotate-flip',
     'image-cropper',
     'heic-to-jpg',

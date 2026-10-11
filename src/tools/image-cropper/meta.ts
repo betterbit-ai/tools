@@ -40,6 +40,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'background-remover',
     'image-rotate-flip',
     'image-resizer',
     'image-compressor',

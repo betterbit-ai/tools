@@ -22,7 +22,7 @@
 | image-converter       | 이미지 형식 변환 | jpg to png, png to jpg, webp to jpg / 이미지 변환 | 모든 조합 하나의 도구 + 조합별 variants         | P0  | live |
 | heic-to-jpg           | HEIC → JPG       | heic to jpg / heic jpg 변환                       | 클라이언트 디코딩(libheif wasm 지연 로드), 배치 | P0  | live |
 | image-cropper         | 이미지 자르기    | crop image / 사진 자르기                          | 비율 프리셋, 원형 자르기(프로필)                | P0  | live |
-| background-remover    | 배경 제거        | remove background / 배경 지우기                   | 온디바이스 ML 모델(지연 로드), 무제한 고해상도  | P1  | todo |
+| background-remover    | 배경 제거        | remove background / 배경 지우기                   | 온디바이스 ML 모델(지연 로드), 원본 크기 PNG    | P1  | live |
 | image-rotate-flip     | 회전·뒤집기      | rotate image / 사진 회전                          | 배치, EXIF 방향 자동 보정                       | P1  | live |
 | image-to-pdf          | 이미지 → PDF     | jpg to pdf / 사진 pdf 변환                        | 순서 드래그, 페이지 크기 맞춤, 업로드 없음      | P0  | live |
 | exif-viewer-remover   | EXIF 보기·제거   | remove exif / 사진 위치정보 삭제                  | 검사 후 배치 제거, ZIP 다운로드                 | P1  | live |
