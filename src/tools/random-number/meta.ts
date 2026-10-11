@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'bmi-calculator',
     'password-generator',
     'random-picker',
+    'spin-wheel',
   ],
 };
