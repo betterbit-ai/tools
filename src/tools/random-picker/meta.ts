@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'The opened Korean tool says its participant list is cleared on refresh and combines five modes—name draw, number draw, teams, order, and ladder—on one page. Betterbit preserves the current name list locally after refresh and focuses the screen on a single keyboard-accessible draw, removal switch, recent results, and copied result summary. (장점: 숫자·조 나누기·순서·사다리타기와 공유 링크를 함께 제공한다.)',
     },
   ],
-  related: ['random-number', 'password-generator', 'qr-code-generator'],
+  related: ['random-number', 'password-generator', 'qr-code-generator', 'spin-wheel'],
 };
