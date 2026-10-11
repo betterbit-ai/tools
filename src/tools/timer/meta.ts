@@ -89,6 +89,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'mic-test',
     'case-converter',
     'word-counter',
     'text-diff',
