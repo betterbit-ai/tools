@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'The opened Korean page presents a multi-step result flow and its visible download action is PNG; its accompanying guide focuses on URL/text settings. Betterbit exposes SVG and PNG together, supports Wi-Fi payloads, and explains the chosen correction level beside the live preview. (Strength: it provides a longer Korean safety guide and additional SMS/email examples.)',
     },
   ],
-  related: ['image-resizer', 'image-converter', 'word-counter'],
+  related: ['image-resizer', 'image-converter', 'word-counter', 'password-generator'],
 };

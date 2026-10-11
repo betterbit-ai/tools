@@ -1,0 +1,208 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  intro:
+    'Generate a random password or a memorable word passphrase. The entropy estimate updates as you change the settings.',
+  modeLabel: 'Generation mode',
+  passwordMode: 'Random password',
+  passphraseMode: 'Word passphrase',
+  lengthLabel: 'Password length',
+  passwordLengthHint: '4 to 128 characters',
+  characterTypesLabel: 'Include',
+  uppercase: 'Uppercase',
+  lowercase: 'Lowercase',
+  numbers: 'Numbers',
+  symbols: 'Symbols',
+  excludeAmbiguous: 'Exclude look-alike characters (I, l, 1, O, 0)',
+  wordCountLabel: 'Number of words',
+  wordCountHint: '2 to 12 random words',
+  separatorLabel: 'Separator',
+  separatorHyphen: 'Hyphen',
+  separatorSpace: 'Space',
+  separatorDot: 'Middle dot',
+  generate: 'Generate password',
+  shortcut: 'Generate with',
+  shortcutKey: 'R',
+  resultHeading: 'Your password',
+  copy: 'Copy',
+  copied: 'Copied',
+  entropyLabel: 'Entropy',
+  bits: 'bits',
+  strengthLabel: 'Strength',
+  strengthWeak: 'Low',
+  strengthFair: 'Moderate',
+  strengthStrong: 'Strong',
+  strengthVeryStrong: 'Very strong',
+  characterCountNote: '{count} characters · {sets} selected character sets',
+  passphraseNote: 'Each word is drawn independently from a fixed 128-word list.',
+  localNote: 'Generated locally with crypto.getRandomValues(). Passwords are never stored or sent to a server.',
+  invalidLength: 'Enter a whole-number password length from 4 to 128.',
+  invalidWordCount: 'Enter a whole-number word count from 2 to 12.',
+  noCharacterSet: 'Choose at least one character type.',
+  lengthTooShort: 'Use at least as many characters as the character types you selected.',
+  cryptoError: 'Your browser does not provide Web Crypto, so a secure password cannot be generated here.',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'Password Generator — Entropy and Word Passphrases',
+    description:
+      'Create a strong random password or memorable word passphrase locally. See an exact entropy estimate, copy in one click, and keep every generated password in your browser.',
+    h1: 'Password Generator',
+    tagline:
+      'Create random passwords and memorable word passphrases with a visible entropy estimate — no ads or sign-up.',
+    name: 'Password Generator',
+    keywords: [
+      'password generator',
+      'strong password generator',
+      'random password',
+      'passphrase generator',
+      'secure password maker',
+    ],
+    howTo: [
+      'Choose Random password for account rules, or Word passphrase when you need something easier to type and remember.',
+      'Set the password length and character types, or choose 2 to 12 words and a separator.',
+      'Check the entropy estimate and strength label before using the result.',
+      'Select Generate password or press R outside an input field to make a fresh value.',
+      'Copy the result and save it in a trusted password manager; generate a different value for every account.',
+    ],
+    sections: [
+      {
+        heading: 'What the entropy number means',
+        body: 'Entropy is shown in bits: a result space with n possible equally likely values has log₂(n) bits. This tool uses the browser’s crypto.getRandomValues() source and rejects remainder values so a selected character is not made slightly more likely by modulo arithmetic. When multiple character types are enabled, it keeps drawing until every enabled type appears, then counts that exact eligible result space for the estimate. It is an estimate of brute-force search space, not a promise about phishing, malware, a breached service, or a reused password.',
+      },
+      {
+        heading: 'Random passwords and word passphrases',
+        body: 'A random character password works well when a service imposes composition rules such as a number or symbol. The generator guarantees each enabled category appears. The word mode joins 2 to 12 independently selected words from its fixed 128-word list, so every word contributes 7 bits of selection entropy; six words show 42 bits. Longer phrases are easier to enter accurately than a short opaque string, but every site has its own maximum length and permitted-character rules. Keep a unique generated password for each account instead of adapting one old password.',
+      },
+      {
+        heading: 'Current password guidance favors length and uniqueness',
+        body: 'NIST SP 800-63B says a password used as the only authentication factor must be at least 15 characters, while passwords used with multi-factor authentication may be at least 8 characters. It also says verifiers should allow at least 64 characters and should not impose other composition rules. Those are requirements for systems that accept passwords, not universal account settings: many websites still require particular characters. Use the rules shown by the service, turn on MFA where available, and replace a password if the service reports a compromise.',
+      },
+    ],
+    faq: [
+      {
+        q: 'Is this password generator safe to use?',
+        a: 'Yes, the generator uses the browser crypto.getRandomValues() API and generates the result locally. It does not save or transmit generated passwords; copy the value into a password manager or the account form, then generate a different one for the next account.',
+      },
+      {
+        q: 'How long should a strong password be?',
+        a: 'For a password used without another factor, NIST SP 800-63B specifies a minimum of 15 characters for the verifier; the practical limit is the individual service’s rules. A unique 20-character random password is the default here, while a word passphrase can be lengthened by adding words.',
+      },
+      {
+        q: 'What does password entropy in bits mean?',
+        a: 'Password entropy in bits is log₂ of the number of possible generated results under the selected settings. For example, six independently chosen words from this generator’s 128-word list have 42 bits because 6 × log₂(128) equals 42.',
+      },
+      {
+        q: 'Are word passphrases easier to remember?',
+        a: 'A random word passphrase is usually easier to read and type than a similarly long punctuation-heavy string. This tool selects each of 2 to 12 words independently, so use more words for a larger search space and do not replace them with personal facts or a familiar quote.',
+      },
+      {
+        q: 'Should I exclude similar-looking characters?',
+        a: 'Exclude look-alike characters when you must read or manually type the password, because I, l, 1, O, and 0 are easy to confuse. Leaving them available gives a slightly larger character pool, so use copy and paste when the destination permits it.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '비밀번호 생성기 — 엔트로피·단어 조합 표시',
+    description:
+      '강력한 랜덤 비밀번호와 기억하기 쉬운 단어 조합을 브라우저에서 만듭니다. 엔트로피를 바로 확인하고 한 번에 복사하며 생성한 비밀번호는 서버로 전송되지 않습니다.',
+    h1: '비밀번호 생성기',
+    tagline: '랜덤 비밀번호와 외우기 쉬운 단어 조합을 만들고, 엔트로피를 바로 확인하세요 — 광고·가입이 없습니다.',
+    name: '비밀번호 생성기',
+    keywords: [
+      '비밀번호 생성기',
+      '강력한 비밀번호 만들기',
+      '랜덤 비밀번호',
+      '안전한 비밀번호 생성',
+      '패스프레이즈 생성기',
+    ],
+    howTo: [
+      '사이트 조건에 맞춰 만들 때는 랜덤 비밀번호를, 직접 입력하고 외워야 할 때는 단어 조합을 고르세요.',
+      '길이와 문자 종류를 설정하거나, 단어 수와 구분 기호를 선택하세요.',
+      '표시되는 엔트로피와 강도 표시를 확인하세요.',
+      '비밀번호 생성을 누르거나 입력칸 밖에서 R 키를 눌러 새 값을 만드세요.',
+      '결과를 복사해 비밀번호 관리자에 저장하고, 계정마다 다른 비밀번호를 사용하세요.',
+    ],
+    sections: [
+      {
+        heading: '엔트로피 숫자는 무엇을 뜻하나요?',
+        body: '엔트로피는 가능한 결과의 수를 비트로 나타낸 값입니다. 결과가 모두 같은 확률이라면 가능한 경우의 수가 n개일 때 log₂(n)비트가 됩니다. 이 도구는 브라우저 crypto.getRandomValues()를 사용하고, 나머지 때문에 특정 문자가 아주 조금 더 자주 선택되는 모듈로 편향도 버립니다. 여러 문자 종류를 켜면 선택한 종류가 모두 포함될 때까지 다시 뽑고, 그 조건을 만족하는 결과 수로 엔트로피를 계산합니다. 다만 이 숫자는 피싱, 악성코드, 서비스 유출, 비밀번호 재사용을 막는 보증은 아닙니다.',
+      },
+      {
+        heading: '랜덤 비밀번호와 단어 조합의 차이',
+        body: '랜덤 비밀번호는 숫자나 특수문자를 요구하는 사이트에 알맞으며, 선택한 문자 종류가 하나씩은 꼭 들어가도록 생성합니다. 단어 조합은 고정된 128개 영어 단어 중에서 2개부터 12개까지를 독립적으로 뽑아 연결합니다. 따라서 단어 하나는 7비트이고, 6개 단어 조합은 42비트입니다. 긴 문장은 짧은 기호 문자열보다 입력하기 쉬울 수 있지만 사이트마다 허용 길이와 문자가 다릅니다. 기존 비밀번호를 살짝 바꾸지 말고 계정마다 새로 생성한 값을 쓰세요.',
+      },
+      {
+        heading: '길이와 고유성이 핵심입니다',
+        body: 'NIST SP 800-63B는 비밀번호만으로 인증하는 경우 서비스가 최소 15자를 요구해야 하며, 다중 인증과 함께 쓰는 비밀번호는 최소 8자까지 허용할 수 있다고 안내합니다. 서비스는 적어도 64자까지 허용하는 것이 권장되며, 문자 종류를 섞도록 강제하지 않는다는 내용도 담고 있습니다. 이는 서비스를 만드는 쪽의 기준이므로 실제 웹사이트의 조건은 다를 수 있습니다. 각 사이트의 규칙을 따르고, 가능하면 MFA를 켜며 유출 알림을 받으면 즉시 교체하세요.',
+      },
+    ],
+    faq: [
+      {
+        q: '이 비밀번호 생성기는 안전한가요?',
+        a: '이 도구는 브라우저의 crypto.getRandomValues()로 비밀번호를 기기 안에서 생성합니다. 생성한 값은 저장하거나 서버로 보내지 않으므로 복사한 뒤 비밀번호 관리자나 가입 화면에 붙여넣고, 다음 계정에는 새 값을 생성하면 됩니다.',
+      },
+      {
+        q: '강력한 비밀번호는 몇 자리로 만들어야 하나요?',
+        a: 'NIST SP 800-63B는 비밀번호만 쓰는 인증에서 서비스가 최소 15자를 요구하도록 정하며, 실제 가능한 길이는 사이트별 규칙에 따라 달라집니다. 이 도구의 기본값은 20자이며, 단어 조합은 단어 수를 늘려 더 길게 만들 수 있습니다.',
+      },
+      {
+        q: '비밀번호 엔트로피의 비트는 무슨 뜻인가요?',
+        a: '엔트로피 비트는 현재 설정으로 생성될 수 있는 경우의 수에 log₂를 적용한 값입니다. 이 도구의 128개 단어 목록에서 독립적으로 6개를 고르면 6 × log₂(128)이라서 42비트로 표시됩니다.',
+      },
+      {
+        q: '단어 조합 비밀번호는 외우기 쉬운가요?',
+        a: '무작위 단어 조합은 비슷한 길이의 기호 문자열보다 읽고 입력하기 쉬운 편입니다. 이 도구는 2개부터 12개 단어를 독립적으로 뽑으므로 단어 수를 늘려 경우의 수를 키우고, 개인 정보나 익숙한 문장을 대신 넣지 마세요.',
+      },
+      {
+        q: '헷갈리는 문자를 빼도 되나요?',
+        a: '직접 읽거나 입력해야 한다면 I, l, 1, O, 0처럼 모양이 비슷한 문자를 빼는 것이 좋습니다. 다만 문자 풀이 조금 작아지므로 붙여넣기가 가능한 곳에서는 문자를 모두 허용하고 복사해 쓰는 방법도 좋습니다.',
+      },
+    ],
+    ui: {
+      intro: '랜덤 비밀번호 또는 외우기 쉬운 단어 조합을 만드세요. 설정을 바꾸면 엔트로피 예상치가 바로 바뀝니다.',
+      modeLabel: '생성 방식',
+      passwordMode: '랜덤 비밀번호',
+      passphraseMode: '단어 조합',
+      lengthLabel: '비밀번호 길이',
+      passwordLengthHint: '4~128자',
+      characterTypesLabel: '포함할 문자',
+      uppercase: '대문자',
+      lowercase: '소문자',
+      numbers: '숫자',
+      symbols: '특수문자',
+      excludeAmbiguous: '헷갈리는 문자 제외 (I, l, 1, O, 0)',
+      wordCountLabel: '단어 수',
+      wordCountHint: '무작위 단어 2~12개',
+      separatorLabel: '구분 기호',
+      separatorHyphen: '하이픈',
+      separatorSpace: '공백',
+      separatorDot: '가운뎃점',
+      generate: '비밀번호 생성',
+      shortcut: '단축키',
+      shortcutKey: 'R',
+      resultHeading: '생성된 비밀번호',
+      copy: '복사',
+      copied: '복사됨',
+      entropyLabel: '엔트로피',
+      bits: '비트',
+      strengthLabel: '강도',
+      strengthWeak: '낮음',
+      strengthFair: '보통',
+      strengthStrong: '강함',
+      strengthVeryStrong: '매우 강함',
+      characterCountNote: '{count}자 · 선택한 문자 종류 {sets}개',
+      passphraseNote: '고정된 128개 단어 목록에서 각 단어를 독립적으로 뽑습니다.',
+      localNote: 'crypto.getRandomValues()로 브라우저에서 생성하며 비밀번호를 저장하거나 서버로 보내지 않습니다.',
+      invalidLength: '4~128 사이의 정수 길이를 입력하세요.',
+      invalidWordCount: '2~12 사이의 정수 단어 수를 입력하세요.',
+      noCharacterSet: '포함할 문자 종류를 하나 이상 선택하세요.',
+      lengthTooShort: '선택한 문자 종류의 수 이상으로 길이를 설정하세요.',
+      cryptoError: '이 브라우저에서는 Web Crypto를 사용할 수 없어 안전한 비밀번호를 생성할 수 없습니다.',
+    },
+  },
+};

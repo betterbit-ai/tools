@@ -1,0 +1,9 @@
+---
+import Tool from './Tool';
+import type { ToolProps } from '../types';
+import type { UI } from './content';
+
+const props = Astro.props as ToolProps<UI>;
+---
+
+<Tool client:load {...props} />

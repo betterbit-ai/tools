@@ -174,7 +174,7 @@
 | slug                | 도구           | 핵심 키워드                          | Edge 아이디어                                     | P   | 상태 |
 | ------------------- | -------------- | ------------------------------------ | ------------------------------------------------- | --- | ---- |
 | qr-code-generator   | QR 코드 생성   | qr code generator / qr코드 만들기    | 만료 없음(정적 QR), 로고 삽입, SVG, 워터마크 없음 | P0  | live |
-| password-generator  | 비밀번호 생성  | password generator / 비밀번호 생성기 | 엔트로피 표시, 외우기 쉬운 단어 조합              | P0  | todo |
+| password-generator  | 비밀번호 생성  | password generator / 비밀번호 생성기 | 엔트로피 표시, 외우기 쉬운 단어 조합              | P0  | live |
 | qr-code-scanner     | QR 코드 스캐너 | qr code scanner online               | 카메라, 이미지 파일                               | P1  | todo |
 | barcode-generator   | 바코드 생성    | barcode generator                    | EAN, Code128, SVG                                 | P1  | todo |
 | random-picker       | 랜덤 뽑기      | random name picker / 제비뽑기        | 룰렛 애니메이션, 결과 공유                        | P0  | todo |
