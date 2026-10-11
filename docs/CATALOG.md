@@ -152,7 +152,7 @@
 | slug              | 도구             | 핵심 키워드                                | Edge 아이디어                        | P   | 상태 |
 | ----------------- | ---------------- | ------------------------------------------ | ------------------------------------ | --- | ---- |
 | json-formatter    | JSON 포맷터      | json formatter / json 정렬                 | 트리 뷰, 오류 위치 표시, 대용량 성능 | P0  | live |
-| base64            | Base64 인코딩    | base64 decode / base64 변환                | 파일 지원, URL-safe                  | P0  | todo |
+| base64            | Base64 인코딩    | base64 decode / base64 변환                | 파일 지원, URL-safe                  | P0  | live |
 | url-encoder       | URL 인코딩       | url encode decode                          | 쿼리 파라미터 표 분해                | P1  | todo |
 | uuid-generator    | UUID 생성        | uuid generator                             | v4/v7, 대량, 형식 옵션               | P1  | todo |
 | hash-generator    | 해시 생성        | sha256 generator / md5                     | 파일 해시, Web Crypto                | P1  | todo |

@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'The Korean tool exposes only Sentence case, lower case, UPPER CASE and Capitalized Case, and shows login/register links plus a cookie-consent banner; it lacks both title-style choices and programming identifier formats.',
     },
   ],
-  related: ['word-counter', 'text-diff', 'json-formatter', 'timer'],
+  related: ['word-counter', 'text-diff', 'json-formatter', 'timer', 'base64'],
 };
