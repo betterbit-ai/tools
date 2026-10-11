@@ -47,6 +47,7 @@ export const meta: ToolMeta = {
     'image-converter',
     'heic-to-jpg',
     'image-to-pdf',
+    'meme-generator',
     'webcam-test',
   ],
 };
