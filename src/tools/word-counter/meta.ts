@@ -31,5 +31,6 @@ export const meta: ToolMeta = {
     'stopwatch',
     'pomodoro-timer',
     'percentage-calculator',
+    'qr-code-generator',
   ],
 };

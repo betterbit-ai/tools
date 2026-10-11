@@ -24,5 +24,5 @@ export const meta: ToolMeta = {
       weakness: 'Private and high quality, but one image at a time and no social-media presets or crop-to-fill.',
     },
   ],
-  related: ['image-cropper', 'image-compressor', 'image-converter', 'heic-to-jpg', 'image-to-pdf'],
+  related: ['image-cropper', 'image-compressor', 'image-converter', 'heic-to-jpg', 'image-to-pdf', 'qr-code-generator'],
 };
