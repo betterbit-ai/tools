@@ -28,8 +28,9 @@ permissions:
 
 jobs:
   run:
-    # Scheduled runs only when switched on (Settings → Variables → FACTORY_ENABLED = true).
-    if: github.event_name == 'workflow_dispatch' || vars.FACTORY_ENABLED == 'true'
+    # Runs only while switched on (Settings → Variables → FACTORY_ENABLED = true), including the
+    # follow-up runs a run dispatches for itself. A person can always start one by hand.
+    if: vars.FACTORY_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && github.actor != 'github-actions[bot]')
     runs-on: ubuntu-latest
     # Scheduled runs are often hours late, so one run keeps building for FACTORY_BUDGET_MIN and then
     # chains the next run itself. Budget + one session (90) + CI wait (25) must fit the timeout.
