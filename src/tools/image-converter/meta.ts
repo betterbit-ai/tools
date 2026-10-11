@@ -100,6 +100,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'image-rotate-flip',
     'image-cropper',
     'heic-to-jpg',
     'image-resizer',

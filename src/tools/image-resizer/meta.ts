@@ -25,6 +25,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'image-rotate-flip',
     'image-cropper',
     'image-compressor',
     'image-converter',
