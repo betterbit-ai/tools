@@ -33,5 +33,6 @@ export const meta: ToolMeta = {
     'pomodoro-timer',
     'percentage-calculator',
     'qr-code-generator',
+    'typing-test',
   ],
 };

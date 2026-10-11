@@ -199,7 +199,7 @@
 | mouse-test         | 마우스 테스트   | mouse test / 더블클릭 테스트         | 더블클릭 오작동 감지            | P1  | todo |
 | dead-pixel-test    | 불량화소 테스트 | dead pixel test / 불량화소           | 전체화면 색 순환                | P1  | todo |
 | speaker-test       | 스피커 테스트   | speaker test / 좌우 스피커 테스트    | 좌우, 주파수 스윕               | P1  | todo |
-| typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM             | P0  | todo |
+| typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM             | P0  | live |
 | refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                               | P2  | todo |
 | click-speed-test   | 클릭 속도       | cps test                             | —                               | P1  | todo |
 | reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                    | P1  | todo |
