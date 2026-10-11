@@ -45,5 +45,12 @@ export const meta: ToolMeta = {
         'Its opened page has only a minimum, maximum, and Generate control, so it cannot make a bulk list, prevent duplicates, sort a result, or copy a newline-separated set. Betterbit adds all four while retaining a simple default 1–100 draw. (장점: 한 숫자만 필요할 때의 화면은 매우 단순하다.)',
     },
   ],
-  related: ['percentage-calculator', 'loan-calculator', 'compound-interest', 'bmi-calculator', 'password-generator'],
+  related: [
+    'percentage-calculator',
+    'loan-calculator',
+    'compound-interest',
+    'bmi-calculator',
+    'password-generator',
+    'random-picker',
+  ],
 };
