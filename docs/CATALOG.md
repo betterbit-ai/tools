@@ -26,7 +26,7 @@
 | image-rotate-flip     | 회전·뒤집기      | rotate image / 사진 회전                          | 배치, EXIF 방향 자동 보정                       | P1  | live |
 | image-to-pdf          | 이미지 → PDF     | jpg to pdf / 사진 pdf 변환                        | 순서 드래그, 페이지 크기 맞춤, 업로드 없음      | P0  | live |
 | exif-viewer-remover   | EXIF 보기·제거   | remove exif / 사진 위치정보 삭제                  | 검사 후 배치 제거, ZIP 다운로드                 | P1  | live |
-| image-watermark       | 워터마크 넣기    | add watermark / 사진 워터마크                     | 배치, 타일 패턴, 로고 이미지                    | P1  | todo |
+| image-watermark       | 워터마크 넣기    | add watermark / 사진 워터마크                     | 배치, 타일 패턴, 로고 이미지                    | P1  | live |
 | meme-generator        | 밈 만들기        | meme generator / 짤 만들기                        | 워터마크 없음, 한글 폰트                        | P1  | todo |
 | collage-maker         | 사진 콜라주      | photo collage / 사진 합치기                       | 레이아웃 템플릿, 고해상도 무료                  | P1  | todo |
 | image-upscaler        | 이미지 업스케일  | upscale image / 사진 화질 개선                    | 온디바이스 AI 모델(지연 로드), 2×·4× 비교       | P0  | live |

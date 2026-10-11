@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its page lists JPG, JPEG, and PNG as the supported cleanup formats and presents a single-photo upload flow, so WebP and a batch ZIP workflow are absent. (Strength: it presents a longer Korean guide to its supported fields.)',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-converter', 'image-rotate-flip'],
+  related: ['image-resizer', 'image-compressor', 'image-converter', 'image-rotate-flip', 'image-watermark'],
 };

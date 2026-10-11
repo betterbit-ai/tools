@@ -33,6 +33,7 @@ export const meta: ToolMeta = {
     'heic-to-jpg',
     'image-to-pdf',
     'exif-viewer-remover',
+    'image-watermark',
     'qr-code-generator',
   ],
 };
