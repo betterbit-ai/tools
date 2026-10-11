@@ -10,6 +10,8 @@ import { join, relative, resolve } from 'node:path';
 const DIST = resolve(process.argv[2] ?? 'dist');
 /** Raw (uncompressed) JS per page. Preact + one tool should be far below this. */
 const JS_BUDGET_BYTES = 150 * 1024;
+/** Cloudflare Workers static assets reject any single file larger than 25 MiB (deploy fails). */
+const ASSET_MAX_BYTES = 25 * 1024 * 1024;
 
 const errors = [];
 const warnings = [];
@@ -110,6 +112,18 @@ for (const file of pages) {
   let js = 0;
   for (const f of jsFiles) js += jsClosure(join(DIST, f), seen);
   if (js > JS_BUDGET_BYTES) fail(page, `JS ${Math.round(js / 1024)} KB exceeds budget ${JS_BUDGET_BYTES / 1024} KB`);
+}
+
+// Deploy limit: every file in dist/, not just pages (e.g. a bundled .wasm).
+for (const file of walk(DIST)) {
+  const size = statSync(file).size;
+  if (size > ASSET_MAX_BYTES) {
+    fail(
+      relative(DIST, file),
+      `${(size / 1024 / 1024).toFixed(1)} MiB exceeds Cloudflare's 25 MiB per-asset limit (the deploy would fail). ` +
+        'Avoid bundling it (e.g. import a smaller entry point of the library) or split it.',
+    );
+  }
 }
 
 for (const w of warnings) console.warn(`warn  ${w}`);
