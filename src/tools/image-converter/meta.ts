@@ -109,6 +109,7 @@ export const meta: ToolMeta = {
     'image-to-pdf',
     'pdf-to-jpg',
     'exif-viewer-remover',
+    'image-watermark',
     'qr-code-generator',
   ],
   variants,
