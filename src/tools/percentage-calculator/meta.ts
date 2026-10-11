@@ -50,5 +50,6 @@ export const meta: ToolMeta = {
     'scientific-calculator',
     'length-converter',
     'weight-converter',
+    'random-number',
   ],
 };

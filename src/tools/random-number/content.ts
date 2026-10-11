@@ -1,0 +1,189 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  intro: 'Choose a range and generate up to 10,000 whole numbers. Every draw uses your browser’s Web Crypto source.',
+  minLabel: 'Minimum',
+  maxLabel: 'Maximum',
+  boundHint: 'Inclusive',
+  countLabel: 'How many numbers?',
+  countHint: '1 to {max}',
+  sortLabel: 'Result order',
+  sortDraw: 'Draw order',
+  sortAscending: 'Ascending',
+  sortDescending: 'Descending',
+  uniqueLabel: 'No repeats',
+  diePreset: 'Die (1–6)',
+  lotteryPreset: 'Lottery (6/45)',
+  bulkPreset: '10 from 1–100',
+  generate: 'Generate numbers',
+  shortcut: 'Generate with',
+  shortcutKey: 'G',
+  resultHeading: 'Generated numbers',
+  copy: 'Copy',
+  copied: 'Copied',
+  countResultLabel: 'Generated',
+  rangeResultLabel: 'Range',
+  cryptoNote: 'Generated locally with crypto.getRandomValues(); no numbers are sent to a server.',
+  invalidBoundsError: 'Enter whole-number bounds from −1,000,000,000 to 1,000,000,000.',
+  invalidCountError: 'Enter a whole-number count from 1 to 10,000.',
+  rangeOrderError: 'The minimum cannot be greater than the maximum.',
+  tooManyUniqueError: 'This range does not contain enough different numbers for a no-repeat draw.',
+  cryptoError: 'Your browser does not provide Web Crypto, so secure numbers cannot be generated here.',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'Random Number Generator — Secure, No Repeats, Bulk',
+    description:
+      'Generate 1 to 10,000 random integers in any inclusive range, with no repeats and one-click copy. Browser Web Crypto keeps every draw local and ad-free.',
+    h1: 'Random Number Generator',
+    tagline:
+      'Generate up to 10,000 secure random integers, with optional no-repeat draws, sorting, and one-click copy — no ads.',
+    name: 'Random Number Generator',
+    keywords: [
+      'random number generator',
+      'random number picker',
+      'random integer generator',
+      'random number generator no repeats',
+      'random number list generator',
+      'random number between two numbers',
+      'secure random number generator',
+    ],
+    howTo: [
+      'Enter the lowest and highest whole numbers that can be drawn; both endpoints are included.',
+      'Set how many numbers to generate, from 1 to 10,000.',
+      'Turn on “No repeats” when every number in the batch must be different.',
+      'Choose draw order, ascending order, or descending order.',
+      'Select “Generate numbers” or press G, then copy the newline-separated result if needed.',
+    ],
+    sections: [
+      {
+        heading: 'Inclusive ranges and no-repeat draws',
+        body: 'The minimum and maximum are both possible results. A range of 1–6 therefore has six values, just like a die. With “No repeats” off, every draw is independent, so duplicate numbers are expected and correct. With it on, this tool samples without replacement: each value appears at most once in that batch. It prevents an impossible request instead of silently repeating a number; for example, a 1–10 range can supply at most 10 different results.',
+      },
+      {
+        heading: 'Why this generator uses Web Crypto',
+        body: 'This tool reads 32-bit values from the browser’s crypto.getRandomValues() API rather than Math.random(). MDN describes getRandomValues() as providing cryptographically strong random values. The generator also rejects the small remainder that would otherwise make some results fractionally more likely when a range does not divide evenly into 2³² possible source values. Results are generated only in this browser and are not a record of a regulated or independently auditable draw.',
+      },
+      {
+        heading: 'Bulk lists without a giant range in memory',
+        body: 'You can generate up to 10,000 integers at once, including negative values, within a supported inclusive range from −1,000,000,000 to 1,000,000,000. For no-repeat batches, the generator uses a partial shuffle that stores only the values selected so far rather than building an array for the entire range. Choose ascending order for a tidy list, or draw order when the sequence itself matters.',
+      },
+    ],
+    faq: [
+      {
+        q: 'How do I generate a random number between two values?',
+        a: 'Enter the lower value in Minimum and the upper value in Maximum, then select Generate numbers. Both values are included: a 1–100 draw can return 1 or 100, and the tool also accepts negative integers down to −1,000,000,000.',
+      },
+      {
+        q: 'How can I generate random numbers with no repeats?',
+        a: 'Turn on No repeats before generating. The tool draws without replacement, so every value in that one batch is different; a request for 6 numbers from 1–45 can return six distinct values, but a request for 11 distinct values from 1–10 is rejected because only 10 exist.',
+      },
+      {
+        q: 'Are the numbers generated by this tool secure?',
+        a: 'The tool uses the browser’s crypto.getRandomValues() API, which MDN describes as cryptographically strong, instead of Math.random(). It is suitable for generating random integers in the stated range, but a local browser result is not a certified, recorded, or independently auditable drawing.',
+      },
+      {
+        q: 'Can I create a large list of random numbers?',
+        a: 'Yes. One generation can contain from 1 to 10,000 whole numbers. Copy returns one number per line, which pastes directly into a spreadsheet column, and ascending or descending order can be selected before generating.',
+      },
+      {
+        q: 'Does this random number generator send my results to a server?',
+        a: 'No. The browser generates the values locally with Web Crypto, and the settings are saved only in this browser so your range and options can be restored after a refresh. Neither settings nor generated numbers are sent to a server.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '랜덤 숫자 생성기 — 중복 없이 최대 1만 개',
+    description:
+      '원하는 범위에서 랜덤 정수를 최대 1만 개까지 생성합니다. 중복 없는 추첨, 정렬, 한 번에 복사를 지원하며 모든 숫자는 브라우저에서 안전하게 생성됩니다.',
+    h1: '랜덤 숫자 생성기',
+    tagline: '범위와 개수만 정하면 중복 없는 랜덤 숫자를 최대 1만 개까지 생성하고 바로 복사합니다 — 광고가 없습니다.',
+    name: '랜덤 숫자 생성기',
+    keywords: [
+      '랜덤 숫자 생성기',
+      '난수 생성기',
+      '랜덤 숫자 뽑기',
+      '랜덤 번호 생성기',
+      '중복 없는 랜덤 숫자',
+      '숫자 추첨기',
+      '난수 뽑기',
+    ],
+    howTo: [
+      '최솟값과 최댓값에 뽑을 수 있는 정수 범위를 입력하세요. 양 끝값도 결과에 포함됩니다.',
+      '생성할 숫자 개수를 1개부터 10,000개까지 입력하세요.',
+      '같은 번호가 다시 나오면 안 되는 추첨은 “중복 없음”을 켜세요.',
+      '생성 순서, 오름차순, 내림차순 중 결과 표시 순서를 고르세요.',
+      '“숫자 생성”을 누르거나 G 키를 누른 뒤, 필요하면 한 번에 복사하세요.',
+    ],
+    sections: [
+      {
+        heading: '범위의 양 끝값도 포함하고, 중복 없음은 비복원 추첨입니다',
+        body: '최솟값과 최댓값은 모두 결과가 될 수 있습니다. 따라서 1~6은 주사위처럼 정확히 6개의 숫자를 포함합니다. “중복 없음”을 끄면 매번 독립적으로 뽑으므로 같은 수가 반복되어도 정상입니다. 켜면 뽑은 번호표를 다시 넣지 않는 비복원 추첨처럼 한 번의 결과 안에서는 같은 수가 최대 한 번만 나옵니다. 예를 들어 1~10에서 서로 다른 숫자는 최대 10개뿐이므로 11개를 중복 없이 요청하면 오류로 알려드립니다.',
+      },
+      {
+        heading: 'Math.random() 대신 브라우저 Web Crypto를 사용합니다',
+        body: '이 도구는 Math.random() 대신 브라우저의 crypto.getRandomValues() API로 32비트 난수를 가져옵니다. MDN은 이 API가 암호학적으로 강한 무작위 값을 제공한다고 설명합니다. 또한 범위 크기가 가능한 2³²개 값으로 나누어떨어지지 않을 때 일부 숫자가 아주 조금 더 자주 나오는 편향을 막기 위해, 나머지 구간의 값은 다시 뽑습니다. 다만 브라우저에서만 만든 결과는 공인 추첨 기록이나 제3자가 검증하는 추첨 증명은 아닙니다.',
+      },
+      {
+        heading: '큰 범위도 전체 목록을 만들지 않고 한 번에 생성합니다',
+        body: '−1,000,000,000부터 1,000,000,000까지의 정수 범위에서 한 번에 최대 10,000개를 생성할 수 있으며, 음수도 지원합니다. 중복 없는 결과는 범위 전체를 배열로 만들어 두지 않고 실제로 뽑은 번호만 저장하는 부분 셔플 방식으로 만듭니다. 엑셀에 붙여넣을 때는 한 줄에 하나씩 복사하고, 번호를 보기 좋게 정리할 때는 오름차순 또는 내림차순을 선택하세요.',
+      },
+    ],
+    faq: [
+      {
+        q: '원하는 범위에서 랜덤 숫자는 어떻게 뽑나요?',
+        a: '최솟값과 최댓값을 입력하고 숫자 생성을 누르면 됩니다. 두 끝값을 모두 포함하므로 1~100에서는 1과 100도 나올 수 있으며, −1,000,000,000까지의 음수 정수도 입력할 수 있습니다.',
+      },
+      {
+        q: '중복 없는 랜덤 숫자는 어떻게 생성하나요?',
+        a: '생성 전에 중복 없음을 켜면 됩니다. 한 번의 결과 안에서 같은 숫자가 다시 나오지 않으며, 1~45 중 6개를 뽑으면 서로 다른 6개가 나옵니다. 반대로 1~10에서 11개를 중복 없이 뽑는 요청은 가능한 숫자가 10개뿐이라 생성할 수 없습니다.',
+      },
+      {
+        q: '이 난수 생성기는 안전한가요?',
+        a: '이 도구는 Math.random()이 아니라 MDN이 암호학적으로 강한 값을 제공한다고 설명하는 브라우저 crypto.getRandomValues() API를 사용합니다. 다만 이 결과는 브라우저에서만 생성되므로 공인된 추첨, 기록 보관, 제3자 검증이 필요한 용도의 증명 자료는 아닙니다.',
+      },
+      {
+        q: '랜덤 숫자 목록을 많이 만들 수 있나요?',
+        a: '한 번에 1개부터 10,000개까지의 정수를 생성할 수 있습니다. 복사하면 숫자 하나가 한 줄씩 들어가 엑셀이나 스프레드시트 열에 바로 붙여넣을 수 있고, 생성 전 오름차순·내림차순 정렬도 선택할 수 있습니다.',
+      },
+      {
+        q: '생성한 숫자가 서버로 전송되나요?',
+        a: '아니요. 난수는 브라우저 안에서 Web Crypto로 생성하며, 선택한 범위와 옵션만 이 브라우저의 로컬 저장소에 남아 새로고침 뒤에도 복원됩니다. 설정과 생성 결과는 서버로 전송되지 않습니다.',
+      },
+    ],
+    ui: {
+      intro: '범위와 개수를 정해 최대 10,000개의 정수를 생성하세요. 모든 난수는 브라우저 Web Crypto로 생성합니다.',
+      minLabel: '최솟값',
+      maxLabel: '최댓값',
+      boundHint: '끝값 포함',
+      countLabel: '생성 개수',
+      countHint: '1~{max}개',
+      sortLabel: '결과 순서',
+      sortDraw: '생성 순서',
+      sortAscending: '오름차순',
+      sortDescending: '내림차순',
+      uniqueLabel: '중복 없음',
+      diePreset: '주사위 (1~6)',
+      lotteryPreset: '로또 (6/45)',
+      bulkPreset: '1~100 중 10개',
+      generate: '숫자 생성',
+      shortcut: '단축키',
+      shortcutKey: 'G',
+      resultHeading: '생성된 숫자',
+      copy: '복사',
+      copied: '복사됨',
+      countResultLabel: '생성 개수',
+      rangeResultLabel: '범위',
+      cryptoNote: 'crypto.getRandomValues()로 브라우저에서 생성하며 서버로 전송하지 않습니다.',
+      invalidBoundsError: '−1,000,000,000부터 1,000,000,000까지의 정수 범위를 입력하세요.',
+      invalidCountError: '1부터 10,000까지의 정수 개수를 입력하세요.',
+      rangeOrderError: '최솟값은 최댓값보다 클 수 없습니다.',
+      tooManyUniqueError: '이 범위에는 중복 없이 뽑을 수 있는 서로 다른 숫자가 충분하지 않습니다.',
+      cryptoError: '이 브라우저에서는 Web Crypto를 사용할 수 없어 안전한 난수를 생성할 수 없습니다.',
+    },
+  },
+};
