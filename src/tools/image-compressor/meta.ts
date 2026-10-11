@@ -37,6 +37,7 @@ export const meta: ToolMeta = {
     'image-cropper',
     'image-resizer',
     'image-converter',
+    'image-upscaler',
     'heic-to-jpg',
     'image-to-pdf',
     'merge-pdf',

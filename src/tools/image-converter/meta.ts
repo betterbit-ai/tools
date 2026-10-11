@@ -104,6 +104,7 @@ export const meta: ToolMeta = {
     'heic-to-jpg',
     'image-resizer',
     'image-compressor',
+    'image-upscaler',
     'image-to-pdf',
     'pdf-to-jpg',
     'qr-code-generator',

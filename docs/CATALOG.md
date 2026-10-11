@@ -29,7 +29,7 @@
 | image-watermark       | 워터마크 넣기    | add watermark / 사진 워터마크                     | 배치, 타일 패턴, 로고 이미지                    | P1  | todo |
 | meme-generator        | 밈 만들기        | meme generator / 짤 만들기                        | 워터마크 없음, 한글 폰트                        | P1  | todo |
 | collage-maker         | 사진 콜라주      | photo collage / 사진 합치기                       | 레이아웃 템플릿, 고해상도 무료                  | P1  | todo |
-| image-upscaler        | 이미지 업스케일  | upscale image / 화질 개선                         | 온디바이스 모델(지연 로드)                      | P2  | todo |
+| image-upscaler        | 이미지 업스케일  | upscale image / 사진 화질 개선                    | 온디바이스 AI 모델(지연 로드), 2×·4× 비교       | P0  | live |
 | favicon-generator     | 파비콘 생성      | favicon generator                                 | 모든 사이즈 + manifest + 코드 스니펫            | P1  | todo |
 | image-to-base64       | 이미지 → Base64  | image to base64                                   | data URI + CSS/HTML 스니펫                      | P2  | todo |
 | svg-to-png            | SVG → PNG        | svg to png                                        | 배율 지정, 투명 배경                            | P2  | todo |
