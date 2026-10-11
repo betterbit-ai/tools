@@ -12,5 +12,11 @@ export default defineConfig({
   integrations: [preact()],
   vite: {
     plugins: [tailwindcss()],
+    // ONNX Runtime's default WebGPU export embeds a 26 MB fallback WASM binary.
+    // Select its external-WASM export instead; the required runtime files are
+    // deliberately self-hosted in public/ort and loaded only when upscaling.
+    resolve: {
+      conditions: ['onnxruntime-web-use-extern-wasm', 'module', 'browser', 'development|production'],
+    },
   },
 });
