@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'A basic turn or mirror opens Adobe’s all-in-one creation product with templates, brand-kit features, and Premium-plan promotion rather than a dedicated batch rotation screen. (Strength: the broader editor provides many design and collaboration tools beyond this focused task.)',
     },
   ],
-  related: ['image-cropper', 'image-resizer', 'image-converter'],
+  related: ['image-cropper', 'image-resizer', 'image-converter', 'exif-viewer-remover'],
 };

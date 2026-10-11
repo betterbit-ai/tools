@@ -108,6 +108,7 @@ export const meta: ToolMeta = {
     'image-upscaler',
     'image-to-pdf',
     'pdf-to-jpg',
+    'exif-viewer-remover',
     'qr-code-generator',
   ],
   variants,

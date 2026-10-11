@@ -40,6 +40,7 @@ export const meta: ToolMeta = {
     'image-upscaler',
     'heic-to-jpg',
     'image-to-pdf',
+    'exif-viewer-remover',
     'merge-pdf',
     'compress-pdf',
   ],
