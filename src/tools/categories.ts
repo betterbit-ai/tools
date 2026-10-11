@@ -69,6 +69,14 @@ export const CATEGORIES = {
       ko: 'QR 코드, 안전한 비밀번호, 랜덤 숫자, 제비뽑기·팀 나누기 생성기. 무료, 무제한, 회원가입과 워터마크 없음.',
     },
   },
+  device: {
+    icon: 'microphone',
+    name: { en: 'Device tests', ko: '기기 테스트' },
+    description: {
+      en: 'Check your microphone, camera, keyboard and other device inputs in the browser before a call, class or recording — no install or account needed.',
+      ko: '화상 회의, 수업, 녹음 전에 마이크·카메라·키보드 등 기기 입력을 브라우저에서 바로 점검합니다. 설치와 회원가입이 필요 없습니다.',
+    },
+  },
 } as const satisfies Record<
   string,
   { icon: string; name: Record<Locale, string>; description: Record<Locale, string> }
