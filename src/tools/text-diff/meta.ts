@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         '줄/단어/글자 단위 비교를 제공하지만, 유니코드 정규화(NFC/NFD)나 결합 문자 처리에 대한 설명이 전혀 없어 macOS에서 자모가 분리된 한글을 붙여넣었을 때도 정확히 비교되는지 확인할 수 없음. (Strength: 완전한 한국어 UI, 가입 없는 무료 다단계 diff.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'json-formatter', 'timer'],
+  related: ['word-counter', 'case-converter', 'json-formatter', 'timer', 'base64'],
 };

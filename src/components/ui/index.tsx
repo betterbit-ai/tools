@@ -306,6 +306,7 @@ export function Dropzone(props: {
 function matchesAccept(file: File, accept: string): boolean {
   return accept.split(',').some((rule) => {
     const r = rule.trim();
+    if (r === '*' || r === '*/*') return true;
     if (r.endsWith('/*')) return file.type.startsWith(r.slice(0, -1));
     if (r.startsWith('.')) return file.name.toLowerCase().endsWith(r.toLowerCase());
     return file.type === r;

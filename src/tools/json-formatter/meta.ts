@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         '포맷·압축만 지원하고 트리 뷰, 오류 위치, 키 정렬 기능이 없어 깨진 JSON을 붙여넣어도 어디가 문제인지 알려주지 않음.',
     },
   ],
-  related: ['case-converter', 'text-diff', 'word-counter'],
+  related: ['case-converter', 'text-diff', 'word-counter', 'base64'],
 };
