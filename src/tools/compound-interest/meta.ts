@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'It asks for a per-period return and a number of periods, so a visitor using an annual rate must first convert the rate for a monthly plan. Betterbit accepts one annual rate, lets the visitor select annual/quarterly/monthly/daily compounding, and shows the resulting effective annual rate. (장점: 회차마다 추가 납입금을 직접 설정하고 세전 결과임을 명확히 알린다.)',
     },
   ],
-  related: ['loan-calculator', 'percentage-calculator', 'salary-calculator-kr'],
+  related: ['loan-calculator', 'percentage-calculator', 'salary-calculator-kr', 'random-number'],
 };

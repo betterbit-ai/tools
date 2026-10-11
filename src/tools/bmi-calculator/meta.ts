@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'length-converter',
     'weight-converter',
     'temperature-converter',
+    'random-number',
   ],
 };
