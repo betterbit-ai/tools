@@ -35,6 +35,7 @@ export const meta: ToolMeta = {
     'image-to-pdf',
     'exif-viewer-remover',
     'image-watermark',
+    'meme-generator',
     'qr-code-generator',
   ],
 };

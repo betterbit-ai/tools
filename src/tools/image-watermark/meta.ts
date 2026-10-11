@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean search result says batch processing is local (Strength: it matches the privacy and batch approach). It does not make a text/logo repeat-pattern editor or a ZIP workflow apparent in the result, whereas both are direct controls here.',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-converter', 'exif-viewer-remover'],
+  related: ['image-resizer', 'image-compressor', 'image-converter', 'exif-viewer-remover', 'meme-generator'],
 };
