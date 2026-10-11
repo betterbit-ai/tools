@@ -460,6 +460,13 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
       }).out;
       details = details.split('\n').slice(-150).join('\n');
     }
+    if (failed.some((c) => /workers builds|cloudflare/i.test(c.name || c.context || ''))) {
+      // The factory can't read Cloudflare's build log; give the agent the usual causes and a local repro.
+      details +=
+        '\n\nCloudflare Workers Builds failed (its log is not available here). It runs `npm run build` then ' +
+        '`wrangler deploy`/`preview`. Common causes: a file in dist/ over 25 MiB (`npm run check:dist` reports it), ' +
+        'a build that only fails on Linux, or wrangler.jsonc problems. Reproduce with `npm run build && npm run check:dist`.';
+    }
   }
 
   const before = sh('git', ['-C', wt, 'rev-parse', 'HEAD']).out;
