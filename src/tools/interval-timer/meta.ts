@@ -47,7 +47,7 @@ export const meta: ToolMeta = {
         'Its Korean timer exposes a larger builder with saved workouts, recent sessions, themes, sets, warm-up and cooldown before its audio controls; Betterbit keeps a one-panel workout timer focused on the next phase. (Strength: it offers saved workouts, themes, vibration and sets.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'pomodoro-timer', 'countdown'],
+  related: ['timer', 'stopwatch', 'pomodoro-timer', 'countdown', 'metronome'],
   variants: [
     {
       slug: 'tabata',

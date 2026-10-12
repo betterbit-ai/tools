@@ -54,5 +54,6 @@ export const meta: ToolMeta = {
     'countdown',
     'date-calculator',
     'time-zone-converter',
+    'metronome',
   ],
 };

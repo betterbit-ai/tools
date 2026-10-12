@@ -96,7 +96,7 @@
 | hours-calculator    | 근무 시간 계산    | hours calculator / 근무시간 계산  | 휴게 시간 차감, 주간 합계                           | P1  | live |
 | online-clock        | 온라인 시계       | online clock / 현재 시간          | 전체화면 대형 시계, 서버 시간 동기화 없이 오차 표시 | P1  | live |
 | interval-timer      | 인터벌 타이머     | tabata timer / 인터벌 타이머      | 운동 프리셋, 음성 안내                              | P1  | live |
-| metronome           | 메트로놈          | metronome / 메트로놈              | Web Audio 정확한 박자, 탭 템포                      | P1  | todo |
+| metronome           | 메트로놈          | metronome / 메트로놈              | Web Audio 정확한 박자, 탭 템포                      | P1  | live |
 | week-number         | 주차 계산         | what week is it / 몇 주차         | ISO 주차, 연간 달력                                 | P2  | todo |
 
 ## calculator: 계산기
