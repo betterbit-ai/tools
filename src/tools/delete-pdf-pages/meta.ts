@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         'It also says it processes files locally, but its Korean page exposes only a generic “페이지 삭제” output action before a file is loaded. This tool shows an explicit selected/remaining count and supports both keyboard-focusable thumbnails and typed page ranges. (Strength: it also presents local thumbnail previews.)',
     },
   ],
-  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'rotate-pdf'],
+  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'rotate-pdf', 'reorder-pdf'],
 };
