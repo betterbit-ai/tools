@@ -43,5 +43,6 @@ export const meta: ToolMeta = {
     'rotate-pdf',
     'delete-pdf-pages',
     'reorder-pdf',
+    'unlock-pdf',
   ],
 };
