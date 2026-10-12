@@ -77,7 +77,7 @@
 | reverse-text           | 텍스트 뒤집기     | reverse text                         | 거꾸로, 상하 뒤집기                                   | P2  | todo |
 | word-frequency         | 단어 빈도         | word frequency counter               | CJK 분절, CSV 내보내기                                | P2  | todo |
 | markdown-editor        | 마크다운 미리보기 | markdown editor online               | 실시간 미리보기, HTML 복사                            | P2  | todo |
-| character-map          | 특수문자표        | special characters / 특수문자        | 한국어 키보드 특수문자(ㅁ+한자) 카테고리              | P1  | todo |
+| character-map          | 특수문자표        | special characters / 특수문자        | 한국어 키보드 특수문자(ㅁ+한자) 카테고리              | P1  | live |
 
 ## time: 시간·날짜
 

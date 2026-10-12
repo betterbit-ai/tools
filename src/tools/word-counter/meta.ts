@@ -41,5 +41,6 @@ export const meta: ToolMeta = {
     'hangul-romanization',
     'fancy-text',
     'invisible-character',
+    'character-map',
   ],
 };
