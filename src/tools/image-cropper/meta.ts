@@ -43,6 +43,7 @@ export const meta: ToolMeta = {
     'background-remover',
     'image-rotate-flip',
     'image-resizer',
+    'image-blur-pixelate',
     'image-compressor',
     'image-converter',
     'heic-to-jpg',
