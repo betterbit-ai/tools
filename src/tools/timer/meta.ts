@@ -98,6 +98,7 @@ export const meta: ToolMeta = {
     'stopwatch',
     'pomodoro-timer',
     'countdown',
+    'alarm-clock',
     'date-calculator',
     'age-calculator',
     'time-zone-converter',
