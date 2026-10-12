@@ -58,5 +58,6 @@ export const meta: ToolMeta = {
     'time-zone-converter',
     'world-clock',
     'typing-test',
+    'hours-calculator',
   ],
 };

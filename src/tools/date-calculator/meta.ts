@@ -54,5 +54,6 @@ export const meta: ToolMeta = {
     'percentage-calculator',
     'scientific-calculator',
     'unix-timestamp',
+    'hours-calculator',
   ],
 };
