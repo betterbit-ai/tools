@@ -3,10 +3,14 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop images here, click to choose, or paste',
-  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · as many as you like',
+  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · up to 50 images per batch',
   privacyNote: 'Images are compressed on your device. Nothing is uploaded.',
   unsupported: 'This file can’t be read by your browser.',
+  processFailed: 'This image could not be compressed. Try a smaller file or another format.',
+  batchLimit: 'A batch can contain up to {n} images. Add more after downloading or clearing these files.',
+  zipFailed: 'The ZIP could not be created. Try downloading fewer images at once.',
   processing: 'Working…',
+  preparingDownload: 'Preparing ZIP…',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
   remove: 'Remove',
@@ -15,7 +19,9 @@ const uiEn = {
   modeSize: 'Target size',
   modeQuality: 'Quality slider',
   targetSize: 'Target file size',
-  targetSizeHint: 'The tool searches for the highest quality — and, if needed, a smaller size — that fits this.',
+  targetSizeHint:
+    'The tool searches for the highest quality — and, if needed, a smaller size — that fits this. 1 KB = 1,024 bytes.',
+  targetInvalid: 'Enter a target size greater than 0 to compress the images.',
   quality: 'Quality',
   qualityHint: 'Applies to JPG and WebP. 70–85 is visually lossless for most photos.',
   pngNoQuality:
@@ -66,7 +72,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your images stay on your device',
-        body: 'This compressor runs entirely in your browser’s own image engine (Canvas) — files are never uploaded to a server, so there is no wait, no file-count limit, and it keeps working offline once the page has loaded. Re-encoding also strips the original EXIF metadata (camera model, GPS location), which is a useful side effect before sharing photos publicly.',
+        body: 'This compressor runs entirely in your browser’s own image engine (Canvas) — files are never uploaded to a server, so there is no upload wait, and it keeps working offline once the page has loaded. A batch holds up to 50 images to keep device memory manageable. Re-encoding also strips the original EXIF metadata (camera model, GPS location), which is a useful side effect before sharing photos publicly.',
       },
     ],
     faq: [
@@ -88,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How many images can I compress at once?',
-        a: 'There is no fixed limit. Hundreds of typical phone photos work fine; the practical limit is your device’s memory, since every image is processed on your own machine.',
+        a: 'A batch can contain up to 50 images. Large, high-resolution photos use more device memory, so split a larger collection into smaller batches if your browser becomes slow.',
       },
       {
         q: 'What is a good target size for a resume or application photo?',
@@ -133,7 +139,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
-        body: '이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 직접 처리하기 때문에 사진이 서버에 업로드되지 않습니다. 업로드·다운로드 대기가 없고, 파일 개수 제한도 없으며, 페이지를 연 뒤에는 오프라인에서도 동작합니다. 다시 인코딩하는 과정에서 원본의 EXIF 메타데이터(카메라 모델, GPS 위치)도 함께 제거되므로, 사진을 공개적으로 올리기 전에도 유용합니다.',
+        body: '이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 직접 처리하기 때문에 사진이 서버에 업로드되지 않습니다. 업로드 대기가 없고 페이지를 연 뒤에는 오프라인에서도 동작합니다. 기기 메모리를 무리하게 쓰지 않도록 한 번에 최대 50장까지 처리합니다. 다시 인코딩하는 과정에서 원본의 EXIF 메타데이터(카메라 모델, GPS 위치)도 함께 제거되므로, 사진을 공개적으로 올리기 전에도 유용합니다.',
       },
     ],
     faq: [
@@ -155,7 +161,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '한 번에 몇 장까지 압축할 수 있나요?',
-        a: '정해진 제한은 없습니다. 모든 처리가 내 기기에서 이루어지므로 휴대폰 사진 수백 장도 문제없고, 실제 한계는 기기의 메모리입니다.',
+        a: '한 번에 최대 50장까지 압축할 수 있습니다. 고해상도 사진은 기기 메모리를 더 많이 쓰므로 브라우저가 느려지면 여러 번으로 나누어 처리하세요.',
       },
       {
         q: '이력서나 지원서 사진은 용량을 얼마로 맞춰야 하나요?',
@@ -164,10 +170,14 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       dropTitle: '이미지를 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
-      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 여러 장 가능',
+      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 한 번에 최대 50장',
       privacyNote: '이미지는 내 기기에서 압축됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
+      processFailed: '이미지를 압축하지 못했습니다. 더 작은 파일이나 다른 형식으로 다시 시도하세요.',
+      batchLimit: '한 번에 최대 {n}장까지 처리할 수 있습니다. 다운로드하거나 파일을 지운 뒤 더 추가하세요.',
+      zipFailed: 'ZIP 파일을 만들지 못했습니다. 한 번에 다운로드하는 이미지 수를 줄여 다시 시도하세요.',
       processing: '처리 중…',
+      preparingDownload: 'ZIP 준비 중…',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
       remove: '삭제',
@@ -176,7 +186,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       modeSize: '목표 용량',
       modeQuality: '품질 슬라이더',
       targetSize: '목표 파일 용량',
-      targetSizeHint: '이 용량에 맞는 가장 높은 품질을, 필요하면 더 작은 크기까지 자동으로 찾습니다.',
+      targetSizeHint:
+        '이 용량에 맞는 가장 높은 품질을, 필요하면 더 작은 크기까지 자동으로 찾습니다. 1KB는 1,024바이트입니다.',
+      targetInvalid: '이미지를 압축하려면 0보다 큰 목표 용량을 입력하세요.',
       quality: '품질',
       qualityHint: 'JPG와 WebP에 적용됩니다. 대부분의 사진은 70~85에서 차이가 거의 보이지 않습니다.',
       pngNoQuality:
@@ -185,7 +197,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       formatHint: '같은 화질이라면 WebP가 보통 가장 작습니다.',
       formatOriginal: '원본과 같게',
       targetNotReached:
-        '가장 낮은 품질과 가장 작은 크기로도 목표에 도달하지 못했습니다. 이것이 가능한 최소 용량입니다.',
+        '가장 낮은 품질과 가장 작은 크기까지 시도했지만 목표에 도달하지 못했습니다. 이것이 시도한 결과 중 가장 작은 용량입니다.',
       animatedGifWarning: '움짤(애니메이션 GIF)입니다. 브라우저 기반 도구 특성상 압축하면 첫 프레임만 저장됩니다.',
     },
   },

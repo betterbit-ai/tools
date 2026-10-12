@@ -2,7 +2,7 @@
  * Browser-only pixel work: canvas encoding and the scale/quality search loop.
  * Pure decision-making (search algorithm, size math) lives in logic.ts.
  */
-import { SCALE_STEPS, searchQuality, type EncodeResult } from './logic';
+import { SCALE_STEPS, searchQuality, supportsQuality, type EncodeResult } from './logic';
 
 export async function readDimensions(file: File): Promise<{ width: number; height: number }> {
   const bmp = await createImageBitmap(file);
@@ -66,6 +66,12 @@ export async function compressToTarget(
     for (const scale of SCALE_STEPS) {
       const width = Math.max(1, Math.round(bmp.width * scale));
       const height = Math.max(1, Math.round(bmp.height * scale));
+      if (!supportsQuality(mime)) {
+        const result = await encodeAt(bmp, width, height, mime, 1);
+        last = { quality: 1, result, achieved: result.size <= targetBytes };
+        if (last.achieved) return last;
+        continue;
+      }
       const outcome = await searchQuality(targetBytes, (quality) => encodeAt(bmp, width, height, mime, quality));
       last = outcome;
       if (outcome.achieved) return outcome;
