@@ -26,6 +26,7 @@ const uiEn = {
   copy: 'Copy text',
   copied: 'Copied',
   autosaved: 'Saved in this browser only',
+  analyzing: 'Counting…',
 };
 export type UI = typeof uiEn;
 
@@ -55,7 +56,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Character limits you might be writing for',
-        body: 'X (Twitter) posts: 280 characters. Meta descriptions: about 155 characters before Google truncates them. SMS: 160 GSM characters, or 70 if the message contains any non-Latin character. Instagram captions: 2,200 characters. LinkedIn posts: 3,000 characters.',
+        body: 'Character limits are not interchangeable: a form may include spaces, line breaks or bytes, while another may not. Set the exact limit shown by the destination, then compare the appropriate count. For SMS, a single message can hold up to 160 GSM-7 characters or 70 UCS-2 characters; multi-part messages have less room per part.',
       },
     ],
     faq: [
@@ -69,7 +70,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Why is my word count different from Microsoft Word or Google Docs?',
-        a: 'Tools disagree on hyphenated words, numbers with punctuation and text without spaces. This counter follows the Unicode word-boundary rules, which treat “well-known” as two words and segment Chinese and Japanese into real words. Differences are usually under 1–2%.',
+        a: 'Tools disagree on hyphenated words, numbers with punctuation and text without spaces. This counter follows the browser’s Unicode word-boundary rules, which treat “well-known” as two words and segment Chinese and Japanese into real words.',
       },
       {
         q: 'What is the “2-byte” count for?',
@@ -107,7 +108,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '단어수와 읽는 시간',
-        body: '단어수는 띄어쓰기 단위(어절)로 셉니다. 일본어·중국어처럼 띄어쓰기가 없는 언어도 유니코드 단어 분리 규칙(Intl.Segmenter)으로 정확하게 셉니다.\n\n읽는 시간은 분당 238단어(성인 평균 묵독 속도, Brysbaert 2019), 말하는 시간은 분당 150단어(일반적인 발표 속도)를 기준으로 계산합니다.',
+        body: '단어수는 브라우저의 유니코드 단어 분리 규칙(Intl.Segmenter)으로 셉니다. 따라서 띄어쓰기뿐 아니라 일본어·중국어처럼 띄어쓰기가 없는 언어도 분리해 셉니다.\n\n읽는 시간은 분당 238단어(성인 평균 묵독 속도, Brysbaert 2019), 말하는 시간은 분당 150단어(일반적인 발표 속도)를 기준으로 계산합니다. 중국어·일본어는 단어수 대신 글자 수를 기준으로 추정합니다.',
       },
     ],
     faq: [
@@ -129,7 +130,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'A4 한 장은 몇 글자인가요?',
-        a: '글꼴 10~11pt, 줄간격 160% 기준으로 공백 포함 약 1,500~1,800자입니다. 여백과 글꼴에 따라 크게 달라집니다.',
+        a: 'A4 한 장의 글자 수에는 정해진 값이 없습니다. 글꼴, 글자 크기, 여백, 줄간격과 문단 간격에 따라 달라지므로, 제출 양식의 글자 수 제한을 직접 확인해야 합니다.',
       },
     ],
     ui: {
@@ -157,6 +158,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       copy: '텍스트 복사',
       copied: '복사됨',
       autosaved: '이 브라우저에만 저장됨',
+      analyzing: '계산 중…',
     },
   },
 };
