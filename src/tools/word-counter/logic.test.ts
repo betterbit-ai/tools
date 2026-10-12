@@ -25,6 +25,16 @@ describe('analyze', () => {
     expect(s.bytesUtf8).toBe(9 * 3 + 1 + 1);
   });
 
+  it('treats CR and Unicode line separators as line breaks', () => {
+    const s = analyze('first\rsecond\u2028third');
+    expect(s).toMatchObject({
+      characters: 18,
+      charactersNoLineBreaks: 16,
+      paragraphs: 3,
+      bytesLegacy: 20,
+    });
+  });
+
   it('segments Japanese without spaces into multiple words', () => {
     expect(analyze('私は学生です').words).toBeGreaterThan(1);
   });

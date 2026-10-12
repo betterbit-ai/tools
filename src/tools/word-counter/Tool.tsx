@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button, CopyButton, Field, NumberInput, Panel, Stat, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
@@ -8,10 +8,25 @@ import { analyze, splitDuration, topKeywords } from './logic';
 
 const STORAGE_KEY = 'tools:word-counter:text';
 const LIMIT_KEY = 'tools:word-counter:limit';
+const ANALYSIS_DELAY = 200;
+
+interface TextAnalysis {
+  stats: ReturnType<typeof analyze>;
+  keywords: ReturnType<typeof topKeywords>;
+}
+
+const emptyAnalysis: TextAnalysis = { stats: analyze(''), keywords: [] };
+
+interface AnalysisResult extends TextAnalysis {
+  id: number;
+}
 
 export default function WordCounter({ locale, ui }: ToolProps<UI>) {
   const [text, setText] = useState('');
   const [limit, setLimit] = useState<number | ''>('');
+  const [analysis, setAnalysis] = useState(emptyAnalysis);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const requestId = useRef(0);
 
   // Restore after hydration (server render has no storage).
   useEffect(() => {
@@ -33,8 +48,41 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
     else safeStorage.remove(LIMIT_KEY);
   }, [limit]);
 
-  const stats = useMemo(() => analyze(text), [text]);
-  const keywords = useMemo(() => topKeywords(text), [text]);
+  useEffect(() => {
+    const id = ++requestId.current;
+    if (!text) {
+      setAnalysis(emptyAnalysis);
+      setIsAnalyzing(false);
+      return;
+    }
+
+    setIsAnalyzing(true);
+    let worker: Worker | undefined;
+    const timeout = setTimeout(() => {
+      try {
+        worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' });
+        worker.onmessage = (event: MessageEvent<AnalysisResult>) => {
+          if (event.data.id !== requestId.current) return;
+          setAnalysis({ stats: event.data.stats, keywords: event.data.keywords });
+          setIsAnalyzing(false);
+        };
+        worker.postMessage({ id, text });
+      } catch {
+        // Very old browsers without module workers retain the previous synchronous behavior.
+        if (id === requestId.current) {
+          setAnalysis({ stats: analyze(text), keywords: topKeywords(text) });
+          setIsAnalyzing(false);
+        }
+      }
+    }, ANALYSIS_DELAY);
+
+    return () => {
+      clearTimeout(timeout);
+      worker?.terminate();
+    };
+  }, [text]);
+
+  const { stats, keywords } = analysis;
   const n = (v: number) => formatNumber(v, locale);
   const duration = (secs: number) => {
     const { m, s } = splitDuration(secs);
@@ -69,7 +117,7 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
         </div>
 
         <div class="flex flex-col gap-5">
-          <div class="grid grid-cols-2 gap-2" aria-live="polite">
+          <div class="grid grid-cols-2 gap-2" aria-live="polite" aria-busy={isAnalyzing}>
             <Stat label={ui.characters} value={n(stats.characters)} emphasis />
             <Stat label={ui.words} value={n(stats.words)} emphasis />
             <Stat label={ui.charactersNoSpaces} value={n(stats.charactersNoSpaces)} />
@@ -81,6 +129,9 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
             <Stat label={ui.readingTime} value={duration(stats.readingSeconds)} />
             <Stat label={ui.speakingTime} value={duration(stats.speakingSeconds)} />
           </div>
+          <p class="min-h-5 text-xs text-subtle" role="status">
+            {isAnalyzing ? ui.analyzing : ''}
+          </p>
 
           <div>
             <Field label={ui.limitLabel} hint={ui.limitHint}>

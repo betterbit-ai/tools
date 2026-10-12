@@ -33,6 +33,8 @@ export const SPEAKING_CJK_CPM = 200;
 
 const IDEOGRAPHIC = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
 const WHITESPACE = /\s/u;
+const LINE_BREAK = /^(?:\r\n|[\n\r\u0085\u2028\u2029])$/u;
+const LINE_BREAKS = /\r\n|[\n\r\u0085\u2028\u2029]/u;
 
 const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 const wordsSeg = new Intl.Segmenter(undefined, { granularity: 'word' });
@@ -47,7 +49,7 @@ export function analyze(text: string): TextStats {
 
   for (const { segment } of graphemes.segment(text)) {
     characters++;
-    if (segment === '\n' || segment === '\r\n' || segment === '\r') {
+    if (LINE_BREAK.test(segment)) {
       lineBreaks++;
       bytesLegacy += 2;
       continue;
@@ -68,7 +70,7 @@ export function analyze(text: string): TextStats {
   let sentences = 0;
   for (const s of sentencesSeg.segment(text)) if (s.segment.trim()) sentences++;
 
-  const paragraphs = text.split(/\r?\n/).filter((line) => line.trim()).length;
+  const paragraphs = text.split(LINE_BREAKS).filter((line) => line.trim()).length;
 
   // Time: spaced-language words at WPM + ideographic characters at CPM.
   const spacedWords = words - ideographicWords;
