@@ -3,10 +3,14 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop images here, click to choose, or paste',
-  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · as many as you like',
+  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · up to 50 images per batch',
   privacyNote: 'Images are resized on your device. Nothing is uploaded.',
   unsupported: 'This file can’t be read by your browser.',
+  processFailed: 'This image could not be resized. Try a smaller file or another format.',
+  batchLimit: 'A batch can contain up to {n} images. Add more after downloading or clearing these files.',
+  zipFailed: 'The ZIP could not be created. Try downloading fewer images at once.',
   processing: 'Working…',
+  preparingDownload: 'Preparing ZIP…',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
   remove: 'Remove',
@@ -27,7 +31,7 @@ const uiEn = {
   width: 'Width (px)',
   height: 'Height (px)',
   auto: 'Auto',
-  sizeHint: 'Leave one side empty to keep proportions.',
+  sizeHint: 'Leave one side empty to keep proportions. Output is limited to 8,192 px per side and 16.7 MP.',
   fit: 'When both sides are set',
   fitContain: 'Fit',
   fitCover: 'Fill & crop',
@@ -36,6 +40,7 @@ const uiEn = {
   noUpscale: 'Don’t enlarge smaller images',
   format: 'Output format',
   formatOriginal: 'Same as original',
+  formatHint: 'GIF, BMP and AVIF are saved as PNG.',
   quality: 'Quality',
   qualityHint: 'Applies to JPG and WebP. 80–85 is visually lossless for most photos.',
 };
@@ -47,7 +52,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       'Resize JPG, PNG and WebP images by pixels or percent — many at once — in your browser. Crop to exact Instagram or YouTube sizes. No upload, no ads, no watermark.',
     h1: 'Image Resizer',
-    tagline: 'Resize one photo or a hundred, by pixels or percent — privately, in your browser.',
+    tagline: 'Resize one photo or a batch of up to 50, by pixels or percent — privately, in your browser.',
     name: 'Image Resizer',
     keywords: ['resize image', 'photo resizer', 'resize picture', 'reduce image size', 'bulk resize', 'instagram size'],
     howTo: [
@@ -63,7 +68,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Making files smaller',
-        body: 'Pixel dimensions matter most: halving width and height cuts the pixel count — and usually the file size — by about 75%. After that, format matters. WebP is typically 25–35% smaller than JPG at the same visual quality and is supported by every modern browser. Use PNG only for screenshots, logos and images that need transparency; for photos it is often 5–10× larger than JPG.',
+        body: 'Pixel dimensions matter most: halving width and height cuts the pixel count to one quarter, which usually makes a smaller file. The exact byte saving depends on the image, format and quality setting. Use JPG or WebP for photographs, and PNG for screenshots, logos or images that need transparency. The result list shows the new file size before you download, so you can compare it with the original instead of guessing.',
       },
       {
         heading: 'Your images stay on your device',
@@ -77,7 +82,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How many images can I resize at once?',
-        a: 'There is no fixed limit. Hundreds of typical phone photos work fine; the practical limit is your device’s memory.',
+        a: 'A batch can contain up to 50 images. Large, high-resolution photos use more device memory, so split a large collection into smaller batches if your browser becomes slow.',
       },
       {
         q: 'Does resizing reduce image quality?',
@@ -89,7 +94,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Can I resize HEIC photos from an iPhone?',
-        a: 'Safari can read HEIC, so on a Mac or iPhone it works and the result is saved as PNG or your chosen format. Chrome and Firefox cannot decode HEIC yet; set your iPhone camera to “Most Compatible” or export as JPG first.',
+        a: 'HEIC decoding depends on the browser and device. If your browser cannot read a HEIC photo, convert it to JPG first with our HEIC to JPG tool, then resize the JPG here.',
+      },
+      {
+        q: 'What happens to animated GIFs?',
+        a: 'This resizer exports the first frame of a GIF as a PNG, so it is suitable for making a still image, not for keeping an animation. Use a GIF-specific editor when you need to preserve every frame.',
       },
       {
         q: 'Is EXIF data (location, camera) kept?',
@@ -103,7 +112,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       'JPG, PNG, WebP 이미지를 픽셀이나 퍼센트로 여러 장 한번에 줄이세요. 인스타그램·유튜브 규격으로 자르기 지원. 서버 업로드 없이 브라우저에서 처리, 광고·워터마크 없음.',
     h1: '이미지 크기 조절',
-    tagline: '사진 한 장이든 백 장이든, 픽셀이나 퍼센트로 — 업로드 없이 브라우저에서.',
+    tagline: '사진 한 장부터 최대 50장까지, 픽셀이나 퍼센트로 — 업로드 없이 브라우저에서.',
     name: '이미지 크기 조절',
     keywords: ['사진 크기 줄이기', '이미지 용량 줄이기', '사진 리사이즈', '이미지 리사이저', '인스타 사이즈', 'resize'],
     howTo: [
@@ -119,7 +128,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진 용량을 줄이는 방법',
-        body: '가장 효과가 큰 것은 픽셀 크기입니다. 가로·세로를 절반으로 줄이면 픽셀 수가 4분의 1이 되어 용량도 보통 약 75% 줄어듭니다. 그다음은 형식입니다. WebP는 같은 화질의 JPG보다 보통 25~35% 작고, 최신 브라우저에서 모두 열립니다. PNG는 스크린샷, 로고, 투명 배경이 필요할 때만 쓰세요. 사진을 PNG로 저장하면 JPG보다 5~10배 커지기도 합니다.',
+        body: '가장 효과가 큰 것은 픽셀 크기입니다. 가로·세로를 절반으로 줄이면 픽셀 수는 4분의 1이 되고, 파일 용량도 대체로 함께 줄어듭니다. 실제 절감량은 사진 내용, 저장 형식, 품질 설정에 따라 달라집니다. 사진은 JPG나 WebP, 스크린샷·로고·투명 배경은 PNG가 알맞습니다. 다운로드 전에 목록에서 원본과 결과 용량을 직접 비교할 수 있습니다.',
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
@@ -133,7 +142,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '한 번에 몇 장까지 줄일 수 있나요?',
-        a: '정해진 제한은 없습니다. 휴대폰 사진 수백 장도 문제없으며, 실제 한계는 기기의 메모리입니다.',
+        a: '한 번에 최대 50장까지 처리할 수 있습니다. 고해상도 사진은 기기 메모리를 더 많이 쓰므로 브라우저가 느려지면 여러 번으로 나누어 처리하세요.',
       },
       {
         q: '크기를 줄이면 화질이 떨어지나요?',
@@ -145,7 +154,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '아이폰 HEIC 사진도 되나요?',
-        a: 'Safari는 HEIC를 읽을 수 있어 Mac이나 iPhone에서는 바로 됩니다. Chrome과 Firefox는 아직 HEIC를 열지 못하므로, 아이폰 카메라 설정을 “높은 호환성”으로 바꾸거나 JPG로 내보낸 뒤 사용하세요.',
+        a: 'HEIC 파일을 읽을 수 있는지는 브라우저와 기기에 따라 다릅니다. 브라우저에서 HEIC를 열지 못하면 HEIC를 JPG로 변환한 뒤 여기서 크기를 조절하세요.',
+      },
+      {
+        q: '움직이는 GIF도 크기를 조절할 수 있나요?',
+        a: '이 도구는 GIF의 첫 프레임을 PNG로 저장하므로 움직임을 유지하는 용도가 아니라 정지 이미지를 만드는 용도에 알맞습니다. 모든 프레임을 유지하려면 GIF 전용 편집기를 사용하세요.',
       },
       {
         q: '위치 정보(EXIF)도 같이 저장되나요?',
@@ -154,10 +167,14 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       dropTitle: '이미지를 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
-      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 여러 장 가능',
+      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 한 번에 최대 50장',
       privacyNote: '이미지는 내 기기에서 처리됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
+      processFailed: '이미지 크기를 조절하지 못했습니다. 더 작은 파일이나 다른 형식으로 다시 시도하세요.',
+      batchLimit: '한 번에 최대 {n}장까지 처리할 수 있습니다. 다운로드하거나 파일을 지운 뒤 더 추가하세요.',
+      zipFailed: 'ZIP 파일을 만들지 못했습니다. 한 번에 다운로드하는 이미지 수를 줄여 다시 시도하세요.',
       processing: '처리 중…',
+      preparingDownload: 'ZIP 준비 중…',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
       remove: '삭제',
@@ -178,7 +195,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       width: '가로 (px)',
       height: '세로 (px)',
       auto: '자동',
-      sizeHint: '한쪽을 비워두면 비율이 유지됩니다.',
+      sizeHint: '한쪽을 비워두면 비율이 유지됩니다. 출력은 한 변 최대 8,192px, 총 1,670만 픽셀까지입니다.',
       fit: '가로·세로를 모두 입력했을 때',
       fitContain: '맞추기',
       fitCover: '채우고 자르기',
@@ -187,6 +204,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       noUpscale: '작은 이미지는 키우지 않기',
       format: '저장 형식',
       formatOriginal: '원본과 같게',
+      formatHint: 'GIF·BMP·AVIF는 PNG로 저장됩니다.',
       quality: '품질',
       qualityHint: 'JPG와 WebP에 적용됩니다. 대부분의 사진은 80~85에서 차이가 거의 보이지 않습니다.',
     },

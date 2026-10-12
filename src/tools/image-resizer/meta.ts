@@ -5,41 +5,27 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'resize',
   added: '2026-10-07',
-  updated: '2026-10-08',
+  updated: '2026-10-13',
   edges: ['privacy', 'no-ads', 'performance', 'features', 'no-signup'],
   competitors: [
     {
       name: 'iLoveIMG Resize',
       url: 'https://www.iloveimg.com/resize-image',
-      weakness: 'Uploads files to a server and makes you wait; batch size and file limits push a paid plan.',
+      weakness:
+        'Its resize page shows an upload-and-process flow (including Drive/Dropbox upload status) and requires a separate “Resize images” action before download. (Strength: it accepts SVG and animated GIF files, plus cloud-storage imports.)',
     },
     {
-      name: 'TinyWow / similar ad-supported hubs',
-      url: 'https://tinywow.com/',
-      weakness: 'Server upload, ads and wait screens before download.',
+      name: 'Squish Image Resizer',
+      url: 'https://squish.tools/en/resize-image',
+      weakness:
+        'Processes locally, but its resize page accepts one image at a time and includes an ad placement. (Strength: it offers a target-file-size option and HEIC support, which are outside this focused batch resizer.)',
     },
     {
       name: 'Squoosh',
       url: 'https://squoosh.app/',
-      weakness: 'Private and high quality, but one image at a time and no social-media presets or crop-to-fill.',
+      weakness:
+        'Processes privately in the browser, but its landing flow is for one image at a time rather than a batch ZIP workflow. (Strength: it provides advanced codecs and a side-by-side quality comparison.)',
     },
   ],
-  related: [
-    'background-remover',
-    'image-rotate-flip',
-    'image-cropper',
-    'image-blur-pixelate',
-    'image-compressor',
-    'image-converter',
-    'passport-photo',
-    'image-upscaler',
-    'heic-to-jpg',
-    'image-to-pdf',
-    'exif-viewer-remover',
-    'image-watermark',
-    'collage-maker',
-    'meme-generator',
-    'qr-code-generator',
-    'favicon-generator',
-  ],
+  related: ['image-rotate-flip', 'image-cropper', 'image-compressor', 'image-converter'],
 };
