@@ -84,8 +84,21 @@ export function sh(cmd, args, { cwd, allowFail = false, input, timeoutMs, logFil
   };
 }
 
+const GH_TRANSIENT_RE = /HTTP 5\d\d|timed out|timeout|could not resolve|connection reset|unexpected EOF|TLS handshake/i;
+
+/** gh with retries: GitHub's API and the network hiccup (504s, DNS right after wake). */
 export function gh(args, opts = {}) {
-  return sh('gh', args, opts);
+  for (let attempt = 1; ; attempt++) {
+    const res = sh('gh', args, { ...opts, allowFail: true });
+    const transient = !res.ok && GH_TRANSIENT_RE.test(res.err);
+    if (res.ok || !transient || attempt >= 4) {
+      if (!res.ok && !opts.allowFail) {
+        throw new Error(`gh ${args.slice(0, 3).join(' ')} failed: ${(res.err || res.out).slice(-2000)}`);
+      }
+      return res;
+    }
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, attempt * 15_000);
+  }
 }
 
 export function ghJson(args) {

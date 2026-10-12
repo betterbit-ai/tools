@@ -50,8 +50,9 @@ function runClaude(promptText, cwd, logFile, { resume } = {}) {
       /* not JSON */
     }
   }
-  const limited = isError && LIMIT_RE.test(result);
-  if (limited) startCooldown(result);
+  const transient = isError && !LIMIT_RE.test(result) && TRANSIENT_RE.test(result);
+  const limited = isError && (LIMIT_RE.test(result) || transient);
+  if (limited) startCooldown(result, transient);
   log(`claude session end (ok=${res.ok}, timedOut=${res.timedOut}, limited=${limited}, resultChars=${result.length})`);
   return { ok: res.ok, timedOut: res.timedOut, result, sessionId, limited };
 }
@@ -161,8 +162,9 @@ function runCodex(promptText, cwd, logFile, { resume, gitDir } = {}) {
     }
   }
   const errorText = [...errors, res.err.slice(-2000)].join('\n');
-  const limited = errors.length > 0 && LIMIT_RE.test(errorText);
-  if (limited) startCooldown(errorText);
+  const transient = errors.length > 0 && !LIMIT_RE.test(errorText) && TRANSIENT_RE.test(errorText);
+  const limited = errors.length > 0 && (LIMIT_RE.test(errorText) || transient);
+  if (limited) startCooldown(errorText, transient);
   const ok = res.ok && errors.length === 0;
   log(`codex session end (ok=${ok}, timedOut=${res.timedOut}, limited=${limited}, resultChars=${result.length})`);
   return { ok, timedOut: res.timedOut, result: result || errors.join('\n'), sessionId, limited };
@@ -171,6 +173,10 @@ function runCodex(promptText, cwd, logFile, { resume, gitDir } = {}) {
 /* ───────────── usage-limit cooldown (per engine) ───────────── */
 
 const LIMIT_RE = /hit your .*limit|usage limit|limit reached|rate limit|try again (in|at) /i;
+/** Server-side hiccups ("Selected model is at capacity", overloaded, 5xx): pause briefly and resume, don't fail the issue. */
+const TRANSIENT_RE =
+  /at capacity|overloaded|temporarily unavailable|internal server error|bad gateway|service unavailable|stream disconnected|connection reset|\b50[234]\b/i;
+const TRANSIENT_PAUSE_MS = 15 * 60_000;
 const COOLDOWN_FILE = join(DIRS.locks, ENGINE === 'claude' ? 'cooldown-until' : `cooldown-until-${ENGINE}`);
 
 /**
@@ -187,6 +193,20 @@ export function cooldownUntil(message, now = new Date()) {
     for (const [, n, u] of rel[1].matchAll(/(\d+)\s*([dhm])/gi)) ms += Number(n) * unit[u.toLowerCase()];
     if (ms > 0) return now.getTime() + ms + slack;
   }
+  // Codex may prefix the time with a date: "try again at Oct 13th, 2026 1:35 AM".
+  const dated = message.match(
+    /try again at\s+([A-Za-z]{3,9})\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})\s+(\d{1,2}):(\d{2})\s*(am|pm)?/i,
+  );
+  if (dated) {
+    const [, mon, day, year, hh, mm, ap] = dated;
+    let h = Number(hh);
+    if (ap) h = (h % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0);
+    const d = new Date(`${mon} ${day}, ${year} 00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      d.setHours(h, Number(mm), 0, 0);
+      return Math.max(d.getTime(), now.getTime()) + slack;
+    }
+  }
   const at =
     message.match(/resets\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i) ??
     message.match(/try again at\s+(\d{1,2}):(\d{2})\s*(am|pm)?/i);
@@ -201,10 +221,11 @@ export function cooldownUntil(message, now = new Date()) {
   return now.getTime() + 60 * 60_000;
 }
 
-export function startCooldown(message) {
-  const until = cooldownUntil(message);
+export function startCooldown(message, transient = false) {
+  const until = transient ? Date.now() + TRANSIENT_PAUSE_MS : cooldownUntil(message);
   writeFileSync(COOLDOWN_FILE, String(until));
-  log(`${ENGINE} usage limit hit → cooling down until ${new Date(until).toLocaleString()}`);
+  const why = transient ? `server hiccup (${message.split('\n')[0].slice(0, 80)})` : 'usage limit hit';
+  log(`${ENGINE} ${why} → cooling down until ${new Date(until).toLocaleString()}`);
   notify('Factory paused', `${ENGINE} usage limit — resumes ${new Date(until).toLocaleTimeString()}`);
 }
 
