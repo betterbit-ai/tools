@@ -61,5 +61,6 @@ export const meta: ToolMeta = {
     'typing-test',
     'hours-calculator',
     'online-clock',
+    'metronome',
   ],
 };

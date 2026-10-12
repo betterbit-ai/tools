@@ -99,6 +99,7 @@ export const meta: ToolMeta = {
     'interval-timer',
     'hours-calculator',
     'online-clock',
+    'metronome',
   ],
   variants,
 };
