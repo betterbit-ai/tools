@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean page describes free daily credits for high-resolution removal rather than unrestricted use. (Strength: it positions specialised edge detection for hair, fur, clothing and translucent objects.)',
     },
   ],
-  related: ['image-cropper', 'image-resizer', 'image-compressor', 'image-converter'],
+  related: ['image-cropper', 'image-resizer', 'image-compressor', 'image-converter', 'passport-photo'],
 };

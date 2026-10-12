@@ -34,6 +34,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'passport-photo',
     'background-remover',
     'image-cropper',
     'image-blur-pixelate',

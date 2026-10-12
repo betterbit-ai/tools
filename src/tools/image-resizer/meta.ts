@@ -31,6 +31,7 @@ export const meta: ToolMeta = {
     'image-blur-pixelate',
     'image-compressor',
     'image-converter',
+    'passport-photo',
     'image-upscaler',
     'heic-to-jpg',
     'image-to-pdf',
