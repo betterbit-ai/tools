@@ -53,5 +53,6 @@ export const meta: ToolMeta = {
     'json-formatter',
     'timer',
     'base64',
+    'lorem-ipsum',
   ],
 };

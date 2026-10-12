@@ -36,5 +36,6 @@ export const meta: ToolMeta = {
     'percentage-calculator',
     'qr-code-generator',
     'typing-test',
+    'lorem-ipsum',
   ],
 };
