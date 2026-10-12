@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean page presents small, medium and large copy options plus a separate generator, without identifying the Unicode code point in those first choices. Betterbit exposes the character name, exact U+ value and its line-break behavior before copying.',
     },
   ],
-  related: ['word-counter', 'fancy-text', 'remove-line-breaks'],
+  related: ['word-counter', 'fancy-text', 'remove-line-breaks', 'character-map'],
 };
