@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean tool presents one time input and one “set alarm” action, and its FAQ says it is funded by advertising; Betterbit visibly manages up to 12 labeled alarms with no ads. (Strength: it gives a concise Korean explanation of the open-tab and sleep limitations.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'pomodoro-timer', 'countdown'],
+  related: ['timer', 'stopwatch', 'pomodoro-timer', 'countdown', 'online-clock'],
 };
