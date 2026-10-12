@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its interface documents a 500-character input limit and 32 displayed styles. Betterbit has no imposed input cap and provides a compact result list filtered to actual transformations. (Strength: it also has Korean/English style search and favorites.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'lorem-ipsum'],
+  related: ['word-counter', 'case-converter', 'lorem-ipsum', 'invisible-character'],
 };
