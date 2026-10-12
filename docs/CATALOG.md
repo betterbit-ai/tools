@@ -68,7 +68,7 @@
 | sort-lines             | 줄 정렬           | sort lines alphabetically            | 자연 정렬, 한글 가나다순, 역순, 셔플                  | P2  | todo |
 | find-and-replace       | 찾아 바꾸기       | find and replace text                | 정규식, 대소문자 옵션                                 | P2  | todo |
 | lorem-ipsum            | 더미 텍스트       | lorem ipsum generator / 더미 텍스트  | 한국어 더미 텍스트                                    | P1  | live |
-| korean-spell-check     | 맞춤법 검사       | 맞춤법 검사기                        | (서버 필요 시 skip 검토)                              | P1  | todo |
+| korean-spell-check     | 맞춤법 검사       | 맞춤법 검사기                        | 브라우저 즉시 검사, 입력 전송 없음, 로컬 초안 복원    | P1  | live |
 | hangul-romanization    | 한글 로마자 변환  | 한글 영문 변환 / korean romanization | 국립국어원 표기법 + 여권 이름 표기                    | P1  | live |
 | text-to-speech         | 텍스트 읽어주기   | text to speech                       | Web Speech API, 다국어 음성                           | P1  | todo |
 | speech-to-text         | 받아쓰기          | speech to text / 음성 텍스트 변환    | 기기 내 Web Speech API, 음성 업로드 없음              | P1  | live |
