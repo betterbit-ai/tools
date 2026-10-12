@@ -69,7 +69,7 @@
 | find-and-replace       | 찾아 바꾸기       | find and replace text                | 정규식, 대소문자 옵션                                 | P2  | todo |
 | lorem-ipsum            | 더미 텍스트       | lorem ipsum generator / 더미 텍스트  | 한국어 더미 텍스트                                    | P1  | live |
 | korean-spell-check     | 맞춤법 검사       | 맞춤법 검사기                        | (서버 필요 시 skip 검토)                              | P1  | todo |
-| hangul-romanization    | 한글 로마자 변환  | 한글 영문 변환 / korean romanization | 국립국어원 표기법 + 여권 이름 표기                    | P1  | todo |
+| hangul-romanization    | 한글 로마자 변환  | 한글 영문 변환 / korean romanization | 국립국어원 표기법 + 여권 이름 표기                    | P1  | live |
 | text-to-speech         | 텍스트 읽어주기   | text to speech                       | Web Speech API, 다국어 음성                           | P1  | todo |
 | speech-to-text         | 받아쓰기          | speech to text / 음성 텍스트 변환    | Web Speech API                                        | P1  | todo |
 | fancy-text             | 특수 폰트 텍스트  | fancy text generator                 | 인스타 바이오용 유니코드 서체                         | P1  | todo |

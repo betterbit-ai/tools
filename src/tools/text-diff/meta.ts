@@ -35,5 +35,6 @@ export const meta: ToolMeta = {
     'json-formatter',
     'timer',
     'base64',
+    'hangul-romanization',
   ],
 };
