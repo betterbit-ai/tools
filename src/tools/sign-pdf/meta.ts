@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         '손글씨 서명을 브라우저에서 처리해 업로드는 없지만, 광고가 함께 표시되고 이미지로 서명을 올릴 때 PNG/JPEG 용량이 최대 10MB로 제한된다고 안내한다.',
     },
   ],
-  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'unlock-pdf'],
+  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'unlock-pdf', 'protect-pdf'],
 };

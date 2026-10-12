@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Adobe’s documented desktop workflow requires opening All tools > Protect a PDF, opening security properties, changing settings, confirming, and saving. This tool produces a separate unlocked download after one action once the known password is entered. (Strength: Acrobat exposes separate controls for document-open and permission passwords.)',
     },
   ],
-  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'sign-pdf'],
+  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'sign-pdf', 'protect-pdf'],
 };
