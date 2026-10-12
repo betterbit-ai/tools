@@ -5,48 +5,27 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'compress',
   added: '2026-10-08',
-  updated: '2026-10-08',
-  edges: ['privacy', 'no-ads', 'no-signup', 'performance', 'features'],
+  updated: '2026-10-13',
+  edges: ['privacy', 'no-ads', 'performance', 'features'],
   competitors: [
     {
       name: 'TinyPNG',
       url: 'https://tinypng.com/',
       weakness:
-        'Uploads to a server and keeps files for up to 48 hours; free tier caps batches at 20 images, 5MB each, and there is no target-file-size option — only one "smart" compression level. (Strength: very good PNG compression via palette quantization, which canvas-based tools cannot match.)',
+        'Its free online compressor accepts up to 20 images at 5MB each and does not offer a target-file-size control. (Strength: it supports AVIF, JPEG XL and animated PNG, and its specialised PNG compression can beat Canvas re-encoding.)',
     },
     {
       name: 'iLoveIMG Compress Image',
       url: 'https://www.iloveimg.com/compress-image',
       weakness:
-        'Uploads files to a server to process; pushes sign-up for larger batches; no option to target an exact KB/MB size.',
+        'Uploads files to its servers, serves ads to free users, limits free compression to 30 files and 200MB per task, and has no compression-level or target-size control. (Strength: it accepts SVG and preserves animated GIF files.)',
     },
     {
-      name: 'ResizePixel (Reduce image in KB)',
-      url: 'https://www.resizepixel.com/reduce-image-in-kb/',
+      name: 'TargetKB',
+      url: 'https://targetkb.com/',
       weakness:
-        'Uploads files to a server and shows ads on the result page. (Strength: it does offer a target-size-in-KB input, same idea we use, but without the privacy or speed of doing it on-device.)',
-    },
-    {
-      name: 'CompressImage.io',
-      url: 'https://compressimage.io/',
-      weakness:
-        'Already compresses on-device with no upload, matching our privacy edge — but its "compress to 1MB/2MB" pages are a manual quality slider: the FAQ tells you to "drag the slider down until the live size readout hits the number you need." There is no automatic search, so hitting an exact KB target is trial and error.',
+        'It matches local, automatic target-size compression but limits a batch to 10 images and offers optional analytics. (Strength: it can resize or centre-crop before compression and accepts HEIC.)',
     },
   ],
-  related: [
-    'passport-photo',
-    'background-remover',
-    'image-cropper',
-    'image-blur-pixelate',
-    'image-resizer',
-    'image-converter',
-    'image-upscaler',
-    'heic-to-jpg',
-    'image-to-pdf',
-    'exif-viewer-remover',
-    'image-watermark',
-    'collage-maker',
-    'merge-pdf',
-    'compress-pdf',
-  ],
+  related: ['image-resizer', 'image-converter', 'heic-to-jpg', 'passport-photo'],
 };

@@ -20,6 +20,11 @@ describe('toBytes', () => {
     expect(toBytes(0, 'KB')).toBe(1);
     expect(toBytes(-5, 'KB')).toBe(1);
   });
+
+  it('keeps invalid numeric input from becoming an invalid target', () => {
+    expect(toBytes(Number.NaN, 'KB')).toBe(1);
+    expect(toBytes(Number.POSITIVE_INFINITY, 'MB')).toBe(1);
+  });
 });
 
 describe('outputType', () => {

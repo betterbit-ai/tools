@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { zipSync } from 'fflate';
+import { zip } from 'fflate';
 import { Button, Dropzone, Field, Notice, NumberInput, Panel, Segmented, Select, cx } from '../../components/ui';
 import { downloadBlob } from '../../lib/browser';
 import { formatBytes, formatNumber } from '../../lib/format';
@@ -25,11 +25,12 @@ interface Item {
   preview: string;
   animatedGif?: boolean;
   result?: { blob: Blob; url: string; width: number; height: number; name: string; achieved: boolean; key: string };
-  error?: boolean;
+  error?: { kind: 'unreadable' | 'processing'; key?: string };
   busy?: boolean;
 }
 
 let nextId = 1;
+const MAX_BATCH_SIZE = 50;
 
 export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
   const [items, setItems] = useState<Item[]>([]);
@@ -38,36 +39,50 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
   const [targetUnit, setTargetUnit] = useState<SizeUnit>('KB');
   const [quality, setQuality] = useState(75);
   const [format, setFormat] = useState<FormatChoice>('original');
+  const [notice, setNotice] = useState<string | null>(null);
+  const [zipping, setZipping] = useState(false);
   const runId = useRef(0);
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
-  const addFiles = useCallback(async (files: File[]) => {
-    const added: Item[] = [];
-    for (const file of files) {
-      try {
-        const dims = await readDimensions(file);
-        // Canvas only ever draws a GIF's first frame, so flag animated ones instead of
-        // silently dropping the rest of the frames when the file re-encodes.
-        const animatedGif = file.type === 'image/gif' && isAnimatedGif(new Uint8Array(await file.arrayBuffer()));
-        added.push({ id: nextId++, file, ...dims, animatedGif, preview: URL.createObjectURL(file) });
-      } catch {
-        added.push({ id: nextId++, file, width: 0, height: 0, preview: '', error: true });
+  const addFiles = useCallback(
+    async (files: File[]) => {
+      const accepted = files.slice(0, Math.max(0, MAX_BATCH_SIZE - itemsRef.current.length));
+      if (accepted.length < files.length) setNotice(ui.batchLimit.replace('{n}', String(MAX_BATCH_SIZE)));
+      if (!accepted.length) return;
+
+      const added: Item[] = [];
+      for (const file of accepted) {
+        try {
+          const dims = await readDimensions(file);
+          // Canvas only ever draws a GIF's first frame, so flag animated ones instead of
+          // silently dropping the rest of the frames when the file re-encodes.
+          const isGif = file.type === 'image/gif' || /\.gif$/i.test(file.name);
+          const animatedGif = isGif && isAnimatedGif(new Uint8Array(await file.arrayBuffer()));
+          added.push({ id: nextId++, file, ...dims, animatedGif, preview: URL.createObjectURL(file) });
+        } catch {
+          added.push({ id: nextId++, file, width: 0, height: 0, preview: '', error: { kind: 'unreadable' } });
+        }
       }
-    }
-    setItems((prev) => [...prev, ...added]);
-  }, []);
+      setItems((prev) => [...prev, ...added]);
+    },
+    [ui.batchLimit],
+  );
 
   // Re-encode whenever settings or the file list change (debounced, sequential, cancellable).
   const fileKey = items.map((i) => i.id).join(',');
+  const settingsKey = JSON.stringify([mode, format, quality, targetValue, targetUnit]);
+  const targetIsValid = targetValue !== '' && Number.isFinite(targetValue) && targetValue > 0;
   useEffect(() => {
     const id = ++runId.current;
-    const key = JSON.stringify([mode, format, quality, targetValue, targetUnit]);
+    if (mode === 'size' && !targetIsValid) return;
     const timeout = setTimeout(async () => {
       for (const item of itemsRef.current) {
         if (runId.current !== id) return;
-        if (item.error || item.result?.key === key) continue;
-        setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, busy: true } : p)));
+        if (item.error?.kind === 'unreadable' || item.result?.key === settingsKey || item.error?.key === settingsKey) {
+          continue;
+        }
+        setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, busy: true, error: undefined } : p)));
         try {
           const mime = outputType(format, item.file.type);
           let out: { blob: Blob; width: number; height: number; size: number };
@@ -88,7 +103,7 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             height: out.height,
             name: outputName(item.file.name, mime),
             achieved,
-            key,
+            key: settingsKey,
           };
           setItems((prev) =>
             prev.map((p) => {
@@ -98,15 +113,32 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             }),
           );
         } catch {
-          setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, error: true, busy: false } : p)));
+          if (runId.current !== id) return;
+          setItems((prev) =>
+            prev.map((p) =>
+              p.id === item.id ? { ...p, error: { kind: 'processing', key: settingsKey }, busy: false } : p,
+            ),
+          );
         }
       }
     }, 250);
     return () => clearTimeout(timeout);
-  }, [fileKey, mode, format, quality, targetValue, targetUnit]);
+  }, [fileKey, mode, format, quality, settingsKey, targetIsValid, targetUnit, targetValue]);
+
+  useEffect(
+    () => () => {
+      runId.current++;
+      for (const item of itemsRef.current) {
+        URL.revokeObjectURL(item.preview);
+        if (item.result) URL.revokeObjectURL(item.result.url);
+      }
+    },
+    [],
+  );
 
   const remove = (id: number) =>
     setItems((prev) => {
+      runId.current++;
       const gone = prev.find((p) => p.id === id);
       if (gone) {
         URL.revokeObjectURL(gone.preview);
@@ -116,30 +148,44 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
     });
 
   const clear = () => {
+    runId.current++;
     for (const p of items) {
       URL.revokeObjectURL(p.preview);
       if (p.result) URL.revokeObjectURL(p.result.url);
     }
     setItems([]);
+    setNotice(null);
   };
 
-  const ready = items.filter((i) => i.result && !i.busy);
+  const ready = items.filter((i) => i.result?.key === settingsKey && !i.busy && !i.error);
   const downloadAll = async () => {
     if (ready.length === 1) return downloadBlob(ready[0].result!.blob, ready[0].result!.name);
+    setZipping(true);
     const files: Record<string, Uint8Array> = {};
-    for (const item of ready) {
-      let name = item.result!.name;
-      for (let n = 2; files[name]; n++) name = item.result!.name.replace(/(\.\w+)$/, `-${n}$1`);
-      files[name] = new Uint8Array(await item.result!.blob.arrayBuffer());
+    try {
+      for (const item of ready) {
+        let name = item.result!.name;
+        for (let n = 2; files[name]; n++) name = item.result!.name.replace(/(\.\w+)$/, `-${n}$1`);
+        files[name] = new Uint8Array(await item.result!.blob.arrayBuffer());
+      }
+      // Images are already compressed. fflate's asynchronous API avoids blocking
+      // the page while it builds the archive.
+      const archive = await makeZip(files);
+      downloadBlob(new Blob([archive as BlobPart], { type: 'application/zip' }), 'compressed-images.zip');
+    } catch {
+      setNotice(ui.zipFailed);
+    } finally {
+      setZipping(false);
     }
-    // Images are already compressed — store without re-compressing (level 0) for speed.
-    const zip = zipSync(files, { level: 0 });
-    downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), 'compressed-images.zip');
   };
 
   const totalBefore = ready.reduce((s, i) => s + i.file.size, 0);
   const totalAfter = ready.reduce((s, i) => s + i.result!.blob.size, 0);
-  const outMime = outputType(format, items[0]?.file.type ?? 'image/jpeg');
+  const showQuality =
+    items.length === 0 ||
+    (format === 'original'
+      ? items.some((item) => supportsQuality(outputType(format, item.file.type)))
+      : supportsQuality(format));
 
   return (
     <Panel>
@@ -155,58 +201,73 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             compact={items.length > 0}
           />
 
+          {notice && (
+            <div class="mt-4">
+              <Notice tone="danger">{notice}</Notice>
+            </div>
+          )}
+
           {items.length > 0 && (
             <ul class="mt-4 divide-y divide-line rounded-lg border border-line">
-              {items.map((item) => (
-                <li class="flex items-center gap-3 p-3">
-                  <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
-                    {item.preview && <img src={item.preview} alt="" class="size-full object-cover" />}
-                  </div>
-                  <div class="min-w-0 flex-1 text-sm">
-                    <p class="truncate font-medium text-fg">{item.file.name}</p>
-                    {item.error ? (
-                      <p class="text-danger">{ui.unsupported}</p>
-                    ) : (
-                      <>
-                        <p class="tabular text-muted" aria-live="polite">
-                          {formatBytes(item.file.size, locale)}
-                          {item.result && (
-                            <>
-                              {' → '}
-                              <span class="text-fg">{formatBytes(item.result.blob.size, locale)}</span>
-                              <SizeDelta before={item.file.size} after={item.result.blob.size} locale={locale} />
-                            </>
-                          )}
+              {items.map((item) => {
+                const stale = item.result?.key !== settingsKey;
+                return (
+                  <li key={item.id} class="flex items-center gap-3 p-3">
+                    <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
+                      {item.preview && <img src={item.preview} alt="" class="size-full object-cover" />}
+                    </div>
+                    <div class="min-w-0 flex-1 text-sm">
+                      <p class="truncate font-medium text-fg">{item.file.name}</p>
+                      {item.error ? (
+                        <p class="text-danger">
+                          {item.error.kind === 'unreadable' ? ui.unsupported : ui.processFailed}
                         </p>
-                        {item.result && !item.result.achieved && (
-                          <p class="text-xs text-danger">{ui.targetNotReached}</p>
-                        )}
-                        {item.animatedGif && <p class="text-xs text-warning">{ui.animatedGifWarning}</p>}
-                      </>
+                      ) : (
+                        <>
+                          <p class="tabular text-muted" aria-live="polite">
+                            {formatBytes(item.file.size, locale)}
+                            {item.result && (
+                              <>
+                                {' → '}
+                                <span class="text-fg">{formatBytes(item.result.blob.size, locale)}</span>
+                                <SizeDelta before={item.file.size} after={item.result.blob.size} locale={locale} />
+                              </>
+                            )}
+                          </p>
+                          {item.result && !item.result.achieved && (
+                            <p class="text-xs text-danger">{ui.targetNotReached}</p>
+                          )}
+                          {item.animatedGif && <p class="text-xs text-warning">{ui.animatedGifWarning}</p>}
+                        </>
+                      )}
+                    </div>
+                    {item.result && !item.error && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={item.busy || stale}
+                        onClick={() => downloadBlob(item.result!.blob, item.result!.name)}
+                      >
+                        {item.busy || stale ? ui.processing : ui.download}
+                      </Button>
                     )}
-                  </div>
-                  {item.result && !item.error && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={item.busy}
-                      onClick={() => downloadBlob(item.result!.blob, item.result!.name)}
-                    >
-                      {item.busy ? ui.processing : ui.download}
+                    <Button size="sm" variant="ghost" aria-label={ui.remove} onClick={() => remove(item.id)}>
+                      ✕
                     </Button>
-                  )}
-                  <Button size="sm" variant="ghost" aria-label={ui.remove} onClick={() => remove(item.id)}>
-                    ✕
-                  </Button>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
 
           {items.length > 0 && (
             <div class="mt-4 flex flex-wrap items-center gap-3">
-              <Button variant="primary" size="lg" disabled={ready.length === 0} onClick={downloadAll}>
-                {ready.length > 1 ? ui.downloadAll.replace('{n}', String(ready.length)) : ui.download}
+              <Button variant="primary" size="lg" disabled={ready.length === 0 || zipping} onClick={downloadAll}>
+                {zipping
+                  ? ui.preparingDownload
+                  : ready.length > 1
+                    ? ui.downloadAll.replace('{n}', String(ready.length))
+                    : ui.download}
               </Button>
               <Button variant="ghost" onClick={clear}>
                 {ui.clear}
@@ -239,20 +300,23 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
           />
 
           {mode === 'size' ? (
-            <Field label={ui.targetSize} hint={ui.targetSizeHint}>
-              <div class="grid grid-cols-[1fr_90px] gap-2">
-                <NumberInput value={targetValue} min={1} max={50000} onValue={setTargetValue} />
-                <Select<SizeUnit>
-                  value={targetUnit}
-                  onValue={setTargetUnit}
-                  options={[
-                    { value: 'KB', label: 'KB' },
-                    { value: 'MB', label: 'MB' },
-                  ]}
-                />
-              </div>
-            </Field>
-          ) : supportsQuality(outMime) || format === 'original' ? (
+            <>
+              <Field label={ui.targetSize} hint={ui.targetSizeHint}>
+                <div class="grid grid-cols-[1fr_90px] gap-2">
+                  <NumberInput value={targetValue} min={1} max={50000} onValue={setTargetValue} />
+                  <Select<SizeUnit>
+                    value={targetUnit}
+                    onValue={setTargetUnit}
+                    options={[
+                      { value: 'KB', label: 'KB' },
+                      { value: 'MB', label: 'MB' },
+                    ]}
+                  />
+                </div>
+              </Field>
+              {!targetIsValid && <Notice tone="danger">{ui.targetInvalid}</Notice>}
+            </>
+          ) : showQuality ? (
             <Field label={`${ui.quality}: ${quality}`} hint={ui.qualityHint}>
               <input
                 type="range"
@@ -285,6 +349,15 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
       </div>
     </Panel>
   );
+}
+
+function makeZip(files: Record<string, Uint8Array>): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    zip(files, { level: 0 }, (error, archive) => {
+      if (error) reject(error);
+      else resolve(archive);
+    });
+  });
 }
 
 function SizeDelta(props: { before: number; after: number; locale: ToolProps['locale'] }) {

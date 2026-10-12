@@ -8,6 +8,7 @@ export type SizeUnit = 'KB' | 'MB';
 export type FormatChoice = 'original' | 'image/jpeg' | 'image/png' | 'image/webp';
 
 export function toBytes(value: number, unit: SizeUnit): number {
+  if (!Number.isFinite(value)) return 1;
   return Math.max(1, Math.round(value * (unit === 'MB' ? 1024 * 1024 : 1024)));
 }
 
