@@ -1,0 +1,183 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  dropTitle: 'Drop an image, click to choose, or paste',
+  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF, and other browser-readable images',
+  privacyNote: 'The image is processed in this browser. It is never uploaded.',
+  unsupported: 'This image cannot be opened by your browser. Try a JPG, PNG, or WebP file.',
+  renderError: 'This image could not be rendered. Try a smaller image or a different format.',
+  editorLabel: 'Image redaction editor. Drag on the image to add a region.',
+  previewAlt: 'Edited image preview',
+  regionLabel: 'Select region {n}',
+  addRegion: 'Add region',
+  undo: 'Undo last',
+  clearRegions: 'Clear regions',
+  changeImage: 'Change image',
+  drawHint: 'Drag to mark an area. Select a box to adjust its percentage coordinates or remove it.',
+  effectLabel: 'Effect',
+  effectBlur: 'Blur',
+  effectPixelate: 'Pixelate',
+  strengthLabel: 'Strength: {n}',
+  strengthHint: 'Use a larger value for smaller text and details.',
+  selectedRegion: 'Selected region',
+  regionX: 'X (%)',
+  regionY: 'Y (%)',
+  regionWidth: 'Width (%)',
+  regionHeight: 'Height (%)',
+  removeRegion: 'Remove region',
+  formatLabel: 'Download format',
+  formatPng: 'PNG (lossless)',
+  formatJpeg: 'JPG',
+  formatWebp: 'WebP',
+  qualityLabel: 'Quality: {n}',
+  widthLabel: 'Width',
+  heightLabel: 'Height',
+  processing: 'Updating preview…',
+  selectRegionNotice: 'Draw or add a region before downloading.',
+  download: 'Download edited image',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'Blur Image — Pixelate Private Areas Locally',
+    description:
+      'Blur or pixelate faces, text, and number plates in your browser. Draw exact regions, inspect the live result, and download without uploading the image.',
+    h1: 'Blur or Pixelate an Image',
+    tagline: 'Mark only the detail to hide, then blur or pixelate it entirely on your device.',
+    name: 'Blur & Pixelate',
+    keywords: ['blur image', 'pixelate image', 'blur face', 'blur text', 'redact screenshot', 'hide number plate'],
+    howTo: [
+      'Drop, choose, or paste an image.',
+      'Drag across each face, name, plate, or detail to hide.',
+      'Choose Blur or Pixelate and increase Strength until the detail is no longer readable.',
+      'Select a region to fine-tune its X, Y, width, and height with the keyboard if needed.',
+      'Download the newly rendered image.',
+    ],
+    sections: [
+      {
+        heading: 'Blur and pixelation solve different jobs',
+        body: 'Blur softens a selected area and usually blends better into a photo. Pixelation replaces detail with enlarged blocks, making the edit obvious and often better suited to names, account numbers, and number plates. For sensitive text, use a large pixel size, download the result, and inspect the saved file before sharing; a light blur can leave characters distinguishable.',
+      },
+      {
+        heading: 'The selection is stored as image-relative coordinates',
+        body: 'Each box is saved as a percentage of the image width and height, not as a screen position. That keeps it aligned when the editor scales a portrait, landscape, or high-resolution image to fit the page. You can draw with a mouse or touch, then use the X, Y, Width, and Height fields for a precise keyboard adjustment.',
+      },
+      {
+        heading: 'A new file is rendered on your device',
+        body: 'The tool uses the browser canvas to create a new PNG, JPG, or WebP file. The original file is not sent to Betterbit or a processing server. PNG is lossless; JPG and WebP use a quality setting to trade file size for image detail. Keep the original separately in case you need an unedited copy later.',
+      },
+    ],
+    faq: [
+      {
+        q: 'Does this tool upload my image?',
+        a: 'No. Image decoding, blur or pixelation, preview rendering, and download all happen in the browser tab, so the original image is not uploaded to Betterbit.',
+      },
+      {
+        q: 'Which is safer for hiding text: blur or pixelate?',
+        a: 'For small or highly sensitive text, strong pixelation is usually easier to verify because it replaces the region with blocks. Increase the value, inspect the saved result, and keep the box slightly larger than the text so edge pixels are covered too.',
+      },
+      {
+        q: 'Can I blur more than one part of a photo?',
+        a: 'Yes. Draw a separate rectangle for every area, or use Add region and set its X, Y, width, and height. Undo removes the most recently added area, and Clear regions restores the unedited preview without replacing the source file.',
+      },
+      {
+        q: 'Will the downloaded image keep its original size?',
+        a: 'Yes. The effect is rendered at the source image’s pixel width and height; the preview may look smaller only because it is scaled to fit the page.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '사진 모자이크·블러 처리 — 업로드 없이 영역 가리기',
+    description:
+      '사진의 얼굴·번호판·개인정보를 원하는 영역만 모자이크 또는 블러 처리합니다. 이미지가 서버에 업로드되지 않고 브라우저에서 바로 저장됩니다.',
+    h1: '사진 모자이크·블러 처리',
+    tagline: '가릴 곳만 드래그해 모자이크 또는 블러 처리하고, 이미지 업로드 없이 바로 저장합니다.',
+    name: '모자이크·블러',
+    keywords: [
+      '사진 모자이크',
+      '이미지 모자이크',
+      '사진 블러 처리',
+      '얼굴 가리기',
+      '번호판 모자이크',
+      '스크린샷 개인정보 가리기',
+    ],
+    howTo: [
+      '사진을 끌어 놓거나 선택하거나 붙여넣습니다.',
+      '얼굴, 이름, 번호판처럼 가릴 부분을 드래그합니다.',
+      '블러 또는 모자이크를 고르고, 글자나 작은 정보가 보이지 않을 때까지 강도를 높입니다.',
+      '필요하면 선택 영역의 X·Y·너비·높이를 키보드로 조절합니다.',
+      '새로 만들어진 이미지를 다운로드합니다.',
+    ],
+    sections: [
+      {
+        heading: '블러와 모자이크는 쓰임이 다릅니다',
+        body: '블러는 선택한 부분을 부드럽게 흐려 사진에 자연스럽게 섞이게 합니다. 모자이크는 픽셀을 큰 블록으로 바꿔 가린 사실이 분명하게 보이므로 이름, 계좌번호, 번호판처럼 작은 정보를 처리할 때 확인하기 쉽습니다. 민감한 글자는 강도를 충분히 높이고, 결과 파일을 내려받아 공유 전에 글자 윤곽이 남지 않았는지 확인합니다.',
+      },
+      {
+        heading: '선택 영역은 사진 비율에 맞춰 저장됩니다',
+        body: '각 영역은 화면의 위치가 아니라 이미지 가로·세로 대비 백분율로 저장됩니다. 세로 사진, 가로 사진, 고해상도 사진이 화면 크기에 맞춰 축소되어도 영역이 원래 위치에 맞는 이유입니다. 마우스나 터치로 드래그한 뒤 X, Y, 너비, 높이 입력란으로 키보드만 사용해 미세 조정할 수도 있습니다.',
+      },
+      {
+        heading: '기기 안에서 새 파일을 만듭니다',
+        body: '이 도구는 브라우저 Canvas로 PNG, JPG 또는 WebP 파일을 새로 만듭니다. 원본 사진은 Betterbit이나 별도 처리 서버로 전송되지 않습니다. PNG는 무손실 형식이고, JPG와 WebP는 품질 값을 낮출수록 파일 크기는 줄지만 세부 표현도 줄어듭니다. 원본이 필요할 수 있으므로 별도로 보관합니다.',
+      },
+    ],
+    faq: [
+      {
+        q: '사진이 서버에 업로드되나요?',
+        a: '아니요. 이미지 열기, 모자이크·블러 처리, 미리보기 생성, 다운로드가 모두 브라우저 탭 안에서 이루어지므로 원본 사진은 Betterbit에 업로드되지 않습니다.',
+      },
+      {
+        q: '글자를 가릴 때 블러와 모자이크 중 무엇이 좋은가요?',
+        a: '작고 민감한 글자는 강한 모자이크가 확인하기 쉽습니다. 값을 높이고 저장한 결과 파일을 확인한 뒤, 글자 가장자리까지 덮도록 선택 영역을 조금 넉넉하게 잡는 것이 좋습니다.',
+      },
+      {
+        q: '한 사진에서 여러 곳을 모자이크 처리할 수 있나요?',
+        a: '네. 가릴 곳마다 사각형을 따로 그리거나 영역 추가를 누른 뒤 X, Y, 너비, 높이를 설정하면 됩니다. 마지막 영역 취소는 가장 최근 영역 하나를 지우고, 영역 전체 지우기는 원본 파일을 바꾸지 않은 채 미리보기만 되돌립니다.',
+      },
+      {
+        q: '다운로드하면 사진 크기가 바뀌나요?',
+        a: '아니요. 효과는 원본 사진의 픽셀 가로·세로 크기로 렌더링됩니다. 화면의 미리보기만 페이지에 맞게 작아 보일 수 있습니다.',
+      },
+    ],
+    ui: {
+      dropTitle: '이미지를 끌어 놓거나 선택하거나 붙여넣기',
+      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF 등 브라우저에서 열 수 있는 이미지',
+      privacyNote: '이미지는 이 브라우저에서 처리되며 업로드되지 않습니다.',
+      unsupported: '브라우저에서 이 이미지를 열 수 없습니다. JPG, PNG 또는 WebP 파일을 사용해 보세요.',
+      renderError: '이미지를 처리할 수 없습니다. 더 작은 이미지나 다른 형식을 사용해 보세요.',
+      editorLabel: '이미지 가리기 편집기. 이미지 위를 드래그해 영역을 추가합니다.',
+      previewAlt: '편집된 이미지 미리보기',
+      regionLabel: '{n}번 영역 선택',
+      addRegion: '영역 추가',
+      undo: '마지막 취소',
+      clearRegions: '영역 전체 지우기',
+      changeImage: '이미지 변경',
+      drawHint: '드래그해 영역을 표시합니다. 상자를 선택하면 백분율 좌표를 조절하거나 지울 수 있습니다.',
+      effectLabel: '효과',
+      effectBlur: '블러',
+      effectPixelate: '모자이크',
+      strengthLabel: '강도: {n}',
+      strengthHint: '작은 글자와 세부 정보는 더 큰 값을 사용합니다.',
+      selectedRegion: '선택한 영역',
+      regionX: 'X (%)',
+      regionY: 'Y (%)',
+      regionWidth: '너비 (%)',
+      regionHeight: '높이 (%)',
+      removeRegion: '영역 삭제',
+      formatLabel: '저장 형식',
+      formatPng: 'PNG (무손실)',
+      formatJpeg: 'JPG',
+      formatWebp: 'WebP',
+      qualityLabel: '품질: {n}',
+      widthLabel: '가로',
+      heightLabel: '세로',
+      processing: '미리보기 업데이트 중…',
+      selectRegionNotice: '영역을 추가하거나 드래그한 뒤 다운로드할 수 있습니다.',
+      download: '편집한 이미지 다운로드',
+    },
+  },
+};

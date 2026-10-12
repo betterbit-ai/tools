@@ -36,6 +36,7 @@ export const meta: ToolMeta = {
   related: [
     'background-remover',
     'image-cropper',
+    'image-blur-pixelate',
     'image-resizer',
     'image-converter',
     'image-upscaler',
