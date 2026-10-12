@@ -53,6 +53,7 @@ export const meta: ToolMeta = {
     'date-calculator',
     'age-calculator',
     'time-zone-converter',
+    'unix-timestamp',
     'world-clock',
   ],
 };

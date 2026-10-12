@@ -53,5 +53,6 @@ export const meta: ToolMeta = {
     'age-calculator',
     'percentage-calculator',
     'scientific-calculator',
+    'unix-timestamp',
   ],
 };
