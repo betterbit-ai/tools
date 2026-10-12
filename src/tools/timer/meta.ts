@@ -102,6 +102,7 @@ export const meta: ToolMeta = {
     'date-calculator',
     'age-calculator',
     'time-zone-converter',
+    'world-clock',
   ],
   variants,
 };
