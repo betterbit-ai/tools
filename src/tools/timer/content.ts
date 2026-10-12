@@ -17,6 +17,8 @@ const uiEn = {
   minutesShort: '{n} min',
   timesUp: 'Time’s up!',
   sound: 'Alarm sound',
+  testSound: 'Test sound',
+  fullscreenUnavailable: 'Full screen is unavailable in this browser.',
   keyStart: 'Start / pause',
 };
 export type UI = typeof uiEn;
@@ -34,12 +36,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Pick a preset or type hours, minutes and seconds.',
       'Press Start (or the Space bar).',
       'Switch tabs freely — the remaining time is shown in the tab title.',
-      'When time is up, an alarm plays for 30 seconds. Press Space or Restart to run it again.',
+      'Optional: press Test sound. When time is up, the enabled alarm plays for 30 seconds.',
     ],
     sections: [
       {
         heading: 'Why this timer stays accurate',
-        body: 'Browsers slow down background tabs to save battery, which makes timers that count “ticks” drift by seconds or even minutes. This timer stores the exact moment it should finish and compares against the clock, so it is exact no matter how long the tab sits in the background — and it keeps running if you refresh or accidentally close and reopen the page.',
+        body: 'Browsers slow down background tabs to save battery, which makes timers that count “ticks” drift by seconds or even minutes. This timer stores the exact moment it should finish and compares against your device clock whenever the browser runs it, so the display catches up after a background tab, sleep or refresh instead of adding delayed ticks. Its precision is limited by your device clock; do not use a browser timer for safety-critical deadlines.',
       },
       {
         heading: 'Keyboard shortcuts',
@@ -53,7 +55,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'Will the alarm sound if the tab is in the background?',
-        a: 'Yes. As long as the tab stays open, the alarm plays when time is up, even if you are on another tab. Make sure your device is not muted. The tab title also changes to “Time’s up!”.',
+        a: 'After you press Start in the current browser session, the timer can play its alarm while the tab is in the background. Browsers may delay or mute background audio when a phone is locked or a device sleeps, so use the built-in clock app for a critical alarm. The tab title changes to “Time’s up!” when the page runs again.',
       },
       {
         q: 'What happens if I refresh or close the page?',
@@ -86,12 +88,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '프리셋을 고르거나 시·분·초를 직접 입력합니다.',
       '시작 버튼(또는 스페이스바)을 누릅니다.',
       '다른 탭으로 이동해도 탭 제목에 남은 시간이 표시됩니다.',
-      '시간이 끝나면 30초 동안 알람이 울립니다. 스페이스바나 “다시 시작”으로 같은 시간을 반복할 수 있습니다.',
+      '필요하면 “소리 테스트”를 누릅니다. 시간이 끝나면 켜져 있는 알람이 30초 동안 울립니다.',
     ],
     sections: [
       {
         heading: '탭을 옮겨도 정확한 이유',
-        body: '브라우저는 배터리를 아끼려고 백그라운드 탭의 동작을 느리게 만듭니다. 그래서 1초씩 세는 방식의 타이머는 몇 초에서 몇 분까지 밀릴 수 있습니다. 이 타이머는 끝나는 시각을 저장해 두고 실제 시계와 비교하기 때문에, 탭을 오래 띄워 두어도 정확합니다. 새로고침하거나 실수로 창을 닫았다가 다시 열어도 이어서 동작합니다.',
+        body: '브라우저는 배터리를 아끼려고 백그라운드 탭의 동작을 느리게 만듭니다. 그래서 1초씩 세는 방식의 타이머는 몇 초에서 몇 분까지 밀릴 수 있습니다. 이 타이머는 끝나는 시각을 저장하고 브라우저가 실행될 때 기기 시계와 비교하므로, 백그라운드 탭·절전·새로고침 뒤에도 밀린 횟수를 더하지 않고 남은 시간을 바로잡습니다. 정확도는 기기 시계에 좌우되므로 안전이 중요한 마감에는 브라우저 타이머를 사용하지 마세요.',
       },
       {
         heading: '키보드 단축키',
@@ -105,7 +107,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: '다른 탭을 보고 있어도 알람이 울리나요?',
-        a: '네. 탭이 열려 있기만 하면 다른 탭을 보고 있어도 시간이 끝날 때 알람이 울립니다. 기기가 무음 상태가 아닌지 확인하세요. 탭 제목도 “시간 종료!”로 바뀝니다.',
+        a: '현재 브라우저 세션에서 시작 버튼을 한 번 누른 뒤에는 다른 탭을 보고 있어도 알람을 재생할 수 있습니다. 다만 휴대폰 화면이 잠기거나 기기가 절전 상태이면 브라우저가 소리를 지연하거나 끌 수 있으므로, 중요한 알람은 기기 기본 시계 앱을 사용하세요. 페이지가 다시 실행되면 탭 제목이 “시간 종료!”로 바뀝니다.',
       },
       {
         q: '새로고침하거나 창을 닫으면 어떻게 되나요?',
@@ -140,6 +142,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       minutesShort: '{n}분',
       timesUp: '시간 종료!',
       sound: '알람 소리',
+      testSound: '소리 테스트',
+      fullscreenUnavailable: '이 브라우저에서는 전체화면을 사용할 수 없습니다.',
       keyStart: '시작 / 일시정지',
     },
   },

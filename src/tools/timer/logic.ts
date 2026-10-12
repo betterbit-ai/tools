@@ -18,8 +18,11 @@ export interface TimerState {
 export const MAX_DURATION_MS = 100 * 3600 * 1000 - 1000;
 
 export function toMs(h: number, m: number, s: number): number {
-  const total = ((h || 0) * 3600 + (m || 0) * 60 + (s || 0)) * 1000;
-  return Math.max(0, Math.min(MAX_DURATION_MS, Math.round(total)));
+  const seconds = [h, m, s].map((value, index) => {
+    if (!Number.isFinite(value)) return 0;
+    return Math.max(0, Math.floor(value)) * [3600_000, 60_000, 1000][index];
+  });
+  return clampDuration(seconds[0] + seconds[1] + seconds[2]);
 }
 
 export function splitMs(ms: number): { h: number; m: number; s: number } {
@@ -35,7 +38,7 @@ export function formatClock(ms: number): string {
 }
 
 export function idle(durationMs: number): TimerState {
-  return { status: 'idle', durationMs, endAt: null, pausedRemainingMs: null };
+  return { status: 'idle', durationMs: clampDuration(durationMs), endAt: null, pausedRemainingMs: null };
 }
 
 export function remaining(state: TimerState, now: number): number {
@@ -64,15 +67,22 @@ export function pause(state: TimerState, now: number): TimerState {
 
 /** Add time to whatever state the timer is in (used by "+1 min"). */
 export function addTime(state: TimerState, ms: number, now: number): TimerState {
+  const durationMs = clampDuration(state.durationMs + clampDuration(ms));
+  const addedMs = durationMs - state.durationMs;
   switch (state.status) {
     case 'running':
-      return { ...state, endAt: (state.endAt ?? now) + ms, durationMs: state.durationMs + ms };
+      return { ...state, endAt: (state.endAt ?? now) + addedMs, durationMs };
     case 'paused':
-      return { ...state, pausedRemainingMs: (state.pausedRemainingMs ?? 0) + ms, durationMs: state.durationMs + ms };
+      return { ...state, pausedRemainingMs: (state.pausedRemainingMs ?? 0) + addedMs, durationMs };
     case 'done':
-      return { status: 'running', durationMs: ms, endAt: now + ms, pausedRemainingMs: null };
+      return {
+        status: 'running',
+        durationMs: clampDuration(ms),
+        endAt: now + clampDuration(ms),
+        pausedRemainingMs: null,
+      };
     case 'idle':
-      return idle(Math.min(MAX_DURATION_MS, state.durationMs + ms));
+      return idle(durationMs);
   }
 }
 
@@ -87,5 +97,17 @@ export function settle(state: TimerState, now: number): TimerState {
 export function isTimerState(v: unknown): v is TimerState {
   if (!v || typeof v !== 'object') return false;
   const s = v as TimerState;
-  return ['idle', 'running', 'paused', 'done'].includes(s.status) && typeof s.durationMs === 'number';
+  if (!['idle', 'running', 'paused', 'done'].includes(s.status) || !isDuration(s.durationMs)) return false;
+  if (s.status === 'running') return typeof s.endAt === 'number' && Number.isFinite(s.endAt);
+  if (s.status === 'paused') return s.endAt === null && isDuration(s.pausedRemainingMs);
+  return s.endAt === null && s.pausedRemainingMs === null;
+}
+
+function clampDuration(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(MAX_DURATION_MS, Math.round(value)));
+}
+
+function isDuration(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= MAX_DURATION_MS;
 }

@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { addTime, formatClock, idle, pause, remaining, settle, start, toMs } from './logic';
+import {
+  MAX_DURATION_MS,
+  addTime,
+  formatClock,
+  idle,
+  isTimerState,
+  pause,
+  remaining,
+  settle,
+  start,
+  toMs,
+} from './logic';
 
 describe('formatClock', () => {
   it('formats minutes and seconds', () => {
@@ -47,5 +58,31 @@ describe('timer state machine', () => {
 
   it('does not start a zero-length timer', () => {
     expect(start(idle(0), 0).status).toBe('idle');
+  });
+
+  it('never extends a timer beyond 99 hours, 59 minutes and 59 seconds', () => {
+    const running = addTime(start(idle(MAX_DURATION_MS), 0), 60_000, 0);
+    expect(running.durationMs).toBe(MAX_DURATION_MS);
+    expect(remaining(running, 0)).toBe(MAX_DURATION_MS);
+
+    const restarted = addTime({ ...idle(0), status: 'done' }, MAX_DURATION_MS + 60_000, 0);
+    expect(restarted.durationMs).toBe(MAX_DURATION_MS);
+  });
+});
+
+describe('timer persistence', () => {
+  it('rejects malformed saved timer states', () => {
+    expect(isTimerState({ status: 'running', durationMs: 60_000, endAt: null, pausedRemainingMs: null })).toBe(false);
+    expect(isTimerState({ status: 'paused', durationMs: Infinity, endAt: null, pausedRemainingMs: 60_000 })).toBe(
+      false,
+    );
+    expect(isTimerState({ status: 'done', durationMs: 60_000, endAt: null, pausedRemainingMs: null })).toBe(true);
+  });
+});
+
+describe('duration input', () => {
+  it('discards invalid values and fractional seconds', () => {
+    expect(toMs(Number.NaN, 1.9, -4)).toBe(60_000);
+    expect(toMs(Infinity, 0, 0)).toBe(0);
   });
 });

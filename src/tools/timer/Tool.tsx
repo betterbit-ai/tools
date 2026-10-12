@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Kbd, NumberInput, Panel, Toggle, cx } from '../../components/ui';
+import { Button, Kbd, Notice, NumberInput, Panel, Toggle, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -8,6 +8,7 @@ import {
   formatClock,
   idle,
   isTimerState,
+  MAX_DURATION_MS,
   pause,
   remaining,
   settle,
@@ -28,6 +29,8 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
   const [now, setNow] = useState(() => Date.now());
   const [sound, setSound] = useState(true);
   const [alarming, setAlarming] = useState(false);
+  const [restored, setRestored] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const audio = useRef<AudioContext | null>(null);
   const alarmTimer = useRef<number | null>(null);
@@ -39,17 +42,21 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
     try {
       const saved = JSON.parse(safeStorage.get(STATE_KEY) ?? 'null');
       if (isTimerState(saved) && (saved.status === 'running' || saved.status === 'paused')) {
-        setState(settle(saved, Date.now()));
+        const t = Date.now();
+        setState(settle(saved, t));
+        setNow(t);
       }
     } catch {
       /* ignore corrupt state */
     }
     setSound(safeStorage.get(SOUND_KEY) !== 'off');
+    setRestored(true);
   }, []);
 
   useEffect(() => {
+    if (!restored) return;
     safeStorage.set(STATE_KEY, JSON.stringify(state));
-  }, [state]);
+  }, [restored, state]);
 
   // Tick while running.
   useEffect(() => {
@@ -129,12 +136,22 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
     setState((s) => addTime(s, 60_000, t));
   };
 
-  const fullscreen = useCallback(() => {
+  const fullscreen = useCallback(async () => {
     const el = panelRef.current;
     if (!el) return;
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void el.requestFullscreen?.();
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else if (el.requestFullscreen) await el.requestFullscreen();
+      else setFullscreenError(true);
+    } catch {
+      setFullscreenError(true);
+    }
   }, []);
+
+  const testSound = () => {
+    unlockAudio();
+    beep(audio.current);
+  };
 
   // Keyboard shortcuts (ignored while typing in inputs).
   useEffect(() => {
@@ -200,7 +217,7 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
           <Button size="lg" onClick={reset} disabled={state.status === 'idle'}>
             {ui.reset}
           </Button>
-          <Button size="lg" onClick={plusMinute}>
+          <Button size="lg" onClick={plusMinute} disabled={state.durationMs >= MAX_DURATION_MS}>
             {ui.plusMinute}
           </Button>
           <Button size="lg" variant="ghost" onClick={fullscreen} aria-label={ui.fullscreen}>
@@ -219,6 +236,8 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
             <span class="hidden sm:inline">{ui.fullscreen}</span>
           </Button>
         </div>
+
+        {fullscreenError && <Notice tone="danger">{ui.fullscreenUnavailable}</Notice>}
       </div>
 
       <div class="mt-6 border-t border-line pt-6 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
@@ -227,6 +246,7 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
           <div class="flex flex-wrap gap-2">
             {PRESET_MINUTES.map((m) => (
               <Button
+                key={m}
                 size="sm"
                 onClick={() => setDuration(toMs(0, m, 0))}
                 class={cx(state.durationMs === toMs(0, m, 0) && editing && 'border-accent text-accent')}
@@ -240,12 +260,13 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
           <legend class="text-sm font-medium text-fg mb-2">{ui.custom}</legend>
           <div class="flex gap-2">
             {(['h', 'm', 's'] as const).map((unit) => (
-              <label class="w-20">
+              <label key={unit} class="w-20">
                 <span class="block text-xs text-muted mb-1">{ui[unit]}</span>
                 <NumberInput
                   value={parts[unit]}
                   min={0}
                   max={unit === 'h' ? 99 : 59}
+                  step={1}
                   onValue={(v) => {
                     const next = { ...parts, [unit]: v === '' ? 0 : v };
                     setDuration(toMs(next.h, next.m, next.s));
@@ -267,6 +288,9 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
           }}
           label={ui.sound}
         />
+        <Button size="sm" onClick={testSound} disabled={!sound}>
+          {ui.testSound}
+        </Button>
         <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>
             <Kbd>Space</Kbd> {ui.keyStart}

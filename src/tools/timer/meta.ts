@@ -69,40 +69,28 @@ export const meta: ToolMeta = {
   category: 'time',
   icon: 'timer',
   added: '2026-10-07',
-  updated: '2026-10-07',
+  updated: '2026-10-13',
   edges: ['no-ads', 'accuracy', 'usability', 'design'],
   competitors: [
     {
       name: 'vClock Timer',
       url: 'https://vclock.com/timer/',
-      weakness: 'Ad-supported layout; the countdown shares the screen with ad slots and settings clutter.',
+      weakness:
+        'Its timer opens with holiday lists and a settings panel before the edit dialog, while Betterbit keeps the countdown, presets, custom time and sound test in one visible panel. (Strength: it offers selectable sounds, repeat-on-zero, a message, shared preset links and embeds.)',
     },
     {
       name: 'Online-Stopwatch',
       url: 'https://www.online-stopwatch.com/',
-      weakness: 'Ad-supported, busy page; many themed timers but the plain countdown is not the focus.',
+      weakness:
+        'Its countdown page promotes a paid ad-free upgrade and premium account alongside a site-wide menu of themed tools; Betterbit has no ads or account prompt and opens directly to a focused countdown. (Strength: it offers many themed classroom and specialty timers.)',
     },
     {
-      name: 'Google search timer',
-      url: 'https://www.google.com/search?q=timer',
-      weakness: 'Lost when the tab is closed or refreshed; no keyboard shortcuts; no tab-title countdown.',
+      name: 'timeanddate Timer',
+      url: 'https://www.timeanddate.com/timer/',
+      weakness:
+        'Its timer page places the editor beneath a large global navigation and supporter pitch for ad-free browsing; Betterbit opens directly to its controls with no ads or account prompt. (Strength: it supports multiple named timers and selectable end alarms.)',
     },
   ],
-  related: [
-    'mic-test',
-    'keyboard-tester',
-    'case-converter',
-    'word-counter',
-    'text-diff',
-    'image-resizer',
-    'stopwatch',
-    'pomodoro-timer',
-    'countdown',
-    'alarm-clock',
-    'date-calculator',
-    'age-calculator',
-    'time-zone-converter',
-    'world-clock',
-  ],
+  related: ['stopwatch', 'pomodoro-timer', 'countdown', 'alarm-clock'],
   variants,
 };

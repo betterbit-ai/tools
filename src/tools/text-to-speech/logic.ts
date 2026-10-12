@@ -52,22 +52,27 @@ export function splitSpeechText(text: string, maxLength = 220): string[] {
   const sentences = normalized.match(SENTENCE) ?? [normalized];
   const chunks: string[] = [];
   let current = '';
+  let currentLength = 0;
 
   for (const sentence of sentences) {
     const next = sentence.trim();
     if (!next) continue;
-    if (graphemeLength(next) > limit) {
+    const nextLength = graphemeLength(next);
+    if (nextLength > limit) {
       if (current) chunks.push(current);
       current = '';
+      currentLength = 0;
       chunks.push(...splitLongChunk(next, limit));
       continue;
     }
-    const combined = current ? `${current} ${next}` : next;
-    if (graphemeLength(combined) > limit && current) {
+    const combinedLength = currentLength + (current ? 1 : 0) + nextLength;
+    if (combinedLength > limit && current) {
       chunks.push(current);
       current = next;
+      currentLength = nextLength;
     } else {
-      current = combined;
+      current = current ? `${current} ${next}` : next;
+      currentLength = combinedLength;
     }
   }
   if (current) chunks.push(current);
@@ -89,20 +94,25 @@ export function isEditableElement(tagName: string, contentEditable = false): boo
 function splitLongChunk(value: string, maxLength: number): string[] {
   const output: string[] = [];
   let current = '';
+  let currentLength = 0;
   for (const word of value.split(' ')) {
-    const combined = current ? `${current} ${word}` : word;
-    if (graphemeLength(combined) <= maxLength) {
-      current = combined;
+    const wordLength = graphemeLength(word);
+    const combinedLength = currentLength + (current ? 1 : 0) + wordLength;
+    if (combinedLength <= maxLength) {
+      current = current ? `${current} ${word}` : word;
+      currentLength = combinedLength;
       continue;
     }
     if (current) output.push(current);
-    if (graphemeLength(word) <= maxLength) {
+    if (wordLength <= maxLength) {
       current = word;
+      currentLength = wordLength;
       continue;
     }
     const pieces = splitGraphemes(word, maxLength);
     output.push(...pieces.slice(0, -1));
     current = pieces.at(-1) ?? '';
+    currentLength = graphemeLength(current);
   }
   if (current) output.push(current);
   return output;
@@ -111,12 +121,15 @@ function splitLongChunk(value: string, maxLength: number): string[] {
 function splitGraphemes(value: string, maxLength: number): string[] {
   const output: string[] = [];
   let current = '';
+  let currentLength = 0;
   for (const { segment } of graphemes.segment(value)) {
-    if (graphemeLength(current) === maxLength) {
+    if (currentLength === maxLength) {
       output.push(current);
       current = '';
+      currentLength = 0;
     }
     current += segment;
+    currentLength++;
   }
   if (current) output.push(current);
   return output;
