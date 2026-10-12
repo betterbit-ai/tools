@@ -43,5 +43,6 @@ export const meta: ToolMeta = {
     'delete-pdf-pages',
     'reorder-pdf',
     'unlock-pdf',
+    'protect-pdf',
   ],
 };
