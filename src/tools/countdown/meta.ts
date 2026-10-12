@@ -49,6 +49,7 @@ export const meta: ToolMeta = {
     'timer',
     'stopwatch',
     'pomodoro-timer',
+    'interval-timer',
     'alarm-clock',
     'date-calculator',
     'age-calculator',
