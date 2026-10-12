@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean-time-based list is a fixed set of country rows and says it updates on page refresh, rather than continuously ticking or retaining a personal group of cities. Betterbit updates each second and saves an editable city set in local browser storage. (Strength: it provides Korea-focused stock-market and travel use-case guidance.)',
     },
   ],
-  related: ['time-zone-converter', 'timer', 'countdown', 'stopwatch'],
+  related: ['time-zone-converter', 'timer', 'countdown', 'stopwatch', 'unix-timestamp'],
 };

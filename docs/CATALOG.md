@@ -92,7 +92,7 @@
 | time-zone-converter | 시간대 변환       | time zone converter / 시차 계산   | 도시 검색, DST 정확                                 | P0  | live |
 | date-calculator     | 날짜 계산기       | date calculator / 날짜 계산       | 영업일 계산, 국가별 공휴일                          | P0  | live |
 | age-calculator      | 나이 계산기       | age calculator / 만 나이 계산기   | 한국 만 나이, 띠, 별자리                            | P0  | live |
-| unix-timestamp      | 타임스탬프 변환   | unix timestamp converter          | 밀리초/초 자동 인식, 시간대                         | P1  | todo |
+| unix-timestamp      | 타임스탬프 변환   | unix timestamp converter          | 밀리초/초 자동 인식, 시간대                         | P1  | live |
 | hours-calculator    | 근무 시간 계산    | hours calculator / 근무시간 계산  | 휴게 시간 차감, 주간 합계                           | P1  | todo |
 | online-clock        | 온라인 시계       | online clock / 현재 시간          | 전체화면 대형 시계, 서버 시간 동기화 없이 오차 표시 | P1  | todo |
 | interval-timer      | 인터벌 타이머     | tabata timer / 인터벌 타이머      | 운동 프리셋, 음성 안내                              | P1  | todo |
