@@ -1,0 +1,193 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  start: 'Start',
+  pause: 'Pause',
+  resume: 'Resume',
+  restart: 'Restart',
+  reset: 'Reset',
+  skip: 'Skip phase',
+  presets: 'Workout presets',
+  tabata: 'Tabata 20/10',
+  hiit: 'HIIT 40/20',
+  boxing: 'Boxing 3/1',
+  custom: 'Custom',
+  settings: 'Intervals',
+  prepSeconds: 'Get ready (seconds)',
+  workSeconds: 'Work (seconds)',
+  restSeconds: 'Rest (seconds)',
+  rounds: 'Rounds',
+  secondsHint: '0–10,800 seconds',
+  roundsHint: '1–99 rounds',
+  phaseReady: 'Get ready',
+  phaseWork: 'Work',
+  phaseRest: 'Rest',
+  phaseDone: 'Complete',
+  round: 'Round {current} of {total}',
+  total: 'Total session',
+  sound: 'Phase-change sound',
+  voice: 'Voice cues',
+  testSound: 'Test sound',
+  complete: 'Workout complete',
+  browserVoiceUnavailable: 'Voice cues are unavailable in this browser.',
+  startPause: 'Start / pause',
+  keyReset: 'Reset',
+  keySkip: 'Skip phase',
+  keySpace: 'Space',
+  keyR: 'R',
+  keyS: 'S',
+  voiceReady: 'Get ready',
+  voiceWork: 'Work',
+  voiceRest: 'Rest',
+  voiceComplete: 'Workout complete',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'Tabata Timer — Interval Timer with Voice Cues',
+    description:
+      'Run Tabata, HIIT or boxing rounds in a clean interval timer with optional voice cues, phase sound and keyboard controls. Settings stay in your browser.',
+    h1: 'Tabata & Interval Timer',
+    tagline: 'Start a workout preset in one click, or set your own work, rest and rounds — with optional voice cues.',
+    name: 'Interval Timer',
+    keywords: ['tabata timer', 'HIIT timer', 'workout timer', 'interval workout', 'boxing round timer', 'EMOM timer'],
+    howTo: [
+      'Choose Tabata, HIIT, Boxing, or edit the interval values.',
+      'Turn on voice cues or phase-change sound if you want hands-free guidance.',
+      'Press Start or Space to begin the get-ready countdown.',
+      'Use S to skip a phase, R to reset, or Pause to hold the current phase.',
+    ],
+    sections: [
+      {
+        heading: 'Tabata is a specific 4-minute interval format',
+        body: 'Classic Tabata is 20 seconds of work and 10 seconds of rest repeated 8 times: 8 × (20 + 10) = 240 seconds, or 4 minutes. HIIT is the broader category of alternating hard and recovery intervals, so a 40/20 workout or boxing rounds are HIIT-style timing but not the original Tabata protocol. This timer includes the rest after the eighth work interval so its Tabata preset is a full 4:00.',
+      },
+      {
+        heading: 'Timing that catches up after a background tab',
+        body: 'Browsers may slow JavaScript in an inactive tab. Instead of subtracting one second per visual tick, this timer stores the scheduled end time of each phase and compares it with your device clock. If the tab wakes up late, it advances through the phases that actually elapsed rather than making the session longer. Browser audio and voice can still be delayed or muted by a locked phone, so do not use a web timer for safety-critical timing.',
+      },
+      {
+        heading: 'Preset timing at a glance',
+        body: 'Tabata is 20 seconds work / 10 seconds rest × 8, for 4:00 plus the optional 5-second get-ready countdown. The HIIT preset is 40/20 × 8, for 8:00. The boxing preset is 3-minute rounds with 1-minute rests × 12, for 48:00. Use Custom for any routine from 1 to 10,800 seconds per work interval and up to 99 rounds.',
+      },
+    ],
+    faq: [
+      {
+        q: 'What is the standard Tabata timer setting?',
+        a: 'The standard Tabata format is 20 seconds of work followed by 10 seconds of rest for 8 rounds, totaling exactly 4 minutes. This timer adds an optional 5-second get-ready countdown before the 4:00 session.',
+      },
+      {
+        q: 'What is the difference between Tabata and HIIT?',
+        a: 'Tabata is one defined HIIT format: 20 seconds of work, 10 seconds of rest and 8 rounds. HIIT describes a wider range of work-to-rest ratios, such as 40/20 or 30/30, selected for a workout and fitness level.',
+      },
+      {
+        q: 'Do voice cues work when I switch browser tabs?',
+        a: 'Voice and sound cues begin after you press Start, but browsers can delay or mute audio in background tabs, especially when a phone is locked. The timing state itself catches up from the device clock when the page runs again.',
+      },
+      {
+        q: 'Does this interval timer save my workout settings?',
+        a: 'Your selected interval settings, active timer and sound choices are stored only in this browser. No account, workout data or setting is sent to a server.',
+      },
+      {
+        q: 'Which keyboard shortcuts does the interval timer support?',
+        a: 'Space starts or pauses the timer, R resets it, and S skips to the next phase. The shortcuts are ignored while you are editing a number field.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '타바타 타이머 — 음성 안내 인터벌 운동 타이머',
+    description:
+      '타바타, HIIT, 복싱 라운드를 바로 시작하는 인터벌 타이머입니다. 음성 안내·전환음·키보드 단축키를 지원하며 설정은 브라우저에만 저장됩니다.',
+    h1: '타바타·인터벌 타이머',
+    tagline:
+      '운동 프리셋을 한 번에 시작하거나 운동·휴식·라운드를 직접 설정합니다. 필요하면 음성으로 단계도 안내합니다.',
+    name: '인터벌 타이머',
+    keywords: ['타바타 타이머', '인터벌 타이머', 'HIIT 타이머', '운동 타이머', '복싱 라운드 타이머', '홈트 타이머'],
+    howTo: [
+      '타바타, HIIT, 복싱을 고르거나 인터벌 값을 직접 수정합니다.',
+      '화면을 보지 않고 진행하려면 음성 안내 또는 전환음을 켭니다.',
+      '시작 버튼이나 스페이스바를 눌러 준비 카운트다운을 시작합니다.',
+      'S로 다음 단계를 건너뛰고, R로 초기화하며, 일시정지로 현재 단계를 멈춥니다.',
+    ],
+    sections: [
+      {
+        heading: '타바타는 4분으로 정해진 인터벌 형식입니다',
+        body: '정통 타바타는 20초 운동과 10초 휴식을 8회 반복합니다. 8 × (20초 + 10초) = 240초이므로 정확히 4분입니다. HIIT는 강한 운동과 회복 구간을 번갈아 하는 더 넓은 훈련 방식을 뜻하므로, 40초/20초나 복싱 라운드는 HIIT 방식이지만 정통 타바타와는 다릅니다. 이 타이머의 타바타 프리셋은 8번째 운동 뒤의 휴식까지 포함해 4:00을 맞춥니다.',
+      },
+      {
+        heading: '백그라운드 탭에서도 누적 오차를 줄입니다',
+        body: '브라우저는 배터리를 아끼기 위해 보이지 않는 탭의 실행을 늦출 수 있습니다. 이 도구는 화면이 갱신될 때마다 1초를 빼는 대신 각 단계의 종료 시각을 기기 시계에 기록합니다. 탭이 늦게 다시 실행되어도 실제로 지난 단계를 한꺼번에 넘겨 운동 시간이 늘어나지 않습니다. 단, 잠긴 휴대폰이나 백그라운드 탭에서는 음성·소리가 지연되거나 음소거될 수 있으므로 안전과 직결되는 시간 측정에는 사용하지 마십시오.',
+      },
+      {
+        heading: '프리셋 시간 구성',
+        body: '타바타는 20초 운동 / 10초 휴식 × 8라운드로 4:00이며, 시작 전 5초 준비 시간은 별도입니다. HIIT 프리셋은 40/20 × 8라운드로 8:00입니다. 복싱 프리셋은 3분 라운드와 1분 휴식 × 12라운드로 48:00입니다. 사용자 설정에서는 운동 구간을 1초부터 10,800초까지, 라운드를 최대 99회까지 정할 수 있습니다.',
+      },
+    ],
+    faq: [
+      {
+        q: '기본 타바타 타이머 설정은 어떻게 되나요?',
+        a: '기본 타바타는 20초 운동 뒤 10초 휴식을 8라운드 반복하는 방식이며 총 4분입니다. 이 도구는 운동 시작 전에 선택적으로 5초 준비 카운트다운을 더합니다.',
+      },
+      {
+        q: '타바타와 HIIT는 무엇이 다른가요?',
+        a: '타바타는 20초 운동·10초 휴식·8라운드로 정해진 HIIT의 한 형식입니다. HIIT는 40/20, 30/30처럼 운동 목적과 체력에 맞게 운동과 회복 시간 비율을 조절하는 더 넓은 개념입니다.',
+      },
+      {
+        q: '다른 탭으로 이동해도 음성 안내가 나오나요?',
+        a: '시작 버튼을 누른 뒤 음성 및 전환음을 재생하지만, 특히 휴대폰 화면이 잠긴 경우 브라우저가 백그라운드 소리를 늦추거나 음소거할 수 있습니다. 타이머 단계는 페이지가 다시 실행될 때 기기 시계를 기준으로 맞춰집니다.',
+      },
+      {
+        q: '인터벌 설정은 저장되나요?',
+        a: '선택한 인터벌, 진행 중인 타이머, 소리 설정은 현재 브라우저에만 저장됩니다. 계정이 필요 없고 운동 기록이나 설정값이 서버로 전송되지 않습니다.',
+      },
+      {
+        q: '인터벌 타이머 단축키는 무엇인가요?',
+        a: '스페이스바는 시작·일시정지, R은 초기화, S는 다음 단계 건너뛰기입니다. 숫자 입력칸을 편집할 때는 단축키가 작동하지 않습니다.',
+      },
+    ],
+    ui: {
+      start: '시작',
+      pause: '일시정지',
+      resume: '계속',
+      restart: '다시 시작',
+      reset: '초기화',
+      skip: '단계 건너뛰기',
+      presets: '운동 프리셋',
+      tabata: '타바타 20/10',
+      hiit: 'HIIT 40/20',
+      boxing: '복싱 3/1',
+      custom: '사용자 설정',
+      settings: '인터벌 설정',
+      prepSeconds: '준비 시간(초)',
+      workSeconds: '운동 시간(초)',
+      restSeconds: '휴식 시간(초)',
+      rounds: '라운드',
+      secondsHint: '0–10,800초',
+      roundsHint: '1–99라운드',
+      phaseReady: '준비',
+      phaseWork: '운동',
+      phaseRest: '휴식',
+      phaseDone: '완료',
+      round: '{current} / {total} 라운드',
+      total: '총 운동 시간',
+      sound: '단계 전환음',
+      voice: '음성 안내',
+      testSound: '소리 테스트',
+      complete: '운동 완료',
+      browserVoiceUnavailable: '이 브라우저에서는 음성 안내를 사용할 수 없습니다.',
+      startPause: '시작 / 일시정지',
+      keyReset: '초기화',
+      keySkip: '단계 건너뛰기',
+      keySpace: 'Space',
+      keyR: 'R',
+      keyS: 'S',
+      voiceReady: '준비',
+      voiceWork: '운동',
+      voiceRest: '휴식',
+      voiceComplete: '운동이 완료되었습니다',
+    },
+  },
+};

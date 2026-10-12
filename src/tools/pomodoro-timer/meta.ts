@@ -45,5 +45,14 @@ export const meta: ToolMeta = {
         'Its Korean timer exposes focus, short-break and long-break controls with start, reset and skip, but no visible editable task list or timestamped session log. Betterbit makes both available alongside its timer. (Strength: it offers dedicated 30-minute and study-timer pages.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'alarm-clock', 'word-counter', 'countdown', 'date-calculator', 'time-zone-converter'],
+  related: [
+    'timer',
+    'stopwatch',
+    'interval-timer',
+    'alarm-clock',
+    'word-counter',
+    'countdown',
+    'date-calculator',
+    'time-zone-converter',
+  ],
 };
