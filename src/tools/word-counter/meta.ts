@@ -37,6 +37,7 @@ export const meta: ToolMeta = {
     'qr-code-generator',
     'typing-test',
     'lorem-ipsum',
+    'speech-to-text',
     'hangul-romanization',
   ],
 };
