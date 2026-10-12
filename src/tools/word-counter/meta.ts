@@ -39,5 +39,6 @@ export const meta: ToolMeta = {
     'lorem-ipsum',
     'speech-to-text',
     'hangul-romanization',
+    'fancy-text',
   ],
 };
