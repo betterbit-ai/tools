@@ -19,13 +19,16 @@ export const HEIC_EXTENSIONS = ['.heic', '.heif', '.hif'] as const;
 /** `accept` for the Dropzone. Chrome leaves `file.type` empty for HEIC, so extensions matter. */
 export const HEIC_ACCEPT = '.heic,.heif,.hif,image/heic,image/heif,image/heic-sequence,image/heif-sequence';
 
+/** MIME types browsers may use for HEIF stills and image sequences. */
+const HEIC_MIME_TYPES = new Set(['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']);
+
 /** HEIF `ftyp` major brands that hold still images we can decode. */
 const HEIF_BRANDS = new Set(['heic', 'heix', 'heim', 'heis', 'hevc', 'hevx', 'hevm', 'hevs', 'mif1', 'msf1', 'heif']);
 
 export function isHeicFile(file: { name: string; type: string }): boolean {
   const name = file.name.toLowerCase();
   if (HEIC_EXTENSIONS.some((ext) => name.endsWith(ext))) return true;
-  return file.type === 'image/heic' || file.type === 'image/heif';
+  return HEIC_MIME_TYPES.has(file.type.toLowerCase());
 }
 
 /** "IMG_4821.HEIC" → "IMG_4821.jpg" (and a name with no extension still gets one). */
@@ -479,7 +482,31 @@ export function readExifSummary(tiff: Uint8Array): ExifSummary | null {
 export function formatExifDate(value: string | null): string | null {
   const m = value?.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2})/);
   if (!m) return null;
-  if (m[1] === '0000') return null; // some cameras write an all-zero placeholder
+  const [year, month, day, hour, minute] = m.slice(1).map(Number);
+  const daysInMonth = [
+    31,
+    year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+  if (
+    year === 0 || // some cameras write an all-zero placeholder
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth[month - 1] ||
+    hour > 23 ||
+    minute > 59
+  )
+    return null;
   return `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}`;
 }
 
