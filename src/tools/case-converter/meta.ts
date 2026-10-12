@@ -55,5 +55,6 @@ export const meta: ToolMeta = {
     'base64',
     'lorem-ipsum',
     'hangul-romanization',
+    'speech-to-text',
   ],
 };

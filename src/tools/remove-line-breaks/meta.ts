@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its multi-purpose workspace requires selecting a cleanup task and pressing “텍스트 정리”; Betterbit keeps just this task live as text is pasted, with a single PDF-copy preset. (Strength: it provides broader delimiter, duplicate and character-filter workflows.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'remove-duplicate-lines', 'text-diff', 'lorem-ipsum'],
+  related: ['word-counter', 'case-converter', 'remove-duplicate-lines', 'text-diff', 'lorem-ipsum', 'speech-to-text'],
 };
