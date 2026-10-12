@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         'Its Korean page starts with a file-upload flow, says files are only automatically deleted after 30 minutes, and displays a cookie-consent banner. This tool never transmits the PDF and shows its page previews immediately in the browser. (Strength: supports page-by-page ±90° and ±180° rotation.)',
     },
   ],
-  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'pdf-to-jpg'],
+  related: ['merge-pdf', 'split-pdf', 'compress-pdf', 'pdf-to-jpg', 'delete-pdf-pages'],
 };
