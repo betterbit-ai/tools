@@ -40,5 +40,6 @@ export const meta: ToolMeta = {
     'speech-to-text',
     'hangul-romanization',
     'fancy-text',
+    'invisible-character',
   ],
 };
