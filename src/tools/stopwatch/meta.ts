@@ -59,5 +59,6 @@ export const meta: ToolMeta = {
     'world-clock',
     'typing-test',
     'hours-calculator',
+    'online-clock',
   ],
 };
