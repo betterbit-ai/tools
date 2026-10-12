@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'States that the selected file is handled by Adobe servers, then prompts users to sign in to share or save the result. Its converter offers JPG, PNG, and TIFF output but does not expose a page-range field or 96/150/300 dpi choices on the tool page. (Strength: supports three image output formats.)',
     },
   ],
-  related: ['compress-pdf', 'split-pdf', 'image-to-pdf', 'image-converter'],
+  related: ['compress-pdf', 'split-pdf', 'image-to-pdf', 'image-converter', 'rotate-pdf'],
 };
