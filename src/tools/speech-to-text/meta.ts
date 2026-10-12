@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean documentation says recordings are processed in the cloud and caps the free tier at 20 files of up to 10 minutes each. Betterbit is live on-device dictation, so there is no file upload, account, or per-file wait. (Strength: Narakeet supports uploaded audio and video formats.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'lorem-ipsum'],
+  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'lorem-ipsum', 'text-to-speech'],
 };

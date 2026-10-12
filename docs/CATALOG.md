@@ -70,7 +70,7 @@
 | lorem-ipsum            | 더미 텍스트       | lorem ipsum generator / 더미 텍스트  | 한국어 더미 텍스트                                    | P1  | live |
 | korean-spell-check     | 맞춤법 검사       | 맞춤법 검사기                        | 브라우저 즉시 검사, 입력 전송 없음, 로컬 초안 복원    | P1  | live |
 | hangul-romanization    | 한글 로마자 변환  | 한글 영문 변환 / korean romanization | 국립국어원 표기법 + 여권 이름 표기                    | P1  | live |
-| text-to-speech         | 텍스트 읽어주기   | text to speech                       | Web Speech API, 다국어 음성                           | P1  | todo |
+| text-to-speech         | 텍스트 읽어주기   | text to speech                       | Web Speech API, 다국어 음성                           | P1  | live |
 | speech-to-text         | 받아쓰기          | speech to text / 음성 텍스트 변환    | 기기 내 Web Speech API, 음성 업로드 없음              | P1  | live |
 | fancy-text             | 특수 폰트 텍스트  | fancy text generator                 | 인스타 바이오용 유니코드 서체                         | P1  | live |
 | invisible-character    | 공백 문자         | invisible character / 투명 문자      | 복사 한 번, 플랫폼별 동작 안내                        | P1  | live |

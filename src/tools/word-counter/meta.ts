@@ -38,6 +38,7 @@ export const meta: ToolMeta = {
     'typing-test',
     'lorem-ipsum',
     'speech-to-text',
+    'text-to-speech',
     'hangul-romanization',
     'fancy-text',
     'invisible-character',

@@ -56,6 +56,7 @@ export const meta: ToolMeta = {
     'lorem-ipsum',
     'hangul-romanization',
     'speech-to-text',
+    'text-to-speech',
     'fancy-text',
     'korean-spell-check',
   ],

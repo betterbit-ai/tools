@@ -52,6 +52,7 @@ export const meta: ToolMeta = {
     'text-diff',
     'lorem-ipsum',
     'speech-to-text',
+    'text-to-speech',
     'invisible-character',
     'korean-spell-check',
   ],
