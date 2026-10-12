@@ -29,21 +29,27 @@ export interface ResizePlan {
   sh: number;
 }
 
-/** Browsers fail on canvases much larger than this (Safari: ~16.7 MP total). */
+/** Browsers reject a canvas side above this in some environments. */
 export const MAX_SIDE = 8192;
+/** Safari limits a canvas to roughly 16.7 million pixels, regardless of side length. */
+export const MAX_PIXELS = 16_777_216;
 
 export function planResize(srcW: number, srcH: number, o: ResizeOptions): ResizePlan {
+  if (!isPositive(srcW) || !isPositive(srcH)) throw new RangeError('Image dimensions must be positive finite numbers.');
+
   const full = { sx: 0, sy: 0, sw: srcW, sh: srcH };
   let w: number;
   let h: number;
 
   if (o.mode === 'percent') {
-    const p = Math.max(1, o.percent) / 100;
+    const p = Math.max(1, Number.isFinite(o.percent) ? o.percent : 100) / 100;
     w = srcW * p;
     h = srcH * p;
   } else {
-    const W = o.width || 0;
-    const H = o.height || 0;
+    // `min` on a number input is advisory: pasted or scripted values can still
+    // be negative or NaN. Treat those just like an empty dimension.
+    const W = isPositive(o.width) ? o.width : 0;
+    const H = isPositive(o.height) ? o.height : 0;
     if (W && H) {
       if (o.fit === 'stretch') {
         w = W;
@@ -84,9 +90,14 @@ export function planResize(srcW: number, srcH: number, o: ResizeOptions): Resize
 }
 
 function clampPlan(w: number, h: number, maxW: number, maxH: number): { width: number; height: number } {
-  let scale = Math.min(1, maxW / w, maxH / h, MAX_SIDE / w, MAX_SIDE / h);
-  if (!Number.isFinite(scale)) scale = 1;
-  return { width: Math.max(1, Math.round(w * scale)), height: Math.max(1, Math.round(h * scale)) };
+  const scale = Math.min(1, maxW / w, maxH / h, MAX_SIDE / w, MAX_SIDE / h, Math.sqrt(MAX_PIXELS / (w * h)));
+  // Floor after scaling so rounding cannot put the result one pixel over the
+  // browser's total-pixel ceiling.
+  return { width: Math.max(1, Math.floor(w * scale)), height: Math.max(1, Math.floor(h * scale)) };
+}
+
+function isPositive(value: number | ''): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
 
 function roundCrop(c: { sx: number; sy: number; sw: number; sh: number }) {
@@ -96,9 +107,18 @@ function roundCrop(c: { sx: number; sy: number; sw: number; sh: number }) {
 const ENCODABLE = ['image/jpeg', 'image/png', 'image/webp'];
 
 /** Output MIME. "original" keeps JPEG/PNG/WebP; anything else (GIF, BMP, HEIC…) becomes PNG. */
-export function outputType(choice: FormatChoice, srcType: string): string {
+export function outputType(choice: FormatChoice, srcType: string, srcName = ''): string {
   if (choice !== 'original') return choice;
-  return ENCODABLE.includes(srcType) ? srcType : 'image/png';
+  const type = srcType.toLowerCase() || mimeFromName(srcName);
+  return ENCODABLE.includes(type) ? type : 'image/png';
+}
+
+function mimeFromName(name: string): string {
+  const extension = name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
+  if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg';
+  if (extension === 'png') return 'image/png';
+  if (extension === 'webp') return 'image/webp';
+  return '';
 }
 
 export function extensionFor(mime: string): string {
