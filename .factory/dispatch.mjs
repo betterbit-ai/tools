@@ -86,7 +86,7 @@ function runRepo(repo) {
     }
     const outcome = startNextIssue(repo, clone);
     if (outcome === 'failed' && ++failures >= 2) return log(`[${repo.name}] two failed sessions in a row — stopping`);
-    if (outcome === 'opened') failures = 0;
+    if (outcome === 'opened' || outcome === 'done') failures = 0;
     if (outcome === 'stop') return;
   }
 }
@@ -96,6 +96,8 @@ function runRepo(repo) {
  * (now, or when the usage limit resets). factory.yml waits until then and dispatches a run.
  */
 const CONTINUE_FILE = join(HOME, 'continue');
+/** Kind of the last issue this factory took ('build' | 'audit'), to alternate the two. */
+const LAST_KIND_FILE = join(DIRS.locks, 'last-kind');
 /** The PR this run just opened. `gh pr list` can lag behind, so it's settled explicitly. */
 let justOpened = null;
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -549,7 +551,10 @@ function startNextIssue(repo, clone) {
     .filter((i) => !ONLY_ISSUE || i.number === ONLY_ISSUE)
     .sort((a, b) => priorityOf(a.labels) - priorityOf(b.labels) || a.number - b.number);
 
-  const issue = issues[0];
+  // Alternate: after a new tool comes a quality audit of an existing one (when one is queued).
+  const isAudit = (i) => i.labels.some((l) => l.name === 'type:audit');
+  const lastKind = existsSync(LAST_KIND_FILE) ? readFileSync(LAST_KIND_FILE, 'utf8').trim() : '';
+  const issue = (lastKind !== 'audit' && issues.find(isAudit)) || issues.find((i) => !isAudit(i)) || issues[0];
   if (!issue) {
     log(`[${repo.name}] no ready issues`);
     return 'stop';
@@ -560,6 +565,7 @@ function startNextIssue(repo, clone) {
   const branch = `agent/issue-${n}`;
   const logFile = join(DIRS.logs, `${repo.name}-issue${n}-${stamp()}.log`);
   if (!claim(repo, n)) return 'stop';
+  writeFileSync(LAST_KIND_FILE, isAudit(issue) ? 'audit' : 'build');
   log(`[${repo.name}] starting issue #${n} with ${ENGINE_LABEL}: ${issue.title}`);
   gh([
     'issue',
@@ -688,6 +694,26 @@ function startNextIssue(repo, clone) {
 
   if (/^BLOCKED:/m.test(session.result)) return fail('agent reported BLOCKED', session.result);
   const commits = Number(sh('git', ['-C', wt, 'rev-list', '--count', `origin/${repo.baseBranch}..HEAD`]).out);
+  if (!commits && /^NO_CHANGES:/m.test(session.result)) {
+    // An audit that found nothing worth changing is a success, not a failure.
+    log(`[${repo.name}] issue #${n}: no changes needed — closing`);
+    gh(
+      [
+        'issue',
+        'comment',
+        String(n),
+        '-R',
+        repo.slug,
+        '--body',
+        `🏭 Audit done, nothing to change.\n\n${session.result.slice(0, 3000)}`,
+      ],
+      { allowFail: true },
+    );
+    gh(['issue', 'close', String(n), '-R', repo.slug, '--reason', 'completed'], { allowFail: true });
+    gh(['issue', 'edit', String(n), '-R', repo.slug, '--remove-label', 'agent:in-progress'], { allowFail: true });
+    removeWorktree(repo, clone, n);
+    return 'done';
+  }
   if (!commits) return fail(session.timedOut ? 'session timed out without commits' : 'no commits', session.result);
 
   const pushed = pushBranch(repo, wt, branch, { allowFail: true });

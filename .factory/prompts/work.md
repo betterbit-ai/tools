@@ -42,4 +42,6 @@ End with a short report in this exact shape (it becomes the PR description):
 <optional: things left out of scope>
 ```
 
+For a quality audit (`type:audit`) that finds nothing worth changing, don't commit; reply with a first line `NO_CHANGES: <reason>` and list what you checked.
+
 If you are truly blocked (missing credentials, contradictory requirements), do not commit partial junk. Reply with a first line `BLOCKED: <reason>` and explain.

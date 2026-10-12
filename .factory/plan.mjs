@@ -7,7 +7,7 @@
  *   node plan.mjs            # plan every repo in config.json
  *   node plan.mjs --dry-run  # print what would be created
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONFIG, DIRS, gh, ghJson, log, stamp } from './lib.mjs';
 
@@ -88,6 +88,85 @@ Research and add **at least 60 new tool ideas** to \`docs/CATALOG.md\`, followin
 `;
 }
 
+function auditIssueBody(slug) {
+  return `> Filed by the factory planner: periodic quality audit of a live tool. Live slugs never change.
+
+### Tool
+\`src/tools/${slug}\` — https://betterbit.org/${slug} (ko: https://betterbit.org/ko/${slug})
+
+### Task
+Review this tool as a demanding user and a reviewer would, then fix what you find. Go through every point:
+
+1. **Correctness** — read \`logic.ts\` and the browser code. Look for wrong results, edge cases (empty, huge, unicode/CJK, odd files), unhandled errors, memory blow-ups, work on the main thread that freezes the page. Add regression tests for anything you fix.
+2. **The edge is real** — every \`meta.edges\` claim must be visible in the UI and true. Remove claims that aren't. Re-check 2–3 competitors (WebSearch) for a feature they now have that we lack; add it if it's small, or note it as \`(Strength: …)\`.
+3. **UX** — clear first step, sensible defaults, keyboard access and visible focus, labels on every control, useful error messages, mobile layout (375px), dark mode via tokens only, no layout jumps.
+4. **Content** — facts, numbers and specs correct; en and ko read naturally for real searchers (no machine-translation tone, no filler); title/description match what people search; FAQ answers real questions.
+5. **SEO/links** — \`related\` points to 2–4 genuinely related tools (both ways), variants are useful landing pages, nothing that would trip \`npm run check:dist\`.
+
+Keep changes focused on this tool (shared code only if the fix belongs there). Bump \`meta.updated\` when you change behavior or content. Run \`npm run format\` and \`npm run verify\`, then commit.
+
+If the tool is already in good shape and nothing is worth changing, do not commit; reply with a first line \`NO_CHANGES: <one-sentence reason>\` followed by what you checked.
+
+### Acceptance criteria
+- [ ] All five areas checked; findings fixed (or explained in the report)
+- [ ] Regression tests for fixed bugs
+- [ ] \`npm run verify\` passes
+`;
+}
+
+/** Live tools, oldest first (by meta.added, then slug). */
+function liveTools(clone) {
+  const dir = join(clone, 'src', 'tools');
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && existsSync(join(dir, d.name, 'meta.ts')))
+    .map((d) => {
+      const meta = readFileSync(join(dir, d.name, 'meta.ts'), 'utf8');
+      return { slug: d.name, added: meta.match(/added:\s*'([\d-]+)'/)?.[1] ?? '9999' };
+    })
+    .sort((a, b) => a.added.localeCompare(b.added) || a.slug.localeCompare(b.slug));
+}
+
+/**
+ * Keep a few quality-audit issues queued for live tools that were never audited (oldest first).
+ * The dispatcher alternates them with new tools.
+ */
+function planAudits(repo, open, allTitles, { dryRun }) {
+  const want = repo.planner.auditQueue ?? 0;
+  const queued = open.filter((i) => i.labels.some((l) => l.name === 'type:audit')).length;
+  if (queued >= want) return;
+  const audited = new Set(allTitles.map((t) => t.match(/^\[audit\] ([a-z0-9-]+):/)?.[1]).filter(Boolean));
+  const next = liveTools(join(DIRS.clones, repo.name))
+    .filter((t) => !audited.has(t.slug))
+    .slice(0, want - queued);
+  for (const t of next) {
+    const title = `[audit] ${t.slug}: quality check`;
+    if (dryRun) {
+      log(`[${repo.name}] would create: ${title}`);
+      continue;
+    }
+    const bodyFile = join(DIRS.logs, `issue-body-${stamp()}-audit-${t.slug}.md`);
+    writeFileSync(bodyFile, auditIssueBody(t.slug));
+    const { out } = gh([
+      'issue',
+      'create',
+      '-R',
+      repo.slug,
+      '--title',
+      title,
+      '--body-file',
+      bodyFile,
+      '--label',
+      'type:audit',
+      '--label',
+      'P1',
+      '--label',
+      'agent:ready',
+    ]);
+    log(`[${repo.name}] created audit ${out}`);
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2500);
+  }
+}
+
 export function planRepo(repo, { dryRun = false } = {}) {
   const p = repo.planner;
   if (!p) return;
@@ -109,6 +188,12 @@ export function planRepo(repo, { dryRun = false } = {}) {
   const ready = open.filter((i) => i.labels.some((l) => l.name === 'agent:ready')).length;
   const all = ghJson(['issue', 'list', '-R', repo.slug, '--state', 'all', '--limit', '2000', '--json', 'title']);
   const filed = new Set(all.map((i) => i.title.match(/^\[tool\] ([a-z0-9-]+):/)?.[1]).filter(Boolean));
+  planAudits(
+    repo,
+    open,
+    all.map((i) => i.title),
+    { dryRun },
+  );
 
   const todo = catalog
     .filter((r) => r.status === 'todo' && !filed.has(r.slug))

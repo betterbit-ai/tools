@@ -6,7 +6,7 @@ It runs every 30 minutes in GitHub Actions ([`.github/workflows/factory.yml`](..
 Each run does one step per repo:
 
 1. **In-flight PR** (`agent/issue-N`, label `agent:review`): squash-merge it once every check is green. If checks are red or the branch conflicts, run a fix session (at most `session.maxFixAttempts`). PRs that touch `.factory/`, `.github/` or `.claude/settings*` are never auto-merged; they get `agent:human`.
-2. **Planner** ([`plan.mjs`](plan.mjs)): keeps the `agent:ready` queue filled from `docs/CATALOG.md`. When the catalog runs low it files a `type:catalog` research issue.
+2. **Planner** ([`plan.mjs`](plan.mjs)): keeps the `agent:ready` queue filled from `docs/CATALOG.md`. When the catalog runs low it files a `type:catalog` research issue. It also keeps two `type:audit` issues queued — quality audits of live tools, oldest first — and the dispatcher alternates them with new tools. An audit that finds nothing to change replies `NO_CHANGES:` and the issue is closed.
 3. **Work**: takes the highest-priority `agent:ready` issue (P0 → P2, then oldest), creates a worktree, runs a Claude Code session ([`prompts/work.md`](prompts/work.md)), pushes the branch and opens a PR.
 
 If a session hits the Claude usage limit, its work is pushed as a `wip:` commit, the issue goes back to `agent:ready`, and the next run after the reset resumes the same session.

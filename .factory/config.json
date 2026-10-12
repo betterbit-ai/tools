@@ -11,7 +11,8 @@
         "catalogPath": "docs/CATALOG.md",
         "queueMin": 5,
         "queueTarget": 15,
-        "expandCatalogBelow": 25
+        "expandCatalogBelow": 25,
+        "auditQueue": 2
       }
     }
   ],
