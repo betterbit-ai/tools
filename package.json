@@ -28,6 +28,7 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.4.299",
     "preact": "^10.29.8",
+    "qpdf-run": "^0.2.1",
     "qrcode-generator": "^2.0.4",
     "tailwindcss": "^4.3.3"
   },
