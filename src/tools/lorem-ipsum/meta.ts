@@ -45,5 +45,12 @@ export const meta: ToolMeta = {
         'Its search result documents a separate 생성하기 action and notes that Japanese and Chinese word mode becomes character-based, while the visible Korean workflow does not describe a live preview. Betterbit keeps a dedicated Korean mode and visible plain-text counts beside the result. (Strength: it additionally offers Japanese and Chinese placeholder styles.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'remove-duplicate-lines', 'speech-to-text'],
+  related: [
+    'word-counter',
+    'case-converter',
+    'remove-line-breaks',
+    'remove-duplicate-lines',
+    'speech-to-text',
+    'fancy-text',
+  ],
 };
