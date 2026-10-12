@@ -37,5 +37,6 @@ export const meta: ToolMeta = {
     'image-watermark',
     'meme-generator',
     'qr-code-generator',
+    'favicon-generator',
   ],
 };

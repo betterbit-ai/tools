@@ -112,6 +112,7 @@ export const meta: ToolMeta = {
     'exif-viewer-remover',
     'image-watermark',
     'qr-code-generator',
+    'favicon-generator',
   ],
   variants,
 };
