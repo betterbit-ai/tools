@@ -26,7 +26,7 @@
  *   node dispatch.mjs --issue 42   # work on a specific issue now
  *   node dispatch.mjs --no-work    # only advance in-flight PRs + planner
  */
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statfsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ENGINE_LABEL, cooldownEnd, coolingDown, runAgent } from './engines.mjs';
 import {
@@ -100,6 +100,17 @@ const CONTINUE_FILE = join(HOME, 'continue');
 const LAST_KIND_FILE = join(DIRS.locks, 'last-kind');
 /** The PR this run just opened. `gh pr list` can lag behind, so it's settled explicitly. */
 let justOpened = null;
+/** A worktree with node_modules takes ~0.7 GB; don't start one on a nearly full disk. */
+const MIN_FREE_BYTES = 3 * 1024 ** 3;
+function lowOnDisk() {
+  const free = statfsSync(DIRS.worktrees).bavail * statfsSync(DIRS.worktrees).bsize;
+  if (free >= MIN_FREE_BYTES) return false;
+  const gb = (free / 1024 ** 3).toFixed(1);
+  log(`only ${gb} GB free on disk — not starting a session`);
+  notify('Factory paused: disk almost full', `${gb} GB free. Free up space and the factory resumes.`);
+  return true;
+}
+
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 const engineOf = (pr) => pr.labels.find((l) => l.name.startsWith('engine:'))?.name.slice(7) ?? 'claude';
 
@@ -560,6 +571,7 @@ function startNextIssue(repo, clone) {
     return 'stop';
   }
   if (coolingDown()) return 'stop';
+  if (lowOnDisk()) return 'stop';
 
   const n = issue.number;
   const branch = `agent/issue-${n}`;
@@ -687,6 +699,11 @@ function startNextIssue(repo, clone) {
       ],
       { allowFail: true },
     );
+    // Keep going right away if the limit was lifted (a reset credit was used); otherwise stop for now.
+    if (!cooldownEnd()) {
+      log(`[${repo.name}] issue #${n}: limit lifted — resuming now`);
+      return 'done';
+    }
     log(`[${repo.name}] issue #${n} paused (usage limit), will resume`);
     return 'stop';
   }

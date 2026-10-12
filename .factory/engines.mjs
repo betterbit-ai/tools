@@ -8,11 +8,11 @@
  *
  * Both return { ok, timedOut, result, sessionId, limited } and share the usage-limit cooldown.
  */
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { CLAUDE_ENV, CONFIG, DIRS, ENGINE, HOME, log, notify, sh } from './lib.mjs';
+import { CLAUDE_ENV, CONFIG, DIRS, ENGINE, HOME, ROOT, log, notify, sh } from './lib.mjs';
 
 const engineConfig = () => CONFIG.engines?.[ENGINE] ?? {};
 export const ENGINE_LABEL = [ENGINE, engineConfig().model].filter(Boolean).join(' ');
@@ -163,11 +163,72 @@ function runCodex(promptText, cwd, logFile, { resume, gitDir } = {}) {
   }
   const errorText = [...errors, res.err.slice(-2000)].join('\n');
   const transient = errors.length > 0 && !LIMIT_RE.test(errorText) && TRANSIENT_RE.test(errorText);
-  const limited = errors.length > 0 && (LIMIT_RE.test(errorText) || transient);
-  if (limited) startCooldown(errorText, transient);
+  const limitHit = errors.length > 0 && LIMIT_RE.test(errorText);
+  const limited = limitHit || transient;
+  if (transient) startCooldown(errorText, true);
+  else if (limitHit && !useResetCreditIfWorthIt()) startCooldown(errorText, false, codexLimitsResetAt());
   const ok = res.ok && errors.length === 0;
   log(`codex session end (ok=${ok}, timedOut=${res.timedOut}, limited=${limited}, resultChars=${result.length})`);
   return { ok, timedOut: res.timedOut, result: result || errors.join('\n'), sessionId, limited };
+}
+
+/* ───────────── Codex account: limits and reset credits ───────────── */
+
+/** Runs codex-account.mjs (codex app-server JSON-RPC). Returns parsed JSON or null. */
+function codexAccount(...args) {
+  const res = sh('node', [join(ROOT, 'codex-account.mjs'), ...args], {
+    allowFail: true,
+    timeoutMs: 90_000,
+    env: { ...CLAUDE_ENV, CODEX_HOME },
+  });
+  if (!res.ok) {
+    log(`codex account ${args[0]} failed: ${(res.err || res.out).slice(0, 300)}`);
+    return null;
+  }
+  try {
+    return JSON.parse(res.out);
+  } catch {
+    return null;
+  }
+}
+
+/** When the exhausted Codex windows reset (epoch ms), from the account API; 0 if unknown. */
+function codexLimitsResetAt(limits = codexAccount('limits')) {
+  const rl = limits?.rateLimits;
+  const full = [rl?.primary, rl?.secondary].filter((w) => w && w.usedPercent >= 100 && w.resetsAt);
+  return full.length ? Math.max(...full.map((w) => w.resetsAt * 1000)) + 60_000 : 0;
+}
+
+/**
+ * The owner allowed spending Codex "rate limit reset" credits when the *weekly* limit runs out.
+ * Also spend one that would otherwise expire before the limit resets anyway (it'd be wasted).
+ * Returns true if a credit was consumed and the limits were reset.
+ */
+function useResetCreditIfWorthIt() {
+  if (ENGINE !== 'codex') return false;
+  const limits = codexAccount('limits');
+  const week = limits?.rateLimits?.secondary;
+  const credits = (limits?.rateLimitResetCredits?.credits ?? []).filter(
+    (c) => c.status === 'available' && c.resetType === 'codexRateLimits',
+  );
+  const available = limits?.rateLimitResetCredits?.availableCount ?? credits.length;
+  if (!available) return false;
+  const resetsAt = codexLimitsResetAt(limits);
+  const weeklyOut = (week?.usedPercent ?? 0) >= 100;
+  const expiring = credits.find((c) => c.expiresAt && c.expiresAt * 1000 < resetsAt);
+  if (!weeklyOut && !expiring) {
+    log(
+      `codex limit hit (weekly ${week?.usedPercent ?? '?'}%) — keeping ${available} reset credit(s) for the weekly limit`,
+    );
+    return false;
+  }
+  const out = codexAccount('reset', randomUUID());
+  const outcome = out?.outcome ?? 'error';
+  log(
+    `codex reset credit (${weeklyOut ? 'weekly limit reached' : 'credit about to expire'}): ${outcome}; ${available - (outcome === 'reset' ? 1 : 0)} left`,
+  );
+  if (outcome === 'reset') notify('Factory: Codex limit reset', `Used a reset credit (${available - 1} left)`);
+  return outcome === 'reset';
 }
 
 /* ───────────── usage-limit cooldown (per engine) ───────────── */
@@ -221,8 +282,8 @@ export function cooldownUntil(message, now = new Date()) {
   return now.getTime() + 60 * 60_000;
 }
 
-export function startCooldown(message, transient = false) {
-  const until = transient ? Date.now() + TRANSIENT_PAUSE_MS : cooldownUntil(message);
+export function startCooldown(message, transient = false, knownUntil = 0) {
+  const until = transient ? Date.now() + TRANSIENT_PAUSE_MS : knownUntil || cooldownUntil(message);
   writeFileSync(COOLDOWN_FILE, String(until));
   const why = transient ? `server hiccup (${message.split('\n')[0].slice(0, 80)})` : 'usage limit hit';
   log(`${ENGINE} ${why} → cooling down until ${new Date(until).toLocaleString()}`);
