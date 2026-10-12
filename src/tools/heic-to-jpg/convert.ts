@@ -13,6 +13,7 @@ import type { Libheif } from 'libheif-js/libheif-wasm/libheif-bundle.mjs';
 import {
   buildExifApp1,
   findExifTiff,
+  isHeicBytes,
   insertExifIntoJpeg,
   readExifSummary,
   rewriteExifTiff,
@@ -131,6 +132,9 @@ export interface ConvertOptions {
 
 export async function convertHeicToJpeg(file: File, opts: ConvertOptions): Promise<ConvertResult> {
   const bytes = new Uint8Array(await file.arrayBuffer());
+  // Extensions and MIME types are hints only. Without this check a renamed JPG
+  // can take the native decode path and be silently returned as a new JPG.
+  if (!isHeicBytes(bytes)) throw new Error('not a HEIC image');
   const tiff = findExifTiff(bytes);
   const exif = tiff ? readExifSummary(tiff) : null;
 

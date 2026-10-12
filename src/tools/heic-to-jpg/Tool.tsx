@@ -46,6 +46,14 @@ export default function HeicToJpg({ locale, ui }: ToolProps<UI>) {
   const runId = useRef(0);
   const itemsRef = useRef(items);
   itemsRef.current = items;
+  const settingsKey = JSON.stringify([quality, metadata]);
+
+  useEffect(
+    () => () => {
+      for (const item of itemsRef.current) if (item.result) URL.revokeObjectURL(item.result.url);
+    },
+    [],
+  );
 
   // Restore the previous session's settings (the files themselves are never stored).
   useEffect(() => {
@@ -72,7 +80,7 @@ export default function HeicToJpg({ locale, ui }: ToolProps<UI>) {
   const fileKey = items.map((i) => i.id).join(',');
   useEffect(() => {
     const id = ++runId.current;
-    const key = JSON.stringify([quality, metadata]);
+    const key = settingsKey;
     const timeout = setTimeout(async () => {
       for (const item of itemsRef.current) {
         if (runId.current !== id) return;
@@ -84,8 +92,8 @@ export default function HeicToJpg({ locale, ui }: ToolProps<UI>) {
             metadata,
             onDecoderLoad: () => setLoadingDecoder(true),
           });
-          setLoadingDecoder(false);
           if (runId.current !== id) return;
+          setLoadingDecoder(false);
           const result: Result = {
             blob: out.blob,
             url: URL.createObjectURL(out.blob),
@@ -106,13 +114,14 @@ export default function HeicToJpg({ locale, ui }: ToolProps<UI>) {
             }),
           );
         } catch {
+          if (runId.current !== id) return;
           setLoadingDecoder(false);
           setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, error: true, busy: false } : p)));
         }
       }
     }, 250);
     return () => clearTimeout(timeout);
-  }, [fileKey, quality, metadata]);
+  }, [fileKey, settingsKey]);
 
   const remove = (id: number) =>
     setItems((prev) => {
@@ -126,7 +135,9 @@ export default function HeicToJpg({ locale, ui }: ToolProps<UI>) {
     setItems([]);
   };
 
-  const ready = items.filter((i) => i.result && !i.busy);
+  // Do not let a previous quality/metadata setting be downloaded while its
+  // replacement is waiting for the debounce or conversion queue.
+  const ready = items.filter((i) => i.result && !i.busy && i.result.key === settingsKey);
   const downloadAll = async () => {
     if (ready.length === 1) return downloadBlob(ready[0].result!.blob, ready[0].result!.name);
     const files: Record<string, Uint8Array> = {};
@@ -196,10 +207,10 @@ export default function HeicToJpg({ locale, ui }: ToolProps<UI>) {
                     <Button
                       size="sm"
                       variant="secondary"
-                      disabled={item.busy}
+                      disabled={item.busy || item.result.key !== settingsKey}
                       onClick={() => downloadBlob(item.result!.blob, item.result!.name)}
                     >
-                      {item.busy ? ui.processing : ui.download}
+                      {item.busy || item.result.key !== settingsKey ? ui.processing : ui.download}
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" aria-label={ui.remove} onClick={() => remove(item.id)}>

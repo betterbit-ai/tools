@@ -242,9 +242,11 @@ describe('isHeicFile', () => {
       expect(isHeicFile({ name, type: '' }), name).toBe(true);
   });
 
-  it('accepts a declared HEIC mime type even with an unhelpful name', () => {
+  it('accepts all declared HEIC MIME types even with an unhelpful name', () => {
     expect(isHeicFile({ name: 'image', type: 'image/heic' })).toBe(true);
     expect(isHeicFile({ name: 'image', type: 'image/heif' })).toBe(true);
+    expect(isHeicFile({ name: 'image', type: 'image/heic-sequence' })).toBe(true);
+    expect(isHeicFile({ name: 'image', type: 'image/heif-sequence' })).toBe(true);
   });
 
   it('rejects other image files', () => {
@@ -442,6 +444,14 @@ describe('formatExifDate', () => {
     expect(formatExifDate('2026-03-14')).toBe(null);
     expect(formatExifDate('')).toBe(null);
     expect(formatExifDate(null)).toBe(null);
+  });
+
+  it('rejects impossible calendar dates instead of showing corrupt EXIF values', () => {
+    expect(formatExifDate('2026:02:29 12:00:00')).toBe(null);
+    expect(formatExifDate('2024:02:29 12:00:00')).toBe('2024-02-29 12:00');
+    expect(formatExifDate('2026:13:01 12:00:00')).toBe(null);
+    expect(formatExifDate('2026:04:31 12:00:00')).toBe(null);
+    expect(formatExifDate('2026:01:01 24:00:00')).toBe(null);
   });
 });
 

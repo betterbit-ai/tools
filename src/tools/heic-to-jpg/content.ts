@@ -8,7 +8,8 @@ const uiEn = {
   notHeic: 'Not a HEIC file — use the Image Converter for JPG, PNG and WebP.',
   unsupported: 'This file could not be decoded. It may be damaged or not a HEIC image.',
   processing: 'Converting…',
-  decoderLoading: 'Preparing the HEIC decoder (about 2 MB, downloaded once). Safari decodes HEIC without it.',
+  decoderLoading:
+    'Preparing the HEIC decoder (about 2 MB, downloaded once). Browsers with built-in HEIC support skip it.',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
   remove: 'Remove',
@@ -55,7 +56,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Why HEIC photos won’t open outside Apple devices',
-        body: 'HEIC is a HEIF container (ISO/IEC 23008-12) holding an image compressed with HEVC, also known as H.265 — the format every iPhone has shot by default since iOS 11 in 2017. HEVC is patent-licensed separately from the operating system, which is why support is so uneven: Safari 17 and later display HEIC natively on macOS and iOS, while Chrome, Firefox, Edge and Opera decode no HEIF at all, on any platform. On Windows you need Microsoft’s free HEIF Image Extensions plus the HEVC Video Extensions, which Microsoft sells for about US$0.99 in the Microsoft Store. Converting to JPG sidesteps all of that: JPG has opened everywhere since 1992.',
+        body: 'HEIC is a HEIF container (ISO/IEC 23008-12) that usually holds an image compressed with HEVC, also known as H.265. Apple made it the default iPhone photo format with iOS 11 in 2017. Support still varies by browser, operating system and installed codec, so a HEIC attachment can fail to open on another person’s device or an upload form. JPG trades some compression efficiency for much broader compatibility, which is why converting a copy is often the simplest way to share a photo.',
       },
       {
         heading: 'Your capture date survives the conversion',
@@ -67,13 +68,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Expect a bigger file, and set quality accordingly',
-        body: 'HEVC is roughly twice as efficient as JPEG, so a JPG of the same photo at visually equivalent quality typically lands at 1.5–2.5× the size of the HEIC you started from — that is the price of universal compatibility, not a bug in the conversion. Quality 90 is a sensible default: on a photograph the difference from the original is hard to see, while dropping to 75 usually cuts the file roughly in half again. If you need to hit a specific file-size limit, convert here first and then run the JPG through the image compressor, which can target a size in KB directly.',
+        body: 'HEIC is often much smaller than a comparable JPG, so the converted file can be larger. The final size depends on the photo’s detail and the quality setting rather than a fixed ratio. Quality 90 is a sensible default for sharing; lower it when a form has a strict size limit. If you need to hit a specific limit, convert here first and then use the image compressor, which can target a size in KB directly.',
       },
     ],
     faq: [
       {
         q: 'Are my photos uploaded to a server?',
-        a: 'No. The HEIC is decoded and the JPG is encoded entirely inside your browser, so the photo never leaves your computer or phone. Once the page has loaded you can disconnect from the internet and it still works.',
+        a: 'No. The HEIC is decoded and the JPG is encoded entirely inside your browser, so the photo never leaves your computer or phone. Internet access is only needed to load this page and, on browsers without native HEIC support, download the decoder.',
       },
       {
         q: 'Does the converted JPG keep the date the photo was taken?',
@@ -81,19 +82,19 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Why is the JPG larger than the HEIC?',
-        a: 'HEIC uses HEVC compression, which is about twice as efficient as JPEG, so the same photo re-encoded as JPG at comparable quality is typically 1.5–2.5× bigger. Lowering the quality slider to 80–85 brings the size down with little visible difference.',
+        a: 'HEIC is usually more space-efficient than JPG, so a comparable JPG can be larger. The exact change depends on the photo and the quality setting; lowering quality to 80–85 is a practical way to reduce the result size.',
       },
       {
         q: 'How do I convert HEIC to JPG on Windows?',
-        a: 'Open this page in any browser on Windows and drop the files in — no codec or app install is needed, because the HEIC decoder runs as WebAssembly inside the page. That avoids Microsoft’s HEVC Video Extensions, which cost about US$0.99 in the Microsoft Store.',
+        a: 'Open this page in a modern browser on Windows and drop the files in. If the browser cannot decode HEIC itself, this tool downloads a WebAssembly decoder into the page, so you do not need to install a separate HEIC codec or app.',
       },
       {
         q: 'Can I convert a whole batch at once?',
-        a: 'Yes. Add as many HEIC files as you like — there is no file count or size limit beyond your device’s memory — and download them individually or all together as a single ZIP.',
+        a: 'Yes. Add multiple HEIC files and download them individually or together as one ZIP. Large photos and batches use your device’s memory, so add them in smaller groups on a phone or a low-memory computer.',
       },
       {
-        q: 'Why is the first conversion slower in Chrome or Firefox?',
-        a: 'Those browsers cannot decode HEIC, so the page downloads a 2 MB WebAssembly build of libheif the first time you add a file. It is cached afterwards, and every later photo converts immediately. Safari on macOS and iOS decodes HEIC natively and never downloads it.',
+        q: 'Why is the first conversion sometimes slower?',
+        a: 'A browser without built-in HEIC decoding downloads a roughly 2 MB WebAssembly decoder the first time you add a file. Later conversions can reuse it from the browser cache. Browsers that decode HEIC natively skip that download.',
       },
       {
         q: 'What happens to a Live Photo?',
@@ -131,7 +132,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'HEIC가 안 열리는 이유',
-        body: 'HEIC는 HEIF 컨테이너(ISO/IEC 23008-12) 안에 HEVC(H.265)로 압축한 사진을 담은 형식입니다. 2017년 iOS 11부터 아이폰 기본 촬영 형식이 됐습니다. 문제는 HEVC가 운영체제와 별도로 특허 라이선스를 받아야 하는 코덱이라는 점입니다. 그래서 지원이 들쭉날쭉합니다. macOS·iOS의 Safari 17 이상은 HEIC를 그대로 보여 주지만, 크롬·파이어폭스·엣지·오페라는 어떤 운영체제에서도 HEIF를 디코딩하지 못합니다. 윈도우에서는 무료인 HEIF 이미지 확장과 함께 HEVC 비디오 확장이 필요한데, 이 HEVC 확장은 Microsoft Store에서 약 1,500원(US$0.99)에 판매됩니다. JPG로 바꾸면 이 문제가 전부 사라집니다. JPG는 1992년부터 어디서나 열립니다.',
+        body: 'HEIC는 보통 HEIF 컨테이너(ISO/IEC 23008-12)에 HEVC(H.265)로 압축한 사진을 담는 형식입니다. 2017년 iOS 11부터 아이폰 기본 촬영 형식이 됐습니다. 브라우저·운영체제·설치된 코덱마다 지원이 달라서, 다른 사람의 기기나 사진 업로드 사이트에서 열리지 않는 일이 생깁니다. JPG는 압축 효율은 조금 떨어지지만 훨씬 폭넓게 지원합니다. 사진을 공유하거나 제출해야 할 때 원본은 그대로 두고 JPG 사본을 만드는 이유입니다.',
       },
       {
         heading: '촬영 날짜가 그대로 남습니다',
@@ -143,13 +144,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '용량은 커집니다. 품질은 이렇게 잡으세요',
-        body: 'HEVC는 JPEG보다 압축 효율이 약 두 배입니다. 그래서 같은 사진을 체감 화질이 비슷한 JPG로 바꾸면 원본 HEIC의 1.5~2.5배 정도가 됩니다. 변환이 잘못된 것이 아니라 어디서나 열리는 형식을 쓰는 대가입니다. 품질 90이 무난한 기본값입니다. 사진에서는 원본과 차이를 알아보기 어렵고, 75까지 내리면 보통 용량이 다시 절반 가까이 줄어듭니다. 지원서 첨부처럼 정해진 용량 제한을 맞춰야 한다면, 여기서 JPG로 바꾼 뒤 이미지 압축 도구에서 KB 단위로 목표 용량을 지정하는 것이 정확합니다.',
+        body: 'HEIC는 같은 사진을 JPG보다 더 작게 저장하는 경우가 많아서, 변환한 JPG의 용량이 커질 수 있습니다. 정확한 차이는 사진의 디테일과 품질 설정에 따라 달라지므로 정해진 배율은 없습니다. 공유용이라면 품질 90이 무난하고, 파일 용량 제한이 있다면 품질을 낮춰 보세요. 지원서 첨부처럼 KB 단위의 목표 용량을 맞춰야 한다면 여기서 JPG로 바꾼 뒤 이미지 압축 도구를 쓰는 편이 정확합니다.',
       },
     ],
     faq: [
       {
         q: '사진이 서버에 업로드되나요?',
-        a: '아니요. HEIC 디코딩과 JPG 인코딩이 모두 브라우저 안에서 일어나므로 사진이 기기 밖으로 나가지 않습니다. 페이지를 한 번 열어 둔 뒤에는 인터넷을 끊어도 동작합니다.',
+        a: '아니요. HEIC 디코딩과 JPG 인코딩이 모두 브라우저 안에서 일어나므로 사진이 기기 밖으로 나가지 않습니다. 인터넷은 페이지를 처음 열 때와, HEIC를 자체 지원하지 않는 브라우저에서 디코더를 받을 때만 필요합니다.',
       },
       {
         q: '변환한 JPG에 촬영 날짜가 남나요?',
@@ -157,19 +158,19 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'JPG가 원본 HEIC보다 커지는데 정상인가요?',
-        a: '정상입니다. HEIC는 JPEG보다 압축 효율이 약 두 배인 HEVC를 쓰기 때문에, 같은 사진을 비슷한 화질의 JPG로 다시 인코딩하면 보통 1.5~2.5배가 됩니다. 품질 슬라이더를 80~85로 내리면 눈에 띄는 차이 없이 용량이 줄어듭니다.',
+        a: '정상입니다. HEIC는 보통 JPG보다 저장 효율이 좋아서 비슷한 사진을 JPG로 바꾸면 용량이 커질 수 있습니다. 정확한 차이는 사진과 품질 설정에 따라 달라지며, 품질을 80~85로 낮추면 결과 파일을 줄이는 데 도움이 됩니다.',
       },
       {
         q: '윈도우에서 HEIC를 JPG로 바꾸는 방법은?',
-        a: '윈도우의 어떤 브라우저에서든 이 페이지를 열고 파일을 올리면 됩니다. HEIC 디코더가 WebAssembly로 페이지 안에서 돌기 때문에 코덱이나 프로그램 설치가 필요 없습니다. Microsoft Store에서 약 1,500원에 파는 HEVC 비디오 확장도 사지 않아도 됩니다.',
+        a: '윈도우에서 최신 브라우저로 이 페이지를 열고 파일을 올리면 됩니다. 브라우저가 HEIC를 자체적으로 읽지 못하면 이 도구가 WebAssembly 디코더를 페이지 안에 내려받아 사용하므로, 별도 코덱이나 프로그램을 설치할 필요가 없습니다.',
       },
       {
         q: '여러 장을 한 번에 변환할 수 있나요?',
-        a: '네. 파일 개수나 용량 제한은 없고 기기 메모리만큼 올릴 수 있습니다. 한 장씩 받거나 전체를 ZIP 파일 하나로 내려받을 수 있습니다.',
+        a: '네. 여러 HEIC 파일을 추가해서 한 장씩 받거나 ZIP 파일 하나로 내려받을 수 있습니다. 고화질 사진과 대량 파일은 기기 메모리를 쓰므로 휴대폰이나 메모리가 적은 컴퓨터에서는 나누어 변환하는 편이 좋습니다.',
       },
       {
-        q: '크롬에서 첫 변환이 느린 이유는?',
-        a: '크롬과 파이어폭스는 HEIC를 디코딩할 수 없어서, 파일을 처음 올릴 때 libheif의 WebAssembly 빌드 약 2MB를 내려받습니다. 그다음부터는 캐시에서 바로 쓰기 때문에 즉시 변환됩니다. macOS·iOS의 Safari는 HEIC를 자체적으로 디코딩해서 이 파일을 아예 내려받지 않습니다.',
+        q: '첫 변환이 가끔 느린 이유는?',
+        a: 'HEIC를 자체 디코딩하지 못하는 브라우저에서는 처음 파일을 추가할 때 약 2MB의 WebAssembly 디코더를 내려받습니다. 이후 변환에서는 브라우저 캐시를 다시 쓸 수 있습니다. HEIC를 자체 지원하는 브라우저는 이 다운로드를 건너뜁니다.',
       },
       {
         q: 'Live Photo(라이브 포토)는 어떻게 되나요?',
@@ -187,7 +188,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       notHeic: 'HEIC 파일이 아닙니다 — JPG·PNG·WebP는 이미지 형식 변환을 이용하세요.',
       unsupported: '디코딩할 수 없는 파일입니다. 손상되었거나 HEIC 이미지가 아닐 수 있습니다.',
       processing: '변환 중…',
-      decoderLoading: 'HEIC 디코더를 준비하는 중입니다(약 2MB, 한 번만 내려받습니다). Safari는 이 과정이 없습니다.',
+      decoderLoading:
+        'HEIC 디코더를 준비하는 중입니다(약 2MB, 한 번만 내려받습니다). HEIC를 자체 지원하는 브라우저는 이 과정을 건너뜁니다.',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
       remove: '삭제',
