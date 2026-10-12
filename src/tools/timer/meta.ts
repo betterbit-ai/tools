@@ -91,6 +91,6 @@ export const meta: ToolMeta = {
         'Its timer page places the editor beneath a large global navigation and supporter pitch for ad-free browsing; Betterbit opens directly to its controls with no ads or account prompt. (Strength: it supports multiple named timers and selectable end alarms.)',
     },
   ],
-  related: ['stopwatch', 'pomodoro-timer', 'countdown', 'alarm-clock'],
+  related: ['stopwatch', 'pomodoro-timer', 'countdown', 'alarm-clock', 'hours-calculator'],
   variants,
 };
