@@ -22,6 +22,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'remove-line-breaks',
     'case-converter',
     'keyboard-tester',
     'text-diff',
