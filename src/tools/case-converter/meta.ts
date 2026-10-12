@@ -57,5 +57,6 @@ export const meta: ToolMeta = {
     'hangul-romanization',
     'speech-to-text',
     'fancy-text',
+    'korean-spell-check',
   ],
 };

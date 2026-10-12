@@ -36,5 +36,6 @@ export const meta: ToolMeta = {
     'timer',
     'base64',
     'hangul-romanization',
+    'korean-spell-check',
   ],
 };

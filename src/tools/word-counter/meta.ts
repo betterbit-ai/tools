@@ -42,5 +42,6 @@ export const meta: ToolMeta = {
     'fancy-text',
     'invisible-character',
     'character-map',
+    'korean-spell-check',
   ],
 };
