@@ -42,5 +42,6 @@ export const meta: ToolMeta = {
     'heic-to-jpg',
     'rotate-pdf',
     'delete-pdf-pages',
+    'reorder-pdf',
   ],
 };
