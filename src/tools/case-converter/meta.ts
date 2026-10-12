@@ -54,5 +54,6 @@ export const meta: ToolMeta = {
     'timer',
     'base64',
     'lorem-ipsum',
+    'hangul-romanization',
   ],
 };
