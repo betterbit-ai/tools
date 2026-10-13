@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its visible calculator combines one percentage rate, one fixed additional discount, and quantity in a single scenario; it does not offer a mode to infer the original price from a final price and a sequence of percentage discounts. Betterbit keeps the percentage-stack math legible by displaying every stage and a dedicated reverse mode. (장점: 수량까지 반영한 총 결제 금액을 보여 준다.)',
     },
   ],
-  related: ['percentage-calculator', 'tip-calculator', 'gpa-calculator', 'fraction-calculator'],
+  related: ['percentage-calculator', 'vat-calculator', 'tip-calculator', 'gpa-calculator', 'fraction-calculator'],
 };
