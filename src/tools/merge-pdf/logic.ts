@@ -58,7 +58,10 @@ export async function mergePdfs(files: MergeInput[]): Promise<Uint8Array> {
     for (const page of pages) merged.addPage(page);
   }
 
-  return merged.save();
+  // pdf-lib adds a blank page by default when the document has no pages. A PDF
+  // made entirely of valid, zero-page inputs should stay zero-page: the UI has
+  // already reported that count and adding a page would be surprising.
+  return merged.save({ addDefaultPage: false });
 }
 
 /** Total page count across files, for the "N pages total" summary before merging. */

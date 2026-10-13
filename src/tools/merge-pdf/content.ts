@@ -6,6 +6,7 @@ const uiEn = {
   dropHint: 'As many files as you like, in any order',
   pageCount: '{n} page(s)',
   processing: 'Reading…',
+  preparing: 'Preparing your merged PDF…',
   invalidPdf: "Can't be read — this file isn't a valid PDF.",
   encryptedPdf: "Password-protected — can't be merged until it's unlocked.",
   mergeFailed:
@@ -23,7 +24,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Merge PDF — Combine Files Online, No Upload',
     description:
-      'Combine multiple PDF files into one, in your browser. Drag to reorder, no file-count or size limit, no upload, no ads, no sign-up.',
+      'Combine multiple PDF files into one in your browser. Drag to reorder with no fixed file-count or size limit, no upload, ads, or sign-up.',
     h1: 'Merge PDF',
     tagline: 'Combine PDF files into one — drag to set the order — without uploading anything.',
     name: 'Merge PDF',
@@ -44,11 +45,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'How merging works here',
-        body: "Each PDF keeps every page exactly as it was — text, images, fonts and layout are copied as-is, not re-rendered or re-compressed, so there is no quality loss. The files are combined in the order shown in the list, top to bottom; drag any row to a new position (or use the keyboard ↑/↓ buttons) and the merged file updates automatically. There is no limit on how many files you combine or how large they are beyond what your device's memory can hold — most PDF mergers cap this at a fixed file count or page total, and this one does not.",
+        body: "Each PDF keeps every page exactly as it was — text, images, fonts and layout are copied as-is, not re-rendered or re-compressed, so there is no quality loss. The files are combined in the order shown in the list, top to bottom; drag any row to a new position (or use the keyboard ↑/↓ buttons) and the download is refreshed automatically. There is no fixed limit on how many files you combine or how large they are; the practical limit is your device's available memory.",
       },
       {
         heading: 'Nothing leaves your device',
-        body: 'Adobe Acrobat’s free merge tool processes your files on Adobe’s servers and deletes them afterward unless you sign in; iLovePDF and Smallpdf work the same way, uploading every PDF before merging it and auto-deleting copies later (Smallpdf states one hour). This tool reads and combines the files entirely in your browser using a small PDF library loaded on the page — your documents and the merged result never cross the network, which matters for contracts, IDs or anything else you would not want sitting on someone else’s server.',
+        body: 'Adobe Acrobat’s online tools upload files to Adobe cloud storage; iLovePDF and Smallpdf also upload PDFs before merging them, and Smallpdf says it deletes server copies after one hour. This tool reads and combines files entirely in your browser — your documents and the merged result never cross the network, which matters for contracts, IDs, or anything else you would not want on someone else’s server.',
       },
       {
         heading: 'What about free-plan limits elsewhere?',
@@ -62,11 +63,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'Are my PDF files uploaded anywhere?',
-        a: 'No. Reading each file, reordering them, and assembling the merged PDF all happen in your browser. You can disconnect from the internet after the page loads and it still works.',
+        a: 'No. Reading each file, reordering them, and assembling the merged PDF all happen in your browser. Once the page and its PDF code have loaded, the merge can continue without an internet connection.',
       },
       {
         q: 'How many PDF files can I merge at once?',
-        a: 'There is no fixed limit on the number of files or total pages; the practical ceiling is your device’s available memory, which is typically enough for hundreds of ordinary documents.',
+        a: 'There is no fixed limit on the number of files or total pages. The practical ceiling is the memory available to your browser, so very large scans are best merged in smaller batches.',
       },
       {
         q: 'Can I change the order the files are merged in?',
@@ -82,7 +83,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Is there a file size limit?',
-        a: 'No fixed limit is enforced by this tool, unlike Adobe’s free plan (1,500 merged pages) or iLovePDF’s free Basic plan (25 files / 100MB per task). The only real ceiling is your browser’s available memory.',
+        a: 'No fixed limit is enforced by this tool, unlike Adobe’s free plan (1,500 merged pages) or iLovePDF’s free Basic plan (25 files / 100MB per task). The practical ceiling is your browser’s available memory.',
       },
     ],
     ui: uiEn,
@@ -90,7 +91,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'PDF 합치기 — 온라인 병합, 업로드 없음',
     description:
-      '여러 개의 PDF 파일을 브라우저에서 하나로 합치세요. 순서는 드래그로, 파일 개수·용량 제한 없음, 업로드·광고·가입 없음.',
+      '여러 PDF 파일을 브라우저에서 하나로 합치세요. 순서는 드래그로 정하고, 고정된 파일 개수·용량 제한 없이 업로드·광고·가입 없이 처리합니다.',
     h1: 'PDF 합치기',
     tagline: '여러 PDF를 하나로 — 순서는 드래그로, 업로드 없이 바로.',
     name: 'PDF 합치기',
@@ -104,11 +105,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '어떻게 합쳐지나요',
-        body: '각 PDF의 모든 페이지는 텍스트, 이미지, 폰트, 레이아웃을 그대로 유지한 채 복사됩니다. 다시 그리거나 압축하지 않으므로 화질 손실이 없습니다. 파일은 목록에 보이는 순서(위에서 아래)대로 합쳐지며, 행을 드래그하거나 키보드 ↑/↓ 버튼으로 순서를 바꾸면 결과 파일이 즉시 다시 만들어집니다. 합칠 수 있는 파일 개수나 용량에는 정해진 제한이 없고, 기기의 메모리가 허락하는 한계까지 합칠 수 있습니다. 대부분의 PDF 합치기 도구는 여기에 고정된 파일 수나 페이지 수 제한을 둡니다.',
+        body: '각 PDF의 모든 페이지는 텍스트, 이미지, 폰트, 레이아웃을 그대로 유지한 채 복사됩니다. 다시 그리거나 압축하지 않으므로 화질 손실이 없습니다. 파일은 목록에 보이는 순서(위에서 아래)대로 합쳐지며, 행을 드래그하거나 키보드 ↑/↓ 버튼으로 순서를 바꾸면 내려받을 파일이 자동으로 갱신됩니다. 합칠 수 있는 파일 개수나 용량에는 고정된 제한이 없고, 실제 한계는 기기와 브라우저가 사용할 수 있는 메모리입니다.',
       },
       {
         heading: 'PDF가 기기 밖으로 나가지 않습니다',
-        body: 'Adobe Acrobat의 무료 합치기는 파일을 Adobe 서버에서 처리하고, 로그인하지 않으면 이후 삭제한다고 안내합니다. iLovePDF와 Smallpdf도 마찬가지로 합치기 전에 모든 PDF를 서버에 업로드하고, 나중에 사본을 삭제합니다(Smallpdf는 1시간 후 삭제라고 명시). 이 도구는 페이지에서 불러온 작은 PDF 라이브러리로 브라우저 안에서만 파일을 읽고 합치므로, 계약서나 신분증처럼 남의 서버에 두고 싶지 않은 문서를 다룰 때 특히 유용합니다.',
+        body: 'Adobe Acrobat 온라인 도구는 파일을 Adobe 클라우드 저장소에 업로드합니다. iLovePDF와 Smallpdf도 PDF를 합치기 전에 서버에 업로드하며, Smallpdf는 서버 사본을 1시간 후 삭제한다고 안내합니다. 이 도구는 브라우저 안에서만 파일을 읽고 합치므로, 계약서나 신분증처럼 다른 서버에 두고 싶지 않은 문서를 다룰 때 특히 유용합니다.',
       },
       {
         heading: '다른 사이트의 무료 제한',
@@ -122,11 +123,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'PDF 파일이 어딘가에 업로드되나요?',
-        a: '아니요. 각 파일을 읽고, 순서를 바꾸고, 최종 PDF를 만드는 모든 과정이 브라우저 안에서 이루어집니다. 페이지를 연 뒤 인터넷을 끊어도 그대로 동작합니다.',
+        a: '아니요. 각 파일을 읽고, 순서를 바꾸고, 최종 PDF를 만드는 모든 과정이 브라우저 안에서 이루어집니다. 페이지와 PDF 처리 코드가 한 번 로드된 뒤에는 인터넷 연결이 끊겨도 병합을 계속할 수 있습니다.',
       },
       {
         q: '한 번에 PDF를 몇 개까지 합칠 수 있나요?',
-        a: '파일 개수나 전체 페이지 수에 정해진 제한은 없습니다. 실제 한계는 기기의 사용 가능한 메모리이며, 보통 수백 개의 일반 문서를 합치기에 충분합니다.',
+        a: '파일 개수나 전체 페이지 수에 고정된 제한은 없습니다. 실제 한계는 기기와 브라우저가 사용할 수 있는 메모리이므로, 용량이 아주 큰 스캔 문서는 나누어 합치는 편이 좋습니다.',
       },
       {
         q: '합치는 순서를 바꿀 수 있나요?',
@@ -142,7 +143,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '파일 크기 제한이 있나요?',
-        a: '이 도구 자체에는 고정된 제한이 없습니다. Adobe 무료 플랜(합친 결과 1,500페이지)이나 iLovePDF 무료 Basic 플랜(작업당 25개·100MB)과 달리, 실질적인 한계는 브라우저가 쓸 수 있는 메모리뿐입니다.',
+        a: '이 도구 자체에는 고정된 제한이 없습니다. Adobe 무료 플랜(합친 결과 1,500페이지)이나 iLovePDF 무료 Basic 플랜(작업당 25개·100MB)과 달리, 실질적인 한계는 브라우저가 쓸 수 있는 메모리입니다.',
       },
     ],
     ui: {
@@ -150,6 +151,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropHint: '파일 개수 제한 없음 · 순서는 나중에 조정 가능',
       pageCount: '{n}페이지',
       processing: '읽는 중…',
+      preparing: '합친 PDF를 준비하는 중…',
       invalidPdf: '읽을 수 없음 — 올바른 PDF 파일이 아닙니다.',
       encryptedPdf: '암호 보호됨 — 잠금을 해제해야 합칠 수 있습니다.',
       mergeFailed:
