@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   extensionFor,
   formatLabel,
+  isCurrentResult,
+  isWithinPixelLimit,
   isAnimatedGif,
   needsBackground,
   outputName,
@@ -18,6 +20,11 @@ describe('sourceMime', () => {
   it('falls back to the extension when the browser reports no type', () => {
     expect(sourceMime({ type: '', name: 'photo.BMP' })).toBe('image/bmp');
     expect(sourceMime({ type: '', name: 'photo.avif' })).toBe('image/avif');
+    expect(sourceMime({ type: 'application/octet-stream', name: 'photo.PNG' })).toBe('image/png');
+  });
+
+  it('normalises the non-standard image/jpg type', () => {
+    expect(sourceMime({ type: 'image/jpg', name: 'photo.jpg' })).toBe('image/jpeg');
   });
 
   it('falls back to a generic type for an unknown extension', () => {
@@ -83,6 +90,27 @@ describe('extensionFor / outputName', () => {
 
   it('handles a file name with multiple dots', () => {
     expect(outputName('v1.2.final.png', 'image/jpeg')).toBe('v1.2.final.jpg');
+  });
+
+  it('does not erase dotfiles or add a duplicate extension after a trailing dot', () => {
+    expect(outputName('.profile', 'image/png')).toBe('.profile.png');
+    expect(outputName('photo.', 'image/webp')).toBe('photo.webp');
+  });
+});
+
+describe('isWithinPixelLimit', () => {
+  it('accepts images at the canvas ceiling and rejects larger or invalid dimensions', () => {
+    expect(isWithinPixelLimit(4096, 4096)).toBe(true);
+    expect(isWithinPixelLimit(4097, 4096)).toBe(false);
+    expect(isWithinPixelLimit(0, 100)).toBe(false);
+    expect(isWithinPixelLimit(100.5, 100)).toBe(false);
+  });
+});
+
+describe('isCurrentResult', () => {
+  it('does not treat output from a previous setting as downloadable', () => {
+    expect(isCurrentResult('["image/webp",92,"#ffffff"]', '["image/webp",92,"#ffffff"]')).toBe(true);
+    expect(isCurrentResult('["image/webp",92,"#ffffff"]', '["image/jpeg",92,"#ffffff"]')).toBe(false);
   });
 });
 

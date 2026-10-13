@@ -71,49 +71,34 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'convert',
   added: '2026-10-08',
-  updated: '2026-10-08',
-  edges: ['privacy', 'no-ads', 'no-signup', 'performance', 'features'],
+  updated: '2026-10-13',
+  edges: ['privacy', 'no-ads', 'no-signup', 'performance', 'usability'],
   competitors: [
     {
       name: 'Convertio (JPG to PNG)',
       url: 'https://convertio.co/jpg-png/',
       weakness:
-        'Uploads files to a server (or pulls from Drive/Dropbox/a URL) and shows "Sign Up" / pricing links throughout the page; every conversion is an upload-then-download round trip even though the per-file cap is a generous 1GB.',
+        'Uploads files from a computer, Drive, Dropbox, or a URL, then says the result remains on its servers for up to 24 hours; conversion requires an upload/download round trip. (Strength: it supports more than 200 output formats, far beyond this focused JPG/PNG/WebP tool.)',
     },
     {
       name: 'FreeConvert (JPG to PNG)',
       url: 'https://www.freeconvert.com/jpg-to-png',
       weakness:
-        'Also server-side: files are uploaded, converted remotely and only "automatically deleted after 8 hours" — meaning a copy of your image sits on their servers for hours. Pushes "Sign Up for more" on the free 1GB tier.',
+        'Uploads files to a server and says they are automatically deleted after 8 hours; the page also shows an upgrade/sign-up prompt after its 1GB limit. (Strength: its conversion page includes resize, metadata-removal, and other advanced settings.)',
     },
     {
-      name: 'Picflow image converter',
-      url: 'https://picflow.com/tools/convert/jpg-to-png',
+      name: 'PicConverter (JPEG to PNG)',
+      url: 'https://picconverter.org/jpeg-to-png',
       weakness:
-        'Already converts fully in-browser with no ads or sign-up (Strength: matches our privacy and no-ads edge) — but each direction is a separate one-way page, there is no ZIP for batch downloads, and transparent sources converting to JPG get a fixed background with no way to change it.',
+        'Already processes locally with no ads, sign-up, or file-size limit and supports batch ZIP downloads (Strength: it matches most of our privacy and batch workflow). Its page requires a separate Convert action and offers resize and rotate controls that this focused converter leaves to our related tools.',
     },
     {
       name: '이미지 포맷 변환기 (url.kr)',
       url: 'https://url.kr/p/image-converter/',
       weakness:
-        '브라우저에서 처리해 업로드가 없는 점은 같지만(Strength: 개인정보 보호 방식이 동일함), 배너 광고가 붙어 있고 JPG·PNG·WebP 세 형식만 지원해 GIF나 BMP 원본은 변환할 수 없습니다.',
+        '브라우저에서 처리해 업로드가 없는 점은 같지만(Strength: 개인정보 보호 방식이 동일함), 제휴 광고가 표시되고 JPG·PNG·WebP 세 형식만 지원합니다. 변환 시작 버튼을 눌러야 하며 GIF·BMP·AVIF 원본을 읽을 수 없고, 여러 파일을 ZIP으로 받는 기능도 없습니다.',
     },
   ],
-  related: [
-    'background-remover',
-    'image-rotate-flip',
-    'image-cropper',
-    'image-blur-pixelate',
-    'heic-to-jpg',
-    'image-resizer',
-    'image-compressor',
-    'image-upscaler',
-    'image-to-pdf',
-    'pdf-to-jpg',
-    'exif-viewer-remover',
-    'image-watermark',
-    'qr-code-generator',
-    'favicon-generator',
-  ],
+  related: ['image-resizer', 'image-compressor', 'image-cropper', 'heic-to-jpg'],
   variants,
 };

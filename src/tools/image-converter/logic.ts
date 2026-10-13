@@ -6,6 +6,9 @@
 /** Canvas can only *encode* to these three; anything else is a source-only format. */
 export type FormatChoice = 'image/jpeg' | 'image/png' | 'image/webp';
 
+/** Safari limits a canvas to roughly 16.7 million pixels. */
+export const MAX_PIXELS = 16_777_216;
+
 const EXT_TO_MIME: Record<string, string> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
@@ -19,7 +22,8 @@ const EXT_TO_MIME: Record<string, string> = {
 
 /** Browsers leave `file.type` empty for some formats (e.g. BMP, AVIF, HEIC); fall back to the extension. */
 export function sourceMime(file: { type: string; name: string }): string {
-  if (file.type) return file.type;
+  const reported = file.type.toLowerCase();
+  if (reported && reported !== 'application/octet-stream') return reported === 'image/jpg' ? 'image/jpeg' : reported;
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
   return EXT_TO_MIME[ext] ?? 'application/octet-stream';
 }
@@ -44,7 +48,10 @@ export function extensionFor(mime: FormatChoice): string {
 
 /** "holiday photo.HEIC" + png -> "holiday photo.png" */
 export function outputName(name: string, mime: FormatChoice): string {
-  const base = name.replace(/\.[^.]+$/, '');
+  const dot = name.lastIndexOf('.');
+  // A leading dot is part of a hidden file name, not a file extension.
+  const withoutExtension = dot > 0 ? name.slice(0, dot) : name;
+  const base = withoutExtension.replace(/\.+$/, '') || 'image';
   return `${base}.${extensionFor(mime)}`;
 }
 
@@ -60,7 +67,23 @@ export function needsBackground(mime: FormatChoice): boolean {
 
 /** True when the source format can carry transparency, so the background colour actually matters. */
 export function sourceMayHaveAlpha(mime: string): boolean {
-  return mime === 'image/png' || mime === 'image/webp' || mime === 'image/gif' || mime === 'image/avif';
+  return (
+    mime === 'image/png' ||
+    mime === 'image/webp' ||
+    mime === 'image/gif' ||
+    mime === 'image/avif' ||
+    mime === 'image/svg+xml'
+  );
+}
+
+/** Guard against canvas limits and excessive decoded-image memory use. */
+export function isWithinPixelLimit(width: number, height: number): boolean {
+  return Number.isInteger(width) && Number.isInteger(height) && width > 0 && height > 0 && width * height <= MAX_PIXELS;
+}
+
+/** A download must match the settings currently shown in the controls. */
+export function isCurrentResult(resultKey: string | undefined, settingsKey: string): boolean {
+  return resultKey === settingsKey;
 }
 
 /**

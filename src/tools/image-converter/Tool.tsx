@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { zipSync } from 'fflate';
+import { zip } from 'fflate';
 import { Button, Dropzone, Field, Notice, Panel, Select } from '../../components/ui';
 import { downloadBlob } from '../../lib/browser';
-import { formatBytes } from '../../lib/format';
+import { formatBytes, formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import { convertImage, readDimensions } from './convert';
 import {
   formatLabel,
+  isCurrentResult,
   isAnimatedGif,
+  isWithinPixelLimit,
+  MAX_PIXELS,
   needsBackground,
   outputName,
   sourceMayHaveAlpha,
@@ -26,7 +29,7 @@ interface Item {
   preview: string;
   animatedGif?: boolean;
   result?: { blob: Blob; url: string; name: string; key: string };
-  error?: boolean;
+  error?: { kind: 'unreadable' | 'tooLarge' | 'processing'; key?: string };
   busy?: boolean;
 }
 
@@ -36,6 +39,8 @@ interface Preset {
 }
 
 let nextId = 1;
+const MAX_BATCH_SIZE = 50;
+const MAX_GIF_SCAN_BYTES = 2 * 1024 * 1024;
 
 export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
   const p = preset as Preset | undefined;
@@ -43,40 +48,93 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
   const [target, setTarget] = useState<FormatChoice>(p?.to ?? 'image/webp');
   const [quality, setQuality] = useState(92);
   const [background, setBackground] = useState('#ffffff');
+  const [notice, setNotice] = useState<string | null>(null);
+  const [zipping, setZipping] = useState(false);
   const accept = p?.accept ?? 'image/*';
   const runId = useRef(0);
   const itemsRef = useRef(items);
+  const settingsKeyRef = useRef('');
   itemsRef.current = items;
 
-  const addFiles = useCallback(async (files: File[]) => {
-    const added: Item[] = [];
-    for (const file of files) {
-      try {
-        const dims = await readDimensions(file);
+  const addFiles = useCallback(
+    async (files: File[]) => {
+      const accepted = files.slice(0, Math.max(0, MAX_BATCH_SIZE - itemsRef.current.length));
+      if (accepted.length < files.length) setNotice(ui.batchLimit.replace('{n}', String(MAX_BATCH_SIZE)));
+      if (!accepted.length) return;
+
+      const added: Item[] = [];
+      for (const file of accepted) {
         const mime = sourceMime(file);
-        const animatedGif = mime === 'image/gif' && isAnimatedGif(new Uint8Array(await file.arrayBuffer()));
-        added.push({ id: nextId++, file, sourceMime: mime, ...dims, animatedGif, preview: URL.createObjectURL(file) });
-      } catch {
-        added.push({ id: nextId++, file, sourceMime: sourceMime(file), width: 0, height: 0, preview: '', error: true });
+        try {
+          const dims = await readDimensions(file);
+          if (!isWithinPixelLimit(dims.width, dims.height)) {
+            added.push({
+              id: nextId++,
+              file,
+              sourceMime: mime,
+              ...dims,
+              preview: '',
+              error: { kind: 'tooLarge' },
+            });
+            continue;
+          }
+          // Only inspect a prefix: reading an arbitrarily large GIF into a second
+          // ArrayBuffer can exhaust memory before any conversion begins.
+          const gifBytes =
+            mime === 'image/gif' ? new Uint8Array(await file.slice(0, MAX_GIF_SCAN_BYTES).arrayBuffer()) : null;
+          const animatedGif = gifBytes ? isAnimatedGif(gifBytes) : false;
+          added.push({
+            id: nextId++,
+            file,
+            sourceMime: mime,
+            ...dims,
+            animatedGif,
+            preview: URL.createObjectURL(file),
+          });
+        } catch {
+          added.push({
+            id: nextId++,
+            file,
+            sourceMime: mime,
+            width: 0,
+            height: 0,
+            preview: '',
+            error: { kind: 'unreadable' },
+          });
+        }
       }
-    }
-    setItems((prev) => [...prev, ...added]);
-  }, []);
+      setItems((prev) => [...prev, ...added]);
+    },
+    [ui.batchLimit],
+  );
 
   // Re-encode whenever settings or the file list change (debounced, sequential, cancellable).
   const fileKey = items.map((i) => i.id).join(',');
+  const settingsKey = JSON.stringify([target, quality, background]);
+  settingsKeyRef.current = settingsKey;
   useEffect(() => {
     const id = ++runId.current;
-    const key = JSON.stringify([target, quality, background]);
     const timeout = setTimeout(async () => {
       for (const item of itemsRef.current) {
-        if (runId.current !== id) return;
-        if (item.error || item.result?.key === key) continue;
-        setItems((prev) => prev.map((p2) => (p2.id === item.id ? { ...p2, busy: true } : p2)));
+        if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+        if (
+          item.error?.kind === 'unreadable' ||
+          item.error?.kind === 'tooLarge' ||
+          isCurrentResult(item.result?.key, settingsKey) ||
+          item.error?.key === settingsKey
+        ) {
+          continue;
+        }
+        setItems((prev) => prev.map((p2) => (p2.id === item.id ? { ...p2, busy: true, error: undefined } : p2)));
         try {
           const blob = await convertImage(item.file, target, quality / 100, background);
-          if (runId.current !== id) return;
-          const result = { blob, url: URL.createObjectURL(blob), name: outputName(item.file.name, target), key };
+          if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+          const result = {
+            blob,
+            url: URL.createObjectURL(blob),
+            name: outputName(item.file.name, target),
+            key: settingsKey,
+          };
           setItems((prev) =>
             prev.map((p2) => {
               if (p2.id !== item.id) return p2;
@@ -85,15 +143,32 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
             }),
           );
         } catch {
-          setItems((prev) => prev.map((p2) => (p2.id === item.id ? { ...p2, error: true, busy: false } : p2)));
+          if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+          setItems((prev) =>
+            prev.map((p2) =>
+              p2.id === item.id ? { ...p2, error: { kind: 'processing', key: settingsKey }, busy: false } : p2,
+            ),
+          );
         }
       }
     }, 250);
     return () => clearTimeout(timeout);
-  }, [fileKey, target, quality, background]);
+  }, [fileKey, target, quality, background, settingsKey]);
+
+  useEffect(
+    () => () => {
+      runId.current++;
+      for (const item of itemsRef.current) {
+        URL.revokeObjectURL(item.preview);
+        if (item.result) URL.revokeObjectURL(item.result.url);
+      }
+    },
+    [],
+  );
 
   const remove = (id: number) =>
     setItems((prev) => {
+      runId.current++;
       const gone = prev.find((p2) => p2.id === id);
       if (gone) {
         URL.revokeObjectURL(gone.preview);
@@ -103,29 +178,40 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
     });
 
   const clear = () => {
+    runId.current++;
     for (const p2 of items) {
       URL.revokeObjectURL(p2.preview);
       if (p2.result) URL.revokeObjectURL(p2.result.url);
     }
     setItems([]);
+    setNotice(null);
   };
 
-  const ready = items.filter((i) => i.result && !i.busy);
+  const ready = items.filter((i) => isCurrentResult(i.result?.key, settingsKey) && !i.busy && !i.error);
   const downloadAll = async () => {
     if (ready.length === 1) return downloadBlob(ready[0].result!.blob, ready[0].result!.name);
+    setZipping(true);
     const files: Record<string, Uint8Array> = {};
-    for (const item of ready) {
-      let name = item.result!.name;
-      for (let n = 2; files[name]; n++) name = item.result!.name.replace(/(\.\w+)$/, `-${n}$1`);
-      files[name] = new Uint8Array(await item.result!.blob.arrayBuffer());
+    try {
+      for (const item of ready) {
+        let name = item.result!.name;
+        for (let n = 2; files[name]; n++) name = item.result!.name.replace(/(\.\w+)$/, `-${n}$1`);
+        files[name] = new Uint8Array(await item.result!.blob.arrayBuffer());
+      }
+      // Images are already compressed. fflate's asynchronous API keeps ZIP
+      // construction off the main thread for larger batches.
+      const archive = await makeZip(files);
+      downloadBlob(new Blob([archive as BlobPart], { type: 'application/zip' }), 'converted-images.zip');
+    } catch {
+      setNotice(ui.zipFailed);
+    } finally {
+      setZipping(false);
     }
-    // Images are already compressed — store without re-compressing (level 0) for speed.
-    const zip = zipSync(files, { level: 0 });
-    downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), 'converted-images.zip');
   };
 
   const anyAlphaSource = items.some((i) => sourceMayHaveAlpha(i.sourceMime));
   const anyAnimated = items.some((i) => i.animatedGif);
+  const hasGif = items.some((i) => i.sourceMime === 'image/gif' && !i.error);
 
   return (
     <Panel>
@@ -141,59 +227,78 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
             compact={items.length > 0}
           />
 
+          {notice && (
+            <div class="mt-4">
+              <Notice tone="danger">{notice}</Notice>
+            </div>
+          )}
+
           {items.length > 0 && (
             <ul class="mt-4 divide-y divide-line rounded-lg border border-line">
-              {items.map((item) => (
-                <li class="flex items-center gap-3 p-3">
-                  <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
-                    {item.preview && <img src={item.preview} alt="" class="size-full object-cover" />}
-                  </div>
-                  <div class="min-w-0 flex-1 text-sm">
-                    <p class="truncate font-medium text-fg">{item.file.name}</p>
-                    {item.error ? (
-                      <p class="text-danger">{ui.unsupported}</p>
-                    ) : (
-                      <>
-                        <p class="tabular text-muted" aria-live="polite">
-                          {formatLabel(item.sourceMime)} · {formatBytes(item.file.size, locale)}
-                          {item.result && (
-                            <>
-                              {' → '}
-                              <span class="text-fg">
-                                {formatLabel(target)} · {formatBytes(item.result.blob.size, locale)}
-                              </span>
-                            </>
-                          )}
+              {items.map((item) => {
+                const stale = !isCurrentResult(item.result?.key, settingsKey);
+                return (
+                  <li key={item.id} class="flex items-center gap-3 p-3">
+                    <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
+                      {item.preview && <img src={item.preview} alt="" class="size-full object-cover" />}
+                    </div>
+                    <div class="min-w-0 flex-1 text-sm">
+                      <p class="truncate font-medium text-fg">{item.file.name}</p>
+                      {item.error ? (
+                        <p class="text-danger">
+                          {item.error.kind === 'unreadable'
+                            ? ui.unsupported
+                            : item.error.kind === 'tooLarge'
+                              ? ui.tooLarge.replace('{max}', formatNumber(MAX_PIXELS, locale))
+                              : ui.processFailed}
                         </p>
-                        {item.animatedGif && <p class="text-xs text-warning">{ui.animatedGifWarning}</p>}
-                        {item.sourceMime === target && !item.animatedGif && (
-                          <p class="text-xs text-subtle">{ui.sameFormat}</p>
-                        )}
-                      </>
+                      ) : (
+                        <>
+                          <p class="tabular text-muted" aria-live="polite">
+                            {formatLabel(item.sourceMime)} · {formatBytes(item.file.size, locale)}
+                            {item.result && (
+                              <>
+                                {' → '}
+                                <span class="text-fg">
+                                  {formatLabel(target)} · {formatBytes(item.result.blob.size, locale)}
+                                </span>
+                              </>
+                            )}
+                          </p>
+                          {item.animatedGif && <p class="text-xs text-warning">{ui.animatedGifWarning}</p>}
+                          {item.sourceMime === target && !item.animatedGif && (
+                            <p class="text-xs text-subtle">{ui.sameFormat}</p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {item.result && !item.error && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={item.busy || stale}
+                        onClick={() => downloadBlob(item.result!.blob, item.result!.name)}
+                      >
+                        {item.busy || stale ? ui.processing : ui.download}
+                      </Button>
                     )}
-                  </div>
-                  {item.result && !item.error && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={item.busy}
-                      onClick={() => downloadBlob(item.result!.blob, item.result!.name)}
-                    >
-                      {item.busy ? ui.processing : ui.download}
+                    <Button size="sm" variant="ghost" aria-label={ui.remove} onClick={() => remove(item.id)}>
+                      ✕
                     </Button>
-                  )}
-                  <Button size="sm" variant="ghost" aria-label={ui.remove} onClick={() => remove(item.id)}>
-                    ✕
-                  </Button>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
 
           {items.length > 0 && (
             <div class="mt-4 flex flex-wrap items-center gap-3">
-              <Button variant="primary" size="lg" disabled={ready.length === 0} onClick={downloadAll}>
-                {ready.length > 1 ? ui.downloadAll.replace('{n}', String(ready.length)) : ui.download}
+              <Button variant="primary" size="lg" disabled={ready.length === 0 || zipping} onClick={downloadAll}>
+                {zipping
+                  ? ui.preparingDownload
+                  : ready.length > 1
+                    ? ui.downloadAll.replace('{n}', String(ready.length))
+                    : ui.download}
               </Button>
               <Button variant="ghost" onClick={clear}>
                 {ui.clear}
@@ -210,6 +315,12 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
           {anyAnimated && items.length > 0 && (
             <div class="mt-3">
               <Notice tone="info">{ui.animatedGifNotice}</Notice>
+            </div>
+          )}
+
+          {hasGif && !anyAnimated && (
+            <div class="mt-3">
+              <Notice>{ui.gifNotice}</Notice>
             </div>
           )}
         </div>
@@ -259,4 +370,13 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
       </div>
     </Panel>
   );
+}
+
+function makeZip(files: Record<string, Uint8Array>): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    zip(files, { level: 0 }, (error, archive) => {
+      if (error) reject(error);
+      else resolve(archive);
+    });
+  });
 }
