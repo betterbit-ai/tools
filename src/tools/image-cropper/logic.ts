@@ -18,6 +18,12 @@ export type FormatChoice = 'original' | 'image/jpeg' | 'image/png' | 'image/webp
 /** Smallest crop side, in natural pixels, a drag can produce (before clamping to a tiny image). */
 export const MIN_CROP = 8;
 
+/**
+ * Keep export canvases within a size that browsers can encode reliably without
+ * exhausting memory. A crop can always be made smaller before downloading.
+ */
+export const MAX_OUTPUT_PIXELS = 16_000_000;
+
 export const ASPECTS = [
   { id: 'free', ratio: null },
   { id: '1:1', ratio: 1 },
@@ -114,41 +120,62 @@ export function resizeRect(
     nh = rect.h + dy;
   }
 
-  if (ratio) {
-    if (handle === 'n' || handle === 's') {
-      const cx = left + rect.w / 2;
-      nw = nh * ratio;
-      nx = cx - nw / 2;
-    } else if (handle === 'e' || handle === 'w') {
-      const cy = top + rect.h / 2;
-      nh = nw / ratio;
-      ny = cy - nh / 2;
-    } else {
-      // Corner: derive from whichever axis moved the box more, so dragging a
-      // ratio-locked (e.g. circle) corner purely vertically still resizes it.
-      const heightFromWidth = nw / ratio;
-      const widthFromHeight = nh * ratio;
-      if (Math.abs(widthFromHeight) > Math.abs(nw)) nw = widthFromHeight;
-      else nh = heightFromWidth;
-    }
+  if (!ratio) {
+    nw = Math.max(MIN_CROP, nw);
+    nh = Math.max(MIN_CROP, nh);
+    if (handle.includes('w')) nx = right - nw;
+    if (handle.includes('n')) ny = bottom - nh;
+    return clampRect({ x: nx, y: ny, w: nw, h: nh }, srcW, srcH);
   }
 
-  nw = Math.max(MIN_CROP, nw);
-  nh = Math.max(MIN_CROP, nh);
+  // A locked crop has a fixed opposite edge (or a fixed center for side
+  // handles). Limit its size against that anchor before positioning it. Using
+  // clampRect after resizing can otherwise slide the supposedly fixed edge
+  // when the crop reaches an image boundary.
+  let desiredW: number;
+  let maxW: number;
+  let maxH: number;
 
-  if (ratio) {
-    // Shrink both sides together so the locked ratio survives clamping —
-    // clamping w/h independently (via clampRect below) would otherwise let a
-    // non-square image turn a locked 1:1 (circle) box into a rectangle.
-    const fit = Math.min(1, srcW / nw, srcH / nh);
-    nw *= fit;
-    nh *= fit;
+  if (handle === 'n' || handle === 's') {
+    desiredW = nh * ratio;
+    const cx = left + rect.w / 2;
+    maxW = 2 * Math.min(cx, srcW - cx);
+    maxH = handle === 'n' ? bottom : srcH - top;
+    const { w, h } = fitRatio(desiredW, ratio, maxW, maxH);
+    return clampRect({ x: cx - w / 2, y: handle === 'n' ? bottom - h : top, w, h }, srcW, srcH);
   }
 
-  if (handle.includes('w')) nx = right - nw;
-  if (handle.includes('n')) ny = bottom - nh;
+  if (handle === 'e' || handle === 'w') {
+    desiredW = nw;
+    const cy = top + rect.h / 2;
+    maxW = handle === 'e' ? srcW - left : right;
+    maxH = 2 * Math.min(cy, srcH - cy);
+    const { w, h } = fitRatio(desiredW, ratio, maxW, maxH);
+    return clampRect({ x: handle === 'w' ? right - w : left, y: cy - h / 2, w, h }, srcW, srcH);
+  }
 
-  return clampRect({ x: nx, y: ny, w: nw, h: nh }, srcW, srcH);
+  // For corners, choose the axis whose movement changed the locked width
+  // more. This lets a purely vertical drag resize a square and avoids the old
+  // behaviour where a small horizontal inward drag could be ignored.
+  const widthFromX = nw;
+  const widthFromY = nh * ratio;
+  desiredW = Math.abs(widthFromX - rect.w) >= Math.abs(widthFromY - rect.w) ? widthFromX : widthFromY;
+  maxW = handle.includes('w') ? right : srcW - left;
+  maxH = handle.includes('n') ? bottom : srcH - top;
+  const { w, h } = fitRatio(desiredW, ratio, maxW, maxH);
+  return clampRect(
+    { x: handle.includes('w') ? right - w : left, y: handle.includes('n') ? bottom - h : top, w, h },
+    srcW,
+    srcH,
+  );
+}
+
+/** Fit a ratio-locked width within the available area while respecting the crop minimum where possible. */
+function fitRatio(desiredW: number, ratio: number, maxW: number, maxH: number): Pick<CropRect, 'w' | 'h'> {
+  const limitW = Math.max(1, Math.min(maxW, maxH * ratio));
+  const minW = Math.min(MIN_CROP, limitW);
+  const w = Math.min(limitW, Math.max(minW, desiredW));
+  return { w, h: w / ratio };
 }
 
 /** Round a rect to integer pixels without pushing it outside the image. */
@@ -184,4 +211,8 @@ export function outputName(name: string, mime: string, w: number, h: number): st
 
 export function supportsQuality(mime: string): boolean {
   return mime === 'image/jpeg' || mime === 'image/webp';
+}
+
+export function exceedsOutputLimit(rect: CropRect): boolean {
+  return Math.round(rect.w) * Math.round(rect.h) > MAX_OUTPUT_PIXELS;
 }

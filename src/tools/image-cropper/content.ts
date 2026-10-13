@@ -10,6 +10,9 @@ const uiEn = {
   keyboardHint:
     'Drag to move, drag a handle to resize. Arrow keys move the focused crop area (Shift for 10px) — use the width/height fields to resize by keyboard:',
   download: 'Download',
+  exporting: 'Preparing download…',
+  tooLarge: 'This crop is larger than 16 megapixels. Choose a smaller area, then download it.',
+  exportFailed: 'The cropped image could not be created. Try a smaller crop or another supported image file.',
   replace: 'Choose another photo',
   shapeLabel: 'Shape',
   shapeRect: 'Rectangle',
@@ -57,13 +60,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Drop a photo onto the box, click to choose a file, or paste a screenshot with Ctrl/⌘ + V.',
       'Drag the crop box or its handles to pick the area, or type exact X, Y, width and height.',
       'Pick an aspect ratio (1:1, 4:3, 16:9…) or switch the shape to Circle for a profile picture.',
-      'Choose an output format — the preview and file size update live as you adjust the crop.',
+      'Choose an output format and quality, then download the crop when the framing is right.',
       'Download the cropped image.',
     ],
     sections: [
       {
         heading: 'Pixel-perfect, not just drag-and-guess',
-        body: 'Most browser croppers only let you drag a box by eye. This one also has X, Y, width and height fields you can type into directly, and the focused crop box can be nudged with the arrow keys (hold Shift to move 10px at a time). That matters when a destination gives you an exact spec to hit — for example LinkedIn asks for at least 400×400px for a profile photo (800×800px recommended), and a Google account picture needs at least 250×250px. Type the number you were given instead of eyeballing a drag handle.',
+        body: 'Most browser croppers only let you drag a box by eye. This one also has X, Y, width and height fields you can type into directly, and the focused crop box can be nudged with the arrow keys (hold Shift to move 10px at a time). That matters when a destination gives you an exact spec to hit: LinkedIn profile photos must be at least 400×400px, for example. Type the number you were given instead of eyeballing a drag handle.',
       },
       {
         heading: 'Circle crops for profile pictures',
@@ -77,7 +80,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'What size should a circular profile picture be?',
-        a: 'For most platforms, upload a square image at least 400×400px (LinkedIn’s stated minimum, 800×800px recommended for sharpness) or at least 250×250px (Google’s stated minimum) — switch the shape to Circle, which locks the crop to 1:1, and type the exact size into the width/height fields.',
+        a: 'For a LinkedIn profile photo, use a square image at least 400×400px; LinkedIn accepts PNG or JPG profile images up to 8MB. Switch the shape to Circle to lock the crop to 1:1, then type the exact pixel dimensions you need into the width and height fields.',
       },
       {
         q: 'Can I crop to an exact pixel size instead of dragging?',
@@ -98,6 +101,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: 'Does cropping reduce image quality?',
         a: 'Cropping itself only removes pixels outside the box — it doesn’t resample the kept area, so there is no quality loss there. Re-encoding to JPG or WebP at the quality slider does apply lossy compression; pick PNG or a quality near 100 to keep it lossless.',
+      },
+      {
+        q: 'Why does the tool limit very large crops?',
+        a: 'The tool limits a downloaded crop to 16 megapixels so the browser does not run out of memory while it creates the image. Select a smaller area, or crop first and use the Image Resizer for a smaller final file.',
       },
     ],
     ui: uiEn,
@@ -122,13 +129,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '사진을 박스에 끌어다 놓거나, 클릭해서 파일을 선택하거나, Ctrl/⌘ + V로 붙여넣습니다.',
       '자르기 박스나 모서리를 드래그해 영역을 고르거나, X·Y·가로·세로 칸에 정확한 숫자를 입력합니다.',
       '비율(1:1, 4:3, 16:9…)을 고르거나, 모양을 원형으로 바꿔 프로필 사진을 만듭니다.',
-      '출력 형식을 고르면 미리보기와 파일 크기가 조정하는 즉시 바로 갱신됩니다.',
+      '출력 형식과 품질을 고른 뒤, 구도가 맞으면 잘린 이미지를 다운로드합니다.',
       '잘린 이미지를 다운로드합니다.',
     ],
     sections: [
       {
         heading: '드래그 말고 픽셀 단위로 정확하게',
-        body: '대부분의 브라우저 자르기 도구는 눈으로 보고 드래그하는 것이 전부입니다. 이 도구는 X, Y, 가로, 세로를 직접 입력하는 칸이 있고, 자르기 영역에 포커스를 둔 채 방향키로 미세 이동(Shift를 누르면 10px씩)도 됩니다. 링크드인 프로필 사진은 최소 400×400px(선명하게 보려면 800×800px 권장), 구글 계정 사진은 최소 250×250px를 요구하는데, 드래그로 맞추는 대신 그 숫자를 그대로 입력하면 됩니다. 한국 여권사진처럼 가로 3.5cm×세로 4.5cm(온라인 신청 권장 규격 413×531px)같은 특정 규격도 가로/세로 칸에 바로 입력해 맞출 수 있습니다.',
+        body: '대부분의 브라우저 자르기 도구는 눈으로 보고 드래그하는 것이 전부입니다. 이 도구는 X, Y, 가로, 세로를 직접 입력하는 칸이 있고, 자르기 영역에 포커스를 둔 채 방향키로 미세 이동(Shift를 누르면 10px씩)도 됩니다. 링크드인 프로필 사진은 최소 400×400px여야 하므로, 드래그로 맞추는 대신 그 숫자를 그대로 입력하면 됩니다. 한국 여권사진처럼 가로 3.5cm×세로 4.5cm(온라인 신청 권장 규격 413×531px)같은 특정 규격도 가로/세로 칸에 바로 입력해 맞출 수 있습니다.',
       },
       {
         heading: '프로필용 원형 자르기',
@@ -142,7 +149,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: '원형 프로필 사진은 몇 픽셀로 만들어야 하나요?',
-        a: '대부분의 서비스는 정사각형 사진을 요구합니다. 링크드인은 최소 400×400px(선명하게 보려면 800×800px 권장), 구글 계정 사진은 최소 250×250px를 안내합니다. 모양을 원형으로 바꾸면 자르기 박스가 자동으로 1:1 정사각형으로 고정되니, 가로/세로 칸에 원하는 크기를 직접 입력하세요.',
+        a: '링크드인 프로필 사진은 최소 400×400px의 정사각형이어야 하며, PNG 또는 JPG 파일을 8MB 이하로 올릴 수 있습니다. 모양을 원형으로 바꾸면 자르기 박스가 자동으로 1:1 정사각형으로 고정되니, 가로와 세로 칸에 필요한 픽셀 수를 직접 입력하세요.',
       },
       {
         q: '드래그 대신 정확한 픽셀 크기로 자를 수 있나요?',
@@ -164,6 +171,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         q: '자르기를 하면 사진 품질이 떨어지나요?',
         a: '자르기 자체는 영역 밖의 픽셀을 버리는 것뿐이라 남은 부분은 다시 계산하지 않으므로 품질 손실이 없습니다. JPG나 WebP로 내보낼 때 품질 슬라이더를 낮추면 그만큼 압축되니, 손실을 피하려면 PNG를 쓰거나 품질을 100 가까이 두세요.',
       },
+      {
+        q: '큰 사진은 왜 바로 다운로드할 수 없나요?',
+        a: '브라우저가 이미지를 만드는 동안 메모리가 부족해지지 않도록 다운로드할 자르기 영역은 1,600만 화소로 제한합니다. 더 작은 영역을 선택하거나, 먼저 자른 뒤 이미지 크기 조절 도구로 최종 파일 크기를 줄이세요.',
+      },
     ],
     ui: {
       dropTitle: '사진을 여기에 놓거나, 클릭해서 선택, 또는 붙여넣기',
@@ -174,6 +185,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       keyboardHint:
         '드래그로 이동, 모서리를 당겨 크기 조절. 방향키는 포커스된 영역을 이동만 합니다(Shift는 10px) — 키보드로 크기를 바꾸려면 아래 가로/세로 칸을 쓰세요:',
       download: '다운로드',
+      exporting: '다운로드 준비 중…',
+      tooLarge: '자르기 영역이 1,600만 화소를 넘습니다. 더 작은 영역을 선택한 뒤 다운로드하세요.',
+      exportFailed: '잘린 이미지를 만들지 못했습니다. 더 작은 영역이나 다른 지원 이미지 파일로 다시 시도하세요.',
       replace: '다른 사진 선택',
       shapeLabel: '모양',
       shapeRect: '사각형',
