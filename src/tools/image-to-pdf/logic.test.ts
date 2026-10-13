@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { buildPdf, computePageLayout, type PdfOptions, type PdfPageInput } from './logic';
+import {
+  buildPdf,
+  computePageLayout,
+  isSafeImageDimensions,
+  normalizePdfOptions,
+  pdfOutputName,
+  shouldBuildPdf,
+  type PdfOptions,
+  type PdfPageInput,
+} from './logic';
 
 // Minimal valid JPEG byte sequence (SOI + EOI). buildPdf never decodes it, just embeds it.
 const FAKE_JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xd9]);
@@ -88,6 +97,52 @@ describe('computePageLayout', () => {
     expect(Number.isFinite(l.pageHeight)).toBe(true);
     expect(l.pageWidth).toBeGreaterThan(0);
     expect(l.pageHeight).toBeGreaterThan(0);
+  });
+});
+
+describe('normalizePdfOptions', () => {
+  it('keeps only known saved layout values', () => {
+    expect(normalizePdfOptions({ pageSize: 'letter', orientation: 'landscape', margin: 'small' })).toEqual({
+      pageSize: 'letter',
+      orientation: 'landscape',
+      margin: 'small',
+    });
+  });
+
+  it('falls back safely when stored settings are malformed', () => {
+    expect(normalizePdfOptions({ pageSize: 'legal', orientation: 'sideways', margin: true })).toEqual({
+      pageSize: 'fit',
+      orientation: 'auto',
+      margin: 'none',
+    });
+    expect(normalizePdfOptions(null)).toEqual({ pageSize: 'fit', orientation: 'auto', margin: 'none' });
+  });
+});
+
+describe('isSafeImageDimensions', () => {
+  it('rejects oversized, unsafe canvases before encoding', () => {
+    expect(isSafeImageDimensions(4096, 4096)).toBe(true);
+    expect(isSafeImageDimensions(8193, 100)).toBe(false);
+    expect(isSafeImageDimensions(5000, 5000)).toBe(false);
+    expect(isSafeImageDimensions(0, 100)).toBe(false);
+  });
+});
+
+describe('pdfOutputName', () => {
+  it('preserves a Unicode base name while replacing a conventional extension', () => {
+    expect(pdfOutputName('한글 photo.png')).toBe('한글 photo.pdf');
+  });
+
+  it('does not turn a dotfile into an empty `.pdf` filename', () => {
+    expect(pdfOutputName('.png')).toBe('.png.pdf');
+  });
+});
+
+describe('shouldBuildPdf', () => {
+  it('waits for every selected image instead of exposing a partial PDF', () => {
+    expect(shouldBuildPdf(1, true)).toBe(false);
+    expect(shouldBuildPdf(2, false)).toBe(true);
+    expect(shouldBuildPdf(0, false)).toBe(false);
   });
 });
 

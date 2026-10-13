@@ -1,3 +1,5 @@
+import { buildPdf, type PdfPageInput } from './logic';
+
 /**
  * Browser-only pixel work: decode a source image and re-encode it as JPEG bytes
  * suitable for embedding in a PDF (/DCTDecode). Transparency is flattened to white.
@@ -32,4 +34,25 @@ export async function encodeToJpeg(
   } finally {
     bmp.close();
   }
+}
+
+/** Build large PDFs away from the interaction thread when the browser supports module workers. */
+export function buildPdfOffMainThread(pages: PdfPageInput[]): Promise<Uint8Array> {
+  if (typeof Worker === 'undefined') return Promise.resolve(buildPdf(pages));
+
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./pdf-worker.ts', import.meta.url), { type: 'module' });
+    const cleanUp = () => worker.terminate();
+
+    worker.onmessage = (event: MessageEvent<{ bytes?: ArrayBuffer; error?: string }>) => {
+      cleanUp();
+      if (event.data.bytes) resolve(new Uint8Array(event.data.bytes));
+      else reject(new Error(event.data.error ?? 'PDF assembly failed.'));
+    };
+    worker.onerror = () => {
+      cleanUp();
+      reject(new Error('PDF assembly failed.'));
+    };
+    worker.postMessage({ pages });
+  });
 }
