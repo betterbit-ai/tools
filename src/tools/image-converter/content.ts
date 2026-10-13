@@ -3,10 +3,15 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop images here, click to choose, or paste',
-  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · as many as you like',
+  dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · up to 50 images',
   privacyNote: 'Images are converted on your device. Nothing is uploaded.',
   unsupported: 'This file can’t be read by your browser.',
+  tooLarge: 'This image is too large to convert here (maximum {max} pixels). Resize it first.',
+  processFailed: 'This image could not be converted with these settings. Try another format or a smaller image.',
+  batchLimit: 'Only the first {n} images were added to keep conversion reliable.',
+  zipFailed: 'The ZIP could not be created. Try downloading the images one at a time.',
   processing: 'Working…',
+  preparingDownload: 'Preparing ZIP…',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
   remove: 'Remove',
@@ -20,6 +25,7 @@ const uiEn = {
   animatedGifWarning: 'Animated — only the first frame will be kept.',
   animatedGifNotice:
     'Converting an animated GIF keeps only its first frame, since none of these output formats can store animation.',
+  gifNotice: 'If this GIF is animated, conversion keeps only its first frame.',
 };
 export type UI = typeof uiEn;
 
@@ -29,7 +35,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       'Convert JPG, PNG and WebP — one image or a batch — right in your browser. Pick the JPG background colour for transparent sources. No upload, sign-up or ads.',
     h1: 'Image Converter',
-    tagline: 'Convert between JPG, PNG and WebP — one file or a hundred, privately in your browser.',
+    tagline: 'Convert between JPG, PNG and WebP — one image or a batch of 50, privately in your browser.',
     name: 'Image Converter',
     keywords: [
       'jpg to png',
@@ -43,12 +49,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Drop images onto the box, click to choose files, or paste a screenshot with Ctrl/⌘ + V.',
       'Pick the format to convert to: JPG, PNG or WebP.',
       'For JPG output, set quality and — if any source has transparency — the background colour.',
-      'Results update instantly. Download each image, or all of them as a ZIP.',
+      'Results update automatically. Download each image, or all ready images as a ZIP.',
     ],
     sections: [
       {
         heading: 'Which format should I pick?',
-        body: 'JPG is the smallest for photos but has no transparency and loses a little detail each time it’s re-saved (lossy). PNG is lossless and supports transparency, which makes it ideal for screenshots, logos and graphics, but it is often 5–10× larger than a JPG of the same photo. WebP is a newer format that is typically 25–35% smaller than JPG at the same visual quality, supports transparency like PNG, and opens in every browser released since 2020 — it’s the best default unless a specific app or form requires JPG or PNG.',
+        body: 'JPG is usually the smallest choice for photos but has no transparency and loses a little detail each time it is re-saved (lossy). PNG is lossless and supports transparency, which makes it ideal for screenshots, logos and graphics, but it is often substantially larger than JPG for photographs. WebP supports transparency and is often smaller than an equivalent JPG or PNG. Choose WebP when the receiving site or app accepts it; otherwise use JPG for photos and PNG for sharp graphics or transparency.',
       },
       {
         heading: 'Converting from a transparent source to JPG',
@@ -56,7 +62,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your images stay on your device',
-        body: 'Most online converters upload your file to a server, convert it there and send it back — which means a copy of your photo sits on someone else’s machine, even briefly. This tool decodes and re-encodes the image using your browser’s own image engine (Canvas), so the file never leaves your computer or phone. That also removes the upload/download wait, and it keeps working offline once the page has loaded.',
+        body: 'Most online converters upload your file to a server, convert it there and send it back — which means a copy of your photo sits on someone else’s machine, even briefly. This tool decodes and re-encodes the image using your browser’s own image engine (Canvas), so the file never leaves your computer or phone. That removes the upload/download wait and the tool keeps working offline once the page has loaded. To keep browser memory reliable, each batch is limited to 50 images and each image to 16,777,216 pixels.',
       },
     ],
     faq: [
@@ -78,7 +84,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Can I convert many images at once?',
-        a: 'Yes. Drop or select multiple files and they all convert with the same settings; download them individually or all together as a single ZIP file.',
+        a: 'Yes. Drop or select up to 50 files and they all convert with the same settings; download them individually or all together as a single ZIP file.',
       },
       {
         q: 'Can I convert an animated GIF to JPG, PNG or WebP?',
@@ -92,19 +98,19 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       'JPG를 PNG로, PNG를 JPG로, WebP를 JPG로 바로 바꾸세요. 한 장이든 여러 장이든 브라우저에서 즉시 처리됩니다. 투명 배경을 JPG로 바꿀 때 배경색도 직접 고를 수 있어요. 업로드·가입·광고 없음.',
     h1: '이미지 형식 변환',
-    tagline: 'JPG, PNG, WebP를 서로 변환하세요 — 한 장이든 백 장이든, 업로드 없이 브라우저에서.',
+    tagline: 'JPG, PNG, WebP를 서로 변환하세요 — 한 장부터 50장까지, 업로드 없이 브라우저에서.',
     name: '이미지 변환',
     keywords: ['jpg png 변환', 'png jpg 변환', 'webp jpg 변환', '이미지 변환', '사진 형식 바꾸기', '확장자 변환'],
     howTo: [
       '이미지를 끌어다 놓거나, 클릭해서 고르거나, Ctrl/⌘ + V로 붙여넣습니다.',
       '변환할 형식을 고릅니다: JPG, PNG, WebP 중 하나.',
       'JPG로 바꿀 때는 품질을 정하고, 원본에 투명 배경이 있으면 배경색도 고릅니다.',
-      '결과가 바로 바뀝니다. 한 장씩 받거나, 전체를 ZIP으로 한번에 다운로드합니다.',
+      '결과가 자동으로 만들어집니다. 한 장씩 받거나, 준비된 파일 전체를 ZIP으로 한번에 다운로드합니다.',
     ],
     sections: [
       {
         heading: '어떤 형식을 골라야 할까',
-        body: 'JPG는 사진 용량이 가장 작지만 투명 배경을 지원하지 않고, 다시 저장할 때마다 품질이 조금씩 손실됩니다. PNG는 손실 없이 저장되고 투명 배경을 지원해 스크린샷, 로고, 그림 파일에 적합하지만 같은 사진이라도 JPG보다 5~10배 커질 수 있습니다. WebP는 비교적 새로운 형식으로, 같은 화질의 JPG보다 보통 25~35% 작고 PNG처럼 투명 배경도 지원하며 2020년 이후 나온 모든 브라우저에서 열립니다. 특정 프로그램이나 양식이 JPG·PNG를 요구하지 않는다면 WebP가 가장 무난한 선택입니다.',
+        body: 'JPG는 사진에 보통 가장 작은 형식이지만 투명 배경을 지원하지 않고, 다시 저장할 때마다 품질이 조금씩 손실됩니다. PNG는 손실 없이 저장되고 투명 배경을 지원해 스크린샷, 로고, 그림 파일에 적합하지만 사진에서는 JPG보다 훨씬 커질 수 있습니다. WebP는 투명 배경을 지원하고 같은 이미지를 JPG나 PNG보다 더 작게 만들 때가 많습니다. 올릴 곳에서 WebP를 받는다면 WebP를, 그렇지 않으면 사진은 JPG, 선명한 글자·그림이나 투명 배경은 PNG를 고르면 됩니다.',
       },
       {
         heading: '투명 배경을 JPG로 바꿀 때',
@@ -112,7 +118,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
-        body: '대부분의 온라인 변환 사이트는 파일을 서버에 올려서 처리한 뒤 다시 내려받게 합니다. 그 사이 내 사진이 다른 사람의 서버에 잠시라도 저장되는 셈입니다. 이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 디코딩·재인코딩하기 때문에 파일이 컴퓨터나 휴대폰 밖으로 전송되지 않습니다. 업로드·다운로드 대기가 없어 더 빠르고, 페이지를 연 뒤에는 오프라인에서도 동작합니다.',
+        body: '대부분의 온라인 변환 사이트는 파일을 서버에 올려서 처리한 뒤 다시 내려받게 합니다. 그 사이 내 사진이 다른 사람의 서버에 잠시라도 저장되는 셈입니다. 이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 디코딩·재인코딩하기 때문에 파일이 컴퓨터나 휴대폰 밖으로 전송되지 않습니다. 업로드·다운로드 대기가 없어 더 빠르고, 페이지를 연 뒤에는 오프라인에서도 동작합니다. 브라우저 메모리를 안정적으로 쓰기 위해 한 번에 50장까지, 이미지 한 장은 16,777,216픽셀까지 변환합니다.',
       },
     ],
     faq: [
@@ -134,7 +140,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '여러 장을 한 번에 변환할 수 있나요?',
-        a: '네. 여러 파일을 올리면 모두 같은 설정으로 변환됩니다. 한 장씩 받거나, 전체를 ZIP 파일 하나로 한번에 다운로드할 수 있습니다.',
+        a: '네. 한 번에 최대 50개 파일을 올리면 모두 같은 설정으로 변환됩니다. 한 장씩 받거나, 전체를 ZIP 파일 하나로 한번에 다운로드할 수 있습니다.',
       },
       {
         q: '움직이는 GIF도 JPG나 PNG, WebP로 변환할 수 있나요?',
@@ -143,10 +149,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       dropTitle: '이미지를 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
-      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 여러 장 가능',
+      dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 최대 50장',
       privacyNote: '이미지는 내 기기에서 변환됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
+      tooLarge: '이미지가 너무 큽니다(최대 {max}픽셀). 먼저 이미지 크기를 줄이세요.',
+      processFailed: '현재 설정으로 이 이미지를 변환할 수 없습니다. 다른 형식이나 더 작은 이미지를 사용하세요.',
+      batchLimit: '안정적인 변환을 위해 처음 {n}개 파일만 추가했습니다.',
+      zipFailed: 'ZIP 파일을 만들지 못했습니다. 이미지를 한 장씩 다운로드해 보세요.',
       processing: '처리 중…',
+      preparingDownload: 'ZIP 준비 중…',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
       remove: '삭제',
@@ -160,6 +171,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       animatedGifWarning: '움직이는 GIF — 첫 프레임만 유지됩니다.',
       animatedGifNotice:
         '움직이는 GIF는 첫 프레임만 남습니다. 선택한 출력 형식들은 애니메이션을 저장할 수 없기 때문입니다.',
+      gifNotice: '이 GIF가 움직이는 파일이라면 변환할 때 첫 프레임만 남습니다.',
     },
   },
 };
