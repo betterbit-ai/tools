@@ -5,7 +5,11 @@
  * (never `Date.parse`, which shifts by a day for negative-UTC-offset time zones).
  */
 
-const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const DATE_PATTERN = /^(\d{4,})-(\d{2})-(\d{2})$/;
+
+function isLeapYear(year: number): boolean {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
 
 export function isValidDate(date: string): boolean {
   const match = DATE_PATTERN.exec(date);
@@ -14,8 +18,9 @@ export function isValidDate(date: string): boolean {
   const year = Number(yearText);
   const month = Number(monthText);
   const day = Number(dayText);
-  const parsed = new Date(year, month - 1, day);
-  return year >= 1 && parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day;
+  return (
+    Number.isSafeInteger(year) && year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month)
+  );
 }
 
 function parts(date: string): [number, number, number] {
@@ -23,27 +28,42 @@ function parts(date: string): [number, number, number] {
   return [Number(y), Number(m), Number(d)];
 }
 
-/** Days since a fixed epoch, computed in UTC so DST transitions never shift the count. */
+/**
+ * Days since 0001-01-01 in the proleptic Gregorian calendar.
+ *
+ * This deliberately avoids `Date` and `Date.UTC`: their numeric constructors map
+ * years 0–99 to 1900–1999, which rejects or miscalculates dates such as 0001-01-01.
+ */
 function toEpochDay(date: string): number {
   const [y, m, d] = parts(date);
-  return Date.UTC(y, m - 1, d) / 86_400_000;
+  const priorYear = y - 1;
+  const daysBeforeYear =
+    priorYear * 365 + Math.floor(priorYear / 4) - Math.floor(priorYear / 100) + Math.floor(priorYear / 400);
+  const daysBeforeMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334][m - 1];
+  return daysBeforeYear + daysBeforeMonth + (m > 2 && isLeapYear(y) ? 1 : 0) + d - 1;
 }
 
 function pad2(n: number): string {
   return String(n).padStart(2, '0');
 }
 
+function padYear(year: number): string {
+  return String(year).padStart(4, '0');
+}
+
 export function todayIso(nowMs: number): string {
   const now = new Date(nowMs);
-  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  return `${padYear(now.getFullYear())}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
 }
 
 function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
+  if (month === 2) return isLeapYear(year) ? 29 : 28;
+  return month === 4 || month === 6 || month === 9 || month === 11 ? 30 : 31;
 }
 
 export function weekdayIndex(date: string): number {
-  return new Date(toEpochDay(date) * 86_400_000).getUTCDay();
+  // 0001-01-01 was a Monday; JavaScript's Sunday-first convention is 0–6.
+  return (toEpochDay(date) + 1) % 7;
 }
 
 /** Exact signed day count from `start` to `end` (end - start). */
@@ -88,7 +108,7 @@ function addMonthsClamped(date: string, months: number): string {
   let year = year0 + Math.floor(month / 12);
   month = ((month % 12) + 12) % 12;
   const clampedDay = Math.min(day, daysInMonth(year, month + 1));
-  return `${year}-${pad2(month + 1)}-${pad2(clampedDay)}`;
+  return `${padYear(year)}-${pad2(month + 1)}-${pad2(clampedDay)}`;
 }
 
 /** 만 나이: international/legal age in whole years as of `reference` (Korea's 2023 "만 나이 통일법"). */
@@ -121,7 +141,7 @@ export function nextBirthday(birth: string, reference: string): { date: string; 
 
 function clampedBirthdayInYear(year: number, month: number, day: number): string {
   const clampedDay = Math.min(day, daysInMonth(year, month));
-  return `${year}-${pad2(month)}-${pad2(clampedDay)}`;
+  return `${padYear(year)}-${pad2(month)}-${pad2(clampedDay)}`;
 }
 
 export const ZODIAC_ANIMALS = [

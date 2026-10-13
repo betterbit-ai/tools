@@ -20,6 +20,7 @@ describe('isValidDate', () => {
   it('accepts real calendar dates', () => {
     expect(isValidDate('2000-01-01')).toBe(true);
     expect(isValidDate('2024-02-29')).toBe(true); // leap day
+    expect(isValidDate('0001-01-01')).toBe(true);
   });
 
   it('rejects malformed or impossible dates', () => {
@@ -28,6 +29,7 @@ describe('isValidDate', () => {
     expect(isValidDate('2023-02-29')).toBe(false); // not a leap year
     expect(isValidDate('2024-13-01')).toBe(false);
     expect(isValidDate('2024-04-31')).toBe(false);
+    expect(isValidDate('0000-01-01')).toBe(false);
   });
 });
 
@@ -50,6 +52,10 @@ describe('ageBreakdown / internationalAge (만 나이)', () => {
     // 2000 was a leap year; 2025 is not, so the "birthday" clamps to Feb 28.
     expect(internationalAge('2000-02-29', '2025-02-28')).toBe(25);
     expect(internationalAge('2000-02-29', '2025-03-01')).toBe(25);
+  });
+
+  it('handles historical years below 100 without Date constructor remapping', () => {
+    expect(ageBreakdown('0001-01-01', '0002-01-01')).toEqual({ years: 1, months: 0, days: 0 });
   });
 });
 
@@ -89,6 +95,7 @@ describe('daysBetween / weekdayIndex', () => {
 
   it('matches a known weekday', () => {
     expect(weekdayIndex('2000-01-01')).toBe(6); // Saturday
+    expect(weekdayIndex('0001-01-01')).toBe(1); // Monday
   });
 });
 
@@ -104,6 +111,10 @@ describe('nextBirthday', () => {
   it('observes Feb 28 for a Feb 29 birthday in a non-leap target year', () => {
     expect(nextBirthday('2000-02-29', '2025-01-01').date).toBe('2025-02-28');
     expect(nextBirthday('2000-02-29', '2024-01-01').date).toBe('2024-02-29');
+  });
+
+  it('can cross the four-digit year boundary without throwing', () => {
+    expect(nextBirthday('0001-01-01', '9999-12-31')).toEqual({ date: '10000-01-01', daysUntil: 1 });
   });
 });
 
