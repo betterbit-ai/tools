@@ -13,6 +13,53 @@ export interface PdfOptions {
   margin: MarginMode;
 }
 
+export const DEFAULT_PDF_OPTIONS: PdfOptions = { pageSize: 'fit', orientation: 'auto', margin: 'none' };
+
+/** Keep individual browser canvases inside conservative Safari-compatible limits. */
+export const MAX_IMAGE_SIDE = 8192;
+export const MAX_IMAGE_PIXELS = 16_777_216;
+/** A bounded batch keeps previews, encoded images, and the resulting PDF within device memory. */
+export const MAX_IMAGE_COUNT = 20;
+
+export function isSafeImageDimensions(width: number, height: number): boolean {
+  return (
+    Number.isFinite(width) &&
+    Number.isFinite(height) &&
+    width > 0 &&
+    height > 0 &&
+    width <= MAX_IMAGE_SIDE &&
+    height <= MAX_IMAGE_SIDE &&
+    width * height <= MAX_IMAGE_PIXELS
+  );
+}
+
+/**
+ * Restored browser storage is untrusted: old versions, extensions, or manual edits
+ * must not be able to put the layout code into an invalid state.
+ */
+export function normalizePdfOptions(value: unknown): PdfOptions {
+  if (!value || typeof value !== 'object') return DEFAULT_PDF_OPTIONS;
+  const candidate = value as Partial<PdfOptions>;
+  return {
+    pageSize: candidate.pageSize === 'a4' || candidate.pageSize === 'letter' ? candidate.pageSize : 'fit',
+    orientation:
+      candidate.orientation === 'portrait' || candidate.orientation === 'landscape' ? candidate.orientation : 'auto',
+    margin: candidate.margin === 'small' ? 'small' : 'none',
+  };
+}
+
+/** Keep Unicode names intact and avoid an empty download name for dotfiles such as `.png`. */
+export function pdfOutputName(fileName: string): string {
+  const lastDot = fileName.lastIndexOf('.');
+  const base = lastDot > 0 ? fileName.slice(0, lastDot) : fileName;
+  return `${base || 'image'}.pdf`;
+}
+
+/** A multi-image download must wait until every accepted image has settled. */
+export function shouldBuildPdf(readyImages: number, hasPendingImages: boolean): boolean {
+  return readyImages > 0 && !hasPendingImages;
+}
+
 export interface PageLayout {
   pageWidth: number;
   pageHeight: number;

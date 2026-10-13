@@ -3,10 +3,15 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop photos here, click to choose, or paste',
-  dropHint: 'JPG, PNG, WebP, GIF, BMP · as many as you like',
+  dropHint: 'JPG, PNG, WebP, GIF, BMP · up to 20 images',
   privacyNote: 'Images are turned into a PDF on your device. Nothing is uploaded.',
   unsupported: 'This file can’t be read by your browser.',
   processing: 'Processing…',
+  building: 'Creating PDF…',
+  batchLimit: 'For a reliable on-device conversion, add up to {n} images at a time.',
+  tooLarge: 'This image is too large to convert safely in your browser.',
+  processFailed: 'This image could not be converted. Try a smaller or different file.',
+  pdfFailed: 'The PDF could not be created. Remove a large image and try again.',
   download: 'Download PDF',
   pages: '{n} page(s)',
   remove: 'Remove',
@@ -73,7 +78,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How many images can I combine into one PDF?',
-        a: 'There is no fixed limit; the practical ceiling is your device’s memory. A few dozen typical phone photos combine in well under a second.',
+        a: 'You can add up to 20 images at once. Each image must be no larger than 8,192 pixels on either side or about 16.7 megapixels, which keeps the conversion reliable on phones and computers.',
       },
       {
         q: 'Can I change the order of the pages?',
@@ -89,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Can I convert PNG or WebP images, not just JPG?',
-        a: 'Yes. PNG, WebP, GIF and BMP files are all accepted; transparent areas are filled with white since the embedded image format has no transparency channel.',
+        a: 'Yes. PNG, WebP, GIF and BMP files are accepted alongside JPG. Animated GIFs use their first frame, and transparent areas are filled with white because JPEG images inside this PDF have no transparency channel.',
       },
     ],
     ui: uiEn,
@@ -129,7 +134,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '한 PDF에 사진을 몇 장까지 합칠 수 있나요?',
-        a: '정해진 제한은 없으며 실제 한계는 기기의 메모리입니다. 휴대폰 사진 수십 장을 합치는 데는 1초도 걸리지 않습니다.',
+        a: '한 번에 최대 20장까지 추가할 수 있습니다. 휴대폰과 컴퓨터에서 안정적으로 변환되도록 각 이미지는 한 변이 8,192픽셀 이하이고 약 1,677만 화소 이하여야 합니다.',
       },
       {
         q: '페이지 순서를 바꿀 수 있나요?',
@@ -145,15 +150,20 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'JPG 말고 PNG나 WebP도 변환되나요?',
-        a: '네. PNG, WebP, GIF, BMP 파일도 모두 지원합니다. 투명한 부분은 흰색으로 채워집니다. PDF에 넣는 이미지 형식에는 투명 채널이 없기 때문입니다.',
+        a: '네. JPG 외에 PNG, WebP, GIF, BMP 파일도 지원합니다. 움직이는 GIF는 첫 프레임으로 변환되고, 투명한 부분은 흰색으로 채워집니다. PDF에 넣는 JPEG 이미지에는 투명 채널이 없기 때문입니다.',
       },
     ],
     ui: {
       dropTitle: '사진을 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
-      dropHint: 'JPG, PNG, WebP, GIF, BMP · 여러 장 가능',
+      dropHint: 'JPG, PNG, WebP, GIF, BMP · 최대 20장',
       privacyNote: '사진은 내 기기에서 PDF로 변환됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
       processing: '처리 중…',
+      building: 'PDF 만드는 중…',
+      batchLimit: '기기에서 안정적으로 변환할 수 있도록 한 번에 최대 {n}장까지 추가할 수 있습니다.',
+      tooLarge: '이 이미지는 브라우저에서 안전하게 변환하기에 너무 큽니다.',
+      processFailed: '이 이미지를 변환하지 못했습니다. 더 작은 파일이나 다른 파일로 다시 시도하세요.',
+      pdfFailed: 'PDF를 만들지 못했습니다. 큰 이미지를 제거한 뒤 다시 시도하세요.',
       download: 'PDF 다운로드',
       pages: '{n}페이지',
       remove: '삭제',
