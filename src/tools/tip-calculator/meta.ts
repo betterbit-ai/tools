@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'It is a single South Korea page whose results are displayed with a $ symbol, so a traveller must find a different page for another country or currency. Betterbit changes both the customary starting rate and currency format in one calculator. (Strength: it includes a separate service-charge input and a rounded-per-person result.)',
     },
   ],
-  related: ['percentage-calculator', 'scientific-calculator', 'compound-interest'],
+  related: ['percentage-calculator', 'scientific-calculator', 'compound-interest', 'discount-calculator'],
 };
