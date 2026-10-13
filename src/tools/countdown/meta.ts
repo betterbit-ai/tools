@@ -56,5 +56,6 @@ export const meta: ToolMeta = {
     'time-zone-converter',
     'unix-timestamp',
     'world-clock',
+    'pregnancy-calculator',
   ],
 };

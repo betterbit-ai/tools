@@ -48,5 +48,6 @@ export const meta: ToolMeta = {
     'bmi-calculator',
     'scientific-calculator',
     'calorie-calculator',
+    'pregnancy-calculator',
   ],
 };
