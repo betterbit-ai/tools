@@ -22,6 +22,11 @@ describe('convertCase', () => {
     expect(convertCase('the story of us', 'title-chicago')).toBe('The Story of Us');
   });
 
+  it('capitalizes title subtitles and treats every line as a separate title', () => {
+    expect(convertCase('a guide: a story about us', 'title-chicago')).toBe('A Guide: A Story about Us');
+    expect(convertCase('the art of code\r\na guide to us', 'title-ap')).toBe('The Art of Code\r\nA Guide to Us');
+  });
+
   it('converts identifier cases and recognizes existing camel-case acronyms', () => {
     expect(convertCase('XMLHttpRequest user ID', 'snake')).toBe('xml_http_request_user_id');
     expect(convertCase('hello world', 'camel')).toBe('helloWorld');

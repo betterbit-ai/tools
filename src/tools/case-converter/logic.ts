@@ -78,7 +78,7 @@ function capitalize(word: string): string {
   return lower.replace(/^\p{L}/u, (letter) => letter.toUpperCase());
 }
 
-function titleCase(input: string, style: 'ap' | 'chicago'): string {
+function titleCaseLine(input: string, style: 'ap' | 'chicago'): string {
   const minorWords = style === 'ap' ? AP_MINOR_WORDS : CHICAGO_MINOR_WORDS;
   const words = Array.from(input.matchAll(/\p{L}[\p{L}\p{M}'’]*/gu));
   if (words.length === 0) return input;
@@ -88,8 +88,18 @@ function titleCase(input: string, style: 'ap' | 'chicago'): string {
 
   return input.replace(/\p{L}[\p{L}\p{M}'’]*/gu, (word, index) => {
     const normalized = word.toLowerCase();
-    return index !== first && index !== last && minorWords.has(normalized) ? normalized : capitalize(word);
+    const startsSubtitle = /(?:^|[:\u2014])(?:\s|["“‘'«])*$/u.test(input.slice(0, index));
+    return index !== first && index !== last && !startsSubtitle && minorWords.has(normalized)
+      ? normalized
+      : capitalize(word);
   });
+}
+
+function titleCase(input: string, style: 'ap' | 'chicago'): string {
+  return input
+    .split(/(\r\n|\r|\n)/)
+    .map((line) => (/^(\r\n|\r|\n)$/.test(line) ? line : titleCaseLine(line, style)))
+    .join('');
 }
 
 function sentenceCase(input: string): string {
