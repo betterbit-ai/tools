@@ -53,6 +53,7 @@ export const meta: ToolMeta = {
     'random-number',
     'tip-calculator',
     'discount-calculator',
+    'vat-calculator',
     'gpa-calculator',
     'fraction-calculator',
     'calorie-calculator',
