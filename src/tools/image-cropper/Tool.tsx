@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { Button, Dropzone, Field, Kbd, Notice, NumberInput, Panel, Segmented, Select, cx } from '../../components/ui';
 import { downloadBlob } from '../../lib/browser';
-import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import { cropImage, readDimensions } from './crop';
 import type { UI } from './content';
@@ -10,6 +9,7 @@ import {
   applyAspect,
   aspectRatio,
   clampRect,
+  exceedsOutputLimit,
   extensionFor,
   initialCrop,
   moveRect,
@@ -46,7 +46,7 @@ interface Drag {
   startRect: CropRect;
 }
 
-export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
+export default function ImageCropper({ ui }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
   const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [previewUrl, setPreviewUrl] = useState('');
@@ -55,8 +55,8 @@ export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
   const [shape, setShape] = useState<ShapeKind>('rect');
   const [format, setFormat] = useState<FormatChoice>('original');
   const [quality, setQuality] = useState(90);
-  const [error, setError] = useState(false);
-  const [result, setResult] = useState<{ blob: Blob; url: string; name: string } | null>(null);
+  const [error, setError] = useState<'unsupported' | 'tooLarge' | 'exportFailed' | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [display, setDisplay] = useState({ w: 0, h: 0 });
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -65,6 +65,7 @@ export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
   rectRef.current = rect;
   const naturalRef = useRef(natural);
   naturalRef.current = natural;
+  const exportIdRef = useRef(0);
   const scaleRef = useRef(0);
   const aspectRatioRef = useRef<number | null>(null);
   aspectRatioRef.current = shape === 'circle' ? 1 : aspectRatio(aspect);
@@ -79,22 +80,28 @@ export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
     return () => ro.disconnect();
   }, [previewUrl]);
 
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl],
+  );
+
   const loadFile = useCallback(async (f: File) => {
+    const loadId = ++exportIdRef.current;
     try {
       const dims = await readDimensions(f);
+      if (loadId !== exportIdRef.current) return;
       setFile(f);
       setNatural({ w: dims.width, h: dims.height });
-      setPreviewUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return URL.createObjectURL(f);
-      });
+      setPreviewUrl(URL.createObjectURL(f));
       setRect(initialCrop(dims.width, dims.height));
       setAspect('free');
       setShape('rect');
-      setResult(null);
-      setError(false);
+      setIsExporting(false);
+      setError(null);
     } catch {
-      setError(true);
+      if (loadId === exportIdRef.current) setError('unsupported');
     }
   }, []);
 
@@ -112,37 +119,34 @@ export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
   };
 
   const clear = () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    if (result) URL.revokeObjectURL(result.url);
+    exportIdRef.current += 1;
     setFile(null);
     setPreviewUrl('');
-    setResult(null);
-    setError(false);
+    setIsExporting(false);
+    setError(null);
   };
 
-  // Re-encode whenever the crop region or output settings change (debounced, cancellable).
-  useEffect(() => {
-    if (!file || !natural.w) return;
-    let cancelled = false;
-    const timeout = setTimeout(async () => {
-      try {
-        const mime = outputType(shape, format, file.type);
-        const cropped = roundRect(rect, natural.w, natural.h);
-        const blob = await cropImage(file, cropped, shape, mime, quality / 100);
-        if (cancelled) return;
-        setResult((prev) => {
-          if (prev) URL.revokeObjectURL(prev.url);
-          return { blob, url: URL.createObjectURL(blob), name: outputName(file.name, mime, cropped.w, cropped.h) };
-        });
-      } catch {
-        if (!cancelled) setError(true);
-      }
-    }, 150);
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-    };
-  }, [file, natural, rect, shape, format, quality]);
+  const download = async () => {
+    if (!file || !natural.w || isExporting) return;
+    const cropped = roundRect(rect, natural.w, natural.h);
+    if (exceedsOutputLimit(cropped)) {
+      setError('tooLarge');
+      return;
+    }
+
+    const exportId = ++exportIdRef.current;
+    setError(null);
+    setIsExporting(true);
+    try {
+      const mime = outputType(shape, format, file.type);
+      const blob = await cropImage(file, cropped, shape, mime, quality / 100);
+      if (exportId === exportIdRef.current) downloadBlob(blob, outputName(file.name, mime, cropped.w, cropped.h));
+    } catch {
+      if (exportId === exportIdRef.current) setError('exportFailed');
+    } finally {
+      if (exportId === exportIdRef.current) setIsExporting(false);
+    }
+  };
 
   const scale = display.w > 0 && natural.w > 0 ? display.w / natural.w : 0;
   scaleRef.current = scale;
@@ -236,7 +240,7 @@ export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
           <div class="mt-4">
             <Notice>{ui.privacyNote}</Notice>
           </div>
-          {error && (
+          {error === 'unsupported' && (
             <div class="mt-4">
               <Notice tone="danger">{ui.unsupported}</Notice>
             </div>
@@ -279,17 +283,32 @@ export default function ImageCropper({ locale, ui }: ToolProps<UI>) {
               {ui.keyboardHint} <Kbd>↑↓←→</Kbd>
             </p>
 
-            {result && (
-              <div class="mt-4 flex flex-wrap items-center gap-3">
-                <Button variant="primary" size="lg" onClick={() => downloadBlob(result.blob, result.name)}>
-                  {ui.download}
-                </Button>
-                <Button variant="ghost" onClick={clear}>
-                  {ui.replace}
-                </Button>
-                <span class="text-sm text-muted tabular" aria-live="polite">
-                  {cropped?.w}×{cropped?.h} · {formatBytes(result.blob.size, locale)}
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <Button variant="primary" size="lg" onClick={() => void download()} disabled={isExporting}>
+                {isExporting ? ui.exporting : ui.download}
+              </Button>
+              <Button variant="ghost" onClick={clear}>
+                {ui.replace}
+              </Button>
+              {cropped && (
+                <span class="text-sm text-muted tabular">
+                  {cropped.w}×{cropped.h}
                 </span>
+              )}
+            </div>
+            {isExporting && (
+              <p class="mt-3 text-sm text-muted" aria-live="polite">
+                {ui.exporting}
+              </p>
+            )}
+            {error === 'tooLarge' && (
+              <div class="mt-3">
+                <Notice tone="danger">{ui.tooLarge}</Notice>
+              </div>
+            )}
+            {error === 'exportFailed' && (
+              <div class="mt-3">
+                <Notice tone="danger">{ui.exportFailed}</Notice>
               </div>
             )}
           </div>

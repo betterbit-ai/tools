@@ -4,6 +4,7 @@ import {
   aspectRatio,
   centeredCrop,
   clampRect,
+  exceedsOutputLimit,
   extensionFor,
   initialCrop,
   moveRect,
@@ -171,6 +172,16 @@ describe('resizeRect', () => {
     expect(r.w).toBeCloseTo(r.h);
     expect(r.w).toBeLessThanOrEqual(800);
   });
+
+  it('keeps the opposite corner fixed when a locked crop reaches an image boundary', () => {
+    const r = resizeRect({ x: 100, y: 100, w: 200, h: 200 }, 'se', 1_000, 1_000, 800, 600, 1);
+    expect(r).toEqual({ x: 100, y: 100, w: 500, h: 500 });
+  });
+
+  it('honours a small horizontal inward drag on a locked corner', () => {
+    const r = resizeRect(base, 'se', -10, 0, 800, 600, 1);
+    expect(r).toEqual({ x: 100, y: 100, w: 190, h: 190 });
+  });
 });
 
 describe('applyAspect', () => {
@@ -250,5 +261,12 @@ describe('extensionFor / outputName / supportsQuality', () => {
     expect(supportsQuality('image/jpeg')).toBe(true);
     expect(supportsQuality('image/webp')).toBe(true);
     expect(supportsQuality('image/png')).toBe(false);
+  });
+});
+
+describe('exceedsOutputLimit', () => {
+  it('allows a 16-megapixel export and rejects a larger crop before allocating a canvas', () => {
+    expect(exceedsOutputLimit({ x: 0, y: 0, w: 4_000, h: 4_000 })).toBe(false);
+    expect(exceedsOutputLimit({ x: 0, y: 0, w: 4_001, h: 4_000 })).toBe(true);
   });
 });
