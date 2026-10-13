@@ -26,6 +26,7 @@ const uiEn = {
   copy: 'Copy result',
   copied: 'Copied',
   useResult: 'Use as input',
+  converting: 'Converting a large text…',
   autosaved: 'Saved in this browser only',
 };
 export type UI = typeof uiEn;
@@ -83,6 +84,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: 'Yes. Paste one value per line. Developer formats preserve every line break, so a list of 20 column names returns a list of 20 separately converted identifiers.',
       },
       {
+        q: 'Can it convert a large list without freezing the page?',
+        a: 'Yes. Short input updates immediately. For text longer than 100,000 characters, conversion runs in a browser worker and shows a status message while the result is prepared, so the page remains responsive.',
+      },
+      {
         q: 'Will it preserve names and brand capitalization?',
         a: 'Not reliably. Lowercase, Sentence Case and Title Case normalize letter casing, so a brand such as iPhone may become Iphone. Review proper nouns, trademarks and acronyms before using converted text publicly.',
       },
@@ -135,6 +140,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: '네. 한 줄에 하나씩 붙여넣으면 줄바꿈을 유지한 채 각 줄을 별도 이름으로 변환합니다. 예를 들어 20개 열 이름을 넣으면 결과도 20줄로 반환됩니다.',
       },
       {
+        q: '긴 목록을 변환해도 화면이 멈추지 않나요?',
+        a: '네. 짧은 입력은 즉시 바꾸고, 10만 자를 넘는 텍스트는 브라우저 워커에서 변환합니다. 결과를 준비하는 동안 상태 메시지를 보여 주므로 페이지를 계속 사용할 수 있습니다.',
+      },
+      {
         q: '브랜드명과 약어도 원래 표기로 유지되나요?',
         a: '항상 유지되지는 않습니다. 소문자·문장 첫 글자·제목 표기는 대소문자를 정규화하므로 iPhone이 Iphone으로 바뀔 수 있습니다. 상표, 고유명사, 약어가 포함된 공개용 문장은 결과를 검토하세요.',
       },
@@ -164,6 +173,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       copy: '결과 복사',
       copied: '복사됨',
       useResult: '입력으로 사용',
+      converting: '긴 텍스트를 변환하는 중…',
       autosaved: '이 브라우저에만 저장됨',
     },
   },
