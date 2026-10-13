@@ -5,8 +5,8 @@ export const meta: ToolMeta = {
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-11',
-  updated: '2026-10-11',
-  edges: ['usability', 'features', 'no-ads'],
+  updated: '2026-10-13',
+  edges: ['usability', 'no-ads'],
   competitors: [
     {
       name: 'CDC — Adult BMI Calculator',
@@ -44,15 +44,12 @@ export const meta: ToolMeta = {
       weakness:
         'Its published guide includes a Korean-versus-WHO reference table, but the calculator description centres on a Korean adult result and a Korean 18.5–23 range rather than presenting two named category results and two height-specific healthy-weight ranges together. Betterbit makes that comparison part of the immediate result. (장점: 키 170cm 등 구체적인 기준표 예시를 설명 콘텐츠에 제공한다.)',
     },
+    {
+      name: '생활계산기 — BMI 계산기',
+      url: 'https://calculator.it.kr/bmi/',
+      weakness:
+        'It combines an optional waist circumference, sex, and age with one Korean adult result, but does not put a named WHO category and WHO healthy-weight range beside the Korean result. Betterbit keeps the adult comparison focused and updates both standards from height and weight alone. (Strength: it can use age and sex to direct users aged 2–19 to child BMI percentiles, and offers an optional waist-circumference assessment.)',
+    },
   ],
-  related: [
-    'percentage-calculator',
-    'age-calculator',
-    'loan-calculator',
-    'length-converter',
-    'weight-converter',
-    'temperature-converter',
-    'random-number',
-    'calorie-calculator',
-  ],
+  related: ['calorie-calculator', 'weight-converter', 'length-converter', 'age-calculator'],
 };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculateBmi,
+  calculateRawBmi,
   categorizeBmi,
   healthyWeightRange,
   imperialToMetric,
@@ -14,12 +15,14 @@ describe('calculateBmi', () => {
     expect(calculateBmi(170, 70)).toBe(24.2);
   });
 
-  it('rejects empty, zero, negative, non-finite, and extraordinarily large inputs', () => {
+  it('rejects empty, out-of-range, non-finite, and extraordinarily large inputs', () => {
     expect(calculateBmi('', 65)).toBeNull();
     expect(calculateBmi(170, '')).toBeNull();
     expect(calculateBmi(0, 65)).toBeNull();
     expect(calculateBmi(170, 0)).toBeNull();
     expect(calculateBmi(-170, 65)).toBeNull();
+    expect(calculateBmi(91.43, 65)).toBeNull();
+    expect(calculateBmi(170, 453.593)).toBeNull();
     expect(calculateBmi(Infinity, 65)).toBeNull();
     expect(calculateBmi(1e-300, 1e308)).toBeNull();
   });
@@ -27,6 +30,11 @@ describe('calculateBmi', () => {
   it('accepts pasted full-width Unicode digits after normalization', () => {
     expect(parseMeasurement('１７０')).toBe(170);
     expect(calculateBmi('１７０', '６５')).toBe(22.5);
+  });
+
+  it('keeps category comparisons precise when the displayed BMI rounds to a boundary', () => {
+    expect(calculateBmi(100, 24.96)).toBe(25);
+    expect(categorizeBmi(calculateRawBmi(100, 24.96)!, 'who')).toBe('healthy');
   });
 });
 
@@ -78,5 +86,9 @@ describe('unit conversions', () => {
 
   it('converts metric values to display-friendly imperial values', () => {
     expect(metricToImperial(170, 65)).toEqual({ feet: 5, inches: 6.9, pounds: 143.3 });
+  });
+
+  it('carries rounded inches into feet instead of displaying 12 inches', () => {
+    expect(metricToImperial(182.87, 65)).toEqual({ feet: 6, inches: 0, pounds: 143.3 });
   });
 });

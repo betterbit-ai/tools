@@ -6,6 +6,7 @@ import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   calculateBmi,
+  calculateRawBmi,
   categorizeBmi,
   healthyWeightRange,
   imperialToMetric,
@@ -60,6 +61,7 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
   const height = isFiniteNumber(state.heightCm) ? state.heightCm : 0;
   const weight = isFiniteNumber(state.weightKg) ? state.weightKg : 0;
   const bmi = useMemo(() => calculateBmi(state.heightCm, state.weightKg), [state.heightCm, state.weightKg]);
+  const rawBmi = useMemo(() => calculateRawBmi(state.heightCm, state.weightKg), [state.heightCm, state.weightKg]);
   const whoRange = useMemo(() => healthyWeightRange(state.heightCm, 'who'), [state.heightCm]);
   const koreanRange = useMemo(() => healthyWeightRange(state.heightCm, 'korean'), [state.heightCm]);
   const imperial = useMemo(() => metricToImperial(height, weight), [height, weight]);
@@ -83,9 +85,9 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
     update(metric);
   };
 
-  const valid = bmi !== null && whoRange !== null && koreanRange !== null;
-  const whoCategory = valid ? categorizeBmi(bmi, 'who') : null;
-  const koreanCategory = valid ? categorizeBmi(bmi, 'korean') : null;
+  const valid = bmi !== null && rawBmi !== null && whoRange !== null && koreanRange !== null;
+  const whoCategory = valid ? categorizeBmi(rawBmi, 'who') : null;
+  const koreanCategory = valid ? categorizeBmi(rawBmi, 'korean') : null;
   const formula = valid
     ? ui.formula
         .replace('{weight}', n(weight))
@@ -113,10 +115,22 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
           {state.unit === 'metric' ? (
             <>
               <Field label={ui.heightCmLabel} hint={ui.heightCmHint}>
-                <NumberInput value={state.heightCm} min="0" step="0.1" onValue={(heightCm) => update({ heightCm })} />
+                <NumberInput
+                  value={state.heightCm}
+                  min="91.44"
+                  max="274.32"
+                  step="0.1"
+                  onValue={(heightCm) => update({ heightCm })}
+                />
               </Field>
               <Field label={ui.weightKgLabel} hint={ui.weightKgHint}>
-                <NumberInput value={state.weightKg} min="0" step="0.1" onValue={(weightKg) => update({ weightKg })} />
+                <NumberInput
+                  value={state.weightKg}
+                  min="24.947"
+                  max="453.592"
+                  step="0.1"
+                  onValue={(weightKg) => update({ weightKg })}
+                />
               </Field>
             </>
           ) : (
@@ -125,7 +139,8 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
                 <Field label={ui.heightFeetLabel}>
                   <NumberInput
                     value={imperial.feet}
-                    min="0"
+                    min="3"
+                    max="9"
                     step="1"
                     onValue={(feet) =>
                       updateImperial(isFiniteNumber(feet) ? feet : 0, imperial.inches, imperial.pounds)
@@ -136,6 +151,7 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
                   <NumberInput
                     value={imperial.inches}
                     min="0"
+                    max="11"
                     step="0.1"
                     onValue={(inches) =>
                       updateImperial(imperial.feet, isFiniteNumber(inches) ? inches : 0, imperial.pounds)
@@ -146,7 +162,8 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
               <Field label={ui.weightPoundsLabel}>
                 <NumberInput
                   value={imperial.pounds}
-                  min="0"
+                  min="55"
+                  max="1000"
                   step="0.1"
                   onValue={(pounds) =>
                     updateImperial(imperial.feet, imperial.inches, isFiniteNumber(pounds) ? pounds : 0)
@@ -160,7 +177,9 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
 
         <div class="flex flex-col gap-3">
           {!valid || !whoCategory || !koreanCategory ? (
-            <Notice tone="danger">{ui.invalidMeasurements}</Notice>
+            <Notice tone="danger">
+              {state.unit === 'metric' ? ui.invalidMetricMeasurements : ui.invalidImperialMeasurements}
+            </Notice>
           ) : (
             <>
               <div class="grid grid-cols-2 gap-2" aria-live="polite">
