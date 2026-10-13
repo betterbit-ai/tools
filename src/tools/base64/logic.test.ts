@@ -65,6 +65,10 @@ describe('bytesToBase64 / base64ToBytes round trip', () => {
     expect(base64ToText(wrapped)).toEqual({ ok: true, text: 'foobar' });
   });
 
+  it('decodes a complete Base64 data URI', () => {
+    expect(base64ToText('data:text/plain;charset=utf-8;base64,Zm9v')).toEqual({ ok: true, text: 'foo' });
+  });
+
   it('round-trips Korean, CJK and emoji through UTF-8', () => {
     for (const text of ['안녕하세요', '日本語テスト', '😀🎉👍🏽', 'mixed 한글 and emoji 🚀']) {
       const encoded = textToBase64(text, { variant: 'standard', padding: true });
@@ -86,8 +90,27 @@ describe('bytesToBase64 / base64ToBytes round trip', () => {
     expect(base64ToBytes('Zg===')).toEqual({ ok: false, error: { code: 'invalid-padding', index: 2 } });
   });
 
+  it('rejects padding that does not complete a four-character quantum', () => {
+    expect(base64ToBytes('Zg=')).toEqual({ ok: false, error: { code: 'invalid-padding', index: 2 } });
+    expect(base64ToBytes('Zm8==')).toEqual({ ok: false, error: { code: 'invalid-padding', index: 3 } });
+    expect(base64ToBytes('Zm9v=')).toEqual({ ok: false, error: { code: 'invalid-padding', index: 4 } });
+  });
+
   it('rejects non-padding characters after the padding starts', () => {
     expect(base64ToBytes('Zg=g')).toEqual({ ok: false, error: { code: 'invalid-padding', index: 2 } });
+  });
+
+  it('rejects non-zero unused bits in a final partial quantum', () => {
+    // These used to decode to "f" and "fo", despite not being canonical Base64.
+    expect(base64ToBytes('Zh==')).toEqual({ ok: false, error: { code: 'invalid-trailing-bits', index: 1 } });
+    expect(base64ToBytes('Zm9=')).toEqual({ ok: false, error: { code: 'invalid-trailing-bits', index: 2 } });
+  });
+
+  it('reports an invalid character at its original position after whitespace', () => {
+    expect(base64ToBytes('Zm9v\n !')).toEqual({
+      ok: false,
+      error: { code: 'invalid-character', index: 6, char: '!' },
+    });
   });
 
   it('reports invalid-utf8 for bytes that are not valid UTF-8 text', () => {

@@ -13,7 +13,8 @@ const uiEn = {
   inputLabelDecode: 'Base64 to decode',
   openFileEncode: 'Open a file to encode',
   openFileDecode: 'Open a .txt file to decode',
-  openFileHint: 'Drop a file, click to browse, or paste with Ctrl/Cmd+V',
+  openFileHintEncode: 'Drop a file up to 8 MB, click to browse, or paste with Ctrl/Cmd+V',
+  openFileHintDecode: 'Drop a Base64 text file up to 12 MB, click to browse, or paste with Ctrl/Cmd+V',
   clear: 'Clear',
   placeholderEncode: 'Type or paste text to encode…',
   placeholderDecode: 'Paste Base64 to decode…',
@@ -28,8 +29,14 @@ const uiEn = {
     "This Base64 is the wrong length — one leftover character can't be decoded (6 bits isn't enough for a byte).",
   errorInvalidPadding:
     'Invalid padding at position {index} — "=" may only appear at the end, at most twice, with nothing after it but more "=".',
+  errorInvalidTrailingBits:
+    'Invalid trailing bits at position {index} — the unused bits in the final Base64 character must be zero.',
   errorInvalidUtf8: "These bytes aren't valid UTF-8 text.",
+  errorInputTooLarge:
+    'To keep this tab responsive, encode text or files up to 8 MB and decode Base64 inputs up to 12 MB.',
+  errorFileRead: "This file couldn't be read. Check that it is still available, then try again.",
   notUtf8: "Decoded successfully, but the result isn't valid UTF-8 text — download it as a file instead.",
+  processing: 'Converting…',
   emptyOutput: 'The result will appear here.',
   statInputSize: 'Input size',
   statOutputSize: 'Output size',
@@ -41,17 +48,18 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Base64 Encode & Decode — URL-Safe, Files Supported',
     description:
-      'Encode or decode Base64 text and files in your browser. URL-safe (-_) is auto-detected on decode, with the exact error position if input is invalid. No uploads, no ads.',
+      'Encode or decode Base64 text and files in your browser. URL-safe (-_) is auto-detected, and invalid input shows its exact position. No uploads or ads.',
     h1: 'Base64 Encode & Decode',
     tagline: 'Convert text and files to Base64 and back — URL-safe, offline-capable, nothing leaves your browser.',
     name: 'Base64 Encode/Decode',
     keywords: ['base64 decode', 'base64 encode', 'base64 to text', 'base64 to file', 'url safe base64', 'base64url'],
     howTo: [
       'Choose Encode to turn text or a file into Base64, or Decode to turn Base64 back into text or a file.',
-      "Paste text, or drop/click to open a file — up to 200,000 characters of text are saved in this browser so you don't lose your place.",
+      "Paste text, a complete data: URI, or drop/click to open a file — up to 200,000 characters of text are saved in this browser so you don't lose your place.",
       'For encoding, pick Standard (+/) or URL-safe (-_) output, and toggle padding (=) on or off.',
       'Decoding accepts standard and URL-safe Base64 automatically, even mixed together or wrapped across multiple lines.',
       'Copy the result, or download it as a .txt (encode) or decoded file (decode).',
+      'For a responsive tab, encode text or files up to 8 MB and decode Base64 inputs up to 12 MB.',
     ],
     sections: [
       {
@@ -60,11 +68,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: "Why decoding here won't silently fail",
-        body: "Base64 input is invalid in exactly a few ways: a character outside the 64-symbol alphabet (plus - and _ for URL-safe), a '=' padding character followed by anything other than more '=' signs, more than two padding characters, or a length that leaves a single leftover character — 6 bits, which can never form a full byte.\n\nMany online decoders either show a generic \"invalid input\" message or silently return garbled bytes. This tool checks for each of these cases and reports the exact character and position that broke decoding, and tells you plainly if the decoded bytes aren't valid UTF-8 text, so you know to download them as a file instead of reading them as text.",
+        body: "Base64 input is invalid in exactly a few ways: a character outside the 64-symbol alphabet (plus - and _ for URL-safe), malformed '=' padding, a length that leaves a single leftover character — 6 bits, which can never form a full byte — or non-zero unused bits in the final character. The last rule prevents multiple different strings from silently decoding to the same bytes.\n\nMany online decoders either show a generic \"invalid input\" message or silently return garbled bytes. This tool checks each case, reports the exact character and position that broke decoding, and tells you plainly if the decoded bytes aren't valid UTF-8 text, so you know to download them as a file instead of reading them as text.",
       },
       {
         heading: 'Files, not just text',
-        body: 'Dropping a file while encoding reads its raw bytes — any file type, not only images — and Base64-encodes them exactly like a data: URI or an email attachment would. Decoding always produces a byte-for-byte result you can download, whether or not it happens to be valid UTF-8 text; when it is, you can also read and copy it as text.\n\nNothing is uploaded anywhere: encoding and decoding both run in this tab using the File and TextDecoder APIs built into your browser.',
+        body: 'Dropping a file while encoding reads its raw bytes — any file type, not only images — and Base64-encodes them exactly like a data: URI or an email attachment would. You can also paste a complete data: URI (`data:…;base64,…`) to decode just its Base64 payload. Decoding always produces a byte-for-byte result you can download, whether or not it happens to be valid UTF-8 text; when it is, you can also read and copy it as text.\n\nTo prevent a giant result from freezing the tab, encoding is limited to 8 MB of source text or file data and decoding to 12 MB of Base64 input. Nothing is uploaded: conversion runs in a background worker in this tab using the File and TextDecoder APIs built into your browser.',
       },
     ],
     faq: [
@@ -77,8 +85,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: "No — this tool's decoder accepts both alphabets in the same input, including a mix of the two, so you never have to pick a mode before pasting a Base64 string.",
       },
       {
+        q: 'Can I paste a full data: URI?',
+        a: 'Yes. Paste a value such as `data:text/plain;base64,SGVsbG8=` and the tool removes the header before decoding its Base64 payload. It also accepts plain Base64.',
+      },
+      {
         q: 'Can I Base64-encode a file, not just text?',
-        a: 'Yes. Drop any file onto the encode panel and it is read as raw bytes and encoded directly, the same way a browser encodes an image into a data: URI. The file never leaves your browser.',
+        a: 'Yes. Drop any file up to 8 MB onto the encode panel and it is read as raw bytes and encoded directly, the same way a browser encodes an image into a data: URI. The file never leaves your browser.',
       },
       {
         q: 'Why does Base64 make my data about 33% bigger?',
@@ -106,10 +118,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     keywords: ['base64 디코딩', 'base64 인코딩', 'base64 변환', 'url safe base64', 'base64 파일 변환', 'base64 디코더'],
     howTo: [
       '인코딩은 텍스트나 파일을 Base64로, 디코딩은 Base64를 다시 텍스트나 파일로 바꿉니다. 위에서 모드를 고르세요.',
-      '텍스트를 붙여넣거나 파일을 끌어다 놓으세요. 최대 20만 자까지는 이 브라우저에만 저장되어 새로고침해도 남아 있습니다.',
+      '텍스트, 완전한 data: URI 또는 파일을 붙여넣거나 끌어다 놓으세요. 최대 20만 자까지는 이 브라우저에만 저장되어 새로고침해도 남아 있습니다.',
       '인코딩할 때는 표준(+/) 또는 URL-safe(-_) 출력을 고르고, 패딩(=) 포함 여부를 켜고 끌 수 있습니다.',
       '디코딩은 표준과 URL-safe Base64를 자동으로 구분해 처리하므로, 줄바꿈이 섞여 있거나 두 방식이 섞여 있어도 그대로 디코딩됩니다.',
       '결과는 복사하거나 .txt(인코딩) 또는 디코딩된 파일로 저장할 수 있습니다.',
+      '탭이 멈추지 않도록 텍스트·파일 인코딩은 8MB, Base64 디코딩 입력은 12MB까지 사용하세요.',
     ],
     sections: [
       {
@@ -118,11 +131,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '왜 디코딩이 조용히 실패하지 않을까',
-        body: "Base64 입력이 잘못되는 경우는 몇 가지로 정해져 있습니다. 64개 알파벳(및 URL-safe의 -, _)에 없는 문자가 섞였거나, '=' 패딩 뒤에 '=' 아닌 문자가 더 있거나, 패딩이 2개보다 많거나, 한 글자가 남아 6비트로는 1바이트조차 만들 수 없는 길이인 경우입니다.\n\n많은 온라인 디코더는 그냥 '잘못된 입력'이라고만 말하거나, 조용히 깨진 바이트를 돌려줍니다. 이 도구는 각 경우를 구분해 어떤 글자가 몇 번째 위치에서 문제인지 알려주고, 디코딩된 바이트가 UTF-8 텍스트로 읽을 수 없을 때도 명확히 알려줘서 파일로 내려받아야 한다는 걸 바로 알 수 있습니다.",
+        body: "Base64 입력이 잘못되는 경우는 몇 가지로 정해져 있습니다. 64개 알파벳(및 URL-safe의 -, _)에 없는 문자가 섞였거나, '=' 패딩 형식이 맞지 않거나, 한 글자가 남아 6비트로는 1바이트조차 만들 수 없는 길이이거나, 마지막 글자의 사용하지 않는 비트가 0이 아닌 경우입니다. 마지막 규칙은 서로 다른 문자열이 같은 바이트로 조용히 디코딩되는 일을 막습니다.\n\n많은 온라인 디코더는 그냥 '잘못된 입력'이라고만 말하거나, 조용히 깨진 바이트를 돌려줍니다. 이 도구는 각 경우를 구분해 어떤 글자가 몇 번째 위치에서 문제인지 알려주고, 디코딩된 바이트가 UTF-8 텍스트로 읽을 수 없을 때도 명확히 알려줘서 파일로 내려받아야 한다는 걸 바로 알 수 있습니다.",
       },
       {
         heading: '텍스트뿐 아니라 파일도',
-        body: '인코딩 중 파일을 끌어다 놓으면 이미지뿐 아니라 어떤 종류의 파일이든 원본 바이트를 그대로 읽어 Base64로 바꿉니다. data: URI나 이메일 첨부파일이 내부적으로 쓰는 방식과 같습니다.\n\n디코딩은 항상 바이트 그대로의 파일로 내려받을 수 있고, 그 바이트가 UTF-8 텍스트로도 유효하다면 화면에서 바로 읽고 복사할 수도 있습니다. 모든 처리는 이 탭 안에서 브라우저의 File·TextDecoder API로 이루어지며 서버로 전송되지 않습니다.',
+        body: '인코딩 중 파일을 끌어다 놓으면 이미지뿐 아니라 어떤 종류의 파일이든 원본 바이트를 그대로 읽어 Base64로 바꿉니다. data: URI나 이메일 첨부파일이 내부적으로 쓰는 방식과 같습니다. `data:…;base64,…` 형태의 완전한 data: URI를 붙여넣어 헤더를 제외한 Base64 본문만 디코딩할 수도 있습니다.\n\n디코딩은 항상 바이트 그대로의 파일로 내려받을 수 있고, 그 바이트가 UTF-8 텍스트로도 유효하다면 화면에서 바로 읽고 복사할 수도 있습니다. 큰 결과 때문에 탭이 멈추지 않도록 인코딩 원본은 8MB, 디코딩 Base64 입력은 12MB로 제한합니다. 변환은 이 탭의 백그라운드 워커에서 브라우저 File·TextDecoder API로 이루어지며 서버로 전송되지 않습니다.',
       },
     ],
     faq: [
@@ -135,11 +148,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: '아니요. 이 도구의 디코더는 두 알파벳을 동시에 인식하므로, 섞여 있어도 모드를 고르지 않고 그냥 붙여넣으면 됩니다.',
       },
       {
-        q: '텍스트가 아니라 파일도 Base64로 인코딩할 수 있나요?',
-        a: '네. 인코딩 패널에 어떤 파일이든 끌어다 놓으면 원본 바이트를 읽어 그대로 인코딩합니다. 파일은 브라우저 밖으로 나가지 않습니다.',
+        q: '완전한 data: URI도 붙여넣을 수 있나요?',
+        a: '네. `data:text/plain;base64,SGVsbG8=`처럼 data: URI 전체를 붙여넣으면 헤더를 제외하고 Base64 본문을 디코딩합니다. Base64만 붙여넣어도 됩니다.',
       },
       {
-        q: 'Base64로 변환하면 왜 용량이 33%쯡 커지나요?',
+        q: '텍스트가 아니라 파일도 Base64로 인코딩할 수 있나요?',
+        a: '네. 인코딩 패널에 8MB 이하 파일을 끌어다 놓으면 원본 바이트를 읽어 그대로 인코딩합니다. 파일은 브라우저 밖으로 나가지 않습니다.',
+      },
+      {
+        q: 'Base64로 변환하면 왜 용량이 33%쯤 커지나요?',
         a: 'Base64는 입력 3바이트(24비트)를 6비트씩 4개의 문자로 표현하므로, 패딩을 빼더라도 결과가 원본보다 약 4/3, 즉 33% 정도 커집니다.',
       },
       {
@@ -163,7 +180,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       inputLabelDecode: '디코딩할 Base64',
       openFileEncode: '인코딩할 파일 열기',
       openFileDecode: '디코딩할 .txt 파일 열기',
-      openFileHint: '파일을 끌어다 놓거나 클릭해서 선택하고, Ctrl/Cmd+V로 붙여넣을 수 있습니다',
+      openFileHintEncode: '최대 8MB 파일을 끌어다 놓거나 클릭해서 선택하고, Ctrl/Cmd+V로 붙여넣을 수 있습니다',
+      openFileHintDecode:
+        '최대 12MB Base64 텍스트 파일을 끌어다 놓거나 클릭해서 선택하고, Ctrl/Cmd+V로 붙여넣을 수 있습니다',
       clear: '지우기',
       placeholderEncode: '인코딩할 텍스트를 입력하거나 붙여넣으세요…',
       placeholderDecode: '디코딩할 Base64를 붙여넣으세요…',
@@ -178,8 +197,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
         'Base64 길이가 올바르지 않습니다 — 한 글자만 남으면(6비트) 1바이트도 만들 수 없어 디코딩할 수 없습니다.',
       errorInvalidPadding:
         '{index}번째 위치의 패딩이 올바르지 않습니다 — "="는 끝에서 최대 2개까지만, 그 뒤에는 "=" 외의 문자가 올 수 없습니다.',
+      errorInvalidTrailingBits:
+        '{index}번째 위치의 마지막 Base64 문자가 올바르지 않습니다 — 사용하지 않는 비트는 모두 0이어야 합니다.',
       errorInvalidUtf8: '이 바이트는 유효한 UTF-8 텍스트가 아닙니다.',
+      errorInputTooLarge: '탭이 멈추지 않도록 텍스트·파일 인코딩은 8MB, Base64 디코딩 입력은 12MB까지 지원합니다.',
+      errorFileRead: '파일을 읽을 수 없습니다. 파일이 아직 사용 가능한지 확인한 뒤 다시 시도하세요.',
       notUtf8: '디코딩은 됐지만 결과가 유효한 UTF-8 텍스트가 아닙니다 — 파일로 다운로드하세요.',
+      processing: '변환 중…',
       emptyOutput: '결과가 여기에 표시됩니다.',
       statInputSize: '입력 크기',
       statOutputSize: '출력 크기',
