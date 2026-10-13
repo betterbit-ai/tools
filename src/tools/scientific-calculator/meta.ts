@@ -44,5 +44,6 @@ export const meta: ToolMeta = {
     'vat-calculator',
     'gpa-calculator',
     'fraction-calculator',
+    'pyeong-calculator',
   ],
 };

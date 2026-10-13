@@ -140,6 +140,7 @@ export const meta: ToolMeta = {
     'percentage-calculator',
     'weight-converter',
     'temperature-converter',
+    'pyeong-calculator',
   ],
   variants,
 };
