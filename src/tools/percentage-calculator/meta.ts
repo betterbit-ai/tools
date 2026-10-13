@@ -53,5 +53,6 @@ export const meta: ToolMeta = {
     'random-number',
     'tip-calculator',
     'discount-calculator',
+    'gpa-calculator',
   ],
 };
