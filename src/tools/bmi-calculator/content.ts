@@ -14,7 +14,10 @@ const uiEn = {
   heightInchesLabel: 'Height (in)',
   weightPoundsLabel: 'Weight (lb)',
   adultNotice: 'For adults. BMI categories for children and teens use age- and sex-specific growth charts.',
-  invalidMeasurements: 'Enter a height and weight greater than 0 to calculate BMI.',
+  invalidMetricMeasurements:
+    'Enter an adult height from 91.4 to 274.3 cm and weight from 24.9 to 453.6 kg to calculate BMI.',
+  invalidImperialMeasurements:
+    'Enter an adult height from 3 ft 0 in to 9 ft 0 in and weight from 55 to 1,000 lb to calculate BMI.',
   bmiLabel: 'BMI (kg/m²)',
   whoLabel: 'WHO adult category',
   koreanLabel: 'Korean adult category',
@@ -150,7 +153,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       heightInchesLabel: '키(in)',
       weightPoundsLabel: '몸무게(lb)',
       adultNotice: '성인용 계산기입니다. 소아·청소년은 나이·성별 성장도표를 사용해야 합니다.',
-      invalidMeasurements: '0보다 큰 키와 몸무게를 입력하면 BMI를 계산합니다.',
+      invalidMetricMeasurements: '키 91.4~274.3cm, 몸무게 24.9~453.6kg 범위에서 BMI를 계산합니다.',
+      invalidImperialMeasurements: '키 3~9ft, 몸무게 55~1,000lb 범위에서 BMI를 계산합니다.',
       bmiLabel: 'BMI(kg/m²)',
       whoLabel: 'WHO 성인 판정',
       koreanLabel: '대한비만학회 성인 판정',
