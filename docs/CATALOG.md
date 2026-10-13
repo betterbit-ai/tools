@@ -112,7 +112,7 @@
 | tip-calculator          | 팁 계산기        | tip calculator                             | 인원 분할, 국가별 팁 관행               | P1  | live |
 | discount-calculator     | 할인율 계산기    | discount calculator / 할인율 계산          | 중복 할인, 원가 역산                    | P1  | live |
 | gpa-calculator          | 학점 계산기      | gpa calculator / 학점 계산기               | 4.5/4.3/4.0 환산                        | P1  | live |
-| fraction-calculator     | 분수 계산기      | fraction calculator                        | 풀이 과정 표시                          | P1  | todo |
+| fraction-calculator     | 분수 계산기      | fraction calculator                        | 풀이 과정 표시                          | P1  | live |
 | random-number           | 랜덤 숫자        | random number generator                    | 중복 없음, 범위, 대량                   | P0  | live |
 | calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시               | P1  | todo |
 | pregnancy-calculator    | 출산 예정일      | due date calculator / 출산예정일           | 주차별 정보                             | P1  | todo |

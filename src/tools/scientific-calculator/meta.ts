@@ -42,5 +42,6 @@ export const meta: ToolMeta = {
     'temperature-converter',
     'tip-calculator',
     'gpa-calculator',
+    'fraction-calculator',
   ],
 };
