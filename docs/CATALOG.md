@@ -117,7 +117,7 @@
 | calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시               | P1  | live |
 | pregnancy-calculator    | 출산 예정일      | due date calculator / 출산예정일           | 주차별 정보                             | P1  | live |
 | vat-calculator          | 부가세 계산기    | vat calculator / 부가세 계산기             | 국가별 세율, 역산                       | P1  | live |
-| severance-pay-kr        | 퇴직금 계산기    | 퇴직금 계산기                              | 평균임금 자동 계산                      | P1  | todo |
+| severance-pay-kr        | 퇴직금 계산기    | 퇴직금 계산기                              | 평균임금 자동 계산                      | P1  | live |
 | unemployment-benefit-kr | 실업급여 계산기  | 실업급여 계산기                            | 2026년 상하한액                         | P1  | todo |
 | pyeong-calculator       | 평수 계산기      | 평수 계산 / 평 제곱미터                    | 공급·전용 면적 설명                     | P1  | todo |
 | ratio-calculator        | 비율 계산기      | ratio calculator / 비례식 계산             | 화면비, 레시피 비율                     | P2  | todo |

@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its summary combines basic time tracking with night-period, 40-hour comparison, and estimated-pay figures; Betterbit keeps gross time, deducted breaks, net time, and decimal hours together for a concise timesheet check. (장점: 야간 시간대와 시급 기준 예상 급여를 함께 보여준다.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'date-calculator', 'time-zone-converter'],
+  related: ['timer', 'stopwatch', 'date-calculator', 'time-zone-converter', 'severance-pay-kr'],
 };
