@@ -40,5 +40,6 @@ export const meta: ToolMeta = {
     'length-converter',
     'weight-converter',
     'temperature-converter',
+    'tip-calculator',
   ],
 };

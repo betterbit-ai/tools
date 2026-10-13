@@ -51,5 +51,6 @@ export const meta: ToolMeta = {
     'length-converter',
     'weight-converter',
     'random-number',
+    'tip-calculator',
   ],
 };
