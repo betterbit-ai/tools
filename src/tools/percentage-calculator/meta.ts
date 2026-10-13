@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'weight-converter',
     'random-number',
     'tip-calculator',
+    'discount-calculator',
   ],
 };
