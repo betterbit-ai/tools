@@ -54,5 +54,6 @@ export const meta: ToolMeta = {
     'tip-calculator',
     'discount-calculator',
     'gpa-calculator',
+    'fraction-calculator',
   ],
 };
