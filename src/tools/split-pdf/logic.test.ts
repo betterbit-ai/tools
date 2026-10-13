@@ -177,6 +177,12 @@ describe('splitPdf', () => {
     expect(results.map((r) => r.name)).toEqual(['doc_p1.pdf', 'doc_p2.pdf']);
   });
 
+  it('gives repeated page groups distinct names so ZIP downloads never overwrite a part', async () => {
+    const bytes = await makePdf(2);
+    const results = await splitPdf(bytes, 'doc.pdf', [[1], [1], [2], [1]]);
+    expect(results.map((r) => r.name)).toEqual(['doc_p1.pdf', 'doc_p1-2.pdf', 'doc_p2.pdf', 'doc_p1-3.pdf']);
+  });
+
   it('throws InvalidPdfError naming the file for unreadable bytes', async () => {
     await expect(splitPdf(new Uint8Array([9, 9, 9]), '손상된파일.pdf', [[1]])).rejects.toThrow(/손상된파일\.pdf/);
   });
