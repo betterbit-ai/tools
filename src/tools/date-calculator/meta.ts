@@ -56,5 +56,6 @@ export const meta: ToolMeta = {
     'unix-timestamp',
     'hours-calculator',
     'pregnancy-calculator',
+    'severance-pay-kr',
   ],
 };
