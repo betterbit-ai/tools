@@ -114,7 +114,7 @@
 | gpa-calculator          | 학점 계산기      | gpa calculator / 학점 계산기               | 4.5/4.3/4.0 환산                        | P1  | live |
 | fraction-calculator     | 분수 계산기      | fraction calculator                        | 풀이 과정 표시                          | P1  | live |
 | random-number           | 랜덤 숫자        | random number generator                    | 중복 없음, 범위, 대량                   | P0  | live |
-| calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시               | P1  | todo |
+| calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시               | P1  | live |
 | pregnancy-calculator    | 출산 예정일      | due date calculator / 출산예정일           | 주차별 정보                             | P1  | todo |
 | vat-calculator          | 부가세 계산기    | vat calculator / 부가세 계산기             | 국가별 세율, 역산                       | P1  | todo |
 | severance-pay-kr        | 퇴직금 계산기    | 퇴직금 계산기                              | 평균임금 자동 계산                      | P1  | todo |

@@ -1,0 +1,207 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  unitsLabel: 'Units',
+  metric: 'Metric',
+  imperial: 'US customary',
+  autosaved: 'Saved in this browser',
+  sexLabel: 'Sex used by the equation',
+  sexHint: 'Mifflin–St Jeor has separate male and female constants.',
+  male: 'Male',
+  female: 'Female',
+  ageLabel: 'Age (years)',
+  ageHint: 'For adults aged 18–120.',
+  heightCmLabel: 'Height (cm)',
+  heightCmHint: 'For example, 175',
+  weightKgLabel: 'Weight (kg)',
+  weightKgHint: 'For example, 70',
+  heightFeetLabel: 'Height (ft)',
+  heightInchesLabel: 'Height (in)',
+  weightPoundsLabel: 'Weight (lb)',
+  activityLabel: 'Typical activity',
+  activityHint: 'Choose your usual week, not an unusually busy day.',
+  activitySedentary: 'Sedentary — little exercise (×1.2)',
+  activityLight: 'Light — 1–3 days/week (×1.375)',
+  activityModerate: 'Moderate — 3–5 days/week (×1.55)',
+  activityVeryActive: 'Very active — 6–7 days/week (×1.725)',
+  activityExtraActive: 'Extra active — physical job + training (×1.9)',
+  goalLabel: 'Planning goal',
+  goalHint: 'A starting estimate, not a prescription.',
+  goalLose: 'Lose weight (85% of maintenance)',
+  goalMaintain: 'Maintain weight (100%)',
+  goalGain: 'Gain weight (110% of maintenance)',
+  invalidMeasurements: 'Enter an adult age, height, and weight in the supported range to calculate.',
+  targetLabel: '{goal} target',
+  maintenanceLabel: 'Maintenance (TDEE)',
+  bmrLabel: 'Basal metabolic rate (BMR)',
+  activityCaloriesLabel: 'Activity + digestion estimate',
+  kcalDay: 'kcal/day',
+  maleConstant: '+ 5',
+  femaleConstant: '− 161',
+  bmrFormula: 'Mifflin–St Jeor: 10 × {weight} + 6.25 × {height} − 5 × {age} {constant} = {bmr} kcal/day',
+  targetFormula: 'TDEE = BMR × {activity}; target = TDEE × {goal} = {target} kcal/day',
+  estimateNotice:
+    'These are starting estimates. Compare them with your average weight trend and adjust with a qualified professional when needed.',
+  adultNotice:
+    'For adults only. Pregnancy, breastfeeding, metabolic disease, competitive training, and eating-disorder history need individual clinical guidance.',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'Calorie Calculator — Mifflin-St Jeor BMR & TDEE',
+    description:
+      'Estimate BMR, maintenance calories, and a daily goal with the Mifflin–St Jeor equation shown using your own measurements. Results update instantly in your browser.',
+    h1: 'Calorie Calculator',
+    tagline: 'See your Mifflin–St Jeor BMR formula, maintenance calories, and a live planning target in one place.',
+    name: 'Calorie Calculator',
+    keywords: [
+      'TDEE calculator',
+      'BMR calculator',
+      'maintenance calories',
+      'daily calorie needs',
+      'Mifflin St Jeor equation',
+    ],
+    howTo: [
+      'Choose Metric or US customary units.',
+      'Select the sex constant used by the Mifflin–St Jeor equation.',
+      'Enter age, height, and weight, then choose your usual activity level.',
+      'Choose a planning goal and read the BMR, maintenance, and target calories.',
+      'Use the two visible formula lines to check how the estimate was made.',
+    ],
+    sections: [
+      {
+        heading: 'Mifflin–St Jeor BMR formula',
+        body: 'This calculator estimates basal metabolic rate (BMR) with the Mifflin–St Jeor equation. For males it is 10 × weight in kg + 6.25 × height in cm − 5 × age in years + 5. For females it is the same expression with −161 instead of +5. The Academy of Nutrition and Dietetics Evidence Analysis Library recommends this equation using actual body weight to estimate resting metabolic rate in overweight and obese adults when indirect calorimetry is unavailable. The displayed formula substitutes your entered values so the number is inspectable rather than a hidden score. BMR is energy used at complete rest; it is not your full daily calorie need.',
+      },
+      {
+        heading: 'From BMR to maintenance calories',
+        body: 'Maintenance calories are estimated here as BMR multiplied by a typical activity factor: 1.2 sedentary, 1.375 light, 1.55 moderate, 1.725 very active, or 1.9 extra active. The result is commonly called total daily energy expenditure (TDEE). Activity selection is usually the largest source of variation, so choose an average week rather than your best workout day. The “activity + digestion” value is simply the difference between estimated TDEE and BMR; it is not a separately measured workout total. Real expenditure changes with body size, training, sleep, illness, and everyday movement.',
+      },
+      {
+        heading: 'Use calorie targets as starting points',
+        body: 'The loss, maintain, and gain options apply 85%, 100%, and 110% to the estimated maintenance value. They are transparent planning presets, not a diagnosis or a guarantee of weight change. Track an average trend for several weeks, because water, glycogen, menstrual cycles, and measurement error can obscure short-term changes. Recalculate after a meaningful change in body weight or usual activity. Pregnancy, breastfeeding, competitive sport, metabolic disease, and a history of disordered eating are situations where a generic equation may not fit; a clinician or registered dietitian can tailor guidance to the person and their health context.',
+      },
+    ],
+    faq: [
+      {
+        q: 'How does this calorie calculator calculate BMR?',
+        a: 'This calculator uses Mifflin–St Jeor: 10 × weight in kilograms + 6.25 × height in centimetres − 5 × age, then adds 5 for males or subtracts 161 for females. The result is an estimated BMR in kcal per day.',
+      },
+      {
+        q: 'What is the difference between BMR and TDEE?',
+        a: 'BMR estimates the energy used at complete rest, while TDEE estimates full daily energy use after multiplying BMR by an activity factor. A sedentary factor is 1.2 and the extra-active factor in this calculator is 1.9.',
+      },
+      {
+        q: 'How many calories should I eat to maintain my weight?',
+        a: 'The maintenance result is an estimated TDEE, calculated as BMR times the selected activity multiplier. It is a starting estimate, so compare it with an average weight trend over several weeks before making a large adjustment.',
+      },
+      {
+        q: 'Why does the calculator ask for sex?',
+        a: 'The Mifflin–St Jeor equation uses a +5 constant for males and a −161 constant for females, a 166 kcal/day difference with the same age, height, and weight. The selection identifies which published equation constant is used.',
+      },
+      {
+        q: 'Is this calorie calculator suitable for children or pregnancy?',
+        a: 'No. This calculator is limited to adults aged 18 through 120 and is not designed for pregnancy, breastfeeding, or growing children. Those situations need age- or condition-specific assessment from a qualified health professional.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '칼로리 계산기 — 미플린-세인트지어 기초대사량',
+    description:
+      '미플린-세인트지어 공식으로 기초대사량(BMR), 유지 칼로리(TDEE), 목표 섭취량을 계산합니다. 내 입력값이 들어간 계산식을 브라우저에서 바로 확인합니다.',
+    h1: '칼로리 계산기',
+    tagline: '기초대사량 공식과 활동량을 반영한 하루 유지 칼로리, 목표 섭취량을 한 번에 확인합니다.',
+    name: '칼로리 계산기',
+    keywords: ['기초대사량 계산기', 'BMR 계산기', '하루 권장 칼로리', '유지 칼로리', '활동대사량', 'TDEE 계산기'],
+    howTo: [
+      '미터법 또는 미국 단위를 선택합니다.',
+      '공식에 사용할 성별 상수를 고릅니다.',
+      '나이, 키, 몸무게와 평소 활동량을 입력합니다.',
+      '감량·유지·증량 목표를 선택하고 결과를 확인합니다.',
+      '결과 아래의 미플린-세인트지어 계산식과 활동계수를 확인합니다.',
+    ],
+    sections: [
+      {
+        heading: '기초대사량(BMR) 계산 공식',
+        body: '이 계산기는 미플린-세인트지어(Mifflin-St Jeor) 공식으로 기초대사량을 추정합니다. 남성 공식은 10 × 몸무게(kg) + 6.25 × 키(cm) − 5 × 나이(세) + 5이고, 여성 공식은 마지막 상수가 +5가 아니라 −161입니다. Academy of Nutrition and Dietetics Evidence Analysis Library는 간접열량측정을 할 수 없는 과체중·비만 성인의 안정시 에너지소비량 추정에 실제 체중을 넣은 이 공식을 권고합니다. 이 페이지는 결과 숫자만 보여주지 않고 입력한 값이 대입된 식을 함께 표시합니다. BMR은 완전히 쉬는 상태의 추정 에너지이며 하루 전체 소비 열량과는 다릅니다.',
+      },
+      {
+        heading: '유지 칼로리와 활동계수',
+        body: '유지 칼로리(TDEE)는 BMR에 평소 활동계수를 곱해 추정합니다. 이 계산기의 활동계수는 거의 운동하지 않음 1.2, 가벼운 활동 1.375, 보통 활동 1.55, 매우 활동적 1.725, 신체 활동이 많은 직업과 훈련을 함께 하는 경우 1.9입니다. 활동량 선택은 결과 차이가 큰 항목이므로 가장 운동한 하루가 아니라 평소 한 주를 기준으로 고르는 편이 낫습니다. 결과의 ‘활동·소화 추정량’은 TDEE에서 BMR을 뺀 값이며, 별도로 측정한 운동 소모 칼로리는 아닙니다. 수면, 질병, 일상 움직임, 체중 변화에 따라 실제 소비량은 달라질 수 있습니다.',
+      },
+      {
+        heading: '목표 섭취량은 출발점입니다',
+        body: '감량·유지·증량 선택지는 추정 유지 칼로리에 각각 85%, 100%, 110%를 적용합니다. 개인에게 맞춘 처방이나 체중 변화 보장은 아니므로, 며칠의 체중보다 수 주간의 평균 추세를 보고 조정하는 것이 좋습니다. 수분, 글리코겐, 월경 주기처럼 짧은 기간의 체중을 바꾸는 요인도 있습니다. 몸무게나 평소 활동량이 크게 달라지면 다시 계산합니다. 임신·수유 중이거나 성장기, 대사질환이 있거나 선수 훈련을 하는 경우, 또는 섭식장애 병력이 있는 경우에는 일반 공식을 그대로 적용하지 말고 의료진이나 영양 전문가의 개별 안내를 받는 편이 안전합니다.',
+      },
+    ],
+    faq: [
+      {
+        q: '기초대사량은 어떻게 계산하나요?',
+        a: '이 계산기는 미플린-세인트지어 공식을 사용합니다. 몸무게(kg) × 10 + 키(cm) × 6.25 − 나이 × 5에 남성은 5를 더하고 여성은 161을 빼며, 결과는 하루 kcal 단위의 BMR 추정치입니다.',
+      },
+      {
+        q: '기초대사량과 활동대사량(TDEE)은 무엇이 다른가요?',
+        a: '기초대사량(BMR)은 완전히 쉬는 상태에서 쓰는 추정 열량이고, TDEE는 BMR에 활동계수를 곱한 하루 전체 소비 열량 추정치입니다. 이 계산기는 활동 수준에 따라 1.2~1.9의 계수를 사용합니다.',
+      },
+      {
+        q: '유지 칼로리는 어떻게 확인하나요?',
+        a: '결과의 ‘유지 칼로리(TDEE)’는 선택한 활동량을 반영한 하루 소비 열량의 출발점입니다. 수 주간의 평균 체중 변화와 비교해 필요하면 조정해야 하며, 하루 단위 결과만으로 확정하면 안 됩니다.',
+      },
+      {
+        q: '성별을 왜 선택하나요?',
+        a: '미플린-세인트지어 공식은 같은 나이·키·몸무게라도 남성 상수는 +5, 여성 상수는 −161을 사용합니다. 따라서 이 입력은 어느 공개 공식을 적용할지 정하는 데 필요하며, 두 상수의 차이는 하루 166kcal입니다.',
+      },
+      {
+        q: '어린이, 임신·수유 중에도 사용할 수 있나요?',
+        a: '아닙니다. 이 계산기는 만 18~120세 성인용이며 성장기, 임신, 수유 상태에는 맞지 않습니다. 해당 상황에서는 일반 BMR 공식 대신 개인의 건강 상태를 고려하는 의료진 또는 영양 전문가의 평가가 필요합니다.',
+      },
+    ],
+    ui: {
+      unitsLabel: '단위',
+      metric: '미터법',
+      imperial: '미국 단위',
+      autosaved: '입력값은 이 브라우저에 저장됩니다',
+      sexLabel: '공식에 사용할 성별',
+      sexHint: '미플린-세인트지어 공식은 남성·여성 상수가 다릅니다.',
+      male: '남성',
+      female: '여성',
+      ageLabel: '나이(세)',
+      ageHint: '만 18~120세 성인용입니다.',
+      heightCmLabel: '키(cm)',
+      heightCmHint: '예: 175',
+      weightKgLabel: '몸무게(kg)',
+      weightKgHint: '예: 70',
+      heightFeetLabel: '키(ft)',
+      heightInchesLabel: '키(in)',
+      weightPoundsLabel: '몸무게(lb)',
+      activityLabel: '평소 활동량',
+      activityHint: '특별히 바쁜 하루가 아니라 평소 한 주를 기준으로 선택합니다.',
+      activitySedentary: '거의 운동하지 않음 (×1.2)',
+      activityLight: '가벼운 활동 — 주 1~3일 (×1.375)',
+      activityModerate: '보통 활동 — 주 3~5일 (×1.55)',
+      activityVeryActive: '매우 활동적 — 주 6~7일 (×1.725)',
+      activityExtraActive: '신체 활동 직업 + 훈련 (×1.9)',
+      goalLabel: '계획 목표',
+      goalHint: '개인 처방이 아닌 시작점입니다.',
+      goalLose: '감량 (유지 칼로리의 85%)',
+      goalMaintain: '유지 (100%)',
+      goalGain: '증량 (110%)',
+      invalidMeasurements: '지원 범위 안의 성인 나이, 키, 몸무게를 입력하면 계산합니다.',
+      targetLabel: '{goal} 목표',
+      maintenanceLabel: '유지 칼로리(TDEE)',
+      bmrLabel: '기초대사량(BMR)',
+      activityCaloriesLabel: '활동·소화 추정량',
+      kcalDay: 'kcal/일',
+      maleConstant: '+ 5',
+      femaleConstant: '− 161',
+      bmrFormula: '미플린-세인트지어: 10 × {weight} + 6.25 × {height} − 5 × {age} {constant} = {bmr} kcal/일',
+      targetFormula: 'TDEE = BMR × {activity}; 목표 = TDEE × {goal} = {target} kcal/일',
+      estimateNotice: '결과는 출발점인 추정치입니다. 평균 체중 추세와 비교하고 필요하면 전문가와 함께 조정합니다.',
+      adultNotice:
+        '성인용 계산기입니다. 임신·수유, 대사질환, 선수 훈련, 섭식장애 병력은 개인별 의료 안내가 필요합니다.',
+    },
+  },
+};

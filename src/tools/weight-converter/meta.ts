@@ -139,6 +139,7 @@ export const meta: ToolMeta = {
     'percentage-calculator',
     'scientific-calculator',
     'temperature-converter',
+    'calorie-calculator',
   ],
   variants,
 };

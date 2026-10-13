@@ -53,5 +53,6 @@ export const meta: ToolMeta = {
     'weight-converter',
     'temperature-converter',
     'random-number',
+    'calorie-calculator',
   ],
 };
