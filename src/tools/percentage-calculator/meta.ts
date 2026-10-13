@@ -55,5 +55,6 @@ export const meta: ToolMeta = {
     'discount-calculator',
     'gpa-calculator',
     'fraction-calculator',
+    'calorie-calculator',
   ],
 };

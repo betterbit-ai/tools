@@ -47,5 +47,6 @@ export const meta: ToolMeta = {
     'percentage-calculator',
     'bmi-calculator',
     'scientific-calculator',
+    'calorie-calculator',
   ],
 };
