@@ -98,6 +98,13 @@ describe('mergePdfs', () => {
     expect(doc.getPageCount()).toBe(1);
   });
 
+  it('keeps an all-empty merge empty instead of adding a blank page', async () => {
+    const empty = await makePdf(0);
+    const result = await mergePdfs([{ bytes: empty, fileName: 'empty.pdf' }]);
+    const doc = await PDFDocument.load(result);
+    expect(doc.getPageCount()).toBe(0);
+  });
+
   it('throws InvalidPdfError naming the offending file when one file is not a PDF', async () => {
     const valid = await makePdf(1);
     const garbage = new Uint8Array([9, 9, 9]);

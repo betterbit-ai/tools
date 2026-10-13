@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'pdf',
   icon: 'merge',
   added: '2026-10-08',
-  updated: '2026-10-08',
+  updated: '2026-10-13',
   edges: ['privacy', 'performance', 'features'],
   competitors: [
     {
@@ -24,7 +24,7 @@ export const meta: ToolMeta = {
       name: 'Smallpdf (Merge PDF)',
       url: 'https://smallpdf.com/merge-pdf',
       weakness:
-        'Uploads files to Smallpdf servers over TLS and only auto-deletes them after one hour, so documents sit on a third-party server in the meantime. Independent reviews consistently report its free plan is limited to 2 tasks per day shared across every Smallpdf tool, with no batch processing. (Strength: shows real page thumbnails and lets you delete or rotate individual pages before merging, not just reorder whole files.)',
+        'Its merge page says processing is cloud-based: PDFs are uploaded to Smallpdf servers and automatically deleted only after one hour. (Strength: it accepts PDF, Office, and image files; it also previews, reorders, rotates, and deletes individual pages before merging.)',
     },
     {
       name: 'Jotform PDF Merger (jform.co.kr)',
@@ -33,17 +33,5 @@ export const meta: ToolMeta = {
         '병합할 PDF 개수와 페이지 수는 제한이 없다고 안내하지만, 파일당 크기는 "최대 30MB"로 제한되어 있어 스캔한 문서처럼 용량이 큰 PDF 한 장이 그 자체로 한도를 넘을 수 있다. (Strength: 파일 개수·페이지 수 제한이 없다는 점은 이 도구와 동일하다.)',
     },
   ],
-  related: [
-    'split-pdf',
-    'compress-pdf',
-    'sign-pdf',
-    'image-to-pdf',
-    'image-compressor',
-    'heic-to-jpg',
-    'rotate-pdf',
-    'delete-pdf-pages',
-    'reorder-pdf',
-    'unlock-pdf',
-    'protect-pdf',
-  ],
+  related: ['split-pdf', 'compress-pdf', 'delete-pdf-pages', 'reorder-pdf'],
 };

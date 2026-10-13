@@ -4,7 +4,8 @@ import { downloadBlob } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { EncryptedPdfError, mergePdfs, readPdfPageCount, totalPageCount } from './logic';
+import { EncryptedPdfError, readPdfPageCount, totalPageCount } from './logic';
+import { mergePdfsOffMainThread } from './merge';
 
 interface Item {
   id: number;
@@ -18,10 +19,12 @@ let nextId = 1;
 
 export default function MergePdf({ ui, locale }: ToolProps<UI>) {
   const [items, setItems] = useState<Item[]>([]);
-  const [merged, setMerged] = useState<{ blob: Blob; url: string } | null>(null);
+  const [merged, setMerged] = useState<{ blob: Blob } | null>(null);
   const [mergeFailed, setMergeFailed] = useState(false);
+  const [isMerging, setIsMerging] = useState(false);
   const [dragId, setDragId] = useState<number | null>(null);
   const runId = useRef(0);
+  const readQueue = useRef<Promise<void>>(Promise.resolve());
 
   // Add rows immediately so the list isn't blank while pdf-lib's chunk downloads and
   // each file is parsed — then fill in page count / error per file as it resolves.
@@ -29,61 +32,61 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
     const placeholders: Item[] = files.map((file) => ({ id: nextId++, file }));
     setItems((prev) => [...prev, ...placeholders]);
     for (const placeholder of placeholders) {
-      (async () => {
-        const bytes = new Uint8Array(await placeholder.file.arrayBuffer());
+      // Parse one file at a time. Starting every large PDF at once makes the
+      // browser retain several full copies and can freeze a low-memory device.
+      readQueue.current = readQueue.current.then(async () => {
         try {
+          const bytes = new Uint8Array(await placeholder.file.arrayBuffer());
           const pageCount = await readPdfPageCount(bytes, placeholder.file.name);
           setItems((prev) => prev.map((p) => (p.id === placeholder.id ? { ...p, bytes, pageCount } : p)));
         } catch (err) {
           const error = err instanceof EncryptedPdfError ? 'encrypted' : 'invalid';
-          setItems((prev) => prev.map((p) => (p.id === placeholder.id ? { ...p, bytes, error } : p)));
+          setItems((prev) => prev.map((p) => (p.id === placeholder.id ? { ...p, error } : p)));
         }
-      })();
+      });
     }
   };
 
   const ready = items.filter((i): i is Item & { bytes: Uint8Array; pageCount: number } => i.pageCount !== undefined);
   const readyKey = ready.map((i) => i.id).join(',');
+  const hasPendingItems = items.some((i) => i.pageCount === undefined && !i.error);
 
   useEffect(() => {
     if (ready.length === 0) {
+      setIsMerging(false);
       setMergeFailed(false);
-      setMerged((prev) => {
-        if (prev) URL.revokeObjectURL(prev.url);
-        return null;
-      });
+      setMerged(null);
       return;
     }
-    const id = ++runId.current;
-    (async () => {
-      try {
-        const bytes = await mergePdfs(ready.map((i) => ({ bytes: i.bytes, fileName: i.file.name })));
-        if (runId.current !== id) return;
-        const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
-        setMergeFailed(false);
-        setMerged((prev) => {
-          if (prev) URL.revokeObjectURL(prev.url);
-          return { blob, url: URL.createObjectURL(blob) };
-        });
-      } catch {
-        if (runId.current !== id) return;
-        setMergeFailed(true);
-        setMerged((prev) => {
-          if (prev) URL.revokeObjectURL(prev.url);
-          return null;
-        });
-      }
-    })();
-  }, [readyKey]);
+    if (hasPendingItems) {
+      setIsMerging(true);
+      setMergeFailed(false);
+      return;
+    }
 
-  useEffect(
-    () => () =>
-      setMerged((prev) => {
-        if (prev) URL.revokeObjectURL(prev.url);
-        return prev;
-      }),
-    [],
-  );
+    const id = ++runId.current;
+    let cancelled = false;
+    setIsMerging(true);
+    setMergeFailed(false);
+    const timeout = window.setTimeout(() => {
+      void mergePdfsOffMainThread(ready.map((i) => ({ bytes: i.bytes, fileName: i.file.name })))
+        .then((bytes) => {
+          if (cancelled || runId.current !== id) return;
+          setMerged({ blob: new Blob([bytes as BlobPart], { type: 'application/pdf' }) });
+          setIsMerging(false);
+        })
+        .catch(() => {
+          if (cancelled || runId.current !== id) return;
+          setMerged(null);
+          setMergeFailed(true);
+          setIsMerging(false);
+        });
+    }, 200);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [hasPendingItems, readyKey]);
 
   const remove = (id: number) => setItems((prev) => prev.filter((p) => p.id !== id));
   const clear = () => setItems([]);
@@ -111,7 +114,7 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
     });
   };
 
-  const outputName = items.length === 1 ? `${items[0].file.name.replace(/\.pdf$/i, '')}.pdf` : 'merged.pdf';
+  const outputName = ready.length === 1 ? `${ready[0].file.name.replace(/\.pdf$/i, '')}.pdf` : 'merged.pdf';
 
   // Numbering only counts rows that will actually land in the merged file, so a row with
   // an error in the middle of the list doesn't shift the perceived page order of the rest.
@@ -218,7 +221,7 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
           <Button
             variant="primary"
             size="lg"
-            disabled={!merged}
+            disabled={!merged || isMerging}
             onClick={() => merged && downloadBlob(merged.blob, outputName)}
           >
             {ui.download}
@@ -226,12 +229,16 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
           <Button variant="ghost" onClick={clear}>
             {ui.clear}
           </Button>
-          {merged && (
+          {isMerging ? (
+            <span class="text-sm text-muted" role="status" aria-live="polite" aria-busy="true">
+              {ui.preparing}
+            </span>
+          ) : merged ? (
             <span class="text-sm text-muted tabular" aria-live="polite">
               {ui.pageCount.replace('{n}', String(totalPageCount(ready.map((i) => i.pageCount))))} ·{' '}
               {formatBytes(merged.blob.size, locale)}
             </span>
-          )}
+          ) : null}
         </div>
       )}
 
