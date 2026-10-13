@@ -138,10 +138,12 @@ export function Select<T extends string>(props: {
   onValue: (v: T) => void;
   options: { value: T; label: string }[];
   id?: string;
+  ariaLabel?: string;
 }) {
   return (
     <select
       id={props.id}
+      aria-label={props.ariaLabel}
       class={cx(inputClass, 'pr-8 appearance-none bg-[length:16px] bg-[right_10px_center] bg-no-repeat')}
       style={{
         backgroundImage:
