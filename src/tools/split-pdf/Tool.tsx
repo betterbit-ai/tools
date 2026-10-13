@@ -20,12 +20,11 @@ import {
   parseRangeSpec,
   RangeOutOfBoundsError,
   RangeSyntaxError,
-  readPdfPageCount,
-  splitPdf,
   tokensToPageGroups,
   tokensToRangeGroups,
   type SplitFile,
 } from './logic';
+import { readPdfPageCountOffMainThread, splitPdfOffMainThread, zipSplitFilesOffMainThread } from './split';
 
 type Mode = 'range' | 'every';
 type LoadError = 'invalid' | 'encrypted';
@@ -35,6 +34,7 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<LoadError | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [mode, setMode] = useState<Mode>('range');
   const [rangeInput, setRangeInput] = useState('');
@@ -43,37 +43,68 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
 
   const [parseError, setParseError] = useState<string | null>(null);
   const [splitFailed, setSplitFailed] = useState(false);
+  const [isSplitting, setIsSplitting] = useState(false);
+  const [downloadFailed, setDownloadFailed] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [outputs, setOutputs] = useState<SplitFile[] | null>(null);
   const runId = useRef(0);
+  const loadId = useRef(0);
+  const loadAbort = useRef<AbortController | null>(null);
+
+  useEffect(
+    () => () => {
+      loadAbort.current?.abort();
+    },
+    [],
+  );
 
   const loadFile = (picked: File) => {
+    const id = ++loadId.current;
+    loadAbort.current?.abort();
+    const controller = new AbortController();
+    loadAbort.current = controller;
     setFile(picked);
     setLoadError(null);
+    setIsLoading(true);
     setBytes(null);
     setPageCount(null);
+    setParseError(null);
+    setSplitFailed(false);
+    setDownloadFailed(false);
     setOutputs(null);
-    (async () => {
-      const buf = new Uint8Array(await picked.arrayBuffer());
+    void (async () => {
       try {
-        const count = await readPdfPageCount(buf, picked.name);
+        const buf = new Uint8Array(await picked.arrayBuffer());
+        if (loadId.current !== id || controller.signal.aborted) return;
+        const count = await readPdfPageCountOffMainThread(buf, picked.name, controller.signal);
+        if (loadId.current !== id || controller.signal.aborted) return;
         setBytes(buf);
         setPageCount(count);
         setRangeInput(count > 0 ? `1-${count}` : '');
       } catch (err) {
-        setBytes(buf);
+        if (loadId.current !== id || controller.signal.aborted) return;
         setPageCount(0);
         setLoadError(err instanceof EncryptedPdfError ? 'encrypted' : 'invalid');
+      } finally {
+        if (loadId.current === id) setIsLoading(false);
       }
     })();
   };
 
   const clear = () => {
+    ++loadId.current;
+    loadAbort.current?.abort();
+    loadAbort.current = null;
     setFile(null);
     setBytes(null);
     setPageCount(null);
     setLoadError(null);
     setParseError(null);
     setSplitFailed(false);
+    setIsLoading(false);
+    setIsSplitting(false);
+    setDownloadFailed(false);
+    setIsDownloading(false);
     setOutputs(null);
   };
 
@@ -81,6 +112,10 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
   useEffect(() => {
     if (!bytes || !file || loadError || pageCount === null || pageCount === 0) return;
     const id = ++runId.current;
+    const controller = new AbortController();
+    setOutputs(null);
+    setSplitFailed(false);
+    setIsSplitting(false);
     const timeout = setTimeout(() => {
       (async () => {
         let groups: number[][];
@@ -109,33 +144,45 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
         }
 
         setParseError(null);
+        setIsSplitting(true);
         try {
-          const files = await splitPdf(bytes, file.name, groups);
+          const files = await splitPdfOffMainThread(bytes, file.name, groups, controller.signal);
           if (runId.current !== id) return;
           setSplitFailed(false);
           setOutputs(files);
         } catch {
+          if (controller.signal.aborted) return;
           if (runId.current !== id) return;
           setSplitFailed(true);
           setOutputs(null);
+        } finally {
+          if (!controller.signal.aborted && runId.current === id) setIsSplitting(false);
         }
       })();
     }, 250);
-    return () => clearTimeout(timeout);
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
   }, [bytes, file, loadError, pageCount, mode, rangeInput, perPage, everyN, ui]);
 
   const download = async () => {
-    if (!outputs || outputs.length === 0) return;
-    if (outputs.length === 1) {
-      downloadBlob(new Blob([outputs[0].bytes as BlobPart], { type: 'application/pdf' }), outputs[0].name);
-      return;
+    if (!outputs || outputs.length === 0 || isDownloading) return;
+    setDownloadFailed(false);
+    setIsDownloading(true);
+    try {
+      if (outputs.length === 1) {
+        downloadBlob(new Blob([outputs[0].bytes as BlobPart], { type: 'application/pdf' }), outputs[0].name);
+        return;
+      }
+      const zipped = await zipSplitFilesOffMainThread(outputs);
+      const baseName = file ? file.name.replace(/\.pdf$/i, '') : 'split';
+      downloadBlob(new Blob([zipped as BlobPart], { type: 'application/zip' }), `${baseName}_split.zip`);
+    } catch {
+      setDownloadFailed(true);
+    } finally {
+      setIsDownloading(false);
     }
-    const { zipSync } = await import('fflate');
-    const entries: Record<string, Uint8Array> = {};
-    for (const o of outputs) entries[o.name] = o.bytes;
-    const zipped = zipSync(entries, { level: 0 });
-    const baseName = file ? file.name.replace(/\.pdf$/i, '') : 'split';
-    downloadBlob(new Blob([zipped as BlobPart], { type: 'application/zip' }), `${baseName}_split.zip`);
   };
 
   return (
@@ -157,7 +204,11 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
             ) : (
               <p class="tabular text-muted" aria-live="polite">
                 {formatBytes(file.size, locale)}
-                {pageCount !== null ? ` · ${ui.pageCount.replace('{n}', String(pageCount))}` : ` · ${ui.processing}`}
+                {pageCount !== null
+                  ? ` · ${ui.pageCount.replace('{n}', String(pageCount))}`
+                  : isLoading
+                    ? ` · ${ui.processing}`
+                    : null}
               </p>
             )}
           </div>
@@ -199,7 +250,9 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
           )}
 
           {parseError && <Notice tone="danger">{parseError}</Notice>}
+          {isSplitting && <Notice>{ui.splitting}</Notice>}
           {splitFailed && <Notice tone="danger">{ui.splitFailed}</Notice>}
+          {downloadFailed && <Notice tone="danger">{ui.downloadFailed}</Notice>}
 
           {outputs && outputs.length > 0 && (
             <ul class="divide-y divide-line rounded-lg border border-line" aria-live="polite">
@@ -213,8 +266,13 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
           )}
 
           <div class="flex flex-wrap items-center gap-3">
-            <Button variant="primary" size="lg" disabled={!outputs || outputs.length === 0} onClick={download}>
-              {outputs && outputs.length > 1 ? ui.downloadZip : ui.download}
+            <Button
+              variant="primary"
+              size="lg"
+              disabled={!outputs || outputs.length === 0 || isDownloading}
+              onClick={download}
+            >
+              {isDownloading ? ui.preparingDownload : outputs && outputs.length > 1 ? ui.downloadZip : ui.download}
             </Button>
             {outputs && outputs.length > 0 && (
               <span class="text-sm tabular text-muted" aria-live="polite">

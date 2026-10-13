@@ -110,11 +110,11 @@ export interface SplitFile {
 }
 
 /** Builds the suggested output file name for a 1-based ascending page group. */
-function partName(baseName: string, group: number[]): string {
+function partName(baseName: string, group: number[], duplicateIndex = 1): string {
   const first = group[0];
   const last = group[group.length - 1];
   const label = first === last ? `p${first}` : `p${first}-${last}`;
-  return `${baseName}_${label}.pdf`;
+  return `${baseName}_${label}${duplicateIndex === 1 ? '' : `-${duplicateIndex}`}.pdf`;
 }
 
 /**
@@ -135,6 +135,7 @@ export async function splitPdf(bytes: Uint8Array, fileName: string, groups: numb
 
   const baseName = fileName.replace(/\.pdf$/i, '');
   const results: SplitFile[] = [];
+  const names = new Map<string, number>();
   for (const group of groups) {
     if (group.length === 0) continue;
     const doc = await PDFDocument.create();
@@ -143,7 +144,10 @@ export async function splitPdf(bytes: Uint8Array, fileName: string, groups: numb
       group.map((p) => p - 1),
     );
     for (const page of pages) doc.addPage(page);
-    results.push({ name: partName(baseName, group), bytes: await doc.save() });
+    const firstName = partName(baseName, group);
+    const duplicateIndex = (names.get(firstName) ?? 0) + 1;
+    names.set(firstName, duplicateIndex);
+    results.push({ name: partName(baseName, group, duplicateIndex), bytes: await doc.save() });
   }
   return results;
 }

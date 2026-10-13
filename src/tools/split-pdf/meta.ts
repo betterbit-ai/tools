@@ -5,44 +5,27 @@ export const meta: ToolMeta = {
   category: 'pdf',
   icon: 'split',
   added: '2026-10-08',
-  updated: '2026-10-08',
-  edges: ['privacy', 'performance', 'features'],
+  updated: '2026-10-13',
+  edges: ['privacy', 'performance'],
   competitors: [
     {
       name: 'iLovePDF (Split PDF)',
       url: 'https://www.ilovepdf.com/split_pdf',
       weakness:
-        'Uploads every PDF to iLovePDF\'s servers before it can split them. Its own pricing page caps the free Basic plan at roughly 100MB per split task — unlimited batch splitting is a paid Premium feature. (Strength: a "Smart" range-detection mode that suggests split points, and importing directly from Google Drive/Dropbox.)',
+        'Shows “Uploading file” and “Splitting PDF…” stages after a file is selected, and offers Google Drive/Dropbox imports, so the document must leave the device before it is processed. (Strength: its range tool also has Smart split detection and a maximum-size mode.)',
     },
     {
       name: 'Smallpdf (Split PDF)',
       url: 'https://smallpdf.com/split-pdf',
       weakness:
-        'Processes files on Smallpdf servers over TLS and states they are only auto-deleted after one hour, so the original document sits on a third-party server in the meantime. (Strength: shows real page thumbnails with a scissors icon to click split points visually.)',
-    },
-    {
-      name: 'Jotform PDF Splitter',
-      url: 'https://www.jotform.com/pdf/split/',
-      weakness:
-        "Caps uploads at 30MB per file, so a single scanned or image-heavy PDF can exceed the limit before it is even split. It also states password-protected PDFs aren't supported at all, with no way to work around it in the tool.",
+        'States that uploaded documents are automatically deleted only after one hour, so the original document sits on a third-party server during that window. (Strength: it presents page thumbnails and scissor controls for visual split points, and supports several uploaded formats.)',
     },
     {
       name: 'PDF24 (Split PDF)',
       url: 'https://tools.pdf24.org/en/split-pdf',
       weakness:
-        'Uploads to a server in Germany and auto-deletes copies only after one hour, meaning the file is held remotely in the meantime even though the site is ad-supported rather than paywalled.',
+        'States that it uploads and processes PDFs on servers in Germany, deletes them after one hour, and funds the tool with advertising. (Strength: it can split odd/even pages and lets users choose visual cut points.)',
     },
   ],
-  related: [
-    'merge-pdf',
-    'compress-pdf',
-    'sign-pdf',
-    'image-to-pdf',
-    'pdf-to-jpg',
-    'rotate-pdf',
-    'delete-pdf-pages',
-    'reorder-pdf',
-    'unlock-pdf',
-    'protect-pdf',
-  ],
+  related: ['merge-pdf', 'compress-pdf', 'delete-pdf-pages', 'rotate-pdf'],
 };
