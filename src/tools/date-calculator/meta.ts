@@ -55,5 +55,6 @@ export const meta: ToolMeta = {
     'scientific-calculator',
     'unix-timestamp',
     'hours-calculator',
+    'pregnancy-calculator',
   ],
 };
