@@ -47,5 +47,6 @@ export const meta: ToolMeta = {
     'pyeong-calculator',
     'area-converter',
     'speed-converter',
+    'data-size-converter',
   ],
 };

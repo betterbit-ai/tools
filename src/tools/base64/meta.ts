@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Caps files at about 10 MB and requires its own page to be revisited once online before offline use. (Strength: can wrap an encoded file as a data: URI with its MIME type.)',
     },
   ],
-  related: ['json-formatter', 'case-converter', 'text-diff'],
+  related: ['json-formatter', 'case-converter', 'text-diff', 'data-size-converter'],
 };
