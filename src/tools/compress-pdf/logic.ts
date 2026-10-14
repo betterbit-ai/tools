@@ -100,3 +100,11 @@ export class PdfLimitError extends Error {
     this.name = 'PdfLimitError';
   }
 }
+
+/** Work was intentionally stopped because the user selected another file or cleared this one. */
+export class CompressionCancelledError extends Error {
+  constructor() {
+    super('PDF compression was cancelled.');
+    this.name = 'CompressionCancelledError';
+  }
+}

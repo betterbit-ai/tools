@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   COMPRESSION_PRESETS,
+  CompressionCancelledError,
   compressedFileName,
   fileExceedsLimit,
   isPdfFile,
@@ -99,5 +100,14 @@ describe('browser safety limits', () => {
     expect(totalRasterExceedsLimit(MAX_TOTAL_RASTER_PIXELS)).toBe(false);
     expect(totalRasterExceedsLimit(MAX_TOTAL_RASTER_PIXELS + 1)).toBe(true);
     expect(totalRasterExceedsLimit(0)).toBe(true);
+  });
+});
+
+describe('cancellation', () => {
+  it('uses a distinct error so a user-initiated cancellation is never presented as a failed PDF', () => {
+    const error = new CompressionCancelledError();
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('CompressionCancelledError');
   });
 });
