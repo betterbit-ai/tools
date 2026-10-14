@@ -5,45 +5,27 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'sparkle',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-15',
   edges: ['privacy', 'performance', 'features', 'no-signup'],
   competitors: [
     {
-      name: 'ToolPile Add Watermark',
-      url: 'https://www.toolpile.dev/image-watermark/',
+      name: 'TinyImagePro Add Watermark',
+      url: 'https://tinyimagepro.com/add-watermark',
       weakness:
-        'It runs locally and supports text/logo/tile controls (Strength: privacy is comparable), but its opened flow has one image chooser and an explicit “Apply Watermark” action; it does not offer a multi-image queue or one ZIP download.',
+        'Its opened page advertises local unlimited batch ZIP output, text/logo/QR marks, and 15 templates (Strength: QR marks, EXIF date stamps, templates, and freely dragged placement are beyond this focused tool). Its workflow requires an explicit “Process All & Download ZIP” action, while this tool updates each accepted still image after a short debounce.',
     },
     {
-      name: 'MiniToolForge Add Watermark Image',
-      url: 'https://minitoolforge.com/tools/images/add-watermark-image',
+      name: 'Wokeey Watermark Image',
+      url: 'https://www.wokeey.com/tools/watermark-image/',
       weakness:
-        'Its detailed FAQ says it handles one photo at a time and recommends picking the next file after download. (Strength: it documents full-resolution browser rendering and sensible JPEG/WebP defaults.) This tool applies one setting set to a batch and downloads every result as one ZIP.',
+        'Its opened page uploads files to an ImageMagick server and says they are deleted after three minutes; it limits batches to 10 files, PNG inputs to 2 MB, JPG/WebP inputs to 7 MB, and each output to 3.5 MB. (Strength: it offers five text fonts and a separate margin control.) This tool keeps files on-device and accepts up to 20 images per batch.',
     },
     {
-      name: 'NanoImage Add Watermark',
-      url: 'https://nanoimage.net/add-watermark',
+      name: 'Watermarkly',
+      url: 'https://watermarkly.com/',
       weakness:
-        'The page states that bulk watermarking is planned and its current version processes one image at a time; it points recurring batch users to a CLI. (Strength: it supports multiple editable layers and text effects, which this focused one-layer tool does not.)',
-    },
-    {
-      name: 'imageonline.io 이미지 워터마크 넣기',
-      url: 'https://imageonline.io/ko/watermark/',
-      weakness:
-        'The Korean result exposes a text-only watermark field and a PNG download path, with a single-image editor. It does not expose a logo-image mode or a batch ZIP workflow.',
-    },
-    {
-      name: 'i2IMG 워터마크 이미지',
-      url: 'https://www.i2img.com/ko/watermark-image',
-      weakness:
-        'Its opened Korean page says uploaded files are automatically deleted after 30 minutes, so image data reaches its service. This tool renders photos and logos only in the browser and never uploads either one.',
-    },
-    {
-      name: 'small.im 이미지 워터마크 대량 추가',
-      url: 'https://small.im/ko/add-watermark',
-      weakness:
-        'Its Korean search result says batch processing is local (Strength: it matches the privacy and batch approach). It does not make a text/logo repeat-pattern editor or a ZIP workflow apparent in the result, whereas both are direct controls here.',
+        'Its current page is also local and supports batch text/logo marks (Strength: it offers saved templates, multiple combined marks, 900+ fonts, visual effects, free placement, resizing, renaming, and metadata preservation). It is a much broader editor; this tool keeps its direct text/logo, nine-position or repeat-pattern workflow and automatic per-file rendering on one screen.',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-converter', 'exif-viewer-remover', 'meme-generator'],
+  related: ['image-resizer', 'image-compressor', 'exif-viewer-remover', 'meme-generator'],
 };

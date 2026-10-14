@@ -1,5 +1,13 @@
 /** Browser-only canvas rendering for image-watermark. */
-import { anchorPoint, normalizeOptions, outputMime, tileOrigins, type WatermarkOptions } from './logic';
+import {
+  anchorPoint,
+  isAnimatedGif,
+  isAnimatedWebp,
+  normalizeOptions,
+  outputMime,
+  tileOrigins,
+  type WatermarkOptions,
+} from './logic';
 
 export async function readDimensions(file: File): Promise<{ width: number; height: number }> {
   const bitmap = await createImageBitmap(file);
@@ -8,6 +16,14 @@ export async function readDimensions(file: File): Promise<{ width: number; heigh
   } finally {
     bitmap.close();
   }
+}
+
+/** Canvas outputs a still image, so animated sources must not be flattened without warning. */
+export async function isAnimatedImage(file: File): Promise<boolean> {
+  const type = file.type.toLowerCase();
+  if (type !== 'image/gif' && type !== 'image/webp') return false;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  return type === 'image/gif' ? isAnimatedGif(bytes) : isAnimatedWebp(bytes);
 }
 
 export async function watermarkImage(file: File, options: WatermarkOptions, logo?: File): Promise<Blob> {

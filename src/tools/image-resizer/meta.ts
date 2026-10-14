@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Processes privately in the browser, but its landing flow is for one image at a time rather than a batch ZIP workflow. (Strength: it provides advanced codecs and a side-by-side quality comparison.)',
     },
   ],
-  related: ['image-rotate-flip', 'image-compressor', 'image-converter', 'image-upscaler'],
+  related: ['image-rotate-flip', 'image-compressor', 'image-converter', 'image-upscaler', 'image-watermark'],
 };
