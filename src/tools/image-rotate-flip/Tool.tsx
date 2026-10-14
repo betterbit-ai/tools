@@ -6,9 +6,11 @@ import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
+  isCurrentResult,
   outputName,
   outputType,
   supportsQuality,
+  transformKey,
   type FormatChoice,
   type Rotation,
   type TransformOptions,
@@ -22,7 +24,7 @@ interface Item {
   height: number;
   preview: string;
   result?: { blob: Blob; url: string; name: string; width: number; height: number; key: string };
-  error?: boolean;
+  error?: { kind: 'read' | 'process'; key?: string };
   busy?: boolean;
 }
 
@@ -88,23 +90,23 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
         const dimensions = await readDimensions(file);
         added.push({ id: nextId++, file, ...dimensions, preview: URL.createObjectURL(file) });
       } catch {
-        added.push({ id: nextId++, file, width: 0, height: 0, preview: '', error: true });
+        added.push({ id: nextId++, file, width: 0, height: 0, preview: '', error: { kind: 'read' } });
       }
     }
     setItems((previous) => [...previous, ...added]);
   }, []);
 
   const fileKey = items.map((item) => item.id).join(',');
+  const key = transformKey(opts, format, quality);
   useEffect(() => {
     const id = ++runId.current;
-    const key = JSON.stringify([opts, format, quality]);
     const timeout = setTimeout(async () => {
       for (const item of itemsRef.current) {
         if (runId.current !== id) return;
-        if (item.error || item.result?.key === key) continue;
+        if (item.error?.kind === 'read' || item.error?.key === key || item.result?.key === key) continue;
         setItems((previous) => previous.map((p) => (p.id === item.id ? { ...p, busy: true } : p)));
         try {
-          const mime = outputType(format, item.file.type);
+          const mime = outputType(format, item.file.type, item.file.name);
           const transformed = await rotateImage(item.file, opts, mime, quality / 100);
           if (runId.current !== id) return;
           const result = {
@@ -119,12 +121,16 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
             previous.map((p) => {
               if (p.id !== item.id) return p;
               if (p.result) URL.revokeObjectURL(p.result.url);
-              return { ...p, result, busy: false };
+              return { ...p, result, error: undefined, busy: false };
             }),
           );
         } catch {
-          setItems((previous) => previous.map((p) => (p.id === item.id ? { ...p, error: true, busy: false } : p)));
+          if (runId.current !== id) return;
+          setItems((previous) =>
+            previous.map((p) => (p.id === item.id ? { ...p, error: { kind: 'process', key }, busy: false } : p)),
+          );
         }
+        await yieldToBrowser();
       }
     }, 250);
     return () => clearTimeout(timeout);
@@ -132,6 +138,7 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
 
   useEffect(
     () => () => {
+      runId.current += 1;
       for (const item of itemsRef.current) {
         URL.revokeObjectURL(item.preview);
         if (item.result) URL.revokeObjectURL(item.result.url);
@@ -140,7 +147,8 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
     [],
   );
 
-  const remove = (id: number) =>
+  const remove = (id: number) => {
+    runId.current += 1;
     setItems((previous) => {
       const gone = previous.find((item) => item.id === id);
       if (gone) {
@@ -149,8 +157,10 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
       }
       return previous.filter((item) => item.id !== id);
     });
+  };
 
   const clear = () => {
+    runId.current += 1;
     for (const item of items) {
       URL.revokeObjectURL(item.preview);
       if (item.result) URL.revokeObjectURL(item.result.url);
@@ -158,7 +168,7 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
     setItems([]);
   };
 
-  const ready = items.filter((item) => item.result && !item.busy);
+  const ready = items.filter((item) => item.result && !item.busy && isCurrentResult(item.result.key, key));
   const downloadAll = async () => {
     if (ready.length === 1) return downloadBlob(ready[0].result!.blob, ready[0].result!.name);
     const files: Record<string, Uint8Array> = {};
@@ -173,7 +183,7 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
     );
   };
 
-  const outputMime = outputType(format, items[0]?.file.type ?? 'image/jpeg');
+  const outputMime = outputType(format, items[0]?.file.type ?? 'image/jpeg', items[0]?.file.name);
   const rotateBy = (amount: number) => setRotation((current) => ((current + amount + 360) % 360) as Rotation);
 
   return (
@@ -196,7 +206,7 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
           {items.length > 0 && (
             <ul class="mt-4 divide-y divide-line rounded-lg border border-line">
               {items.map((item) => (
-                <li class="flex items-center gap-3 p-3">
+                <li class="flex items-center gap-3 p-3" key={item.id}>
                   <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
                     {item.result?.url ? (
                       <img src={item.result.url} alt="" class="size-full object-cover" />
@@ -206,8 +216,8 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
                   </div>
                   <div class="min-w-0 flex-1 text-sm">
                     <p class="truncate font-medium text-fg">{item.file.name}</p>
-                    {item.error ? (
-                      <p class="text-danger">{ui.unsupported}</p>
+                    {item.error?.kind === 'read' || item.error?.key === key ? (
+                      <p class="text-danger">{item.error?.kind === 'read' ? ui.unreadable : ui.processingFailed}</p>
                     ) : (
                       <p class="tabular text-muted" aria-live="polite">
                         {item.width}×{item.height} · {formatBytes(item.file.size, locale)}
@@ -220,10 +230,11 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
                             </span>
                           </>
                         )}
+                        {(item.busy || !isCurrentResult(item.result?.key, key)) && <> · {ui.processing}</>}
                       </p>
                     )}
                   </div>
-                  {item.result && !item.error && (
+                  {item.result && isCurrentResult(item.result.key, key) && !item.error && (
                     <Button
                       size="sm"
                       variant="secondary"
@@ -308,4 +319,8 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
       </div>
     </Panel>
   );
+}
+
+function yieldToBrowser(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
