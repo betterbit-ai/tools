@@ -236,8 +236,17 @@ function pushBranch(repo, wt, branch, { allowFail = false, force = false } = {})
   );
 }
 
+/**
+ * Agents start dev/preview servers to check their work and sometimes leave them running;
+ * they piled up to 120 node processes. Kill anything still running from this worktree.
+ */
+function killStrays(wt) {
+  sh('pkill', ['-f', `${wt}/`], { allowFail: true });
+}
+
 function removeWorktree(repo, clone, issue) {
   const wt = worktreePath(repo, issue);
+  killStrays(wt);
   if (existsSync(wt)) sh('git', ['-C', clone, 'worktree', 'remove', '--force', wt], { allowFail: true });
 }
 
@@ -494,6 +503,7 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
   });
   const sessionStarted = Date.now();
   const session = runAgent(text, wt, logFile, { gitDir: join(clone, '.git') });
+  killStrays(wt);
   if (session.limited) {
     log(`[${repo.name}] fix for PR #${pr.number} paused by usage limit`);
     return false;
@@ -663,6 +673,7 @@ function startNextIssue(repo, clone) {
     resume: resuming ? saved.sessionId : undefined,
     gitDir: join(clone, '.git'),
   });
+  killStrays(wt);
 
   if (session.limited) {
     // Not the issue's fault: keep the work, remember the session, re-queue.

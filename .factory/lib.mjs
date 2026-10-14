@@ -150,8 +150,9 @@ export function prompt(name, vars) {
 /** Where this run happens, for issue/PR comments. WORKER identifies this factory in issue claims. */
 export const HOST = CI
   ? `GitHub Actions run ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
-  : hostname();
-export const WORKER = `${ENGINE}@${CI ? 'actions' : hostname().split('.')[0]}`;
+  : process.env.FACTORY_HOST_LABEL || hostname();
+// FACTORY_HOST_LABEL keeps the machine's personal name (e.g. "<owner>-MacBookAir") out of public comments.
+export const WORKER = `${ENGINE}@${CI ? 'actions' : HOST.split('.')[0]}`;
 
 export function stamp() {
   return new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
