@@ -10,6 +10,7 @@ import {
   isValidTime,
   nextAnnualDate,
   normalizeEventName,
+  splitElapsed,
   splitRemaining,
   toLocalTimestamp,
   type PresetEvent,
@@ -43,9 +44,13 @@ function shareUrl(input: CountdownInput): string {
   if (typeof window === 'undefined') return '';
   const url = new URL(window.location.href);
   url.search = '';
-  url.searchParams.set('date', input.date);
-  if (input.time) url.searchParams.set('time', input.time);
-  if (input.event) url.searchParams.set('event', input.event);
+  const state = new URLSearchParams();
+  state.set('date', input.date);
+  if (input.time) state.set('time', input.time);
+  if (input.event) state.set('event', input.event);
+  // Fragments stay in the browser, unlike query strings that are sent when the
+  // page is requested. Keep event details out of ordinary request logs.
+  url.hash = state.toString();
   return url.toString();
 }
 
@@ -55,7 +60,9 @@ export default function Countdown({ ui }: ToolProps<UI>) {
 
   // A URL is portable; local storage is a convenient fallback for an unshared event.
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    // Query-string links from earlier versions still open, while new links use
+    // a fragment so the event details are not included in the page request.
+    const params = new URLSearchParams(window.location.hash.slice(1) || window.location.search);
     const fromUrl = {
       event: normalizeEventName(params.get('event') ?? ''),
       date: params.get('date') ?? '',
@@ -87,8 +94,12 @@ export default function Countdown({ ui }: ToolProps<UI>) {
   const target = toLocalTimestamp(input.date, input.time);
   const dayDifference = calendarDayDifference(input.date, now);
   const valid = target !== null && dayDifference !== null;
-  const parts = valid ? splitRemaining(target!, now) : { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const reached = valid && target! <= now;
+  const parts = valid
+    ? reached
+      ? splitElapsed(target!, now)
+      : splitRemaining(target!, now)
+    : { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const url = useMemo(() => (valid ? shareUrl(input) : ''), [input, valid]);
 
   const update = useCallback((change: Partial<CountdownInput>) => {
@@ -140,7 +151,7 @@ export default function Countdown({ ui }: ToolProps<UI>) {
           <Field label={ui.event} hint={ui.eventHint}>
             <TextInput
               value={input.event}
-              maxLength={80}
+              maxLength={640}
               placeholder={ui.eventPlaceholder}
               onInput={(event) => update({ event: normalizeEventName(event.currentTarget.value) })}
             />
@@ -178,7 +189,7 @@ export default function Countdown({ ui }: ToolProps<UI>) {
           </div>
         </section>
 
-        <section aria-live="polite" aria-label={heading} class="rounded-lg bg-surface-2 p-4 sm:p-5">
+        <section role="timer" aria-label={heading} class="rounded-lg bg-surface-2 p-4 sm:p-5">
           <p class="text-sm font-medium text-muted">{heading}</p>
           {!valid ? (
             <Notice tone="danger">{ui.invalidDate}</Notice>

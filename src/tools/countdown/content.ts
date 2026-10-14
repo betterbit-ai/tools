@@ -19,12 +19,12 @@ const uiEn = {
   dday: 'Calendar D-day',
   until: 'until',
   elapsed: 'Elapsed since',
-  targetReached: 'The target time has arrived.',
+  targetReached: 'The target time has arrived. This now shows elapsed time.',
   invalidDate: 'Choose a valid calendar date and time.',
   share: 'Copy share link',
   copied: 'Link copied',
   reset: 'Reset',
-  shareHint: 'The link contains this event’s name, date and time. Nothing is saved on a server.',
+  shareHint: 'The link keeps this event’s name, date and time after #, so it is not sent with the page request.',
   refresh: 'Refresh countdown',
   keyboard: 'Refresh',
 };
@@ -56,7 +56,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'A live countdown and a calendar D-day answer different questions',
-        body: 'The large display counts down to one exact local moment: 2026-12-25 at 09:00 is different from midnight on the same date. The D-day label separately compares calendar dates, so a target tomorrow is D-1 even if it is only a few hours away. On the target date it reads D-Day, and after it passes it becomes D+1, D+2 and so on. The two readings are useful together because a deadline can be on the next calendar day while its exact time is much closer.',
+        body: 'The large display counts down to one exact local moment: 2026-12-25 at 09:00 is different from midnight on the same date. The D-day label separately compares calendar dates, so a target tomorrow is D-1 even if it is only a few hours away. On the target date it reads D-Day, and after it passes it becomes D+1, D+2 and so on while the large display counts elapsed time. The two readings are useful together because a deadline can be on the next calendar day while its exact time is much closer.',
       },
       {
         heading: 'Why the number stays correct after a background tab pauses',
@@ -64,7 +64,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'What a share link includes',
-        body: 'Copying a link puts the event name, date and optional time in the URL itself. Opening that URL fills the same values without an account, database entry or server-side event. Anyone with the link can read those values, so do not put confidential information in the event name. The date and time are interpreted in the viewer’s local time; use a time-zone-specific calendar invitation for an event that must happen at one identical instant worldwide.',
+        body: 'Copying a link puts the event name, date and optional time after the # in the URL. That fragment stays in the browser and fills the same values without an account, database entry or server-side event. Anyone with the link can read those values, so do not put confidential information in the event name. The date and time are interpreted in the viewer’s local time; use a time-zone-specific calendar invitation for an event that must happen at one identical instant worldwide.',
       },
     ],
     faq: [
@@ -78,7 +78,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'What does the share link save?',
-        a: 'The share link contains only the event name, date and optional time as URL parameters. This tool does not create an account, send those values to a server, or keep a remotely stored countdown that you need to manage.',
+        a: 'The share link contains only the event name, date and optional time after the # character, so those values are not included in the page request. This tool does not create an account or keep a remotely stored countdown that you need to manage.',
       },
       {
         q: 'Which time zone does this countdown use?',
@@ -109,7 +109,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'D-day와 남은 시간은 기준이 다릅니다',
-        body: '큰 숫자는 선택한 시각까지 남은 실제 시간을 일·시·분·초로 보여 줍니다. 반면 D-day는 달력 날짜만 비교합니다. 내일이 목표일이면 남은 시간이 몇 시간뿐이어도 D-1이고, 목표일 당일에는 D-Day입니다. 목표일이 지나면 다음 날부터 D+1로 표시합니다. 마감처럼 시각이 중요한 일정과 시험·여행처럼 날짜가 중요한 일정을 함께 확인할 수 있도록 두 값을 나란히 보여 줍니다.',
+        body: '큰 숫자는 선택한 시각까지 남은 실제 시간을 일·시·분·초로 보여 줍니다. 반면 D-day는 달력 날짜만 비교합니다. 내일이 목표일이면 남은 시간이 몇 시간뿐이어도 D-1이고, 목표일 당일에는 D-Day입니다. 목표 시각이 지나면 큰 숫자는 지난 시간을 세고, 다음 날부터 D+1로 표시합니다. 마감처럼 시각이 중요한 일정과 시험·여행처럼 날짜가 중요한 일정을 함께 확인할 수 있도록 두 값을 나란히 보여 줍니다.',
       },
       {
         heading: '다른 탭을 보고 있어도 남은 시간이 밀리지 않습니다',
@@ -117,7 +117,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '공유 링크에는 무엇이 들어가나요?',
-        body: '공유 링크 복사를 누르면 일정 이름, 날짜, 선택한 시간이 주소에 들어갑니다. 링크를 연 사람은 계정이나 별도 저장 없이 같은 입력값을 바로 볼 수 있습니다. 주소를 아는 사람은 일정 이름도 읽을 수 있으므로 민감한 정보는 이름에 쓰지 않는 것이 좋습니다. 이 도구는 서버에 일정을 저장하지 않으며, 나라가 다른 사람이 같은 순간을 맞춰야 하는 행사라면 시간대가 지정된 캘린더 초대를 사용하세요.',
+        body: '공유 링크 복사를 누르면 일정 이름, 날짜, 선택한 시간이 주소의 # 뒤에 들어갑니다. # 뒤의 값은 페이지를 요청할 때 서버로 전송되지 않고, 링크를 연 사람은 계정이나 별도 저장 없이 같은 입력값을 바로 볼 수 있습니다. 주소를 아는 사람은 일정 이름도 읽을 수 있으므로 민감한 정보는 이름에 쓰지 않는 것이 좋습니다. 나라가 다른 사람이 같은 순간을 맞춰야 하는 행사라면 시간대가 지정된 캘린더 초대를 사용하세요.',
       },
     ],
     faq: [
@@ -131,7 +131,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '공유 링크를 만들면 일정이 서버에 저장되나요?',
-        a: '아니요. 공유 링크에는 일정 이름, 날짜, 선택한 시간만 URL 파라미터로 들어갑니다. 계정을 만들거나 서버에 일정을 저장하지 않으므로 주소를 가진 사람만 그 입력값을 열 수 있습니다.',
+        a: '아니요. 공유 링크의 # 뒤에는 일정 이름, 날짜, 선택한 시간만 들어가며 이 값은 페이지 요청에 포함되지 않습니다. 계정을 만들거나 서버에 일정을 저장하지 않으므로 주소를 가진 사람만 그 입력값을 열 수 있습니다.',
       },
       {
         q: '공유 링크를 다른 나라에서 열면 어떻게 되나요?',
@@ -160,12 +160,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dday: '달력 기준 디데이',
       until: '까지',
       elapsed: '경과 시간',
-      targetReached: '목표 시각이 되었습니다.',
+      targetReached: '목표 시각이 되었습니다. 이제 지난 시간을 표시합니다.',
       invalidDate: '올바른 날짜와 시간을 선택하세요.',
       share: '공유 링크 복사',
       copied: '링크 복사됨',
       reset: '초기화',
-      shareHint: '링크에는 일정 이름, 날짜, 시간이 들어갑니다. 서버에는 저장하지 않습니다.',
+      shareHint: '링크의 # 뒤에 일정 이름, 날짜, 시간이 들어가므로 페이지 요청에는 전송되지 않습니다.',
       refresh: '카운트다운 새로고침',
       keyboard: '새로고침',
     },
