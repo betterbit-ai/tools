@@ -35,6 +35,17 @@ export const DEFAULT_OPTIONS: WatermarkOptions = {
 
 const MAX_TEXT_LENGTH = 160;
 
+/** Keep one full-resolution canvas per image within broadly supported browser limits. */
+export const MAX_INPUT_PIXELS = 24_000_000;
+export const MAX_INPUT_DIMENSION = 8_000;
+export const MAX_FILE_BYTES = 30 * 1024 * 1024;
+export const MAX_IMAGE_COUNT = 20;
+
+export interface InputCheck {
+  ok: boolean;
+  reason?: 'invalid' | 'dimension' | 'pixels' | 'file';
+}
+
 export function clamp(value: number, min: number, max: number): number {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
@@ -70,6 +81,67 @@ export function normalizeOptions(value: Partial<WatermarkOptions>): WatermarkOpt
     color: value.color === 'dark' ? 'dark' : 'light',
     format,
   };
+}
+
+/** Reject sources that would make a full-resolution canvas unreliable or memory-heavy. */
+export function validateInput(width: number, height: number, fileBytes: number): InputCheck {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
+    return { ok: false, reason: 'invalid' };
+  }
+  if (width > MAX_INPUT_DIMENSION || height > MAX_INPUT_DIMENSION) return { ok: false, reason: 'dimension' };
+  if (width * height > MAX_INPUT_PIXELS) return { ok: false, reason: 'pixels' };
+  if (fileBytes > MAX_FILE_BYTES) return { ok: false, reason: 'file' };
+  return { ok: true };
+}
+
+/** Canvas draws only the first GIF frame, so detect animation before it can be silently flattened. */
+export function isAnimatedGif(bytes: Uint8Array): boolean {
+  if (bytes.length < 13) return false;
+  const header = String.fromCharCode(...bytes.subarray(0, 6));
+  if (header !== 'GIF87a' && header !== 'GIF89a') return false;
+
+  let position = 6;
+  const screenPacked = bytes[position + 4];
+  position += 7;
+  if (screenPacked & 0x80) position += 3 * 2 ** ((screenPacked & 0x07) + 1);
+
+  let frames = 0;
+  while (position < bytes.length) {
+    const block = bytes[position];
+    if (block === 0x3b) return false;
+    if (block === 0x21) {
+      position = skipGifSubBlocks(bytes, position + 2);
+    } else if (block === 0x2c) {
+      frames++;
+      if (frames > 1) return true;
+      const localPacked = bytes[position + 9];
+      position += 10;
+      if (localPacked & 0x80) position += 3 * 2 ** ((localPacked & 0x07) + 1);
+      position = skipGifSubBlocks(bytes, position + 1);
+    } else {
+      return false;
+    }
+  }
+  return false;
+}
+
+/** Animated WebP uses an ANIM chunk in its RIFF container. */
+export function isAnimatedWebp(bytes: Uint8Array): boolean {
+  if (bytes.length < 16) return false;
+  const signature = String.fromCharCode(...bytes.subarray(0, 4));
+  const format = String.fromCharCode(...bytes.subarray(8, 12));
+  if (signature !== 'RIFF' || format !== 'WEBP') return false;
+
+  let position = 12;
+  while (position + 8 <= bytes.length) {
+    const chunk = String.fromCharCode(...bytes.subarray(position, position + 4));
+    const length =
+      bytes[position + 4] | (bytes[position + 5] << 8) | (bytes[position + 6] << 16) | (bytes[position + 7] << 24);
+    if (chunk === 'ANIM') return true;
+    if (length < 0 || position + 8 + length > bytes.length) return false;
+    position += 8 + length + (length % 2);
+  }
+  return false;
 }
 
 export const POSITIONS: Position[] = [
@@ -145,4 +217,13 @@ export function tileOrigins(
     for (let x = -markWidth - gap; x <= canvasWidth + markWidth + gap; x += stepX) origins.push({ x, y });
   }
   return origins;
+}
+
+function skipGifSubBlocks(bytes: Uint8Array, position: number): number {
+  while (position < bytes.length) {
+    const length = bytes[position++];
+    if (length === 0) return position;
+    position += length;
+  }
+  return position;
 }

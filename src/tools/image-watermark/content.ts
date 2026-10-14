@@ -7,10 +7,17 @@ const uiEn = {
   privacyNote: 'Photos and logos stay on your device. Nothing is uploaded.',
   unsupported: 'This image can’t be read by your browser.',
   unsupportedLogo: 'This logo image can’t be read by your browser.',
+  errorPixels: 'This image has more than {max} pixels. Resize it first.',
+  errorDimension: 'This image is wider or taller than {max} pixels. Resize it first.',
+  errorFile: 'This image is larger than {max}. Choose a smaller file.',
+  animatedImage: 'Animated GIF and WebP files are not supported because the result would lose their animation.',
+  batchLimit: 'Add up to {n} images at a time so your browser stays responsive.',
   processing: 'Applying watermark…',
   processingError: 'This image could not be watermarked. Try a different image or output format.',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
+  preparingDownload: 'Preparing ZIP…',
+  zipFailed: 'The ZIP could not be prepared. Try downloading fewer images at once.',
   remove: 'Remove',
   clear: 'Clear all',
   modeLabel: 'Watermark type',
@@ -56,7 +63,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Add Watermark to Images — Batch, Logo & Pattern, No Upload',
     description:
-      'Add a text or logo watermark to images in bulk. Repeat a protective pattern, export a ZIP, and keep every photo on your device — no upload or account.',
+      'Add a text or logo watermark to up to 20 images. Repeat a protective pattern, export a ZIP, and keep every photo on your device — no upload or account.',
     h1: 'Add Watermark to Images',
     tagline:
       'Stamp text or your logo on one image or a batch — privately, with a repeat pattern when a corner mark is not enough.',
@@ -70,7 +77,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'watermark maker',
     ],
     howTo: [
-      'Drop photos onto the box, click to choose files, or paste an image with Ctrl/⌘ + V.',
+      'Drop up to 20 photos onto the box, click to choose files, or paste an image with Ctrl/⌘ + V.',
       'Type a text watermark, or choose a logo image with a transparent background.',
       'Choose one position or a repeat pattern, then set the size, opacity and angle.',
       'Check the live image preview and download one result or the complete ZIP.',
@@ -82,7 +89,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Choose the right output format',
-        body: 'PNG is lossless and preserves transparent pixels, which is useful for graphics and screenshots. JPG has no transparency and is usually the smaller choice for photographs. WebP also supports transparency and is commonly smaller than PNG for web images. This tool encodes JPG and WebP at 92% quality; selecting “Same as original” keeps JPG, PNG, or WebP when the browser can encode that format.',
+        body: 'PNG is lossless and preserves transparent pixels, which is useful for graphics and screenshots. JPG has no transparency and is usually the smaller choice for photographs. WebP also supports transparency and is commonly smaller than PNG for web images. This tool encodes JPG and WebP at 92% quality; selecting “Same as original” keeps JPG, PNG, or WebP when the browser can encode that format. To keep browser memory predictable, each source can be up to 30 MB, 8,000 pixels on either side, and 24 million pixels overall.',
       },
       {
         heading: 'The watermark is visible, not DRM',
@@ -96,7 +103,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Can I add the same watermark to multiple images?',
-        a: 'Yes. Drop any number of photos, set one text or logo watermark, and the same relative size, opacity, angle, and layout are applied to every readable image. Download the finished batch as one ZIP file.',
+        a: 'Yes. Drop up to 20 photos, set one text or logo watermark, and the same relative size, opacity, angle, and layout are applied to every readable image. Download the finished batch as one ZIP file.',
       },
       {
         q: 'What is a good opacity for a watermark?',
@@ -105,6 +112,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: 'Will a watermark stop people from copying my photo?',
         a: 'No visible watermark is DRM and a determined person can crop or try to remove it. A repeated pattern across the subject is harder to crop cleanly than a single corner mark and makes the source or intended use visible on shared copies.',
+      },
+      {
+        q: 'What limits apply to images?',
+        a: 'Each source image can be up to 30 MB, 8,000 pixels on either side, and 24 million pixels overall; a batch can contain up to 20 images. These browser-safety limits prevent a large batch from exhausting the tab’s memory. Animated GIF and WebP files are not accepted because a Canvas export would turn them into a still image.',
       },
       {
         q: 'Does watermarking keep the original photo metadata?',
@@ -116,7 +127,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '사진 워터마크 넣기 — 로고·반복 패턴, 여러 장 한번에',
     description:
-      '사진에 텍스트 또는 로고 워터마크를 여러 장 한번에 넣으세요. 반복 패턴과 ZIP 다운로드를 지원하며, 파일은 서버에 올리지 않고 내 기기에서 처리합니다.',
+      '사진 최대 20장에 텍스트 또는 로고 워터마크를 한 번에 넣으세요. 반복 패턴과 ZIP 다운로드를 지원하며, 파일은 서버에 올리지 않고 내 기기에서 처리합니다.',
     h1: '사진 워터마크 넣기',
     tagline: '글자나 로고를 사진 여러 장에 한 번에 넣고, 필요한 경우 반복 패턴으로 사진 전체를 표시합니다.',
     name: '사진 워터마크',
@@ -129,7 +140,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '대량 워터마크',
     ],
     howTo: [
-      '사진을 끌어다 놓거나, 클릭해서 고르거나, Ctrl/⌘ + V로 붙여넣습니다.',
+      '사진 최대 20장을 끌어다 놓거나, 클릭해서 고르거나, Ctrl/⌘ + V로 붙여넣습니다.',
       '워터마크 문구를 입력하거나 투명 배경 로고 이미지를 선택합니다.',
       '한 곳에 놓을지 반복할지 고르고, 크기·투명도·기울기를 조절합니다.',
       '바뀐 미리보기를 확인한 뒤 한 장씩 받거나 전체 ZIP 파일을 다운로드합니다.',
@@ -141,7 +152,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '다운로드 형식을 고르는 방법',
-        body: 'PNG는 손실 없이 저장되고 투명 영역을 보존해 로고·스크린샷에 적합합니다. JPG는 투명도를 지원하지 않지만 보통 사진 용량이 작습니다. WebP는 투명도를 지원하면서 웹용 이미지의 용량을 줄이는 데 유용합니다. 이 도구는 JPG와 WebP를 품질 92%로 저장하며, “원본과 같음”을 고르면 브라우저가 지원하는 JPG·PNG·WebP 형식을 유지합니다.',
+        body: 'PNG는 손실 없이 저장되고 투명 영역을 보존해 로고·스크린샷에 적합합니다. JPG는 투명도를 지원하지 않지만 보통 사진 용량이 작습니다. WebP는 투명도를 지원하면서 웹용 이미지의 용량을 줄이는 데 유용합니다. 이 도구는 JPG와 WebP를 품질 92%로 저장하며, “원본과 같음”을 고르면 브라우저가 지원하는 JPG·PNG·WebP 형식을 유지합니다. 브라우저 메모리를 안정적으로 쓰기 위해 사진 한 장은 30MB, 한 변 8,000px, 전체 2,400만 화소까지 받습니다.',
       },
       {
         heading: '워터마크는 DRM이 아닙니다',
@@ -155,7 +166,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '사진 여러 장에 같은 워터마크를 넣을 수 있나요?',
-        a: '네. 사진을 여러 장 넣고 하나의 텍스트 또는 로고 워터마크를 설정하면, 상대 크기·투명도·각도·배치가 읽을 수 있는 모든 사진에 똑같이 적용됩니다. 완성된 파일은 ZIP 하나로 받을 수 있습니다.',
+        a: '네. 사진 최대 20장을 넣고 하나의 텍스트 또는 로고 워터마크를 설정하면, 상대 크기·투명도·각도·배치가 읽을 수 있는 모든 사진에 똑같이 적용됩니다. 완성된 파일은 ZIP 하나로 받을 수 있습니다.',
       },
       {
         q: '워터마크 투명도는 몇 퍼센트가 적당한가요?',
@@ -164,6 +175,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: '워터마크를 넣으면 사진 도용을 막을 수 있나요?',
         a: '보이는 워터마크는 DRM이 아니므로 완전히 막을 수는 없습니다. 사진 중앙을 가로지르는 반복 패턴은 모서리 한 곳의 표시보다 깔끔하게 잘라내기 어렵고, 공유된 사본에 출처나 용도를 남기는 데 도움이 됩니다.',
+      },
+      {
+        q: '사진 크기와 개수에 제한이 있나요?',
+        a: '사진 한 장은 30MB, 한 변 8,000px, 전체 2,400만 화소까지 가능하고 한 번에 최대 20장을 처리합니다. 큰 사진 묶음으로 브라우저 탭의 메모리가 부족해지는 일을 막기 위한 제한입니다. Canvas로 저장하면 움직임이 사라지므로 애니메이션 GIF와 WebP는 받지 않습니다.',
       },
       {
         q: '워터마크를 넣으면 사진의 위치 정보도 남나요?',
@@ -176,10 +191,17 @@ export const content: Record<Locale, ToolContent<UI>> = {
       privacyNote: '사진과 로고는 내 기기에서만 처리됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 이미지입니다.',
       unsupportedLogo: '브라우저에서 읽을 수 없는 로고 이미지입니다.',
+      errorPixels: '이 이미지는 {max}화소를 초과합니다. 먼저 크기를 줄여 주세요.',
+      errorDimension: '이 이미지의 가로 또는 세로가 {max}px를 초과합니다. 먼저 크기를 줄여 주세요.',
+      errorFile: '이 이미지가 {max}보다 큽니다. 더 작은 파일을 골라 주세요.',
+      animatedImage: '움직임이 사라지는 것을 막기 위해 애니메이션 GIF와 WebP는 지원하지 않습니다.',
+      batchLimit: '브라우저가 멈추지 않도록 한 번에 최대 {n}장까지 넣을 수 있습니다.',
       processing: '워터마크 적용 중…',
       processingError: '이 이미지에 워터마크를 넣지 못했습니다. 다른 이미지나 다운로드 형식을 선택해 보세요.',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
+      preparingDownload: 'ZIP 준비 중…',
+      zipFailed: 'ZIP 파일을 만들지 못했습니다. 한 번에 넣는 사진 수를 줄여 다시 시도해 보세요.',
       remove: '삭제',
       clear: '모두 지우기',
       modeLabel: '워터마크 유형',

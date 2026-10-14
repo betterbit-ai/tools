@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAX_FILE_BYTES,
+  MAX_INPUT_DIMENSION,
   MAX_TILE_COUNT,
   anchorPoint,
+  isAnimatedGif,
+  isAnimatedWebp,
   normalizeOptions,
   normalizeText,
   outputMime,
   outputName,
   tileOrigins,
+  validateInput,
 } from './logic';
 
 describe('image-watermark logic', () => {
@@ -17,6 +22,24 @@ describe('image-watermark logic', () => {
       rotation: -90,
       gap: 0,
     });
+  });
+
+  it('keeps full-resolution canvas work within documented file, side, and pixel limits', () => {
+    expect(validateInput(MAX_INPUT_DIMENSION, 3000, MAX_FILE_BYTES)).toEqual({ ok: true });
+    expect(validateInput(MAX_INPUT_DIMENSION + 1, 1, 1)).toEqual({ ok: false, reason: 'dimension' });
+    expect(validateInput(6000, 4001, 1)).toEqual({ ok: false, reason: 'pixels' });
+    expect(validateInput(1, 1, MAX_FILE_BYTES + 1)).toEqual({ ok: false, reason: 'file' });
+  });
+
+  it('detects animated GIF and WebP files before Canvas would flatten them', () => {
+    const gifHeader = [71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 0, 0, 0];
+    const gifFrame = [0x2c, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0];
+    expect(isAnimatedGif(new Uint8Array([...gifHeader, ...gifFrame, 0x3b]))).toBe(false);
+    expect(isAnimatedGif(new Uint8Array([...gifHeader, ...gifFrame, ...gifFrame, 0x3b]))).toBe(true);
+
+    const webpHeader = [82, 73, 70, 70, 12, 0, 0, 0, 87, 69, 66, 80];
+    expect(isAnimatedWebp(new Uint8Array([...webpHeader, 86, 80, 56, 32, 0, 0, 0, 0]))).toBe(false);
+    expect(isAnimatedWebp(new Uint8Array([...webpHeader, 65, 78, 73, 77, 0, 0, 0, 0]))).toBe(true);
   });
 
   it('keeps Unicode graphemes intact while limiting an extremely long label', () => {
