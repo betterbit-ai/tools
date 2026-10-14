@@ -7,6 +7,7 @@ import type { UI } from './content';
 import { compressPdf } from './compress';
 import {
   COMPRESSION_PRESETS,
+  CompressionCancelledError,
   compressedFileName,
   EncryptedPdfError,
   fileExceedsLimit,
@@ -33,10 +34,13 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<FileError | null>(null);
   const runId = useRef(0);
+  const controllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => safeStorage.set(STORAGE_KEY, level), [level]);
 
   const loadFile = useCallback((picked: File) => {
+    controllerRef.current?.abort();
+    runId.current++;
     if (!isPdfFile(picked.name, picked.type)) {
       setFile(picked);
       setOutput(null);
@@ -53,15 +57,24 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
   useEffect(() => {
     if (!file || error) return;
     const id = ++runId.current;
+    const controller = new AbortController();
+    controllerRef.current?.abort();
+    controllerRef.current = controller;
     const timeout = setTimeout(async () => {
       setOutput(null);
       setError(null);
       setProgress({ done: 0, total: 0 });
       try {
         const bytes = new Uint8Array(await file.arrayBuffer());
-        const result = await compressPdf(bytes, file.name, COMPRESSION_PRESETS[level], (done, total) => {
-          if (runId.current === id) setProgress({ done, total });
-        });
+        const result = await compressPdf(
+          bytes,
+          file.name,
+          COMPRESSION_PRESETS[level],
+          (done, total) => {
+            if (runId.current === id) setProgress({ done, total });
+          },
+          controller.signal,
+        );
         if (runId.current !== id) return;
         setOutput({
           blob: new Blob([result.bytes as BlobPart], { type: 'application/pdf' }),
@@ -69,7 +82,7 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
         });
         setProgress(null);
       } catch (caught) {
-        if (runId.current !== id) return;
+        if (runId.current !== id || caught instanceof CompressionCancelledError || controller.signal.aborted) return;
         setOutput(null);
         setProgress(null);
         setError(
@@ -85,11 +98,14 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
     }, 250);
     return () => {
       clearTimeout(timeout);
+      controller.abort();
+      if (controllerRef.current === controller) controllerRef.current = null;
       runId.current++;
     };
   }, [file, level, error]);
 
   const clear = () => {
+    controllerRef.current?.abort();
     runId.current++;
     setFile(null);
     setOutput(null);

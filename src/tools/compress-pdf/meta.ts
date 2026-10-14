@@ -5,14 +5,14 @@ export const meta: ToolMeta = {
   category: 'pdf',
   icon: 'compress',
   added: '2026-10-11',
-  updated: '2026-10-11',
-  edges: ['privacy', 'no-ads', 'features'],
+  updated: '2026-10-14',
+  edges: ['privacy', 'usability'],
   competitors: [
     {
       name: 'iLovePDF (Compress PDF)',
       url: 'https://www.ilovepdf.com/compress_pdf',
       weakness:
-        'The English and Korean tool pages show an upload stage (including upload speed and remaining-time UI) before compression, so each PDF is sent to iLovePDF first. Its three levels only describe a quality/compression trade-off; this tool instead exposes the concrete local rendering levels used for scan/image-heavy PDFs. (Strength: it can import from Google Drive and Dropbox.)',
+        'The tool shows “Uploading file”, upload speed, and remaining-time states before compression, so each PDF is sent to iLovePDF first. It also requires a separate “COMPRESS PDF” click after choosing a file, while this tool starts its local scan compression automatically. (Strength: it can import from Google Drive and Dropbox.)',
     },
     {
       name: 'Smallpdf (Compress PDF)',
@@ -24,23 +24,8 @@ export const meta: ToolMeta = {
       name: 'PDF24 (Compress PDF)',
       url: 'https://tools.pdf24.org/ko/compress-pdf',
       weakness:
-        'Its Korean and English pages state that PDFs are compressed in the cloud on its servers and deleted only after a short period; the page also includes an advertisement and says it is funded by advertising. (Strength: it offers advanced controls such as grayscale, metadata removal, and form flattening.)',
-    },
-    {
-      name: 'i2PDF (PDF Compress)',
-      url: 'https://www.i2pdf.com/ko/compress-pdf',
-      weakness:
-        'Its Korean page directs the user to upload a PDF to start an online operation, while its description only promises to keep visual quality “as much as possible” without exposing a numerical image-recompression level. (Strength: it offers other optimization tools such as Fast Web View.)',
+        'Its page says PDFs are compressed in the cloud on servers in Germany and deleted from the server after one hour; it also visibly labels advertising as the funding source. Compression needs a separate button click, while this tool starts locally after a PDF is chosen. (Strength: it offers lossless compression and advanced controls for grayscale, metadata, annotations, forms, and structural data.)',
     },
   ],
-  related: [
-    'merge-pdf',
-    'split-pdf',
-    'sign-pdf',
-    'image-compressor',
-    'pdf-to-jpg',
-    'rotate-pdf',
-    'delete-pdf-pages',
-    'unlock-pdf',
-  ],
+  related: ['merge-pdf', 'split-pdf', 'pdf-to-jpg', 'unlock-pdf'],
 };
