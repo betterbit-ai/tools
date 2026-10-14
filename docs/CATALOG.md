@@ -142,7 +142,7 @@
 | clothing-size-converter | 옷 사이즈      | clothing size chart / 옷 사이즈 변환        | 국가별 표                     | P2  | todo |
 | number-base-converter   | 진법 변환      | binary to decimal / 진법 변환               | 실시간 다중 진법              | P1  | live |
 | roman-numerals          | 로마 숫자      | roman numeral converter                     | 양방향 + 규칙 설명            | P2  | todo |
-| korean-number           | 숫자 한글 변환 | 숫자 한글 변환 / 금액 한글                  | 수표·계약서용 "일금 ○○원정"   | P1  | todo |
+| korean-number           | 숫자 한글 변환 | 숫자 한글 변환 / 금액 한글                  | 수표·계약서용 "일금 ○○원정"   | P1  | live |
 | cooking-converter       | 요리 계량      | tablespoon to grams                         | 재료별 밀도                   | P2  | todo |
 | pressure-converter      | 압력 변환      | psi to bar                                  | 타이어 압력 표                | P2  | todo |
 | energy-converter        | 에너지 변환    | kcal to kj                                  | —                             | P2  | todo |

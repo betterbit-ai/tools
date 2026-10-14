@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'It accepts a custom rate and supports reverse calculation, but requires a separate “계산하기” action and describes a 0%–100% rate field without country presets. Betterbit recalculates on each input, provides six verified standard-rate presets, and shows the exact add/extract formula next to the result. (장점: Korean won inputs are explicitly limited to whole-won amounts and it discusses one-won rounding.)',
     },
   ],
-  related: ['percentage-calculator', 'discount-calculator', 'scientific-calculator'],
+  related: ['percentage-calculator', 'discount-calculator', 'scientific-calculator', 'korean-number'],
 };
