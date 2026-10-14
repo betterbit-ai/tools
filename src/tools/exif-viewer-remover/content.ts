@@ -5,7 +5,8 @@ const uiEn = {
   dropTitle: 'Drop photos here',
   dropHint: 'JPG, PNG, or WebP · multiple files welcome · paste with Ctrl/⌘+V',
   privacyNote: 'Files are read and cleaned only in this browser. Nothing is uploaded.',
-  unsupported: 'Use a JPG, PNG, or WebP image.',
+  unsupported: 'Use a valid JPG, PNG, or WebP image.',
+  cleanError: 'Could not create a clean copy. Keep the original and try another image.',
   remove: 'Remove',
   clear: 'Clear all',
   processing: 'Reading…',
@@ -25,6 +26,9 @@ const uiEn = {
   tagLabel: 'Detected data',
   cleanNote: 'A new copy is created; your original stays unchanged.',
   resultNote: 'The clean copy was checked again for removable metadata.',
+  privateNames: 'Use private download names',
+  privateNamesHint:
+    'Uses private-image-01.jpg instead of the original filename. Turn this off to keep a cleaned version of the source name.',
 };
 export type UI = typeof uiEn;
 
@@ -52,7 +56,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'What this tool removes',
-        body: 'For JPEG files, the cleaner removes APP1 (EXIF/XMP), APP13 (IPTC), and comment segments. For PNG it removes eXIf, text, and time chunks; for WebP it removes EXIF and XMP chunks. The compressed image data is copied instead of being redrawn, so JPG, PNG, and WebP pixels are not recompressed.',
+        body: 'For JPEG files, the cleaner removes APP1 (EXIF/XMP), APP13 (IPTC), and comment segments. For PNG it removes eXIf, text, and time chunks; for WebP it removes EXIF and XMP chunks. The encoded image data is copied instead of being redrawn, so supported JPG, PNG, and WebP pixels are not recompressed. The downloaded copy gets a neutral name by default because filenames can reveal personal details too.',
       },
       {
         heading: 'What EXIF data can reveal',
@@ -60,7 +64,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Check the downloaded copy before sharing',
-        body: 'Removing metadata does not hide an address, face, vehicle number, or watermark visible in the pixels. Keep the original for your records and inspect the downloaded copy again if the sharing context is sensitive. Unsupported formats are left unchanged rather than being converted silently.',
+        body: 'Removing metadata does not hide an address, face, vehicle number, or watermark visible in the pixels. Keep the original for your records and inspect the downloaded copy again if the sharing context is sensitive. Unsupported formats are not converted, so this tool never makes a surprise format or quality change.',
       },
     ],
     faq: [
@@ -108,7 +112,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '공유 전 새 파일을 다시 확인하세요',
-        body: '메타데이터를 지워도 사진에 보이는 집 주소, 얼굴, 차량 번호, 워터마크는 가려지지 않습니다. 원본은 보관하고, 민감한 사진이라면 다운로드한 새 파일을 다시 검사한 뒤 공유하세요. 지원하지 않는 형식은 품질이나 형식을 바꾸지 않도록 그대로 둡니다.',
+        body: '메타데이터를 지워도 사진에 보이는 집 주소, 얼굴, 차량 번호, 워터마크는 가려지지 않습니다. 원본은 보관하고, 민감한 사진이라면 다운로드한 새 파일을 다시 검사한 뒤 공유하세요. 지원하지 않는 형식은 변환하지 않으므로, 뜻하지 않게 형식이나 화질이 바뀌지 않습니다.',
       },
     ],
     faq: [
@@ -133,7 +137,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropTitle: '사진을 여기에 끌어 놓으세요',
       dropHint: 'JPG, PNG, WebP · 여러 장 가능 · Ctrl/⌘+V로 붙여넣기',
       privacyNote: '파일은 이 브라우저 안에서만 읽고 정리합니다. 업로드하지 않습니다.',
-      unsupported: 'JPG, PNG, WebP 이미지를 사용하세요.',
+      unsupported: '올바른 JPG, PNG, WebP 이미지를 사용하세요.',
+      cleanError: '정리된 파일을 만들 수 없습니다. 원본은 보관하고 다른 이미지로 다시 시도하세요.',
       remove: '삭제',
       clear: '모두 비우기',
       processing: '읽는 중…',
@@ -153,6 +158,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       tagLabel: '감지된 정보',
       cleanNote: '원본은 바꾸지 않고 새 파일을 만듭니다.',
       resultNote: '정리된 파일에서 삭제 대상 메타데이터를 다시 확인했습니다.',
+      privateNames: '개인정보 보호용 파일명 사용',
+      privateNamesHint: '원본 파일명 대신 private-image-01.jpg처럼 저장합니다. 원본 파일명에 -clean을 붙이려면 끄세요.',
     },
   },
 };

@@ -22,6 +22,24 @@ export function detectImageFormat(bytes: Uint8Array): ImageFormat {
   return 'unknown';
 }
 
+/**
+ * Checks the container boundaries before inspection or rewriting. A file can
+ * have a supported signature while still be truncated or malformed; copying
+ * that file as a "clean" result would give false confidence.
+ */
+export function isValidImage(bytes: Uint8Array): boolean {
+  switch (detectImageFormat(bytes)) {
+    case 'jpeg':
+      return isValidJpeg(bytes);
+    case 'png':
+      return isValidPng(bytes);
+    case 'webp':
+      return isValidWebp(bytes);
+    default:
+      return false;
+  }
+}
+
 export function inspectMetadata(bytes: Uint8Array): ExifSummary {
   const format = detectImageFormat(bytes);
   if (format === 'jpeg') return inspectJpeg(bytes);
@@ -48,6 +66,12 @@ export function cleanedName(name: string): string {
   const base = name.replace(/\.[^.]+$/, '') || 'image';
   const extension = name.match(/\.([^.]+)$/)?.[1]?.toLowerCase() || 'jpg';
   return `${base}-clean.${extension}`;
+}
+
+/** A source-independent download name avoids exposing a revealing filename. */
+export function privateName(name: string, index: number): string {
+  const extension = name.match(/\.([^.]+)$/)?.[1]?.toLowerCase() || 'jpg';
+  return `private-image-${String(index).padStart(2, '0')}.${extension}`;
 }
 
 function inspectJpeg(bytes: Uint8Array): ExifSummary {
@@ -111,36 +135,35 @@ function inspectWebp(bytes: Uint8Array): ExifSummary {
 }
 
 function stripJpeg(bytes: Uint8Array): Uint8Array {
-  const kept: number[] = [0xff, 0xd8];
+  const kept: Uint8Array[] = [bytes.subarray(0, 2)];
   let offset = 2;
   while (offset + 4 <= bytes.length && bytes[offset] === 0xff) {
     const marker = bytes[offset + 1];
     if (marker === 0xda || marker === 0xd9) {
-      append(kept, bytes.subarray(offset));
-      return new Uint8Array(kept);
+      kept.push(bytes.subarray(offset));
+      return concat(kept);
     }
     const length = readU16(bytes, offset + 2, false);
     if (length < 2 || offset + 2 + length > bytes.length) break;
     // APP1: EXIF/XMP, APP13: IPTC, COM: comments. Other APP blocks can contain
     // colour/display data, so retain them.
-    if (marker !== 0xe1 && marker !== 0xed && marker !== 0xfe)
-      append(kept, bytes.subarray(offset, offset + 2 + length));
+    if (marker !== 0xe1 && marker !== 0xed && marker !== 0xfe) kept.push(bytes.subarray(offset, offset + 2 + length));
     offset += 2 + length;
   }
   return bytes.slice();
 }
 
 function stripPng(bytes: Uint8Array): Uint8Array {
-  const kept = Array.from(bytes.subarray(0, 8));
+  const kept: Uint8Array[] = [bytes.subarray(0, 8)];
   let offset = 8;
   while (offset + 12 <= bytes.length) {
     const length = readU32(bytes, offset, false);
     const type = ascii(bytes, offset + 4, 4);
     if (offset + 12 + length > bytes.length) return bytes.slice();
     if (!['eXIf', 'iTXt', 'tEXt', 'zTXt', 'tIME'].includes(type))
-      append(kept, bytes.subarray(offset, offset + length + 12));
+      kept.push(bytes.subarray(offset, offset + length + 12));
     offset += length + 12;
-    if (type === 'IEND') return new Uint8Array(kept);
+    if (type === 'IEND') return concat(kept);
   }
   return bytes.slice();
 }
@@ -297,9 +320,65 @@ function readU32(bytes: Uint8Array, offset: number, little: boolean): number {
 function writeU32(value: number): Uint8Array {
   return new Uint8Array([value & 255, (value >>> 8) & 255, (value >>> 16) & 255, (value >>> 24) & 255]);
 }
+
+function isValidJpeg(bytes: Uint8Array): boolean {
+  let offset = 2;
+  while (offset + 4 <= bytes.length && bytes[offset] === 0xff) {
+    const marker = bytes[offset + 1];
+    if (marker === 0xda) {
+      const length = readU16(bytes, offset + 2, false);
+      if (length < 2 || offset + 2 + length > bytes.length) return false;
+      for (let scan = offset + 2 + length; scan + 1 < bytes.length; scan++)
+        if (bytes[scan] === 0xff && bytes[scan + 1] === 0xd9) return true;
+      return false;
+    }
+    if (marker === 0xd9) return false;
+    const length = readU16(bytes, offset + 2, false);
+    if (length < 2 || offset + 2 + length > bytes.length) return false;
+    offset += 2 + length;
+  }
+  return false;
+}
+
+function isValidPng(bytes: Uint8Array): boolean {
+  let offset = 8;
+  let first = true;
+  while (offset + 12 <= bytes.length) {
+    const length = readU32(bytes, offset, false);
+    const type = ascii(bytes, offset + 4, 4);
+    if (offset + 12 + length > bytes.length) return false;
+    if (first && (type !== 'IHDR' || length !== 13)) return false;
+    first = false;
+    offset += length + 12;
+    if (type === 'IEND') return length === 0 && offset === bytes.length;
+  }
+  return false;
+}
+
+function isValidWebp(bytes: Uint8Array): boolean {
+  if (readU32(bytes, 4, true) + 8 !== bytes.length) return false;
+  let offset = 12;
+  let hasImageData = false;
+  while (offset + 8 <= bytes.length) {
+    const type = ascii(bytes, offset, 4);
+    const length = readU32(bytes, offset + 4, true);
+    const paddedLength = length + (length % 2);
+    if (offset + 8 + paddedLength > bytes.length) return false;
+    if (type === 'VP8 ' || type === 'VP8L' || type === 'VP8X') hasImageData = true;
+    offset += 8 + paddedLength;
+  }
+  return hasImageData && offset === bytes.length;
+}
+
 function ascii(bytes: Uint8Array, offset: number, length: number): string {
   return String.fromCharCode(...bytes.subarray(offset, offset + length));
 }
-function append(target: number[], source: Uint8Array) {
-  for (const value of source) target.push(value);
+function concat(chunks: Uint8Array[]): Uint8Array {
+  const output = new Uint8Array(chunks.reduce((total, chunk) => total + chunk.length, 0));
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return output;
 }
