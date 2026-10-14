@@ -30,6 +30,8 @@ import {
 } from './logic';
 
 const STORAGE_KEY = 'tools:date-calculator:state';
+const MAX_BUSINESS_DAYS = 10_000;
+const MAX_CALENDAR_UNIT = 100_000;
 
 type Mode = 'diff' | 'add';
 type Direction = 'add' | 'subtract';
@@ -91,6 +93,38 @@ function defaultState(today: string): PersistedState {
   };
 }
 
+function isHolidayCountry(value: unknown): value is HolidayCountry {
+  return value === 'none' || value === 'us' || value === 'kr';
+}
+
+function boundedWholeNumber(value: unknown, maximum: number, fallback: number | '' = ''): number | '' {
+  if (value === '') return '';
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.min(maximum, Math.max(0, Math.round(value)));
+}
+
+function restoreState(saved: unknown, defaults: PersistedState): PersistedState {
+  if (!saved || typeof saved !== 'object') return defaults;
+  const value = saved as Partial<PersistedState>;
+  return {
+    ...defaults,
+    mode: value.mode === 'add' || value.mode === 'diff' ? value.mode : defaults.mode,
+    startDate: typeof value.startDate === 'string' ? value.startDate : defaults.startDate,
+    endDate: typeof value.endDate === 'string' ? value.endDate : defaults.endDate,
+    includeStart: typeof value.includeStart === 'boolean' ? value.includeStart : defaults.includeStart,
+    diffCountry: isHolidayCountry(value.diffCountry) ? value.diffCountry : defaults.diffCountry,
+    baseDate: typeof value.baseDate === 'string' ? value.baseDate : defaults.baseDate,
+    direction: value.direction === 'add' || value.direction === 'subtract' ? value.direction : defaults.direction,
+    useBusinessDays: typeof value.useBusinessDays === 'boolean' ? value.useBusinessDays : defaults.useBusinessDays,
+    businessDaysAmount: boundedWholeNumber(value.businessDaysAmount, MAX_BUSINESS_DAYS, defaults.businessDaysAmount),
+    years: boundedWholeNumber(value.years, MAX_CALENDAR_UNIT, defaults.years),
+    months: boundedWholeNumber(value.months, MAX_CALENDAR_UNIT, defaults.months),
+    weeks: boundedWholeNumber(value.weeks, MAX_CALENDAR_UNIT, defaults.weeks),
+    days: boundedWholeNumber(value.days, MAX_CALENDAR_UNIT, defaults.days),
+    addCountry: isHolidayCountry(value.addCountry) ? value.addCountry : defaults.addCountry,
+  };
+}
+
 export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<PersistedState>(() => defaultState('2026-01-01'));
@@ -101,7 +135,7 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
     let next = defaultState(today);
     try {
       const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-      if (saved && typeof saved === 'object') next = { ...next, ...saved };
+      next = restoreState(saved, next);
     } catch {
       /* ignore corrupt state */
     }
@@ -149,9 +183,10 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
     if (!isValidDate(state.baseDate)) return null;
     const sign = state.direction === 'add' ? 1 : -1;
     if (state.useBusinessDays) {
-      return addBusinessDays(state.baseDate, sign * (state.businessDaysAmount || 0), state.addCountry);
+      const result = addBusinessDays(state.baseDate, sign * (state.businessDaysAmount || 0), state.addCountry);
+      return isValidDate(result) ? result : null;
     }
-    return addCalendarDelta(
+    const result = addCalendarDelta(
       state.baseDate,
       {
         years: state.years || 0,
@@ -161,6 +196,7 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
       },
       sign,
     );
+    return isValidDate(result) ? result : null;
   }, [
     state.baseDate,
     state.direction,
@@ -190,6 +226,7 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
     : '';
 
   const addSummary = addResultDate ? formatLong(addResultDate) : '';
+  const addError = !isValidDate(state.baseDate) ? ui.invalidDate : ui.dateOutOfRange;
 
   return (
     <Panel>
@@ -213,6 +250,8 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
               <Field label={ui.startDate}>
                 <TextInput
                   type="date"
+                  min="0001-01-01"
+                  max="9999-12-31"
                   value={state.startDate}
                   onInput={(e) => update({ startDate: (e.currentTarget as HTMLInputElement).value })}
                 />
@@ -220,6 +259,8 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
               <Field label={ui.endDate}>
                 <TextInput
                   type="date"
+                  min="0001-01-01"
+                  max="9999-12-31"
                   value={state.endDate}
                   onInput={(e) => update({ endDate: (e.currentTarget as HTMLInputElement).value })}
                 />
@@ -269,6 +310,8 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
               <Field label={ui.baseDate}>
                 <TextInput
                   type="date"
+                  min="0001-01-01"
+                  max="9999-12-31"
                   value={state.baseDate}
                   onInput={(e) => update({ baseDate: (e.currentTarget as HTMLInputElement).value })}
                 />
@@ -297,8 +340,9 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
                 <Field label={ui.businessDaysAmount}>
                   <NumberInput
                     value={state.businessDaysAmount}
-                    onValue={(v) => update({ businessDaysAmount: v === '' ? '' : Math.max(0, Math.round(v)) })}
+                    onValue={(v) => update({ businessDaysAmount: boundedWholeNumber(v, MAX_BUSINESS_DAYS) })}
                     min={0}
+                    max={MAX_BUSINESS_DAYS}
                   />
                 </Field>
                 <Field label={ui.holidayCountry} hint={ui.holidayHint}>
@@ -313,16 +357,36 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
               <>
                 <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <Field label={ui.years}>
-                    <NumberInput value={state.years} onValue={(v) => update({ years: v })} min={0} />
+                    <NumberInput
+                      value={state.years}
+                      onValue={(v) => update({ years: boundedWholeNumber(v, MAX_CALENDAR_UNIT) })}
+                      min={0}
+                      max={MAX_CALENDAR_UNIT}
+                    />
                   </Field>
                   <Field label={ui.months}>
-                    <NumberInput value={state.months} onValue={(v) => update({ months: v })} min={0} />
+                    <NumberInput
+                      value={state.months}
+                      onValue={(v) => update({ months: boundedWholeNumber(v, MAX_CALENDAR_UNIT) })}
+                      min={0}
+                      max={MAX_CALENDAR_UNIT}
+                    />
                   </Field>
                   <Field label={ui.weeks}>
-                    <NumberInput value={state.weeks} onValue={(v) => update({ weeks: v })} min={0} />
+                    <NumberInput
+                      value={state.weeks}
+                      onValue={(v) => update({ weeks: boundedWholeNumber(v, MAX_CALENDAR_UNIT) })}
+                      min={0}
+                      max={MAX_CALENDAR_UNIT}
+                    />
                   </Field>
                   <Field label={ui.days}>
-                    <NumberInput value={state.days} onValue={(v) => update({ days: v })} min={0} />
+                    <NumberInput
+                      value={state.days}
+                      onValue={(v) => update({ days: boundedWholeNumber(v, MAX_CALENDAR_UNIT) })}
+                      min={0}
+                      max={MAX_CALENDAR_UNIT}
+                    />
                   </Field>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -343,7 +407,7 @@ export default function DateCalculator({ locale, ui }: ToolProps<UI>) {
 
           <div class="flex flex-col gap-3">
             {!addResultDate ? (
-              <Notice tone="danger">{ui.invalidDate}</Notice>
+              <Notice tone="danger">{addError}</Notice>
             ) : (
               <>
                 <div class={cx('rounded-md bg-surface-2 px-4 py-5 text-center')} aria-live="polite">

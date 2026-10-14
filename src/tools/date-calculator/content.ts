@@ -15,8 +15,9 @@ const uiEn = {
   countryUs: 'United States',
   countryKr: 'South Korea',
   holidayUnsupported:
-    'The South Korea holiday table covers 2024–2026. Outside those years, only weekends were excluded.',
+    'The South Korea holiday table covers 2024–2027. Outside those years, only weekends were excluded.',
   invalidDate: 'Choose a valid calendar date.',
+  dateOutOfRange: 'This amount would fall outside the supported date range (0001–9999).',
   totalDays: 'Total days',
   businessDays: 'Business days',
   calendarSpan: 'Years, months, days',
@@ -74,7 +75,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Why business-day counts need a holiday calendar, not just weekends',
-        body: 'Excluding Saturdays and Sundays gets you close to a working-day count, but it still overcounts by one for every public holiday that falls on a weekday. This calculator computes the 11 US federal holidays directly from their official rules — fixed dates like Independence Day (July 4) and Christmas (December 25) shift to the nearest weekday when they land on a Saturday or Sunday, and floating dates like Memorial Day (last Monday of May) and Thanksgiving (fourth Thursday of November) are derived for any year, so US holidays never go stale. South Korean public holidays follow the lunar calendar for Seollal and Chuseok, and the government decides substitute holidays (대체공휴일) year by year, so this calculator uses a verified table covering 2024–2026; outside that range it still excludes weekends but shows a note that holidays were not subtracted.',
+        body: 'Excluding Saturdays and Sundays gets you close to a working-day count, but it still overcounts by one for every public holiday that falls on a weekday. This calculator computes the current 11 US federal holidays directly from their official rules — fixed dates like Independence Day (July 4) and Christmas (December 25) shift to the nearest weekday when they land on a Saturday or Sunday, and floating dates like Memorial Day (last Monday of May) and Thanksgiving (fourth Thursday of November) are derived for each year. Juneteenth is included from 2021, when it became a federal holiday. South Korean public holidays follow the lunar calendar for Seollal and Chuseok, and the government decides substitute holidays (대체공휴일) year by year, so this calculator uses a verified table covering 2024–2027; outside that range it still excludes weekends but shows a note that holidays were not subtracted.',
       },
       {
         heading: 'How the years/months/days span is calculated',
@@ -104,7 +105,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Which countries’ public holidays are supported?',
-        a: 'United States federal holidays are computed from their official rules for any year. South Korean public holidays, including lunar-calendar and substitute holidays, are supported for 2024–2026; a notice appears if a chosen date falls outside that range.',
+        a: 'United States federal holidays are computed from their official rules, with Juneteenth included from 2021 when it became a federal holiday. South Korean public holidays, including lunar-calendar and substitute holidays, are supported for 2024–2027; a notice appears if a chosen date falls outside that range.',
       },
       {
         q: 'Is any date I enter sent to a server?',
@@ -132,7 +133,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '주말만 빼면 영업일이 틀리는 이유',
-        body: '토요일과 일요일만 빼면 실제 근무일보다 공휴일 수만큼 더 많이 나옵니다. 이 계산기는 미국 연방 공휴일 11개를 공식 규정대로 직접 계산합니다. 독립기념일(7월 4일), 크리스마스(12월 25일)처럼 날짜가 고정된 공휴일은 토요일이면 금요일로, 일요일이면 월요일로 당겨지는 대체 규정을 그대로 적용하고, 현충일 성격의 메모리얼 데이는 5월 마지막 월요일처럼 매년 계산해 날짜가 바뀌어도 정확합니다. 대한민국 공휴일은 설날·추석이 음력 기준이고 대체공휴일도 해마다 정부가 정하기 때문에, 2024~2026년은 직접 확인한 날짜표를 쓰고 그 범위를 벗어나면 주말만 제외했다는 안내를 보여줍니다.',
+        body: '토요일과 일요일만 빼면 실제 근무일보다 공휴일 수만큼 더 많이 나옵니다. 이 계산기는 현재 미국 연방 공휴일 11개를 공식 규정대로 직접 계산합니다. 독립기념일(7월 4일), 크리스마스(12월 25일)처럼 날짜가 고정된 공휴일은 토요일이면 금요일로, 일요일이면 월요일로 당겨지는 대체 규정을 그대로 적용하고, 메모리얼 데이는 5월 마지막 월요일처럼 매년 계산합니다. 준틴스는 연방 공휴일이 된 2021년부터 반영합니다. 대한민국 공휴일은 설날·추석이 음력 기준이고 대체공휴일도 해마다 정부가 정하기 때문에, 2024~2027년은 직접 확인한 날짜표를 쓰고 그 범위를 벗어나면 주말만 제외했다는 안내를 보여줍니다.',
       },
       {
         heading: '연·월·일 차이는 어떻게 계산하나요',
@@ -162,7 +163,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '어느 나라의 공휴일을 지원하나요?',
-        a: '미국 연방 공휴일은 공식 규정대로 어떤 해든 계산합니다. 대한민국 공휴일은 음력 명절과 대체공휴일까지 포함해 2024~2026년을 지원하며, 그 밖의 해를 고르면 안내 문구가 나타납니다.',
+        a: '미국 연방 공휴일은 공식 규정대로 계산하며 준틴스는 연방 공휴일이 된 2021년부터 반영합니다. 대한민국 공휴일은 음력 명절과 대체공휴일까지 포함해 2024~2027년을 지원하며, 그 밖의 해를 고르면 안내 문구가 나타납니다.',
       },
       {
         q: '입력한 날짜가 서버로 전송되나요?',
@@ -182,8 +183,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       countryNone: '없음(주말만 제외)',
       countryUs: '미국',
       countryKr: '대한민국',
-      holidayUnsupported: '대한민국 공휴일 데이터는 2024~2026년만 지원해 그 밖의 해는 주말만 제외했습니다.',
+      holidayUnsupported: '대한민국 공휴일 데이터는 2024~2027년만 지원해 그 밖의 해는 주말만 제외했습니다.',
       invalidDate: '올바른 날짜를 선택하세요.',
+      dateOutOfRange: '계산 결과가 지원 날짜 범위(0001~9999년)를 벗어납니다.',
       totalDays: '총 일수',
       businessDays: '영업일',
       calendarSpan: '연·월·일',
