@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its “Popular Sizes” places labels such as “24 평(59㎡)” and “32 평(84㎡)” next to a direct converter, even though 59㎡ and 84㎡ convert directly to about 17.85평 and 25.41평; readers must find the later explanation to learn those labels use another area basis. Betterbit names the basis next to the result and exposes both entered figures together. (Strength: its guide clearly explains exclusive, supply, and contract area below the calculator.)',
     },
   ],
-  related: ['length-converter', 'scientific-calculator', 'loan-calculator'],
+  related: ['length-converter', 'scientific-calculator', 'loan-calculator', 'area-converter'],
 };

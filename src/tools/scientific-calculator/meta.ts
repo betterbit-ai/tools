@@ -45,5 +45,6 @@ export const meta: ToolMeta = {
     'gpa-calculator',
     'fraction-calculator',
     'pyeong-calculator',
+    'area-converter',
   ],
 };

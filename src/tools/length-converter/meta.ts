@@ -141,6 +141,7 @@ export const meta: ToolMeta = {
     'weight-converter',
     'temperature-converter',
     'pyeong-calculator',
+    'area-converter',
   ],
   variants,
 };
