@@ -135,7 +135,7 @@
 | weight-converter        | 무게 변환      | kg to lbs / kg 파운드                       | 근, 돈 등 한국 단위           | P0  | live |
 | temperature-converter   | 온도 변환      | celsius to fahrenheit / 섭씨 화씨           | 요리 온도 표                  | P0  | live |
 | area-converter          | 넓이 변환      | sq ft to m2 / 평 계산                       | 평 ↔ ㎡ 강조                  | P1  | live |
-| volume-converter        | 부피 변환      | cups to ml / 컵 ml                          | 요리 계량 (US/메트릭 컵 구분) | P1  | todo |
+| volume-converter        | 부피 변환      | cups to ml / 컵 ml                          | 요리 계량 (US/메트릭 컵 구분) | P1  | live |
 | speed-converter         | 속도 변환      | mph to kmh                                  | 페이스(분/km) 변환            | P1  | todo |
 | data-size-converter     | 데이터 크기    | mb to gb / 용량 변환                        | 1000 vs 1024 둘 다 표시       | P1  | todo |
 | shoe-size-converter     | 신발 사이즈    | shoe size conversion / 신발 사이즈 표       | 브랜드별 차이 안내            | P1  | todo |
