@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'compound-interest',
     'random-number',
     'pyeong-calculator',
+    'exchange-rate',
   ],
 };

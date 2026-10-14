@@ -57,5 +57,6 @@ export const meta: ToolMeta = {
     'gpa-calculator',
     'fraction-calculator',
     'calorie-calculator',
+    'exchange-rate',
   ],
 };
