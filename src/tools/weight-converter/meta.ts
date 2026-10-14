@@ -140,6 +140,7 @@ export const meta: ToolMeta = {
     'scientific-calculator',
     'temperature-converter',
     'calorie-calculator',
+    'area-converter',
   ],
   variants,
 };
