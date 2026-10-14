@@ -143,6 +143,7 @@ export const meta: ToolMeta = {
     'pyeong-calculator',
     'area-converter',
     'volume-converter',
+    'speed-converter',
   ],
   variants,
 };
