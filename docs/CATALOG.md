@@ -101,29 +101,29 @@
 
 ## calculator: 계산기
 
-| slug                    | 도구             | 핵심 키워드                                | Edge 아이디어                           | P   | 상태 |
-| ----------------------- | ---------------- | ------------------------------------------ | --------------------------------------- | --- | ---- |
-| percentage-calculator   | 퍼센트 계산기    | percentage calculator / 퍼센트 계산        | 4가지 유형 동시 표시, 계산식 노출       | P0  | live |
-| scientific-calculator   | 공학용 계산기    | scientific calculator / 공학용 계산기      | 키보드 입력, 히스토리                   | P0  | live |
-| bmi-calculator          | BMI 계산기       | bmi calculator / bmi 계산                  | 아시아 기준(대한비만학회) 병기          | P0  | live |
-| loan-calculator         | 대출 이자 계산기 | loan calculator / 대출 이자 계산기         | 원리금균등, 원금균등, 만기일시, 상환표  | P0  | live |
-| salary-calculator-kr    | 연봉 실수령액    | 연봉 실수령액 계산기                       | 2026년 4대보험 요율, 비과세 반영        | P0  | live |
-| compound-interest       | 복리 계산기      | compound interest calculator / 복리 계산기 | 적립식, 그래프                          | P0  | live |
-| tip-calculator          | 팁 계산기        | tip calculator                             | 인원 분할, 국가별 팁 관행               | P1  | live |
-| discount-calculator     | 할인율 계산기    | discount calculator / 할인율 계산          | 중복 할인, 원가 역산                    | P1  | live |
-| gpa-calculator          | 학점 계산기      | gpa calculator / 학점 계산기               | 4.5/4.3/4.0 환산                        | P1  | live |
-| fraction-calculator     | 분수 계산기      | fraction calculator                        | 풀이 과정 표시                          | P1  | live |
-| random-number           | 랜덤 숫자        | random number generator                    | 중복 없음, 범위, 대량                   | P0  | live |
-| calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시               | P1  | live |
-| pregnancy-calculator    | 출산 예정일      | due date calculator / 출산예정일           | 주차별 정보                             | P1  | live |
-| vat-calculator          | 부가세 계산기    | vat calculator / 부가세 계산기             | 국가별 세율, 역산                       | P1  | live |
-| severance-pay-kr        | 퇴직금 계산기    | 퇴직금 계산기                              | 평균임금 자동 계산                      | P1  | live |
-| unemployment-benefit-kr | 실업급여 계산기  | 실업급여 계산기                            | 2026년 상하한액                         | P1  | live |
-| pyeong-calculator       | 평수 계산기      | 평수 계산 / 평 제곱미터                    | 공급·전용 면적 설명                     | P1  | live |
-| ratio-calculator        | 비율 계산기      | ratio calculator / 비례식 계산             | 화면비, 레시피 비율                     | P2  | todo |
-| average-calculator      | 평균 계산기      | average calculator                         | 평균, 중앙값, 최빈값, 표준편차 한번에   | P2  | todo |
-| electricity-bill-kr     | 전기요금 계산기  | 전기요금 계산기                            | 누진 구간 시각화                        | P2  | todo |
-| exchange-rate           | 환율 계산기      | currency converter / 환율 계산기           | (환율 데이터 필요: 빌드 타임 갱신 검토) | P1  | todo |
+| slug                    | 도구             | 핵심 키워드                                | Edge 아이디어                               | P   | 상태 |
+| ----------------------- | ---------------- | ------------------------------------------ | ------------------------------------------- | --- | ---- |
+| percentage-calculator   | 퍼센트 계산기    | percentage calculator / 퍼센트 계산        | 4가지 유형 동시 표시, 계산식 노출           | P0  | live |
+| scientific-calculator   | 공학용 계산기    | scientific calculator / 공학용 계산기      | 키보드 입력, 히스토리                       | P0  | live |
+| bmi-calculator          | BMI 계산기       | bmi calculator / bmi 계산                  | 아시아 기준(대한비만학회) 병기              | P0  | live |
+| loan-calculator         | 대출 이자 계산기 | loan calculator / 대출 이자 계산기         | 원리금균등, 원금균등, 만기일시, 상환표      | P0  | live |
+| salary-calculator-kr    | 연봉 실수령액    | 연봉 실수령액 계산기                       | 2026년 4대보험 요율, 비과세 반영            | P0  | live |
+| compound-interest       | 복리 계산기      | compound interest calculator / 복리 계산기 | 적립식, 그래프                              | P0  | live |
+| tip-calculator          | 팁 계산기        | tip calculator                             | 인원 분할, 국가별 팁 관행                   | P1  | live |
+| discount-calculator     | 할인율 계산기    | discount calculator / 할인율 계산          | 중복 할인, 원가 역산                        | P1  | live |
+| gpa-calculator          | 학점 계산기      | gpa calculator / 학점 계산기               | 4.5/4.3/4.0 환산                            | P1  | live |
+| fraction-calculator     | 분수 계산기      | fraction calculator                        | 풀이 과정 표시                              | P1  | live |
+| random-number           | 랜덤 숫자        | random number generator                    | 중복 없음, 범위, 대량                       | P0  | live |
+| calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시                   | P1  | live |
+| pregnancy-calculator    | 출산 예정일      | due date calculator / 출산예정일           | 주차별 정보                                 | P1  | live |
+| vat-calculator          | 부가세 계산기    | vat calculator / 부가세 계산기             | 국가별 세율, 역산                           | P1  | live |
+| severance-pay-kr        | 퇴직금 계산기    | 퇴직금 계산기                              | 평균임금 자동 계산                          | P1  | live |
+| unemployment-benefit-kr | 실업급여 계산기  | 실업급여 계산기                            | 2026년 상하한액                             | P1  | live |
+| pyeong-calculator       | 평수 계산기      | 평수 계산 / 평 제곱미터                    | 공급·전용 면적 설명                         | P1  | live |
+| ratio-calculator        | 비율 계산기      | ratio calculator / 비례식 계산             | 화면비, 레시피 비율                         | P2  | todo |
+| average-calculator      | 평균 계산기      | average calculator                         | 평균, 중앙값, 최빈값, 표준편차 한번에       | P2  | todo |
+| electricity-bill-kr     | 전기요금 계산기  | 전기요금 계산기                            | 누진 구간 시각화                            | P2  | todo |
+| exchange-rate           | 환율 계산기      | currency converter / 환율 계산기           | 실제 제시 환율·수수료·실질 환율을 함께 계산 | P1  | live |
 
 ## converter: 단위 변환
 
