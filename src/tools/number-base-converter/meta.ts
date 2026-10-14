@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its search result and opened page describe a “계산” button workflow for four bases and a 64-bit integer limit; decimal input is capped at 18,446,744,073,709,551,615. Betterbit recalculates on every edit, supports bases 2–36, and keeps exact whole-number values up to 10,000 digits. (Strength: it shows worked positional-expansion and division steps for its four supported bases.)',
     },
   ],
-  related: ['scientific-calculator', 'data-size-converter', 'base64'],
+  related: ['scientific-calculator', 'data-size-converter', 'base64', 'korean-number'],
 };

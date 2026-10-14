@@ -49,5 +49,6 @@ export const meta: ToolMeta = {
     'speed-converter',
     'data-size-converter',
     'number-base-converter',
+    'korean-number',
   ],
 };
