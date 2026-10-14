@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from 'preact/hooks';
 import { zipSync } from 'fflate';
-import { Button, Dropzone, Notice, Panel, Stat } from '../../components/ui';
+import { Button, Dropzone, Notice, Panel, Stat, Toggle } from '../../components/ui';
 import { downloadBlob } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import { cleanFile, inspectFile } from './clean';
 import type { ExifSummary } from './logic';
-import { cleanedName } from './logic';
+import { cleanedName, privateName } from './logic';
 import type { UI } from './content';
 
 interface Item {
@@ -15,13 +15,14 @@ interface Item {
   summary?: ExifSummary;
   result?: { blob: Blob; summary: ExifSummary };
   busy?: boolean;
-  error?: boolean;
+  error?: 'read' | 'clean';
 }
 
 let nextId = 1;
 
 export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
   const [items, setItems] = useState<Item[]>([]);
+  const [usePrivateNames, setUsePrivateNames] = useState(true);
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
@@ -37,7 +38,7 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
         );
       } catch {
         setItems((current) =>
-          current.map((entry) => (entry.id === item.id ? { ...entry, error: true, busy: false } : entry)),
+          current.map((entry) => (entry.id === item.id ? { ...entry, error: 'read', busy: false } : entry)),
         );
       }
     }
@@ -54,7 +55,9 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
         current.map((entry) => (entry.id === id ? { ...entry, result: { blob, summary }, busy: false } : entry)),
       );
     } catch {
-      setItems((current) => current.map((entry) => (entry.id === id ? { ...entry, error: true, busy: false } : entry)));
+      setItems((current) =>
+        current.map((entry) => (entry.id === id ? { ...entry, error: 'clean', busy: false } : entry)),
+      );
     }
   }, []);
 
@@ -66,12 +69,16 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
   const ready = items.filter((item) => item.result && !item.busy);
   const pending = items.filter((item) => !item.error && !item.result && !item.busy);
   const found = items.filter((item) => item.summary?.hasMetadata).length;
+  const outputName = (item: Item) =>
+    usePrivateNames
+      ? privateName(item.file.name, items.findIndex((entry) => entry.id === item.id) + 1)
+      : cleanedName(item.file.name);
 
   const downloadAll = async () => {
-    if (ready.length === 1) return downloadBlob(ready[0].result!.blob, cleanedName(ready[0].file.name));
+    if (ready.length === 1) return downloadBlob(ready[0].result!.blob, outputName(ready[0]));
     const files: Record<string, Uint8Array> = {};
     for (const item of ready) {
-      const sourceName = cleanedName(item.file.name);
+      const sourceName = outputName(item);
       let name = sourceName;
       for (let duplicate = 2; files[name]; duplicate++) name = sourceName.replace(/(\.[^.]+)$/, `-${duplicate}$1`);
       files[name] = new Uint8Array(await item.result!.blob.arrayBuffer());
@@ -84,7 +91,7 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
       <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div class="min-w-0">
           <Dropzone
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
             multiple
             onFiles={addFiles}
             title={ui.dropTitle}
@@ -103,7 +110,7 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
                     <div class="min-w-0 flex-1 text-sm">
                       <p class="truncate font-medium text-fg">{item.file.name}</p>
                       {item.error ? (
-                        <p class="mt-1 text-danger">{ui.unsupported}</p>
+                        <p class="mt-1 text-danger">{item.error === 'clean' ? ui.cleanError : ui.unsupported}</p>
                       ) : item.busy && !item.summary ? (
                         <p class="mt-1 text-muted">{ui.processing}</p>
                       ) : item.summary ? (
@@ -133,7 +140,7 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => downloadBlob(item.result!.blob, cleanedName(item.file.name))}
+                          onClick={() => downloadBlob(item.result!.blob, outputName(item))}
                         >
                           {ui.download}
                         </Button>
@@ -141,7 +148,7 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
                         <Button
                           size="sm"
                           variant="secondary"
-                          disabled={item.busy || item.error}
+                          disabled={item.busy || Boolean(item.error)}
                           onClick={() => clean(item.id)}
                         >
                           {item.busy ? ui.processing : ui.clean}
@@ -176,6 +183,10 @@ export default function ExifViewerRemover({ locale, ui }: ToolProps<UI>) {
             <Stat label={ui.metadataFound} value={found} emphasis />
           </div>
           <Notice>{ui.cleanNote}</Notice>
+          <div>
+            <Toggle checked={usePrivateNames} onChecked={setUsePrivateNames} label={ui.privateNames} />
+            <p class="mt-1 text-xs text-subtle">{ui.privateNamesHint}</p>
+          </div>
           {ready.length > 0 && <Notice tone="success">{ui.resultNote}</Notice>}
         </div>
       </div>
