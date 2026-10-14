@@ -5,57 +5,27 @@ export const meta: ToolMeta = {
   category: 'time',
   icon: 'clock',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-14',
   edges: ['usability', 'privacy'],
   competitors: [
-    {
-      name: 'ShortCalc Date Countdown Calculator',
-      url: 'https://date-countdown.shortcalc.com/',
-      weakness:
-        'Its countdown view is a multi-result date-difference calculator with weekday filters and a “Show all 10 results” control, rather than a continuously updating event display with a named share URL. (Strength: it offers working-day and custom-weekday counts.)',
-    },
     {
       name: 'Tickward',
       url: 'https://tickward.com/',
       weakness:
-        'Its shared timers are server-backed public links that can be revoked, and cross-device sync requires an account or restore key. Betterbit encodes the name, date and time directly in a shareable URL without creating an account or server-side event. (Strength: it supports time zones, embeds and recurring timers.)',
+        'Its public timer links can be revoked and cross-device sync needs an account or restore key. Betterbit stores a one-off event entirely in the browser and in a share link fragment, with no remotely managed timer. (Strength: it supports event time zones, embeds, recurring timers and cross-device sync.)',
     },
     {
-      name: 'I Love Timers Countdown To Date',
-      url: 'https://www.ilovetimers.com/countdown-to-date/',
+      name: 'timeanddate.com Countdown',
+      url: 'https://www.timeanddate.com/countdown/create',
       weakness:
-        'Its quick targets are Tomorrow, +7 days and +30 days, and its page describes no saved event management. Betterbit gives named annual-event buttons and keeps the selected event in both local storage and the URL. (Strength: it provides copy, share and fullscreen actions.)',
+        'Its creation page presents 30+ themed designs, a city-based event location and a large site-wide navigation before the event fields, plus advertising. Betterbit opens directly to a compact event form with annual-event presets and no ads. (Strength: it supports selected-location DST handling, design themes and a seconds field.)',
     },
     {
-      name: 'DamdaTools D-day Calculator',
-      url: 'https://damdatools.com/dday/',
+      name: 'timer.ly',
+      url: 'https://www.timer.ly/',
       weakness:
-        'It clearly compares inclusive and exclusive D-day counting and stores events locally, but its visible input has a date only: it does not offer a live hours/minutes/seconds countdown or a URL that opens a selected event. (Strength: it also calculates 100-day and anniversary dates.)',
-    },
-    {
-      name: 'Numsmith Date Calculator',
-      url: 'https://numsmith.com/tools/d-day',
-      weakness:
-        'Its Korean D-day tool combines date differences, date addition and anniversaries behind a calculation action; the result description does not provide a live event clock. Betterbit updates one named countdown every second and keeps its exact date/time in the URL. (Strength: it includes calendar-month and business-day calculations.)',
-    },
-    {
-      name: 'WikiTool D-day Calculator',
-      url: 'https://wikitool.co.kr/tools/dday',
-      weakness:
-        'Its FAQ states that it ignores hours and minutes and does not save events, so it cannot show time remaining to a specific moment or reopen a selected event from a link. Betterbit includes optional local time and a URL-based event state. (Strength: its date-only explanation is concise.)',
+        'Its target-date flow requires choosing date, hours, minutes and a time zone from long option lists. Betterbit needs only a date (and an optional native time input) for a local event, then updates its share link as you edit. (Strength: it offers duration and past-date timers, explicit time zones, and country holiday calendars.)',
     },
   ],
-  related: [
-    'timer',
-    'stopwatch',
-    'pomodoro-timer',
-    'interval-timer',
-    'alarm-clock',
-    'date-calculator',
-    'age-calculator',
-    'time-zone-converter',
-    'unix-timestamp',
-    'world-clock',
-    'pregnancy-calculator',
-  ],
+  related: ['timer', 'stopwatch', 'date-calculator', 'time-zone-converter'],
 };
