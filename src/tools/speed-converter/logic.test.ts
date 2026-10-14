@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+import {
+  MAX_SPEED,
+  SPEED_UNITS,
+  convertSpeed,
+  formatPace,
+  isSpeedUnit,
+  paceSecondsFromSpeed,
+  parseSpeedNumber,
+  quickTable,
+  speedFromPace,
+} from './logic';
+
+describe('convertSpeed', () => {
+  it('uses the exact mph and knot definitions', () => {
+    expect(convertSpeed(1, 'mph', 'kmh')).toBeCloseTo(1.609344, 12);
+    expect(convertSpeed(60, 'mph', 'kmh')).toBeCloseTo(96.56064, 12);
+    expect(convertSpeed(1, 'knot', 'kmh')).toBeCloseTo(1.852, 12);
+  });
+
+  it('converts metres per second and round-trips every unit', () => {
+    expect(convertSpeed(20, 'ms', 'kmh')).toBeCloseTo(72, 12);
+    for (const from of SPEED_UNITS) {
+      for (const to of SPEED_UNITS) {
+        expect(convertSpeed(convertSpeed(123.456, from, to), to, from)).toBeCloseTo(123.456, 8);
+      }
+    }
+  });
+
+  it('keeps zero but rejects negative, non-finite, and oversized values', () => {
+    expect(convertSpeed(0, 'kmh', 'mph')).toBe(0);
+    expect(convertSpeed(-1, 'kmh', 'mph')).toBe(0);
+    expect(convertSpeed(NaN, 'kmh', 'mph')).toBe(0);
+    expect(convertSpeed(Infinity, 'kmh', 'mph')).toBe(0);
+    expect(convertSpeed(MAX_SPEED + 1, 'kmh', 'mph')).toBe(0);
+  });
+});
+
+describe('pace conversion', () => {
+  it('converts a 5:00 min/km running pace to 12 km/h and 8:03 min/mi', () => {
+    const speed = speedFromPace(5, 0, 'km');
+    expect(convertSpeed(speed, 'ms', 'kmh')).toBeCloseTo(12, 12);
+    expect(formatPace(paceSecondsFromSpeed(speed, 'ms', 'mi'))).toBe('8:03');
+  });
+
+  it('converts a 10:00 min/mi pace to km/h and min/km', () => {
+    const speed = speedFromPace(10, 0, 'mi');
+    expect(convertSpeed(speed, 'ms', 'kmh')).toBeCloseTo(9.656064, 12);
+    expect(formatPace(paceSecondsFromSpeed(speed, 'ms', 'km'))).toBe('6:13');
+  });
+
+  it('rejects impossible pace fields and treats stopped speed as no pace', () => {
+    expect(speedFromPace(0, 0, 'km')).toBe(0);
+    expect(speedFromPace(4, 60, 'km')).toBe(0);
+    expect(speedFromPace(-1, 30, 'mi')).toBe(0);
+    expect(paceSecondsFromSpeed(0, 'kmh', 'km')).toBeNull();
+    expect(formatPace(null)).toBe('—');
+  });
+
+  it('rounds pace seconds and carries to the next minute', () => {
+    expect(formatPace(299.5)).toBe('5:00');
+    expect(formatPace(59.4)).toBe('0:59');
+  });
+});
+
+describe('input and reference helpers', () => {
+  it('normalizes full-width Korean keyboard digits but rejects prose and units', () => {
+    expect(parseSpeedNumber('１２，３４５．６')).toBe(12345.6);
+    expect(parseSpeedNumber(' 60 ')).toBe(60);
+    expect(parseSpeedNumber('60 mph')).toBeNull();
+    expect(parseSpeedNumber('시속 60')).toBeNull();
+    expect(parseSpeedNumber('😀')).toBeNull();
+  });
+
+  it('recognizes only its units and builds a table from every source unit', () => {
+    expect(isSpeedUnit('mph')).toBe(true);
+    expect(isSpeedUnit('mach')).toBe(false);
+    expect(isSpeedUnit('')).toBe(false);
+    for (const unit of SPEED_UNITS) {
+      const rows = quickTable(unit, 'kmh');
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows[0]?.result).toBeCloseTo(convertSpeed(rows[0]!.value, unit, 'kmh'), 12);
+    }
+  });
+});

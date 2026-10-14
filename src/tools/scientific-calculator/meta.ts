@@ -46,5 +46,6 @@ export const meta: ToolMeta = {
     'fraction-calculator',
     'pyeong-calculator',
     'area-converter',
+    'speed-converter',
   ],
 };
