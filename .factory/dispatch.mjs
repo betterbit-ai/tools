@@ -492,6 +492,7 @@ function fixPr(repo, clone, pr, issue, failed, attempts) {
     PROBLEM: problem,
     DETAILS: details || '(none)',
   });
+  const sessionStarted = Date.now();
   const session = runAgent(text, wt, logFile, { gitDir: join(clone, '.git') });
   if (session.limited) {
     log(`[${repo.name}] fix for PR #${pr.number} paused by usage limit`);
@@ -728,6 +729,40 @@ function startNextIssue(repo, clone) {
     );
     gh(['issue', 'close', String(n), '-R', repo.slug, '--reason', 'completed'], { allowFail: true });
     gh(['issue', 'edit', String(n), '-R', repo.slug, '--remove-label', 'agent:in-progress'], { allowFail: true });
+    removeWorktree(repo, clone, n);
+    return 'done';
+  }
+  // A "timeout" far past the limit means the machine slept mid-session (timers jump on wake):
+  // that's an interruption, not the issue's fault — re-queue it.
+  const sleptThrough = session.timedOut && Date.now() - sessionStarted > CONFIG.session.timeoutMinutes * 60_000 * 1.3;
+  if (!commits && sleptThrough) {
+    log(`[${repo.name}] issue #${n}: session outlived its timeout (machine slept) — re-queued`);
+    gh(
+      [
+        'issue',
+        'edit',
+        String(n),
+        '-R',
+        repo.slug,
+        '--remove-label',
+        'agent:in-progress',
+        '--add-label',
+        'agent:ready',
+      ],
+      { allowFail: true },
+    );
+    gh(
+      [
+        'issue',
+        'comment',
+        String(n),
+        '-R',
+        repo.slug,
+        '--body',
+        `${INTERRUPT_MARKER}\n🏭 The machine slept during this session. Re-queued.`,
+      ],
+      { allowFail: true },
+    );
     removeWorktree(repo, clone, n);
     return 'done';
   }
