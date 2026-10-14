@@ -92,6 +92,6 @@ export const meta: ToolMeta = {
         'Its interface asks the visitor to press “계산하기” after selecting the value, input unit, and calculation basis; its page also loads Google Tag Manager. Betterbit has no calculation step or third-party tracking and retains both standards at once rather than making the visitor pick one before calculating. (Strength: it includes a detailed capacity-difference table and bit/byte examples.)',
     },
   ],
-  related: ['base64', 'scientific-calculator', 'length-converter'],
+  related: ['base64', 'scientific-calculator', 'length-converter', 'number-base-converter'],
   variants,
 };

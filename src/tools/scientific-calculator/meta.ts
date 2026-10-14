@@ -48,5 +48,6 @@ export const meta: ToolMeta = {
     'area-converter',
     'speed-converter',
     'data-size-converter',
+    'number-base-converter',
   ],
 };

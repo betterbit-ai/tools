@@ -140,7 +140,7 @@
 | data-size-converter     | 데이터 크기    | mb to gb / 용량 변환                        | 1000 vs 1024 둘 다 표시       | P1  | live |
 | shoe-size-converter     | 신발 사이즈    | shoe size conversion / 신발 사이즈 표       | 브랜드별 차이 안내            | P1  | todo |
 | clothing-size-converter | 옷 사이즈      | clothing size chart / 옷 사이즈 변환        | 국가별 표                     | P2  | todo |
-| number-base-converter   | 진법 변환      | binary to decimal / 진법 변환               | 실시간 다중 진법              | P1  | todo |
+| number-base-converter   | 진법 변환      | binary to decimal / 진법 변환               | 실시간 다중 진법              | P1  | live |
 | roman-numerals          | 로마 숫자      | roman numeral converter                     | 양방향 + 규칙 설명            | P2  | todo |
 | korean-number           | 숫자 한글 변환 | 숫자 한글 변환 / 금액 한글                  | 수표·계약서용 "일금 ○○원정"   | P1  | todo |
 | cooking-converter       | 요리 계량      | tablespoon to grams                         | 재료별 밀도                   | P2  | todo |
