@@ -68,7 +68,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Set realistic expectations',
-        body: 'Upscaling predicts plausible texture; it cannot retrieve text, facial features or object detail that was never captured. At 4×, faces, lettering and repeating patterns can look painted or invented, so inspect the 100% comparison before using a result for print or evidence. A 1,000,000-pixel image creates up to 121 model tiles: a WebGPU-capable desktop normally feels much quicker than a phone using the WebAssembly fallback. Start with 2× on a phone or when the original is already fairly clear.',
+        body: 'Upscaling predicts plausible texture; it cannot retrieve text, facial features or object detail that was never captured. At 4×, faces, lettering and repeating patterns can look painted or invented, so inspect the 100% comparison before using a result for print or evidence. A 1,000,000-pixel image can create as many as 148 model tiles: a WebGPU-capable desktop normally feels much quicker than a phone using the WebAssembly fallback. Start with 2× on a phone or when the original is already fairly clear.',
       },
     ],
     faq: [
@@ -82,7 +82,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How long does AI upscaling take?',
-        a: 'Processing time depends on the device, browser and image size. This tool shows model-download progress and every 128-pixel inference tile; a 1,000,000-pixel maximum-size image can require up to 121 tiles. Desktop WebGPU is generally faster than phone WebAssembly.',
+        a: 'Processing time depends on the device, browser and image size. This tool shows model-download progress and every 128-pixel inference tile; a 1,000,000-pixel maximum-size image can require as many as 148 tiles. Desktop WebGPU is generally faster than phone WebAssembly.',
       },
       {
         q: 'Does image upscaling recover unreadable text or blurred faces?',
@@ -128,7 +128,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '화질 개선의 한계와 처리 시간',
-        body: 'AI 업스케일은 사라진 정보를 사실대로 되찾는 기능이 아니라 주변 픽셀을 바탕으로 그럴듯한 질감을 예측하는 기능입니다. 원본에 없는 글자, 심하게 흔들린 얼굴, 작은 인물의 세부 정보는 복원하지 못할 수 있고 4배에서는 글자·얼굴·반복 무늬가 인위적으로 보일 수 있습니다. 최대 100만 픽셀은 모델 타일이 최대 121개가 되므로, WebGPU를 쓸 수 있는 데스크톱이 휴대폰의 WebAssembly 처리보다 대체로 빠릅니다. 휴대폰에서는 2배부터 확인하는 편이 좋습니다.',
+        body: 'AI 업스케일은 사라진 정보를 사실대로 되찾는 기능이 아니라 주변 픽셀을 바탕으로 그럴듯한 질감을 예측하는 기능입니다. 원본에 없는 글자, 심하게 흔들린 얼굴, 작은 인물의 세부 정보는 복원하지 못할 수 있고 4배에서는 글자·얼굴·반복 무늬가 인위적으로 보일 수 있습니다. 최대 100만 픽셀 이미지는 모델 타일이 최대 148개가 될 수 있으므로, WebGPU를 쓸 수 있는 데스크톱이 휴대폰의 WebAssembly 처리보다 대체로 빠릅니다. 휴대폰에서는 2배부터 확인하는 편이 좋습니다.',
       },
     ],
     faq: [
@@ -142,7 +142,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'AI 사진 화질 개선에는 얼마나 걸리나요?',
-        a: '처리 시간은 이미지 크기, 브라우저, 기기 성능에 따라 달라집니다. 이 도구는 모델 다운로드와 128px 타일별 진행 상황을 보여 주며, 최대 100만 픽셀 이미지는 최대 121개 타일을 처리합니다. 일반적으로 WebGPU 데스크톱이 휴대폰 WebAssembly보다 빠릅니다.',
+        a: '처리 시간은 이미지 크기, 브라우저, 기기 성능에 따라 달라집니다. 이 도구는 모델 다운로드와 128px 타일별 진행 상황을 보여 주며, 최대 100만 픽셀 이미지는 최대 148개 타일을 처리합니다. 일반적으로 WebGPU 데스크톱이 휴대폰 WebAssembly보다 빠릅니다.',
       },
       {
         q: '흐린 글자나 얼굴도 정확하게 복원되나요?',

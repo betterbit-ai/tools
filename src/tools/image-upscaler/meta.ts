@@ -12,8 +12,8 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'sparkle',
   added: '2026-10-11',
-  updated: '2026-10-11',
-  edges: ['privacy', 'no-ads', 'no-signup', 'performance', 'features'],
+  updated: '2026-10-15',
+  edges: ['privacy', 'no-ads'],
   competitors: [
     {
       name: 'Adobe Firefly Image Upscaler',
@@ -25,7 +25,7 @@ export const meta: ToolMeta = {
       name: 'VanceAI Image Enlarger',
       url: 'https://vanceai.com/image-enlarger/',
       weakness:
-        'Uploads images to its service and says they are deleted within 24 hours; free use starts with 10 credits. (Strength: it offers specialised portrait, product, anime, text and low-light models plus up to 8× online.)',
+        'Its online tool starts with an image upload rather than local browser processing and promotes subscriptions and credits. (Strength: it offers specialised image modes, up to 8× online, and a local desktop client.)',
     },
     {
       name: 'ImgUpscaler',

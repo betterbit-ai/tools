@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_INPUT_PIXELS,
   MODEL_INPUT_SIZE,
+  imageDimensionsFromHeader,
   makeTileGrid,
   outputDimensions,
   outputName,
@@ -28,6 +29,7 @@ describe('image-upscaler planning', () => {
       }
     }
     expect([...covered].every((count) => count === 1)).toBe(true);
+    expect(makeTileGrid(289, 3457)).toHaveLength(148);
   });
 
   it('maps edge tile cores to correct 4× stitch coordinates', () => {
@@ -59,5 +61,29 @@ describe('image-upscaler planning', () => {
   it('keeps Unicode and emoji filenames readable', () => {
     expect(outputName('가족 사진 📷.PNG', 4, 'image/png')).toBe('가족 사진 📷-4x-upscaled.png');
     expect(outputName('.hidden', 2, 'image/jpeg')).toBe('.hidden-2x-upscaled.jpg');
+    expect(outputName('photo.', 2, 'image/webp')).toBe('photo-2x-upscaled.webp');
+  });
+
+  it('reads supported image dimensions from a small header before full decoding', () => {
+    const png = new Uint8Array(24);
+    png.set([137, 80, 78, 71, 13, 10, 26, 10]);
+    png.set([0, 0, 0, 13, 73, 72, 68, 82], 8);
+    png.set([0, 0, 15, 160, 0, 0, 7, 208], 16);
+
+    const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xc0, 0, 8, 8, 0, 32, 0, 48, 3, 1, 17, 0, 0xff, 0xd9]);
+
+    const webp = new Uint8Array(30);
+    webp.set([82, 73, 70, 70, 22, 0, 0, 0, 87, 69, 66, 80, 86, 80, 56, 88, 10, 0, 0, 0]);
+    webp.set([0, 0, 0, 0, 127, 2, 0, 63, 1, 0], 20);
+
+    const webpVp8 = new Uint8Array(30);
+    webpVp8.set([82, 73, 70, 70, 22, 0, 0, 0, 87, 69, 66, 80, 86, 80, 56, 32, 10, 0, 0, 0]);
+    webpVp8.set([0, 0, 0, 157, 1, 42, 128, 2, 64, 1], 20);
+
+    expect(imageDimensionsFromHeader(png)).toEqual({ width: 4000, height: 2000 });
+    expect(imageDimensionsFromHeader(jpeg)).toEqual({ width: 48, height: 32 });
+    expect(imageDimensionsFromHeader(webp)).toEqual({ width: 640, height: 320 });
+    expect(imageDimensionsFromHeader(webpVp8)).toEqual({ width: 640, height: 320 });
+    expect(imageDimensionsFromHeader(new Uint8Array([1, 2, 3]))).toBeNull();
   });
 });
