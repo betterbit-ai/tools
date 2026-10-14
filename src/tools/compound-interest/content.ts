@@ -4,6 +4,7 @@ import type { ToolContent } from '../types';
 const uiEn = {
   intro: 'Change any value to update the projection, annual chart, and schedule instantly.',
   autosaved: 'Saved in this browser',
+  reset: 'Reset',
   principalLabel: 'Starting amount',
   principalHint: 'Use any currency consistently; results keep the same unit.',
   monthlyContributionLabel: 'Monthly contribution',
@@ -13,7 +14,7 @@ const uiEn = {
   yearsLabel: 'Years',
   yearsHint: 'Whole years from 1 to 100.',
   frequencyLabel: 'Compounding frequency',
-  frequencyHint: 'How often the stated annual rate compounds.',
+  frequencyHint: 'How often the stated annual rate compounds; monthly deposits are applied in the month they arrive.',
   annual: 'Annually',
   quarterly: 'Quarterly',
   monthly: 'Monthly',
@@ -71,7 +72,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Compound interest formula and monthly contributions',
-        body: 'For a single starting amount, the standard nominal-rate formula is A = P × (1 + r ÷ n)^(n × t). P is the starting amount, r is the annual rate as a decimal, n is the number of compounding periods in a year, and t is the number of years. A 5% nominal rate compounded monthly has a monthly multiplier of 1 + 0.05 ÷ 12. This calculator applies the matching monthly growth factor to every balance, so a monthly contribution added earlier has more time to grow than one added near the end. It reports the final balance, total amount contributed, and the difference as projected interest.',
+        body: 'For a single starting amount, the standard nominal-rate formula is A = P × (1 + r ÷ n)^(n × t). P is the starting amount, r is the annual rate as a decimal, n is the number of compounding periods in a year, and t is the number of years. Monthly deposits have their own dates, so this calculator converts the selected annual growth factor into an equivalent monthly factor: (1 + r ÷ n)^(n ÷ 12). That keeps annual, quarterly, monthly, and daily choices comparable while allowing each deposit to start growing in the month it arrives. It reports the final balance, total amount contributed, and the difference as projected interest.',
       },
       {
         heading: 'Annual rate, compounding frequency, and effective rate',
@@ -94,6 +95,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: 'Should I use beginning or end of month for contributions?',
         a: 'Use Beginning when each contribution reaches the account before that month’s growth and End when it arrives after the month’s growth. Beginning-of-month deposits receive one additional month of modeled growth, so their projected final balance is higher at any positive rate.',
+      },
+      {
+        q: 'How does the calculator handle monthly deposits with annual or quarterly compounding?',
+        a: 'The calculator converts the selected nominal annual compounding rate into an equivalent monthly growth rate, then applies each monthly deposit on its actual month. This preserves the selected annual growth factor while avoiding a grouped-deposit approximation when deposits are made monthly.',
       },
       {
         q: 'Does this calculator account for tax, inflation, or fees?',
@@ -132,7 +137,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '복리 계산식과 월 적립금',
-        body: '초기 투자금만 있을 때 명목 연이율 기준 복리 계산식은 A = P × (1 + r ÷ n)^(n × t)입니다. P는 초기 투자금, r은 소수로 바꾼 연이율, n은 1년 동안 이자가 붙는 횟수, t는 기간(년)입니다. 예를 들어 연 5%를 월복리로 계산하면 한 달 성장 배수는 1 + 0.05 ÷ 12입니다. 이 계산기는 매달 넣는 금액도 납입된 시점부터 같은 월간 성장 배수를 적용하므로 먼저 넣은 적립금일수록 더 오래 복리 효과를 받습니다. 최종 금액에서 내가 넣은 총액을 빼면 예상 이자·수익입니다.',
+        body: '초기 투자금만 있을 때 명목 연이율 기준 복리 계산식은 A = P × (1 + r ÷ n)^(n × t)입니다. P는 초기 투자금, r은 소수로 바꾼 연이율, n은 1년 동안 이자가 붙는 횟수, t는 기간(년)입니다. 월 적립금은 실제로 들어오는 달이 있으므로, 이 계산기는 선택한 연간 성장 배수를 월간 등가 성장 배수 (1 + r ÷ n)^(n ÷ 12)로 바꿉니다. 따라서 연·분기·월·일 복리를 고르더라도 매달 납입한 금액이 해당 달부터 성장하도록 계산합니다. 최종 금액에서 내가 넣은 총액을 빼면 예상 이자·수익입니다.',
       },
       {
         heading: '연이율·복리 주기·실효 연수익률',
@@ -157,6 +162,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: '월초 납입은 적립금이 그 달의 성장 전에 계좌에 들어오는 경우이고, 월말 납입은 그 달의 성장 후에 들어오는 경우입니다. 양의 수익률에서는 월초 납입금이 매달 한 달 더 운용되므로 같은 조건이면 월말 납입보다 최종 금액이 더 큽니다.',
       },
       {
+        q: '월 적립인데 연복리나 분기복리를 골라도 되나요?',
+        a: '네. 이 계산기는 선택한 명목 연이율과 복리 주기를 월간 등가 수익률로 바꾼 뒤, 월 적립금이 실제 납입된 달부터 성장하도록 계산합니다. 따라서 월 적립금을 연간 또는 분기 단위로 한꺼번에 묶어 계산하지 않으면서 선택한 연간 성장률은 유지합니다.',
+      },
+      {
         q: '복리 계산기에 세금과 수수료도 반영되나요?',
         a: '아니요. 이 계산기는 일정한 세전 수익률만 적용하며 세금, 수수료, 펀드 보수, 물가, 인출, 손실, 금리 변동은 반영하지 않습니다. 실제 예금·적금·투자 상품의 수령액은 이 비용과 상품별 이자 계산 방식에 따라 달라질 수 있습니다.',
       },
@@ -168,6 +177,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       intro: '값을 바꾸면 예상 금액, 연도별 그래프, 적립 내역이 즉시 다시 계산됩니다.',
       autosaved: '입력값은 이 브라우저에 저장됩니다',
+      reset: '기본값으로 재설정',
       principalLabel: '초기 투자금',
       principalHint: '원 단위로 입력하세요. 결과도 같은 단위로 표시됩니다.',
       monthlyContributionLabel: '월 적립금',
@@ -177,7 +187,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       yearsLabel: '투자 기간(년)',
       yearsHint: '1년부터 100년까지의 정수를 입력하세요.',
       frequencyLabel: '복리 주기',
-      frequencyHint: '입력한 연이율에 이자가 붙는 횟수입니다.',
+      frequencyHint: '입력한 연이율에 이자가 붙는 횟수이며, 월 적립금은 실제 납입한 달부터 계산합니다.',
       annual: '연복리',
       quarterly: '분기복리',
       monthly: '월복리',
