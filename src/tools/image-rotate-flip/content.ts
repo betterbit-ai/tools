@@ -5,7 +5,8 @@ const uiEn = {
   dropTitle: 'Drop photos here, click to choose, or paste',
   dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF',
   privacyNote: 'Photos are processed on this device. Nothing is uploaded.',
-  unsupported: 'This file can’t be read by your browser.',
+  unreadable: 'This file can’t be read by your browser. Try JPG, PNG, or WebP.',
+  processingFailed: 'This image could not be exported. Try PNG or a smaller image.',
   processing: 'Processing…',
   download: 'Download',
   downloadAll: 'Download {n} images as ZIP',
@@ -69,7 +70,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'What the browser can export',
-        body: 'The browser redraws the image to a canvas, so the result is a new file rather than a reversible display setting. JPG and WebP use the quality control and are lossy formats; PNG is lossless but may be larger. Choosing Same as original preserves JPG, PNG, or WebP when possible; inputs such as GIF, BMP, AVIF, or HEIC fall back to PNG because browser canvas cannot reliably encode every input format. Animated GIFs are exported as the first frame, not as a new animation.',
+        body: 'The browser redraws the image to a canvas, so the result is a new file rather than a reversible display setting. JPG and WebP use the quality control and are lossy formats; PNG is lossless but may be larger. Choosing Same as original preserves JPG, PNG, or WebP when possible. Other formats that the browser can decode are exported as PNG because canvas cannot reliably encode every source format; some formats cannot be decoded by every browser. Animated GIFs are exported as the first frame, not as a new animation.',
       },
     ],
     faq: [
@@ -130,7 +131,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '출력 형식과 품질을 고르는 법',
-        body: '브라우저 캔버스가 사진을 새로 그려 결과 파일을 만들기 때문에, 화면에서만 돌려 보는 기능과 달리 어디에 보내도 같은 방향으로 보입니다. JPG와 WebP는 품질 슬라이더가 적용되는 손실 압축 형식이고, PNG는 무손실이지만 파일이 더 커질 수 있습니다. 원본과 동일을 선택하면 JPG·PNG·WebP는 가능한 한 같은 형식으로 저장합니다. GIF·BMP·AVIF·HEIC처럼 캔버스가 안정적으로 저장하지 못하는 입력은 PNG로 저장됩니다. 움직이는 GIF는 애니메이션 전체가 아니라 첫 프레임만 저장됩니다.',
+        body: '브라우저 캔버스가 사진을 새로 그려 결과 파일을 만들기 때문에, 화면에서만 돌려 보는 기능과 달리 어디에 보내도 같은 방향으로 보입니다. JPG와 WebP는 품질 슬라이더가 적용되는 손실 압축 형식이고, PNG는 무손실이지만 파일이 더 커질 수 있습니다. 원본과 동일을 선택하면 JPG·PNG·WebP는 가능한 한 같은 형식으로 저장합니다. 그 밖에 브라우저가 읽을 수 있는 형식은 캔버스가 모든 원본 형식을 안정적으로 저장할 수 없어서 PNG로 저장합니다. 형식에 따라 브라우저에서 아예 읽지 못할 수도 있습니다. 움직이는 GIF는 애니메이션 전체가 아니라 첫 프레임만 저장됩니다.',
       },
     ],
     faq: [
@@ -159,7 +160,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropTitle: '사진을 여기에 놓거나, 클릭해서 선택, 또는 붙여넣기',
       dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF',
       privacyNote: '사진은 기기에서 바로 처리됩니다. 어디에도 업로드되지 않습니다.',
-      unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
+      unreadable: '브라우저에서 읽을 수 없는 파일입니다. JPG, PNG, WebP 파일을 사용해 보세요.',
+      processingFailed: '이미지를 내보내지 못했습니다. PNG를 선택하거나 더 작은 이미지를 사용해 보세요.',
       processing: '처리 중…',
       download: '다운로드',
       downloadAll: '사진 {n}장 ZIP으로 다운로드',

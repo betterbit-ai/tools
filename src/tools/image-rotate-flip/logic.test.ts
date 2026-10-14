@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeRotation, outputName, outputType, supportsQuality, transformedDimensions } from './logic';
+import {
+  isCurrentResult,
+  normalizeRotation,
+  outputName,
+  outputType,
+  supportsQuality,
+  transformKey,
+  transformedDimensions,
+} from './logic';
 
 describe('normalizeRotation', () => {
   it('normalizes negative and oversized quarter turns', () => {
@@ -36,9 +44,25 @@ describe('output details', () => {
     expect(supportsQuality('image/png')).toBe(false);
   });
 
+  it('keeps a supported original format when browsers omit the file MIME type', () => {
+    expect(outputType('original', '', '여행 사진.JPG')).toBe('image/jpeg');
+    expect(outputType('original', '', '東京.png')).toBe('image/png');
+    expect(outputType('original', 'IMAGE/WEBP')).toBe('image/webp');
+  });
+
   it('builds safe names for empty, Korean, CJK, and emoji file names', () => {
     expect(outputName('', 'image/png')).toBe('image-rotated.png');
     expect(outputName('여행 사진 東京 📷.JPG', 'image/jpeg')).toBe('여행 사진 東京 📷-rotated.jpg');
     expect(outputName('archive.tar.png', 'image/webp')).toBe('archive.tar-rotated.webp');
+  });
+});
+
+describe('transform result identity', () => {
+  it('marks an earlier output stale as soon as a setting changes', () => {
+    const initial = transformKey({ rotation: 0, flipHorizontal: false, flipVertical: false }, 'original', 92);
+    const rotated = transformKey({ rotation: 90, flipHorizontal: false, flipVertical: false }, 'original', 92);
+
+    expect(isCurrentResult(initial, initial)).toBe(true);
+    expect(isCurrentResult(initial, rotated)).toBe(false);
   });
 });

@@ -32,9 +32,26 @@ export function transformedDimensions(
 }
 
 /** Canvas can encode these three formats; unknown originals safely become PNG. */
-export function outputType(choice: FormatChoice, sourceType: string): string {
+export function outputType(choice: FormatChoice, sourceType: string, sourceName = ''): string {
   if (choice !== 'original') return choice;
-  return ENCODABLE.includes(sourceType) ? sourceType : 'image/png';
+  const normalizedType = sourceType.toLowerCase();
+  if (ENCODABLE.includes(normalizedType)) return normalizedType;
+
+  const extension = sourceName.toLowerCase().match(/\.([^.]+)$/)?.[1];
+  if (extension === 'jpg' || extension === 'jpeg') return 'image/jpeg';
+  if (extension === 'png') return 'image/png';
+  if (extension === 'webp') return 'image/webp';
+  return 'image/png';
+}
+
+/** Identifies exactly which settings produced an image result. */
+export function transformKey(opts: TransformOptions, format: FormatChoice, quality: number): string {
+  return JSON.stringify([opts.rotation, opts.flipHorizontal, opts.flipVertical, format, quality]);
+}
+
+/** A prior render must not be offered for download after settings change. */
+export function isCurrentResult(resultKey: string | undefined, key: string): boolean {
+  return resultKey === key;
 }
 
 export function extensionFor(mime: string): string {
