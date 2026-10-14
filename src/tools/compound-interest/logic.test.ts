@@ -64,6 +64,22 @@ describe('calculateCompoundInterest', () => {
     expect(result?.schedule.at(-1)).toMatchObject({ year: 3, balance: 2_700, contributions: 2_700, interest: 0 });
   });
 
+  it('keeps monthly contribution dates while converting annual compounding to an equivalent monthly rate', () => {
+    const result = calculateCompoundInterest({
+      ...base,
+      principal: 10_000,
+      monthlyContribution: 100,
+      annualRate: 5,
+      years: 10,
+      frequency: 'annual',
+      contributionTiming: 'end',
+    });
+
+    expect(result?.finalBalance).toBeCloseTo(31_725.26239792115, 10);
+    expect(result?.effectiveAnnualRate).toBeCloseTo(0.05, 10);
+    expect(result?.schedule.at(-1)).toMatchObject({ year: 10, contributions: 22_000 });
+  });
+
   it('rejects empty, negative, fractional, excessive, non-finite, and unknown option inputs', () => {
     expect(calculateCompoundInterest({ ...base, principal: '' })).toBeNull();
     expect(calculateCompoundInterest({ ...base, principal: -1 })).toBeNull();

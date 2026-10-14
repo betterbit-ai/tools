@@ -5,77 +5,22 @@ import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import { calculateCompoundInterest, type CompoundFrequency, type ContributionTiming } from './logic';
+import { defaultCompoundInterestState, restoreCompoundInterestState, type CompoundInterestState } from './state';
 
 const STORAGE_KEY = 'tools:compound-interest:state';
 
-interface State {
-  principal: number | '';
-  monthlyContribution: number | '';
-  annualRate: number | '';
-  years: number | '';
-  frequency: CompoundFrequency;
-  contributionTiming: ContributionTiming;
-}
-
-function defaultState(locale: ToolProps<UI>['locale']): State {
-  return locale === 'ko'
-    ? {
-        principal: 10_000_000,
-        monthlyContribution: 500_000,
-        annualRate: 5,
-        years: 10,
-        frequency: 'monthly',
-        contributionTiming: 'end',
-      }
-    : {
-        principal: 10_000,
-        monthlyContribution: 500,
-        annualRate: 7,
-        years: 20,
-        frequency: 'monthly',
-        contributionTiming: 'end',
-      };
-}
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
-function restoreState(fallback: State): State {
-  try {
-    const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-    if (!saved || typeof saved !== 'object') return fallback;
-    return {
-      principal: isFiniteNumber(saved.principal) ? saved.principal : fallback.principal,
-      monthlyContribution: isFiniteNumber(saved.monthlyContribution)
-        ? saved.monthlyContribution
-        : fallback.monthlyContribution,
-      annualRate: isFiniteNumber(saved.annualRate) ? saved.annualRate : fallback.annualRate,
-      years: isFiniteNumber(saved.years) ? saved.years : fallback.years,
-      frequency: isFrequency(saved.frequency) ? saved.frequency : fallback.frequency,
-      contributionTiming: isTiming(saved.contributionTiming) ? saved.contributionTiming : fallback.contributionTiming,
-    };
-  } catch {
-    return fallback;
-  }
-}
-
-function isFrequency(value: unknown): value is CompoundFrequency {
-  return value === 'annual' || value === 'quarterly' || value === 'monthly' || value === 'daily';
-}
-
-function isTiming(value: unknown): value is ContributionTiming {
-  return value === 'beginning' || value === 'end';
-}
-
 export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
-  const initialState = defaultState(locale);
+  const initialState = useMemo(() => defaultCompoundInterestState(locale), [locale]);
   const [ready, setReady] = useState(false);
-  const [state, setState] = useState<State>(initialState);
+  const [state, setState] = useState<CompoundInterestState>(initialState);
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
   useEffect(() => {
-    setState(restoreState(initialState));
+    try {
+      setState(restoreCompoundInterestState(JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null'), initialState));
+    } catch {
+      setState(initialState);
+    }
     setReady(true);
   }, []);
 
@@ -83,7 +28,7 @@ export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
     if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
   }, [ready, state]);
 
-  const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
+  const update = (patch: Partial<CompoundInterestState>) => setState((current) => ({ ...current, ...patch }));
   const result = useMemo(() => calculateCompoundInterest(state), [state]);
   const money = (value: number) => formatNumber(value, locale, 0);
   const percent = (value: number) => `${formatNumber(value * 100, locale, 2)}%`;
@@ -93,7 +38,18 @@ export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
     <Panel>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <p class="text-sm text-muted">{ui.intro}</p>
-        <span class="shrink-0 text-xs text-subtle">{ui.autosaved}</span>
+        <div class="flex items-center gap-3">
+          <span class="shrink-0 text-xs text-subtle">{ui.autosaved}</span>
+          <Button
+            size="sm"
+            onClick={() => {
+              setState(defaultCompoundInterestState(locale));
+              setScheduleOpen(false);
+            }}
+          >
+            {ui.reset}
+          </Button>
+        </div>
       </div>
 
       <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
