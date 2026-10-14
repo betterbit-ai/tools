@@ -2,6 +2,7 @@
 import {
   MODEL_INPUT_SIZE,
   MODEL_SCALE,
+  imageDimensionsFromHeader,
   makeTileGrid,
   outputDimensions,
   stitchRect,
@@ -10,6 +11,7 @@ import {
 } from './logic';
 
 const MODEL_URL = '/models/realesr-general-x4v3.onnx';
+const MAX_HEADER_BYTES = 256 * 1024;
 
 export interface UpscaleProgress {
   phase: 'model' | 'tiles';
@@ -26,6 +28,19 @@ export interface UpscaleOptions {
 
 function cancelled(signal?: AbortSignal) {
   if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
+}
+
+/** Reads only a small file header so oversized decoded images can be rejected before decoding. */
+export async function readImageDimensions(file: File) {
+  const header = new Uint8Array(await file.slice(0, MAX_HEADER_BYTES).arrayBuffer());
+  const dimensions = imageDimensionsFromHeader(header);
+  if (!dimensions) throw new Error('Unsupported or invalid image header.');
+  return dimensions;
+}
+
+/** Let cancellation and progress paint before processing the next tile. */
+function yieldToBrowser(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 async function fetchModel(signal: AbortSignal | undefined, onProgress?: UpscaleOptions['onProgress']) {
@@ -198,14 +213,14 @@ export async function upscaleImage(
           rect.destinationHeight,
         );
         onProgress?.({ phase: 'tiles', completed: index + 1, total: tiles.length });
+        await yieldToBrowser();
       }
+      cancelled(signal);
 
       // The model is RGB. Apply separately-resampled alpha after inference so
       // transparent PNG/WebP pixels stay transparent instead of being flattened.
-      const alpha = makeCanvas(modelOutput.width, modelOutput.height);
-      alpha.getContext('2d')!.drawImage(source, 0, 0, modelOutput.width, modelOutput.height);
       enlargedCtx.globalCompositeOperation = 'destination-in';
-      enlargedCtx.drawImage(alpha, 0, 0);
+      enlargedCtx.drawImage(source, 0, 0, modelOutput.width, modelOutput.height);
       enlargedCtx.globalCompositeOperation = 'source-over';
 
       const output = scale === MODEL_SCALE ? enlarged : makeCanvas(bitmap.width * scale, bitmap.height * scale);

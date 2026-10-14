@@ -6,13 +6,14 @@ import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   MAX_INPUT_DIMENSION,
+  MAX_FILE_BYTES,
   MAX_INPUT_PIXELS,
   outputDimensions,
   outputName,
   validateInput,
   type Scale,
 } from './logic';
-import { upscaleImage, type UpscaleProgress } from './upscale';
+import { readImageDimensions, upscaleImage, type UpscaleProgress } from './upscale';
 
 type OutputFormat = 'image/png' | 'image/jpeg' | 'image/webp';
 
@@ -28,6 +29,8 @@ interface Result {
   width: number;
   height: number;
   url: string;
+  scale: Scale;
+  mime: OutputFormat;
 }
 
 function savedScale(): Scale {
@@ -45,9 +48,11 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
   const [scale, setScale] = useState<Scale>(savedScale);
   const [format, setFormat] = useState<OutputFormat>(savedFormat);
   const [progress, setProgress] = useState<UpscaleProgress | null>(null);
+  const [isWorking, setIsWorking] = useState(false);
   const [error, setError] = useState('');
   const [comparison, setComparison] = useState<'before' | 'after'>('after');
   const abortRef = useRef<AbortController | null>(null);
+  const isWorkingRef = useRef(false);
 
   useEffect(() => () => item && URL.revokeObjectURL(item.preview), [item]);
   useEffect(() => () => result && URL.revokeObjectURL(result.url), [result]);
@@ -63,10 +68,12 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
       setProgress(null);
       setError('');
       try {
-        const bitmap = await createImageBitmap(file);
-        const check = validateInput(bitmap.width, bitmap.height, file.size);
-        const dimensions = { width: bitmap.width, height: bitmap.height };
-        bitmap.close();
+        if (file.size > MAX_FILE_BYTES) {
+          setError(ui.errorFile);
+          return;
+        }
+        const dimensions = await readImageDimensions(file);
+        const check = validateInput(dimensions.width, dimensions.height, file.size);
         if (!check.ok) {
           setError(
             check.reason === 'pixels'
@@ -108,9 +115,28 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
       return null;
     });
   };
+  const discardResult = () => {
+    setResult((previous) => {
+      if (previous) URL.revokeObjectURL(previous.url);
+      return null;
+    });
+  };
+  const changeScale = (value: string) => {
+    const next = Number(value) as Scale;
+    if (next === scale) return;
+    setScale(next);
+    discardResult();
+  };
+  const changeFormat = (next: OutputFormat) => {
+    if (next === format) return;
+    setFormat(next);
+    discardResult();
+  };
   const cancel = () => abortRef.current?.abort();
   const start = async () => {
-    if (!item || progress) return;
+    if (!item || isWorkingRef.current) return;
+    isWorkingRef.current = true;
+    setIsWorking(true);
     const controller = new AbortController();
     abortRef.current = controller;
     setError('');
@@ -126,7 +152,7 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
         onProgress: setProgress,
       });
       if (!controller.signal.aborted) {
-        setResult({ ...next, url: URL.createObjectURL(next.blob) });
+        setResult({ ...next, scale, mime: format, url: URL.createObjectURL(next.blob) });
         setComparison('after');
       }
     } catch (cause) {
@@ -134,13 +160,18 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null;
+        isWorkingRef.current = false;
+        setIsWorking(false);
         setProgress(null);
       }
     }
   };
 
-  const output = item ? outputDimensions(item.width, item.height, scale) : null;
-  const isWorking = !!progress;
+  const output = item
+    ? result
+      ? { width: result.width, height: result.height }
+      : outputDimensions(item.width, item.height, scale)
+    : null;
   const status = progress
     ? progress.phase === 'model'
       ? progress.total
@@ -149,7 +180,9 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
             .replace('{total}', formatBytes(progress.total, locale))
         : ui.modelLoading
       : ui.tileProgress.replace('{done}', String(progress.completed)).replace('{total}', String(progress.total))
-    : '';
+    : isWorking
+      ? ui.modelLoading
+      : '';
 
   return (
     <Panel>
@@ -185,6 +218,7 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
                 label={ui.compareLabel}
                 value={comparison}
                 onValue={setComparison}
+                disabled={isWorking}
                 options={[
                   { value: 'before', label: ui.before },
                   { value: 'after', label: ui.after },
@@ -213,7 +247,8 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
           <Segmented
             label={ui.scaleLabel}
             value={String(scale)}
-            onValue={(value) => setScale(Number(value) as Scale)}
+            onValue={changeScale}
+            disabled={isWorking}
             options={[
               { value: '2', label: ui.scale2 },
               { value: '4', label: ui.scale4 },
@@ -222,7 +257,8 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
           <Field label={ui.formatLabel} hint={ui.formatHint}>
             <Select
               value={format}
-              onValue={setFormat}
+              onValue={changeFormat}
+              disabled={isWorking}
               options={[
                 { value: 'image/png', label: ui.formatPng },
                 { value: 'image/jpeg', label: ui.formatJpeg },
@@ -254,7 +290,7 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
             <Button
               variant="secondary"
               size="md"
-              onClick={() => downloadBlob(result.blob, outputName(item.file.name, scale, format))}
+              onClick={() => downloadBlob(result.blob, outputName(item.file.name, result.scale, result.mime))}
             >
               {ui.download}
             </Button>

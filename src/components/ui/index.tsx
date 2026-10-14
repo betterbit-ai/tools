@@ -139,12 +139,17 @@ export function Select<T extends string>(props: {
   options: { value: T; label: string }[];
   id?: string;
   ariaLabel?: string;
+  disabled?: boolean;
 }) {
   return (
     <select
       id={props.id}
       aria-label={props.ariaLabel}
-      class={cx(inputClass, 'pr-8 appearance-none bg-[length:16px] bg-[right_10px_center] bg-no-repeat')}
+      disabled={props.disabled}
+      class={cx(
+        inputClass,
+        'pr-8 appearance-none bg-[length:16px] bg-[right_10px_center] bg-no-repeat disabled:cursor-not-allowed disabled:opacity-50',
+      )}
       style={{
         backgroundImage:
           "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b8b93' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
@@ -165,6 +170,7 @@ export function Segmented<T extends string>(props: {
   onValue: (v: T) => void;
   options: { value: T; label: string }[];
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <div
@@ -179,9 +185,10 @@ export function Segmented<T extends string>(props: {
             type="button"
             role="radio"
             aria-checked={active}
+            disabled={props.disabled}
             onClick={() => props.onValue(o.value)}
             class={cx(
-              'h-8 px-3 rounded-[5px] text-sm font-medium transition-colors',
+              'h-8 px-3 rounded-[5px] text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               active ? 'bg-surface text-fg shadow-card' : 'text-muted hover:text-fg',
             )}
           >
