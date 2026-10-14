@@ -142,6 +142,7 @@ export const meta: ToolMeta = {
     'temperature-converter',
     'pyeong-calculator',
     'area-converter',
+    'volume-converter',
   ],
   variants,
 };

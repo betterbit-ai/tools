@@ -141,6 +141,7 @@ export const meta: ToolMeta = {
     'temperature-converter',
     'calorie-calculator',
     'area-converter',
+    'volume-converter',
   ],
   variants,
 };

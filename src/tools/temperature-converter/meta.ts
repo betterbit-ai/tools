@@ -112,6 +112,6 @@ export const meta: ToolMeta = {
         '과학적 기준점(절대영도, 물의 어는점·끓는점, 평균 체온) 표만 제공하고 요리·오븐 온도표는 없어, 해외 레시피의 화씨 온도를 확인하려면 다른 사이트를 찾아야 한다. Betterbit는 가스 마크 1~9의 화씨·섭씨 값을 같은 화면에서 바로 보여준다.',
     },
   ],
-  related: ['length-converter', 'weight-converter', 'scientific-calculator', 'bmi-calculator'],
+  related: ['length-converter', 'weight-converter', 'scientific-calculator', 'bmi-calculator', 'volume-converter'],
   variants,
 };
