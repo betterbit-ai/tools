@@ -142,6 +142,7 @@ export const meta: ToolMeta = {
     'calorie-calculator',
     'area-converter',
     'volume-converter',
+    'shoe-size-converter',
   ],
   variants,
 };
