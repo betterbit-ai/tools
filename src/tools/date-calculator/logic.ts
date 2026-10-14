@@ -7,6 +7,23 @@
 
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+function localDate(year: number, monthIndex: number, day: number): Date {
+  const date = new Date(0);
+  // Date's multi-argument constructor treats 0–99 as 1900–1999. Setting the
+  // full year explicitly keeps the calculator's advertised YYYY-MM-DD range
+  // working from year 0001 onward.
+  date.setFullYear(year, monthIndex, day);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function utcDate(year: number, monthIndex: number, day: number): Date {
+  const date = new Date(0);
+  date.setUTCFullYear(year, monthIndex, day);
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+}
+
 export function isValidDate(date: string): boolean {
   const match = DATE_PATTERN.exec(date);
   if (!match) return false;
@@ -14,20 +31,20 @@ export function isValidDate(date: string): boolean {
   const year = Number(yearText);
   const month = Number(monthText);
   const day = Number(dayText);
-  const parsed = new Date(year, month - 1, day);
+  const parsed = localDate(year, month - 1, day);
   return year >= 1 && parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day;
 }
 
 /** Days since a fixed epoch, computed in UTC so DST transitions never shift the count. */
 function toEpochDay(date: string): number {
   const [, yearText, monthText, dayText] = DATE_PATTERN.exec(date)!;
-  return Date.UTC(Number(yearText), Number(monthText) - 1, Number(dayText)) / 86_400_000;
+  return utcDate(Number(yearText), Number(monthText) - 1, Number(dayText)).getTime() / 86_400_000;
 }
 
 function fromEpochDay(epochDay: number): string {
   const d = new Date(epochDay * 86_400_000);
   const pad = (v: number) => String(v).padStart(2, '0');
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  return `${padYear(d.getUTCFullYear())}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
 
 export function todayIso(nowMs: number): string {
@@ -76,7 +93,7 @@ export function calendarSpan(a: string, b: string): CalendarSpan {
 }
 
 function daysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
+  return localDate(year, month, 0).getDate();
 }
 
 /** Adds whole months to `date`, clamping an overflowing day to the end of the target month. */
@@ -86,7 +103,7 @@ function addMonthsClamped(date: string, months: number): string {
   let year = year0 + Math.floor(month / 12);
   month = ((month % 12) + 12) % 12;
   const clampedDay = Math.min(day, daysInMonth(year, month + 1));
-  return `${year}-${pad2(month + 1)}-${pad2(clampedDay)}`;
+  return `${padYear(year)}-${pad2(month + 1)}-${pad2(clampedDay)}`;
 }
 
 export type HolidayCountry = 'none' | 'us' | 'kr';
@@ -95,40 +112,43 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0');
 }
 
+function padYear(year: number): string {
+  return String(year).padStart(4, '0');
+}
+
 /** nth weekday (0=Sunday..6=Saturday) of a month, e.g. 3rd Monday of January. */
 function nthWeekdayOfMonth(year: number, month: number, weekday: number, n: number): string {
-  const first = new Date(year, month - 1, 1);
+  const first = localDate(year, month - 1, 1);
   const firstWeekday = first.getDay();
   const day = 1 + ((weekday - firstWeekday + 7) % 7) + (n - 1) * 7;
-  return `${year}-${pad2(month)}-${pad2(day)}`;
+  return `${padYear(year)}-${pad2(month)}-${pad2(day)}`;
 }
 
 /** Last weekday (0=Sunday..6=Saturday) of a month, e.g. last Monday of May. */
 function lastWeekdayOfMonth(year: number, month: number, weekday: number): string {
   const lastDay = daysInMonth(year, month);
-  const last = new Date(year, month - 1, lastDay);
+  const last = localDate(year, month - 1, lastDay);
   const lastWeekday = last.getDay();
   const day = lastDay - ((lastWeekday - weekday + 7) % 7);
-  return `${year}-${pad2(month)}-${pad2(day)}`;
+  return `${padYear(year)}-${pad2(month)}-${pad2(day)}`;
 }
 
 /** US federal "in lieu" rule: Saturday observed the Friday before, Sunday observed the Monday after. */
 function observedFixedDate(year: number, month: number, day: number): string {
-  const d = new Date(year, month - 1, day);
+  const d = localDate(year, month - 1, day);
   const weekday = d.getDay();
   if (weekday === 6) d.setDate(d.getDate() - 1);
   else if (weekday === 0) d.setDate(d.getDate() + 1);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  return `${padYear(d.getFullYear())}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
 /** US federal holidays, computed from the official rules (fixed dates + "in lieu" weekend shift). */
 function usFederalHolidays(year: number): string[] {
-  return [
+  const holidays = [
     observedFixedDate(year, 1, 1), // New Year's Day
     nthWeekdayOfMonth(year, 1, 1, 3), // Birthday of Martin Luther King, Jr.
     nthWeekdayOfMonth(year, 2, 1, 3), // Washington's Birthday
     lastWeekdayOfMonth(year, 5, 1), // Memorial Day
-    observedFixedDate(year, 6, 19), // Juneteenth
     observedFixedDate(year, 7, 4), // Independence Day
     nthWeekdayOfMonth(year, 9, 1, 1), // Labor Day
     nthWeekdayOfMonth(year, 10, 1, 2), // Columbus Day
@@ -136,13 +156,17 @@ function usFederalHolidays(year: number): string[] {
     nthWeekdayOfMonth(year, 11, 4, 4), // Thanksgiving Day
     observedFixedDate(year, 12, 25), // Christmas Day
   ];
+  // The Juneteenth National Independence Day Act took effect on June 17, 2021.
+  // Applying it to earlier years makes historical business-day counts wrong.
+  if (year >= 2021) holidays.splice(4, 0, observedFixedDate(year, 6, 19));
+  return holidays;
 }
 
 /**
  * South Korean public holidays (관공서 공휴일), including substitute holidays (대체공휴일)
  * and one-off election-day holidays. Seollal/Chuseok follow the lunar calendar and 대체공휴일
  * decisions are set year by year, so this is a verified table rather than a formula.
- * Covers 2024–2026; see docs/CATALOG.md note for extending it.
+ * Covers 2024–2027; see docs/CATALOG.md note for extending it.
  */
 const KR_HOLIDAYS: Record<number, string[]> = {
   2024: [
@@ -192,6 +216,7 @@ const KR_HOLIDAYS: Record<number, string[]> = {
     '2026-02-17',
     '2026-02-18',
     '2026-03-02',
+    '2026-05-01',
     '2026-05-05',
     '2026-05-25',
     '2026-06-03',
@@ -205,6 +230,32 @@ const KR_HOLIDAYS: Record<number, string[]> = {
     '2026-10-05',
     '2026-10-09',
     '2026-12-25',
+  ],
+  2027: [
+    '2027-01-01',
+    '2027-02-06',
+    '2027-02-07',
+    '2027-02-08',
+    '2027-02-09',
+    '2027-03-01',
+    '2027-05-01',
+    '2027-05-03',
+    '2027-05-05',
+    '2027-05-13',
+    '2027-06-06',
+    '2027-07-17',
+    '2027-07-19',
+    '2027-08-15',
+    '2027-08-16',
+    '2027-09-14',
+    '2027-09-15',
+    '2027-09-16',
+    '2027-10-03',
+    '2027-10-04',
+    '2027-10-09',
+    '2027-10-11',
+    '2027-12-25',
+    '2027-12-27',
   ],
 };
 
@@ -221,7 +272,10 @@ export function isHolidayCountrySupportedForYear(year: number, country: HolidayC
 function holidaySetForRange(startYear: number, endYear: number, country: HolidayCountry): Set<string> {
   const set = new Set<string>();
   if (country === 'none') return set;
-  for (let y = startYear; y <= endYear; y++) for (const d of holidaysInYear(y, country)) set.add(d);
+  // A Saturday New Year's Day is observed on the preceding Friday, so include
+  // the following year's schedule when a range ends on December 31.
+  const finalYear = country === 'us' ? endYear + 1 : endYear;
+  for (let y = startYear; y <= finalYear; y++) for (const d of holidaysInYear(y, country)) set.add(d);
   return set;
 }
 
@@ -254,23 +308,27 @@ export function countBusinessDays(
   const endYear = Number(to.slice(0, 4));
   const holidays = holidaySetForRange(startYear, endYear, country);
 
-  let businessDays = 0;
-  let weekendDays = 0;
-  let holidayDays = 0;
-  for (let e = fromEpoch; e <= toEpochValue; e++) {
-    const day = fromEpochDay(e);
-    const weekday = weekdayIndex(day);
-    if (weekday === 0 || weekday === 6) {
-      weekendDays++;
-      continue;
-    }
-    if (country !== 'none' && holidays.has(day)) {
-      holidayDays++;
-      continue;
-    }
-    businessDays++;
+  const totalDays = Math.max(0, toEpochValue - fromEpoch + 1);
+  const fullWeeks = Math.floor(totalDays / 7);
+  const remainingDays = totalDays % 7;
+  const startWeekday = weekdayIndex(from);
+  let weekendDays = fullWeeks * 2;
+  for (let offset = 0; offset < remainingDays; offset++) {
+    const weekday = (startWeekday + offset) % 7;
+    if (weekday === 0 || weekday === 6) weekendDays++;
   }
-  return { businessDays, weekendDays, holidayDays };
+
+  let holidayDays = 0;
+  if (country !== 'none') {
+    for (const day of holidays) {
+      const epoch = toEpochDay(day);
+      const weekday = weekdayIndex(day);
+      if (epoch >= fromEpoch && epoch <= toEpochValue && weekday !== 0 && weekday !== 6) {
+        holidayDays++;
+      }
+    }
+  }
+  return { businessDays: totalDays - weekendDays - holidayDays, weekendDays, holidayDays };
 }
 
 /** Adds (or subtracts, for a negative count) `amount` business days to `date`, skipping weekends/holidays. */

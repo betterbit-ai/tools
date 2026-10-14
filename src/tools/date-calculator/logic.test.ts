@@ -29,6 +29,12 @@ describe('isValidDate', () => {
   it('rejects year zero', () => {
     expect(isValidDate('0000-01-01')).toBe(false);
   });
+
+  it('supports four-digit years below 0100 without Date constructor coercion', () => {
+    expect(isValidDate('0001-01-01')).toBe(true);
+    expect(daysBetween('0001-01-01', '0001-01-02')).toBe(1);
+    expect(addCalendarDelta('0001-01-31', { years: 0, months: 1, weeks: 0, days: 0 }, 1)).toBe('0001-02-28');
+  });
 });
 
 describe('todayIso / weekdayIndex', () => {
@@ -94,6 +100,11 @@ describe('US federal holidays (computed from the official rules)', () => {
     expect(holidays.has('2027-07-05')).toBe(true); // Independence Day shifted from Sun Jul 4
   });
 
+  it('does not apply Juneteenth before it became a federal holiday', () => {
+    expect(holidaysInYear(2020, 'us').has('2020-06-19')).toBe(false);
+    expect(holidaysInYear(2021, 'us').has('2021-06-18')).toBe(true);
+  });
+
   it('is always supported, unlike the Korean table', () => {
     expect(isHolidayCountrySupportedForYear(1999, 'us')).toBe(true);
     expect(isHolidayCountrySupportedForYear(2099, 'us')).toBe(true);
@@ -101,11 +112,21 @@ describe('US federal holidays (computed from the official rules)', () => {
 });
 
 describe('Korean public holidays (verified table)', () => {
-  it('includes the 2026 substitute holidays and the reinstated Constitution Day', () => {
+  it('includes the 2026 Labor Day, substitute holidays, and reinstated Constitution Day', () => {
     const holidays = holidaysInYear(2026, 'kr');
     expect(holidays.has('2026-03-02')).toBe(true); // substitute for 삼일절 (Sun Mar 1)
+    expect(holidays.has('2026-05-01')).toBe(true); // Labor Day, public holiday from 2026
     expect(holidays.has('2026-07-17')).toBe(true); // 제헌절, reinstated from 2026
     expect(holidays.has('2026-08-17')).toBe(true); // substitute for 광복절 (Sat Aug 15)
+  });
+
+  it('includes the officially published 2027 Korean calendar and substitute holidays', () => {
+    const holidays = holidaysInYear(2027, 'kr');
+    expect(holidays.has('2027-02-09')).toBe(true); // substitute for Seollal
+    expect(holidays.has('2027-05-03')).toBe(true); // substitute for Labor Day
+    expect(holidays.has('2027-07-19')).toBe(true); // substitute for Constitution Day
+    expect(holidays.has('2027-12-27')).toBe(true); // substitute for Christmas
+    expect(isHolidayCountrySupportedForYear(2027, 'kr')).toBe(true);
   });
 
   it('is only marked supported for years with a verified table', () => {
@@ -130,6 +151,17 @@ describe('countBusinessDays', () => {
     // Includes Christmas 2026-12-25 (Friday) and the following weekend.
     const result = countBusinessDays('2026-12-21', '2026-12-27', 'us', true);
     expect(result).toEqual({ businessDays: 4, weekendDays: 2, holidayDays: 1 });
+  });
+
+  it('counts a New Year’s Day observed on the preceding December 31', () => {
+    // New Year's Day 2022 was Saturday, so US federal employees observed it on Friday 2021-12-31.
+    const result = countBusinessDays('2021-12-31', '2021-12-31', 'us', true);
+    expect(result).toEqual({ businessDays: 0, weekendDays: 0, holidayDays: 1 });
+  });
+
+  it('handles the full supported date span without visiting every calendar day', () => {
+    const result = countBusinessDays('0001-01-01', '9999-12-31', 'none', true);
+    expect(result.businessDays + result.weekendDays + result.holidayDays).toBe(3_652_059);
   });
 
   it('also excludes Korean public holidays when selected', () => {
