@@ -40,9 +40,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'SHA-256 Generator — File & MD5 Hash Check',
     description:
-      'Generate SHA-256, MD5, SHA-1, SHA-384, or SHA-512 hashes for text and files locally. Compare a published checksum with no ads or upload.',
+      'Generate SHA-256, MD5, SHA-1, SHA-384, or SHA-512 hashes for text and files locally. Compare a published checksum without uploading it.',
     h1: 'Hash Generator',
-    tagline: 'Create and compare text or file checksums locally, with no upload and no ads.',
+    tagline: 'Create and compare text or file checksums locally, without uploading them.',
     name: 'Hash Generator',
     keywords: ['sha256 generator', 'md5 generator', 'file hash', 'checksum calculator', 'sha256 checksum'],
     howTo: [
@@ -88,9 +88,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'SHA-256 해시 생성기 — 파일·MD5 체크섬',
     description:
-      '텍스트와 파일의 SHA-256·MD5·SHA-1·SHA-384·SHA-512 해시를 브라우저에서 생성하고 체크섬을 대조합니다. 업로드와 광고가 없습니다.',
+      '텍스트와 파일의 SHA-256·MD5·SHA-1·SHA-384·SHA-512 해시를 브라우저에서 생성하고, 업로드 없이 체크섬을 대조합니다.',
     h1: '해시 생성기',
-    tagline: '텍스트·파일 체크섬을 브라우저에서 바로 만들고 비교합니다. 업로드와 광고가 없습니다.',
+    tagline: '텍스트·파일 체크섬을 브라우저에서 바로 만들고, 업로드 없이 비교합니다.',
     name: '해시 생성기',
     keywords: ['sha256 생성기', 'SHA-256 해시 생성기', 'md5 생성기', '파일 해시', '체크섬 확인'],
     howTo: [

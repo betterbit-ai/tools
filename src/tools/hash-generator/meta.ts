@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'shield',
   added: '2026-10-15',
   updated: '2026-10-15',
-  edges: ['no-ads', 'usability'],
+  edges: ['privacy', 'usability'],
   competitors: [
     {
       name: 'Go Tools — SHA-256 Generator',

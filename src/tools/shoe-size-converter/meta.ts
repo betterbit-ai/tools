@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'convert',
   added: '2026-10-14',
   updated: '2026-10-14',
-  edges: ['no-ads', 'usability'],
+  edges: ['privacy', 'usability'],
   competitors: [
     {
       name: 'ShoeSizeConverter.org — Shoe Size Converter',
