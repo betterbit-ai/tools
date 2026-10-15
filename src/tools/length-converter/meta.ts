@@ -145,6 +145,7 @@ export const meta: ToolMeta = {
     'volume-converter',
     'speed-converter',
     'data-size-converter',
+    'shoe-size-converter',
   ],
   variants,
 };

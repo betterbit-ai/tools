@@ -119,6 +119,7 @@ export const meta: ToolMeta = {
     'bmi-calculator',
     'volume-converter',
     'speed-converter',
+    'shoe-size-converter',
   ],
   variants,
 };
