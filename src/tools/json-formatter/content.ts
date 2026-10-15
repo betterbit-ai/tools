@@ -6,6 +6,7 @@ const uiEn = {
   placeholder: 'Paste or type JSON here…',
   openFile: 'Open .json file',
   openFileHint: 'Drop a file, click to browse, or paste with Ctrl/Cmd+V',
+  fileReadError: 'This file could not be read. Try opening it again or paste its contents.',
   indentLabel: 'Indent',
   indent2: '2 spaces',
   indent4: '4 spaces',
@@ -72,7 +73,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Why error messages differ from your browser console',
-        body: 'JavaScript engines don’t agree on JSON error messages: V8 (Chrome, Edge, Node) reports a character position and sometimes a line/column, while older Safari and Firefox builds often give only a vague description with no location at all. This tool runs its own parser that follows the JSON grammar from RFC 8259 character by character, so the line, column and plain-language reason are identical and precise no matter which browser you use.\n\nThe parser checks the same rules a strict JSON reader checks: property names and strings must use double quotes, commas may not trail before a closing bracket, and numbers may not have a leading zero (01) or a bare decimal point (1. or .5).',
+        body: 'Browser JSON error messages vary. This tool checks a failed document against the JSON grammar from RFC 8259 and reports the first problem as a line, column and plain-language reason, then “Jump to error” selects that character in the input.\n\nStrict JSON requires double quotes around property names and strings. It does not allow a comma before a closing bracket, a leading zero in a number (01), or a bare decimal point (1. or .5).',
       },
       {
         heading: 'Common reasons JSON fails to parse',
@@ -80,11 +81,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Formatted, minified or tree — which to use',
-        body: 'Formatted (pretty-printed) JSON is easiest to read and review in a pull request. Minified JSON strips all whitespace, which typically shrinks a response by 10–20% and is what you’d actually send over a network or store in a database. Tree view is best for exploring a deeply nested API response: collapse branches you don’t care about, and large arrays load the first 50 items with a “Show more” button so a 10,000-item array doesn’t freeze the tab.',
+        body: 'Formatted (pretty-printed) JSON is easiest to read and review in a pull request. Minified JSON strips whitespace outside strings, which is useful for compact API requests or one-line configuration fields. Tree view is best for exploring a nested API response: collapse branches you do not need, and use “Show more” to reveal large arrays and objects in batches of 50 items.',
       },
       {
-        heading: 'Nothing is uploaded, and there is no artificial size cap',
-        body: 'Parsing, sorting, formatting and the tree view all run with your browser’s built-in JSON engine — the same native code used by JSON.parse in your DevTools console — so performance matches what the browser itself can do, typically tens of megabytes before memory becomes the limit. No file or text is ever sent to a server, so pasting a real API response with tokens or personal data in it is safe.',
+        heading: 'Nothing is uploaded',
+        body: 'Parsing, sorting, formatting and the tree view run in this browser tab. No file or text is sent to a server. The practical limit depends on your device’s memory and browser; very large documents can still take time to parse or format. The tree initially shows 50 children at a time and leaves deeper branches collapsed to keep exploration responsive.',
       },
     ],
     faq: [
@@ -106,7 +107,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How large a JSON file can this handle?',
-        a: 'Parsing and formatting use the browser’s native JSON engine, so it scales to tens of megabytes on a typical laptop before memory becomes the limiting factor. The tree view renders large arrays and objects in batches of 50 items with a “Show more” button, so even a 100,000-item array stays scrollable instead of freezing the tab.',
+        a: 'There is no fixed application limit. The practical size depends on available device memory and the browser, and very large documents can still take time to parse or format. Tree view initially shows 50 children at a time and keeps deeper branches collapsed; use “Show more” only where you need to inspect more data.',
       },
       {
         q: 'Does JSON support comments?',
@@ -134,7 +135,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '왜 브라우저 콘솔의 오류 메시지와 다를까',
-        body: '자바스크립트 엔진마다 JSON 오류 메시지가 다릅니다. V8(크롬, 엣지, Node.js)은 문자 위치나 줄·열을 알려주지만, 일부 사파리·파이어폭스 버전은 위치 정보 없이 모호한 설명만 보여줍니다. 이 도구는 RFC 8259 JSON 문법을 한 글자씩 직접 검사하는 자체 파서를 사용하므로, 어떤 브라우저에서 써도 정확히 같은 줄·열 번호와 이해하기 쉬운 이유를 보여줍니다.\n\n이 파서는 엄격한 JSON 리더와 동일한 규칙을 검사합니다: 키와 문자열 값은 반드시 큰따옴표를 써야 하고, 닫는 괄호 앞에 쉼표가 남아 있으면 안 되며, 숫자는 앞에 0을 붙이거나(01) 소수점만 단독으로 쓸 수(1. 또는 .5) 없습니다.',
+        body: '브라우저마다 JSON 오류 메시지가 다릅니다. 이 도구는 실패한 입력을 RFC 8259 JSON 문법으로 다시 검사해 첫 오류의 줄·열 번호와 이해하기 쉬운 이유를 보여줍니다. “오류로 이동”을 누르면 그 문자를 입력창에서 바로 선택합니다.\n\n엄격한 JSON에서는 키와 문자열 값을 반드시 큰따옴표로 감싸야 합니다. 닫는 괄호 앞에 쉼표를 남기거나, 숫자 앞에 0을 붙이거나(01), 소수점만 단독으로 쓰는(1. 또는 .5) 것도 허용되지 않습니다.',
       },
       {
         heading: 'JSON 파싱이 실패하는 흔한 이유',
@@ -142,11 +143,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '정렬, 압축, 트리 중 무엇을 써야 할까',
-        body: '정렬된(pretty-print) JSON은 코드 리뷰나 읽기에 가장 편합니다. 압축된 JSON은 모든 공백을 제거해 보통 용량을 10~20% 줄이는데, 이것이 실제로 네트워크 전송이나 데이터베이스 저장에 쓰이는 형태입니다. 트리 뷰는 깊게 중첩된 API 응답을 탐색할 때 가장 유용합니다. 관심 없는 가지는 접어두고, 큰 배열은 처음 50개 항목만 불러온 뒤 "더 보기" 버튼으로 이어서 불러오므로 10,000개짜리 배열도 탭을 멈추게 하지 않습니다.',
+        body: '정렬된(pretty-print) JSON은 코드 리뷰나 읽기에 가장 편합니다. 압축된 JSON은 문자열 밖의 공백을 제거하므로 API 요청이나 한 줄 설정값에 유용합니다. 트리 뷰는 깊게 중첩된 API 응답을 탐색할 때 좋습니다. 관심 없는 가지는 접어두고, 큰 배열과 객체는 처음 50개씩만 표시한 뒤 “더 보기”로 필요한 부분만 펼치세요.',
       },
       {
-        heading: '업로드 없음, 임의의 용량 제한 없음',
-        body: '파싱, 정렬, 포맷팅, 트리 뷰 모두 브라우저에 내장된 JSON 엔진으로 처리됩니다. 개발자도구 콘솔에서 JSON.parse를 실행할 때와 같은 네이티브 코드를 쓰므로, 성능은 메모리가 한계에 이르기 전까지(보통 수십 메가바이트) 브라우저 자체의 처리 속도와 같습니다. 어떤 파일이나 텍스트도 서버로 전송되지 않으므로, 토큰이나 개인정보가 담긴 실제 API 응답을 붙여넣어도 안전합니다.',
+        heading: '업로드 없이 브라우저에서 처리',
+        body: '파싱, 정렬, 포맷팅, 트리 뷰는 모두 이 브라우저 탭에서 처리됩니다. 파일과 텍스트는 서버로 전송되지 않습니다. 실제 처리 한계는 기기의 메모리와 브라우저에 따라 다르며, 매우 큰 문서는 파싱이나 포맷팅에 시간이 걸릴 수 있습니다. 트리는 처음 50개 항목씩 보여 주고 깊은 가지는 접어 두어 필요한 부분을 더 빠르게 살펴볼 수 있습니다.',
       },
     ],
     faq: [
@@ -168,7 +169,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '얼마나 큰 JSON 파일까지 처리할 수 있나요?',
-        a: '파싱과 포맷팅은 브라우저의 네이티브 JSON 엔진을 사용하므로 일반적인 노트북에서 메모리가 한계에 이르기 전까지(보통 수십 메가바이트) 처리할 수 있습니다. 트리 뷰는 큰 배열과 객체를 50개 단위로 나눠 "더 보기" 버튼으로 불러오므로, 항목이 100,000개인 배열도 탭이 멈추지 않고 계속 스크롤할 수 있습니다.',
+        a: '도구에 정해 둔 용량 제한은 없습니다. 다만 실제 처리 한계는 기기의 메모리와 브라우저에 따라 다르고, 매우 큰 문서는 파싱이나 포맷팅에 시간이 걸릴 수 있습니다. 트리 뷰는 처음 50개 항목을 보여 주고 깊은 가지를 접어 두므로, 필요한 곳에서만 “더 보기”로 항목을 펼치면 됩니다.',
       },
       {
         q: 'JSON에 주석을 쓸 수 있나요?',
@@ -180,6 +181,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       placeholder: '여기에 JSON을 입력하거나 붙여넣으세요…',
       openFile: '.json 파일 열기',
       openFileHint: '파일을 끌어다 놓거나 클릭하세요. Ctrl/Cmd+V로 붙여넣기도 됩니다',
+      fileReadError: '파일을 읽을 수 없습니다. 다시 열거나 내용을 직접 붙여넣으세요.',
       indentLabel: '들여쓰기',
       indent2: '2칸',
       indent4: '4칸',

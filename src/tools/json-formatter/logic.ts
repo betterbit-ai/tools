@@ -218,18 +218,29 @@ function locateJsonError(input: string): JsonError {
     if (e instanceof JsonSyntaxError) {
       return { code: e.code, detail: e.detail, index: e.index, ...lineColumnAt(input, e.index) };
     }
-    throw e;
+    // The diagnostic scanner is only used after JSON.parse has already rejected
+    // the input. A document nested beyond the JavaScript call-stack limit must
+    // still produce a useful validation error instead of crashing the island.
+    return { code: 'unexpected-end', index: input.length, ...lineColumnAt(input, input.length) };
   }
 }
 
 export function parseJsonSafe(input: string): ParseResult {
-  if (input.trim() === '') {
+  // UTF-8 JSON files sometimes begin with a BOM. RFC 8259 allows parsers to
+  // ignore it, but JSON.parse rejects it, so strip only the leading marker.
+  const source = input.charCodeAt(0) === 0xfeff ? input.slice(1) : input;
+  if (source.trim() === '') {
     return { ok: false, error: { code: 'empty', index: 0, line: 1, column: 1 } };
   }
   try {
-    return { ok: true, value: JSON.parse(input) };
+    return { ok: true, value: JSON.parse(source) };
   } catch {
-    return { ok: false, error: locateJsonError(input) };
+    const error = locateJsonError(source);
+    if (source === input) return { ok: false, error };
+    return {
+      ok: false,
+      error: { ...error, index: error.index + 1, column: error.line === 1 ? error.column + 1 : error.column },
+    };
   }
 }
 
@@ -249,39 +260,37 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /** Recursively sorts object keys ordinally (byte-wise); array order is left untouched. */
 export function sortKeysDeep<T>(value: T): T {
-  if (Array.isArray(value)) return value.map((v) => sortKeysDeep(v)) as unknown as T;
-  if (isPlainObject(value)) {
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(value).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) {
-      sorted[key] = sortKeysDeep(value[key]);
+  if (!Array.isArray(value) && !isPlainObject(value)) return value;
+
+  const root: unknown[] | Record<string, unknown> = Array.isArray(value) ? [] : Object.create(null);
+  const pending: { source: unknown[] | Record<string, unknown>; target: unknown[] | Record<string, unknown> }[] = [
+    { source: value, target: root },
+  ];
+
+  while (pending.length) {
+    const current = pending.pop()!;
+    const copyChild = (key: string | number) => {
+      const child = current.source[key as never] as unknown;
+      const target = current.target as Record<string | number, unknown>;
+      if (Array.isArray(child) || isPlainObject(child)) {
+        const childTarget: unknown[] | Record<string, unknown> = Array.isArray(child) ? [] : Object.create(null);
+        target[key] = childTarget;
+        pending.push({ source: child, target: childTarget });
+      } else {
+        target[key] = child;
+      }
+    };
+
+    if (Array.isArray(current.source)) {
+      for (let index = 0; index < current.source.length; index++) copyChild(index);
+    } else {
+      for (const key of Object.keys(current.source).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) {
+        copyChild(key);
+      }
     }
-    return sorted as unknown as T;
   }
-  return value;
-}
 
-function depthOf(value: unknown): number {
-  if (Array.isArray(value)) return value.length === 0 ? 1 : 1 + Math.max(...value.map(depthOf));
-  if (isPlainObject(value)) {
-    const vals = Object.values(value);
-    return vals.length === 0 ? 1 : 1 + Math.max(...vals.map(depthOf));
-  }
-  return 0;
-}
-
-function countKeys(value: unknown): number {
-  if (Array.isArray(value)) return value.reduce((sum: number, v) => sum + countKeys(v), 0);
-  if (isPlainObject(value)) {
-    const entries = Object.entries(value);
-    return entries.reduce((sum, [, v]) => sum + countKeys(v), entries.length);
-  }
-  return 0;
-}
-
-function countLeaves(value: unknown): number {
-  if (Array.isArray(value)) return value.reduce((sum: number, v) => sum + countLeaves(v), 0);
-  if (isPlainObject(value)) return Object.values(value).reduce((sum: number, v) => sum + countLeaves(v), 0);
-  return 1;
+  return root as T;
 }
 
 export interface JsonStats {
@@ -292,12 +301,63 @@ export interface JsonStats {
   values: number;
 }
 
+function countUtf8Bytes(text: string): number {
+  let bytes = 0;
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code < 0x80) bytes += 1;
+    else if (code < 0x800) bytes += 2;
+    else if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length) {
+      const next = text.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        bytes += 4;
+        i++;
+      } else bytes += 3; // TextEncoder replaces an unpaired surrogate with U+FFFD.
+    } else bytes += 3;
+  }
+  return bytes;
+}
+
+function countCodePoints(text: string): number {
+  let count = 0;
+  for (let i = 0; i < text.length; i++, count++) {
+    const code = text.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length) {
+      const next = text.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) i++;
+    }
+  }
+  return count;
+}
+
 export function computeStats(value: unknown, raw: string): JsonStats {
+  let depth = 0;
+  let keys = 0;
+  let values = 0;
+  const pending: { value: unknown; depth: number }[] = [{ value, depth: 0 }];
+
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (Array.isArray(current.value)) {
+      const nextDepth = current.depth + 1;
+      depth = Math.max(depth, nextDepth);
+      for (let i = current.value.length - 1; i >= 0; i--) pending.push({ value: current.value[i], depth: nextDepth });
+    } else if (isPlainObject(current.value)) {
+      const entries = Object.entries(current.value);
+      const nextDepth = current.depth + 1;
+      depth = Math.max(depth, nextDepth);
+      keys += entries.length;
+      for (let i = entries.length - 1; i >= 0; i--) pending.push({ value: entries[i][1], depth: nextDepth });
+    } else {
+      values++;
+    }
+  }
+
   return {
-    bytes: new TextEncoder().encode(raw).length,
-    characters: Array.from(raw).length,
-    depth: depthOf(value),
-    keys: countKeys(value),
-    values: countLeaves(value),
+    bytes: countUtf8Bytes(raw),
+    characters: countCodePoints(raw),
+    depth,
+    keys,
+    values,
   };
 }
