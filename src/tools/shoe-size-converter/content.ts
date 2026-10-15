@@ -39,7 +39,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Shoe Size Converter — US, UK, EU, KR & Japan Chart',
     description:
-      'Convert adult shoe sizes across Korea mm, Japan cm, US men’s and women’s, UK, and EU instantly. Compare a brand-specific sizing reminder beside the reference chart.',
+      'Convert adult shoe sizes across Korea mm, Japan cm, US men’s and women’s, UK, and EU instantly. Compare a brand-specific sizing reminder in one reference chart.',
     h1: 'Shoe Size Converter',
     tagline:
       'Enter one adult size to compare Korea, Japan, US, UK and EU labels at once — then check the brand’s own fit chart.',
@@ -92,7 +92,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '신발 사이즈 표 — 한국·미국·유럽·영국·일본 변환',
     description:
-      '한국 mm, 일본 cm, 미국 남녀, 유럽 EU, 영국 UK 신발 사이즈를 입력 즉시 비교합니다. 브랜드별 공식 사이즈표를 확인할 때의 기준도 함께 보여줍니다.',
+      '한국 mm, 일본 cm, 미국 남녀, 유럽 EU, 영국 UK 신발 사이즈를 입력 즉시 비교합니다. 브랜드별 공식 사이즈표를 확인할 때의 기준과 함께 보여줍니다.',
     h1: '신발 사이즈 변환',
     tagline:
       '한 가지 성인 신발 사이즈를 입력하면 한국·일본·미국·유럽·영국 표기를 한눈에 비교하고, 브랜드별 확인 사항도 함께 안내합니다.',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Button, CopyButton, Dropzone, Notice, Panel, Segmented, Stat, Toggle } from '../../components/ui';
+import { Button, CopyButton, Dropzone, Notice, Panel, Segmented, Stat, Textarea, Toggle } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -19,6 +19,7 @@ const INDENT_KEY = 'tools:json-formatter:indent';
 const SORT_KEY = 'tools:json-formatter:sort';
 const INITIAL_ITEMS = 50;
 const SHOW_MORE_STEP = 200;
+const AUTO_COLLAPSE_DEPTH = 2;
 
 const SAMPLE = `{
   "name": "Betterbit Tools",
@@ -59,6 +60,7 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
   const [indent, setIndent] = useState<IndentChoice>('2');
   const [sortKeys, setSortKeys] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('pretty');
+  const [fileError, setFileError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -119,19 +121,27 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
             accept=".json,application/json"
             onFiles={(files) => {
               const file = files[0];
-              if (file) void file.text().then(setText);
+              if (!file) return;
+              void file.text().then(
+                (contents) => {
+                  setText(contents);
+                  setFileError(null);
+                },
+                () => setFileError(ui.fileReadError),
+              );
             }}
             title={ui.openFile}
             hint={ui.openFileHint}
           />
-          <textarea
+          {fileError && <Notice tone="danger">{fileError}</Notice>}
+          <Textarea
             id="json-input"
             ref={textareaRef}
             value={text}
             onInput={(e) => setText((e.currentTarget as HTMLTextAreaElement).value)}
             placeholder={ui.placeholder}
             spellcheck={false}
-            class="min-h-[280px] lg:min-h-[400px] flex-1 w-full resize-y rounded-lg border border-line bg-bg p-4 font-mono text-sm leading-6 text-fg placeholder:text-subtle focus:border-accent focus:outline-none"
+            class="min-h-[280px] lg:min-h-[400px] flex-1 w-full font-mono text-sm"
           />
           <div class="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="ghost" onClick={() => setText('')} disabled={!text}>
@@ -230,9 +240,9 @@ function JsonTree(props: { value: unknown; ui: UI }) {
   );
 }
 
-function JsonTreeNode(props: { keyName?: string; index?: number; value: unknown; ui: UI }) {
+function JsonTreeNode(props: { keyName?: string; index?: number; value: unknown; ui: UI; depth?: number }) {
   const { value, ui } = props;
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState((props.depth ?? 0) >= AUTO_COLLAPSE_DEPTH);
   const [shown, setShown] = useState(INITIAL_ITEMS);
 
   const keyPrefix =
@@ -250,13 +260,14 @@ function JsonTreeNode(props: { keyName?: string; index?: number; value: unknown;
 
   if (Array.isArray(value) || (value !== null && typeof value === 'object')) {
     const isArray = Array.isArray(value);
+    const objectKeys = isArray ? null : Object.keys(value as Record<string, unknown>);
+    const entryCount = isArray ? value.length : objectKeys!.length;
     const entries: [string | number, unknown][] = isArray
-      ? value.map((v, i) => [i, v])
-      : Object.entries(value as Record<string, unknown>);
+      ? value.slice(0, shown).map((item, index) => [index, item])
+      : objectKeys!.slice(0, shown).map((key) => [key, (value as Record<string, unknown>)[key]]);
     const open = isArray ? '[' : '{';
     const close = isArray ? ']' : '}';
-    const visible = entries.slice(0, shown);
-    const isEmpty = entries.length === 0;
+    const isEmpty = entryCount === 0;
 
     return (
       <div>
@@ -278,20 +289,20 @@ function JsonTreeNode(props: { keyName?: string; index?: number; value: unknown;
         </button>
         {!collapsed && !isEmpty && (
           <div class="ml-3 border-l border-line pl-3">
-            {visible.map(([k, v]) =>
+            {entries.map(([k, v]) =>
               isArray ? (
-                <JsonTreeNode index={k as number} value={v} ui={ui} />
+                <JsonTreeNode key={k} index={k as number} value={v} ui={ui} depth={(props.depth ?? 0) + 1} />
               ) : (
-                <JsonTreeNode keyName={k as string} value={v} ui={ui} />
+                <JsonTreeNode key={k} keyName={k as string} value={v} ui={ui} depth={(props.depth ?? 0) + 1} />
               ),
             )}
-            {entries.length > shown && (
+            {entryCount > shown && (
               <button
                 type="button"
                 class="py-1 text-xs text-accent hover:underline"
                 onClick={() => setShown((s) => s + SHOW_MORE_STEP)}
               >
-                {fillTemplate(ui.showMore, { n: entries.length - shown })}
+                {fillTemplate(ui.showMore, { n: entryCount - shown })}
               </button>
             )}
           </div>

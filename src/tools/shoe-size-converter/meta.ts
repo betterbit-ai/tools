@@ -5,8 +5,8 @@ export const meta: ToolMeta = {
   category: 'converter',
   icon: 'convert',
   added: '2026-10-14',
-  updated: '2026-10-14',
-  edges: ['privacy', 'usability'],
+  updated: '2026-10-15',
+  edges: ['usability'],
   competitors: [
     {
       name: 'ShoeSizeConverter.org — Shoe Size Converter',
@@ -30,7 +30,7 @@ export const meta: ToolMeta = {
       name: 'KoCalculators — 신발 사이즈 변환기',
       url: 'https://kocalculators.com/unit/shoe-size/',
       weakness:
-        'The page presents three separate conversion directions and a “계산하기” action, and repeats Coupang Partners affiliate disclosures and shopping links through the page. Betterbit accepts any of six systems as the input, updates every result live, and has no advertising or affiliate links. (Strength: it includes several brand-specific editorial fit suggestions.)',
+        'The page presents three separate conversion directions and a “계산하기” action, and repeats Coupang Partners affiliate disclosures and shopping links through the page. Betterbit accepts any of six systems as the input and updates every result live in one focused comparison. (Strength: it includes several brand-specific editorial fit suggestions.)',
     },
   ],
   related: ['length-converter', 'weight-converter', 'temperature-converter'],

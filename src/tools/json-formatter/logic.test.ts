@@ -20,6 +20,11 @@ describe('parseJsonSafe', () => {
     if (r.ok) expect(r.value).toEqual({ 한글: '안녕 😀', emoji: '🎉' });
   });
 
+  it('accepts a UTF-8 BOM at the start of a JSON file', () => {
+    const r = parseJsonSafe('\uFEFF{"message":"안녕하세요"}');
+    expect(r).toEqual({ ok: true, value: { message: '안녕하세요' } });
+  });
+
   it('rejects empty input', () => {
     const r = parseJsonSafe('   ');
     expect(r.ok).toBe(false);
@@ -140,10 +145,30 @@ describe('sortKeysDeep', () => {
     expect(result).toEqual([{ a: 2, b: 1 }, 3, 1]);
   });
 
+  it('retains a __proto__ key when sorting JSON object keys', () => {
+    const parsed = JSON.parse('{"z":1,"__proto__":{"safe":true},"a":2}');
+    const sorted = sortKeysDeep(parsed);
+    expect(Object.keys(sorted)).toEqual(['__proto__', 'a', 'z']);
+    expect((sorted as Record<string, unknown>)['__proto__']).toEqual({ safe: true });
+    expect(formatJson(sorted, 2)).toContain('"__proto__"');
+  });
+
   it('passes through primitives and null', () => {
     expect(sortKeysDeep(null)).toBe(null);
     expect(sortKeysDeep(5)).toBe(5);
     expect(sortKeysDeep('x')).toBe('x');
+  });
+
+  it('sorts a deeply nested document without overflowing the call stack', () => {
+    let value: unknown = { z: 1, a: 2 };
+    for (let i = 0; i < 20_000; i++) value = { z: value, a: i };
+
+    let sorted: unknown = sortKeysDeep(value);
+    for (let i = 0; i < 20_000; i++) {
+      expect(Object.keys(sorted as Record<string, unknown>)).toEqual(['a', 'z']);
+      sorted = (sorted as Record<string, unknown>).z;
+    }
+    expect(Object.keys(sorted as Record<string, unknown>)).toEqual(['a', 'z']);
   });
 });
 
@@ -172,5 +197,19 @@ describe('computeStats', () => {
     const stats = computeStats('한글', raw);
     // 2 quotes (1 byte each) + 2 Korean chars (3 bytes each in UTF-8)
     expect(stats.bytes).toBe(8);
+  });
+
+  it('handles a wide array without spreading every item into Math.max', () => {
+    const value = Array.from({ length: 200_000 }, (_, i) => i);
+    const stats = computeStats(value, JSON.stringify(value));
+    expect(stats).toMatchObject({ depth: 1, keys: 0, values: 200_000 });
+  });
+
+  it('counts a deeply nested document without overflowing the call stack', () => {
+    let value: unknown = 1;
+    for (let i = 0; i < 20_000; i++) value = [value];
+
+    const stats = computeStats(value, '');
+    expect(stats).toMatchObject({ depth: 20_000, keys: 0, values: 1 });
   });
 });
