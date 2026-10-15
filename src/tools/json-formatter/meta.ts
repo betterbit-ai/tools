@@ -27,5 +27,14 @@ export const meta: ToolMeta = {
         'It limits dropped files to 8 MB, while Betterbit does not impose an application file-size cap and batches its tree view by 50 children. (Strength: it shows the percentage reduction after minifying and its Korean guide explains when a browser is not suitable for a very large document.)',
     },
   ],
-  related: ['case-converter', 'text-diff', 'word-counter', 'base64', 'url-encoder', 'uuid-generator', 'hash-generator'],
+  related: [
+    'case-converter',
+    'text-diff',
+    'word-counter',
+    'base64',
+    'url-encoder',
+    'uuid-generator',
+    'hash-generator',
+    'jwt-decoder',
+  ],
 };

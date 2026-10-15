@@ -36,5 +36,6 @@ export const meta: ToolMeta = {
     'url-encoder',
     'uuid-generator',
     'hash-generator',
+    'jwt-decoder',
   ],
 };

@@ -156,7 +156,7 @@
 | url-encoder       | URL 인코딩       | url encode decode                          | 쿼리 파라미터 표 분해                | P1  | live |
 | uuid-generator    | UUID 생성        | uuid generator                             | v4/v7, 대량, 형식 옵션               | P1  | live |
 | hash-generator    | 해시 생성        | sha256 generator / md5                     | 파일 해시, Web Crypto                | P1  | live |
-| jwt-decoder       | JWT 디코더       | jwt decode                                 | 만료 시간 사람이 읽는 형태로         | P1  | todo |
+| jwt-decoder       | JWT 디코더       | jwt decode                                 | 만료 시간 사람이 읽는 형태로         | P1  | live |
 | regex-tester      | 정규식 테스트    | regex tester                               | 매치 하이라이트, 설명                | P1  | todo |
 | diff-checker-code | 코드 비교        | diff checker                               | 구문 하이라이트 diff                 | P2  | todo |
 | cron-parser       | Cron 해석        | cron expression                            | 다음 실행 시각 목록                  | P2  | todo |
