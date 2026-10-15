@@ -35,5 +35,6 @@ export const meta: ToolMeta = {
     'number-base-converter',
     'url-encoder',
     'uuid-generator',
+    'hash-generator',
   ],
 };

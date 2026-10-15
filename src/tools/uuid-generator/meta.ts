@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened Korean page describes a v4-only, 1–100 UUID generator. Betterbit adds RFC 9562 v7 for time-ordered identifiers and lets a batch of up to 10,000 copy as a JSON array or four UUID string forms. (장점: JSON·SQL·URL 입력의 포맷·변환 기능을 함께 소개한다.)',
     },
   ],
-  related: ['base64', 'json-formatter', 'url-encoder', 'random-number'],
+  related: ['base64', 'json-formatter', 'url-encoder', 'random-number', 'hash-generator'],
 };
