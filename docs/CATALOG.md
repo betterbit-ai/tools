@@ -164,7 +164,7 @@
 | css-minifier      | CSS/JS 압축      | minify css                                 | —                                    | P2  | todo |
 | sql-formatter     | SQL 포맷터       | sql formatter                              | 방언 선택                            | P2  | todo |
 | yaml-json         | YAML ↔ JSON      | yaml to json                               | 양방향                               | P2  | todo |
-| csv-json          | CSV ↔ JSON       | csv to json                                | 미리보기 표                          | P1  | todo |
+| csv-json          | CSV ↔ JSON       | csv to json                                | 미리보기 표                          | P1  | live |
 | html-entities     | HTML 엔티티      | html encode                                | —                                    | P2  | todo |
 | user-agent        | 내 브라우저 정보 | what is my browser / user agent            | 해석된 정보 + 복사                   | P2  | todo |
 | screen-resolution | 화면 해상도 확인 | what is my screen resolution / 해상도 확인 | DPR, 뷰포트 함께                     | P1  | todo |
