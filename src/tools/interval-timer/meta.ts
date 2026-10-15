@@ -8,7 +8,7 @@ export const meta: ToolMeta = {
   icon: 'timer',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['no-ads', 'usability', 'features', 'accuracy'],
+  edges: ['usability', 'features', 'accuracy'],
   competitors: [
     {
       name: 'timers.tools Tabata Timer',

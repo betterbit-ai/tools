@@ -53,7 +53,7 @@ export const meta: ToolMeta = {
   icon: 'convert',
   added: '2026-10-14',
   updated: '2026-10-14',
-  edges: ['no-ads', 'usability'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'SqFtMath — Square feet to square metres',
@@ -77,7 +77,7 @@ export const meta: ToolMeta = {
       name: 'EVERYCALC — 평수 변환 계산기',
       url: 'https://www.everycalc.pe.kr/pyeong',
       weakness:
-        'Its conversion content and reference table cover 평 and ㎡, but the page does not expose ft², yd², acres, or hectares in its calculator flow; its page also contains banner advertising. Betterbit keeps Korean, metric and imperial land units in one ad-free live converter. (Strength: it gives a detailed explanation of exclusive, supply and contract area.)',
+        'Its conversion content and reference table cover 평 and ㎡, but the page does not expose ft², yd², acres, or hectares in its calculator flow; its page also contains banner advertising. Betterbit keeps Korean, metric and imperial land units in one live converter. (Strength: it gives a detailed explanation of exclusive, supply and contract area.)',
     },
     {
       name: 'WikiTool — 평수 계산기',

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'reorder',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['privacy', 'no-ads', 'performance', 'usability', 'no-signup'],
+  edges: ['privacy', 'performance', 'usability', 'no-signup'],
   competitors: [
     {
       name: 'Adobe Acrobat (Rearrange PDF Pages)',

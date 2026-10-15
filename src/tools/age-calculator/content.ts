@@ -63,7 +63,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Age Calculator — International, Korean Age, Zodiac',
     description:
-      'Get your exact age, Korean counting age and year age, Chinese zodiac animal and star sign from a date of birth — updates instantly in your browser, no ads.',
+      'Get your exact age, Korean counting age and year age, Chinese zodiac animal and star sign from a date of birth — updates instantly in your browser.',
     h1: 'Age Calculator',
     tagline: 'Your exact age, Korean age conventions, zodiac animal and star sign — all from one date of birth.',
     name: 'Age Calculator',
@@ -132,7 +132,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '나이 계산기 — 만 나이·세는 나이·연 나이·띠·별자리',
     description:
-      '생년월일 하나로 만 나이, 세는 나이, 연 나이, 띠, 별자리를 입력하는 즉시 계산합니다. 버튼 클릭 없이 바로 업데이트되고, 광고와 서버 전송이 없습니다.',
+      '생년월일 하나로 만 나이, 세는 나이, 연 나이, 띠, 별자리를 입력하는 즉시 계산합니다. 버튼 클릭 없이 바로 업데이트되고, 서버 전송이 없습니다.',
     h1: '나이 계산기',
     tagline: '생년월일 하나로 만 나이·세는 나이·연 나이와 띠·별자리까지 한 번에 확인하세요.',
     name: '나이 계산기',

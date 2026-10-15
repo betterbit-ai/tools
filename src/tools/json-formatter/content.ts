@@ -55,7 +55,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'JSON Formatter — Validate, Beautify & Tree View',
     description:
-      'Format, validate and explore JSON with a tree view and exact error line/column. Nothing is uploaded — it all runs in your browser, with no ads.',
+      'Format, validate and explore JSON with a tree view and exact error line/column. Nothing is uploaded — it all runs in your browser.',
     h1: 'JSON Formatter',
     tagline:
       'Pretty-print, minify and explore JSON in a tree view — with the exact line and column of any syntax error.',
@@ -118,7 +118,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'JSON 포맷터 — JSON 정렬·검증·트리 뷰',
     description:
-      'JSON을 정렬(pretty print)하고 검증하고 트리 뷰로 살펴보세요. 오류 위치(줄·열)를 정확히 보여줍니다. 서버 업로드 없음, 광고 없음, 모두 브라우저에서 처리됩니다.',
+      'JSON을 정렬(pretty print)하고 검증하고 트리 뷰로 살펴보세요. 오류 위치(줄·열)를 정확히 보여줍니다. 서버 업로드 없음, 모두 브라우저에서 처리됩니다.',
     h1: 'JSON 포맷터',
     tagline: 'JSON을 정렬·압축하고 트리 뷰로 탐색합니다. 오류가 있으면 정확한 줄·열 번호를 알려줍니다.',
     name: 'JSON 포맷터',

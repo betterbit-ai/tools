@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'compress',
   added: '2026-10-08',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'performance', 'features'],
+  edges: ['privacy', 'performance', 'features'],
   competitors: [
     {
       name: 'TinyPNG',

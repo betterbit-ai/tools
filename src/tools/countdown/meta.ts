@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'timeanddate.com Countdown',
       url: 'https://www.timeanddate.com/countdown/create',
       weakness:
-        'Its creation page presents 30+ themed designs, a city-based event location and a large site-wide navigation before the event fields, plus advertising. Betterbit opens directly to a compact event form with annual-event presets and no ads. (Strength: it supports selected-location DST handling, design themes and a seconds field.)',
+        'Its creation page presents 30+ themed designs, a city-based event location and a large site-wide navigation before the event fields, plus advertising. Betterbit opens directly to a compact event form with annual-event presets. (Strength: it supports selected-location DST handling, design themes and a seconds field.)',
     },
     {
       name: 'timer.ly',

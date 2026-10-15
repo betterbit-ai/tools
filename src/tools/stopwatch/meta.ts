@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'stopwatch',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'timeanddate Stopwatch',
@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'W3Schools Online Stopwatch',
       url: 'https://www.w3schools.com/tools/tool_stopwatch.php',
       weakness:
-        'The stopwatch page places a “REMOVE ADS” prompt beside its lap controls and documents hundredths-of-a-second display; Betterbit has no ads and shows three millisecond digits with CSV download.',
+        'The stopwatch page places a “REMOVE ADS” prompt beside its lap controls and documents hundredths-of-a-second display; Betterbit shows three millisecond digits with CSV download.',
     },
     {
       name: 'OpenStopwatch',

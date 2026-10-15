@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calendar',
   added: '2026-10-11',
   updated: '2026-10-14',
-  edges: ['usability', 'no-ads'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'Calculator.net Date Calculator',

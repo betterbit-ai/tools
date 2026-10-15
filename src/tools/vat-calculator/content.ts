@@ -42,7 +42,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'VAT Calculator — Add or Extract VAT by Rate',
     description:
-      'Add VAT to a net price or extract it from a tax-inclusive total with verified standard-rate presets, a custom rate, and a live formula — no ads.',
+      'Add VAT to a net price or extract it from a tax-inclusive total with verified standard-rate presets, a custom rate, and a live formula.',
     h1: 'VAT Calculator',
     tagline:
       'Add VAT or work backward from an inclusive total with standard-rate presets, a custom rate, and the formula shown.',
@@ -150,7 +150,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
     ],
     ui: {
-      intro: '공급가액에 부가세를 더하거나, 부가세 포함 합계에서 바로 역산합니다 — 로그인과 광고가 없습니다.',
+      intro: '공급가액에 부가세를 더하거나, 부가세 포함 합계에서 바로 역산합니다 — 로그인이 필요 없습니다.',
       autosaved: '입력값은 이 브라우저에 저장됩니다',
       modeLabel: '계산 방식',
       modeHint: '현재 가진 금액이 세전인지, 부가세 포함인지 선택합니다.',

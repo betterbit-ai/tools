@@ -2,7 +2,7 @@ import type { Locale } from '../../i18n/locales';
 import type { ToolContent } from '../types';
 
 const uiEn = {
-  intro: 'All four calculations update as you type — no button, no ads.',
+  intro: 'All four calculations update as you type — no button needed.',
   autosaved: 'Your numbers are saved in this browser',
   invalidNumberError: 'Enter a valid number.',
   type1Heading: 'Percent of a number',
@@ -35,10 +35,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Percentage Calculator — All 4 Types at Once',
     description:
-      'Percent of a number, what percent X is of Y, the whole from a part, and percent increase/decrease — all four update live with the formula shown, no ads.',
+      'Percent of a number, what percent X is of Y, the whole from a part, and percent increase/decrease — all four update live with the formula shown.',
     h1: 'Percentage Calculator',
     tagline:
-      'All four percentage calculations update as you type, with the formula behind each result — no button, no ads.',
+      'All four percentage calculations update as you type, with the formula behind each result — no button needed.',
     name: 'Percentage Calculator',
     keywords: [
       'percentage calculator',
@@ -101,9 +101,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '퍼센트 계산기 — 4가지 유형 한 번에, 계산식 표시',
     description:
-      '숫자의 퍼센트, 몇 퍼센트인지, 전체값 구하기, 증가·감소율까지 네 가지 계산을 입력하는 즉시 한 화면에서 보여주고 계산식도 함께 표시합니다. 버튼 클릭과 광고가 없습니다.',
+      '숫자의 퍼센트, 몇 퍼센트인지, 전체값 구하기, 증가·감소율까지 네 가지 계산을 입력하는 즉시 한 화면에서 보여주고 계산식도 함께 표시합니다. 버튼을 누를 필요가 없습니다.',
     h1: '퍼센트 계산기',
-    tagline: '네 가지 퍼센트 계산이 입력하는 즉시 모두 갱신되고, 계산식도 함께 보여줍니다 — 버튼과 광고가 없습니다.',
+    tagline:
+      '네 가지 퍼센트 계산이 입력하는 즉시 모두 갱신되고, 계산식도 함께 보여줍니다 — 버튼을 누를 필요가 없습니다.',
     name: '퍼센트 계산기',
     keywords: [
       '퍼센트 계산기',
@@ -162,7 +163,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
     ],
     ui: {
-      intro: '네 가지 계산이 입력하는 즉시 모두 갱신됩니다 — 버튼도, 광고도 없습니다.',
+      intro: '네 가지 계산이 입력하는 즉시 모두 갱신됩니다 — 버튼을 누를 필요가 없습니다.',
       autosaved: '입력한 숫자는 이 브라우저에 저장됩니다',
       invalidNumberError: '올바른 숫자를 입력하세요.',
       type1Heading: '숫자의 퍼센트',

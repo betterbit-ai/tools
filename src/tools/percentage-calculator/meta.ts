@@ -6,25 +6,19 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['usability', 'no-ads'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'Calculator.net — Percentage Calculator',
       url: 'https://www.calculator.net/percent-calculator.html',
       weakness:
-        'Each of its three modes needs two values typed in and a separate "Calculate" button pressed before anything appears — nothing updates as you type — and a user review of the site specifically calls out mobile ads "getting heavy." Betterbit shows all four calculation types updating live with no button and no ads. (Strength: it also offers a symmetric "percentage difference" mode, which this calculator treats as a specialized case rather than a separate tool.)',
+        'Each of its three modes needs two values typed in and a separate "Calculate" button pressed before anything appears — nothing updates as you type — and a user review of the site specifically calls out mobile ads "getting heavy." Betterbit shows all four calculation types updating live with no button. (Strength: it also offers a symmetric "percentage difference" mode, which this calculator treats as a specialized case rather than a separate tool.)',
     },
     {
       name: 'CalculatorSoup — Percentage Calculator',
       url: 'https://www.calculatorsoup.com/calculators/math/percentage.php',
       weakness:
-        'Its worked formulas use generic placeholder letters, such as "(X / Y) * 100 = P%", instead of substituting the actual numbers you type, so you still have to do that substitution yourself to check the math, and the site is widely reported in reviews as carrying a lot of ads across its pages. Betterbit\'s formula line plugs in your real numbers automatically and has no ads. (Strength: its written walkthroughs explain the underlying fraction/decimal conversion in more depth.)',
-    },
-    {
-      name: 'Omni Calculator — Percentage Calculator',
-      url: 'https://www.omnicalculator.com/math/percentage',
-      weakness:
-        'Omni Calculator is itself used by Google as a public AdSense case study (google.com/ads/publisher/stories/omni_calculator), confirming the site runs Google-served display ads alongside its calculators, including this one. Betterbit has no ads anywhere on the page. (Strength: its four calculators load right at the top of the page, and it also explains percentage points and basis points as related but distinct concepts.)',
+        'Its worked formulas use generic placeholder letters, such as "(X / Y) * 100 = P%", instead of substituting the actual numbers you type, so you still have to do that substitution yourself to check the math, and the site is widely reported in reviews as carrying a lot of ads across its pages. Betterbit\'s formula line plugs in your real numbers automatically. (Strength: its written walkthroughs explain the underlying fraction/decimal conversion in more depth.)',
     },
     {
       name: '상담모아 퍼센트 계산기',

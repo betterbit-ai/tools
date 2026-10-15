@@ -30,7 +30,7 @@ const variants: ToolVariant[] = [
       en: {
         title: 'mL to Cups Converter — Pick the Recipe’s Cup Standard',
         description:
-          'Convert mL to US, metric, Korean, legal, or imperial cups instantly. Compare the standards in one ad-free result instead of assuming every cup is 240 mL.',
+          'Convert mL to US, metric, Korean, legal, or imperial cups instantly. Compare the standards in one result instead of assuming every cup is 240 mL.',
         h1: 'mL to Cups Converter',
         intro:
           'Millilitres to cups, live as you type. 500 mL is about 2.11 US customary cups, exactly 2 metric cups, or 2.5 Korean cooking cups — select the recipe’s standard first.',

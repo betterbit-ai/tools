@@ -34,7 +34,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Countdown to Date — Shareable Event Timer',
     description:
-      'Count down to any date and time with a live D-day display. Copy a shareable link with your event details—no ads, sign-up, or server-stored event.',
+      'Count down to any date and time with a live D-day display. Copy a shareable link with your event details—no sign-up or server-stored event.',
     h1: 'Countdown to Date',
     tagline: 'Set a moment, watch it update every second, and share the exact event in one privacy-friendly link.',
     name: 'Countdown',
@@ -94,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '디데이 계산기 — 공유 링크 되는 카운트다운',
     description:
-      '목표 날짜와 시간까지 남은 시간을 초 단위로 보여 주는 디데이 계산기입니다. 일정 이름·날짜·시간을 담은 공유 링크를 만들며, 광고·가입·서버 저장이 없습니다.',
+      '목표 날짜와 시간까지 남은 시간을 초 단위로 보여 주는 디데이 계산기입니다. 일정 이름·날짜·시간을 담은 공유 링크를 만들며, 가입·서버 저장이 없습니다.',
     h1: '디데이 카운트다운',
     tagline: '날짜와 시간을 정하면 D-day와 남은 시간을 바로 계산하고, 같은 일정을 링크 하나로 공유합니다.',
     name: '디데이 카운트다운',

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'resize',
   added: '2026-10-07',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'performance', 'features', 'no-signup'],
+  edges: ['privacy', 'performance', 'features', 'no-signup'],
   competitors: [
     {
       name: 'iLoveIMG Resize',

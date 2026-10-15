@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['usability', 'features', 'no-ads'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'M2Toolkit — VAT, GST & Sales Tax Calculator',
@@ -36,7 +36,7 @@ export const meta: ToolMeta = {
       name: 'utilo.kr — 부가세 계산기',
       url: 'https://utilo.kr/tax/',
       weakness:
-        "It opens with a cookie choice for analytics and advertising, and its standard calculation is fixed at Korea's 10% rate while its extra tabs focus on Korean simplified-taxpayer estimates. Betterbit is ad-free, has a quick standard-rate preset list plus a custom rate, and clearly keeps the scope to a transaction breakdown. (장점: 간이과세 업종별 부가가치율과 매입·매출 차액을 별도로 다룬다.)",
+        "It opens with a cookie choice for analytics and advertising, and its standard calculation is fixed at Korea's 10% rate while its extra tabs focus on Korean simplified-taxpayer estimates. Betterbit has a quick standard-rate preset list plus a custom rate, and clearly keeps the scope to a transaction breakdown. (장점: 간이과세 업종별 부가가치율과 매입·매출 차액을 별도로 다룬다.)",
     },
     {
       name: '도구몽 — 부가세 계산기',

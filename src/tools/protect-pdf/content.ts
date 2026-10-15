@@ -94,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'PDF 암호 설정 — AES-256, 업로드 없음',
     description:
-      '브라우저에서 PDF에 AES-256 비밀번호를 설정하세요. 파일과 비밀번호는 기기에만 남으며 업로드·가입·광고가 없습니다.',
+      '브라우저에서 PDF에 AES-256 비밀번호를 설정하세요. 파일과 비밀번호는 기기에만 남으며 업로드·가입이 없습니다.',
     h1: 'PDF 암호 설정',
     tagline: 'PDF 1개에 열기 비밀번호를 설정하고 바로 내려받습니다. 파일은 업로드하지 않습니다.',
     name: 'PDF 암호 설정',

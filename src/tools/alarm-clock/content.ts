@@ -33,9 +33,9 @@ export type UI = typeof uiEn;
 
 export const content: Record<Locale, ToolContent<UI>> = {
   en: {
-    title: 'Online Alarm Clock — Multiple Alarms, No Ads',
+    title: 'Online Alarm Clock — Multiple Labeled Alarms',
     description:
-      'Set up to 12 online alarms in one browser tab. Save labeled alarms locally, see the next alert, and use a precise system-clock check—without ads or sign-up.',
+      'Set up to 12 online alarms in one browser tab. Save labeled alarms locally, see the next alert, and use a precise system-clock check—without signing up.',
     h1: 'Online Alarm Clock',
     tagline: 'Set several labeled alarms in one clean tab and keep them saved on this device.',
     name: 'Alarm Clock',
@@ -88,7 +88,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '온라인 알람 — 여러 개 설정하는 무료 알람시계',
     description:
-      '브라우저 한 탭에서 최대 12개의 온라인 알람을 설정하세요. 이름을 붙여 기기에만 저장하고, 다음 알람을 바로 확인합니다. 광고와 가입이 없습니다.',
+      '브라우저 한 탭에서 최대 12개의 온라인 알람을 설정하세요. 이름을 붙여 기기에만 저장하고, 다음 알람을 바로 확인합니다. 가입이 없습니다.',
     h1: '온라인 알람',
     tagline: '여러 개의 알람에 이름을 붙여 한 탭에서 관리하고, 이 기기에만 저장합니다.',
     name: '알람',

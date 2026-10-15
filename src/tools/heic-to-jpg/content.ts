@@ -34,7 +34,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'HEIC to JPG — Free, No Upload, Keeps Photo Dates',
     description:
-      'Convert HEIC to JPG in your browser — one photo or hundreds. No upload, no sign-up, no ads. Keeps each photo’s capture date and camera, and can leave GPS out.',
+      'Convert HEIC to JPG in your browser — one photo or hundreds. No upload, no sign-up. Keeps each photo’s capture date and camera, and can leave GPS out.',
     h1: 'HEIC to JPG Converter',
     tagline: 'Turn iPhone HEIC photos into JPG without uploading them — and without losing the date they were taken.',
     name: 'HEIC to JPG',
@@ -110,7 +110,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'HEIC JPG 변환 — 업로드 없이, 촬영 날짜 유지',
     description:
-      '아이폰 HEIC 사진을 브라우저에서 바로 JPG로 변환합니다. 한 장도 수백 장도 가능하고, 업로드·가입·광고가 없습니다. 촬영 날짜와 카메라 정보는 유지하고 위치정보는 빼 줍니다.',
+      '아이폰 HEIC 사진을 브라우저에서 바로 JPG로 변환합니다. 한 장도 수백 장도 가능하고, 업로드·가입이 없습니다. 촬영 날짜와 카메라 정보는 유지하고 위치정보는 빼 줍니다.',
     h1: 'HEIC JPG 변환',
     tagline: '아이폰 HEIC 사진을 업로드 없이 JPG로 바꿉니다. 촬영 날짜도 그대로 남습니다.',
     name: 'HEIC JPG 변환',

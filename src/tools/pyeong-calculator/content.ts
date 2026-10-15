@@ -47,7 +47,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Pyeong Calculator — Compare Exclusive & Supply Area',
     description:
-      'Convert pyeong and square metres instantly with the exact 400/121㎡ factor, then compare a Korean listing’s exclusive and supply area side by side — no ads.',
+      'Convert pyeong and square metres instantly with the exact 400/121㎡ factor, then compare a Korean listing’s exclusive and supply area side by side.',
     h1: 'Pyeong Calculator',
     tagline:
       'Convert ㎡ and 평 instantly, then put exclusive and supply area side by side so a listing’s two pyeong figures do not get mixed up.',
@@ -107,7 +107,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '평수 계산기 — 전용·공급면적 비교와 ㎡ 환산',
     description:
-      '평과 제곱미터를 정확한 400/121㎡ 기준으로 즉시 환산하고, 매물의 전용면적·공급면적을 나란히 비교합니다. 광고 없이 브라우저에서 계산합니다.',
+      '평과 제곱미터를 정확한 400/121㎡ 기준으로 즉시 환산하고, 매물의 전용면적·공급면적을 나란히 비교합니다. 브라우저에서 계산합니다.',
     h1: '평수 계산기',
     tagline: '평·㎡를 바로 환산하고, 전용면적과 공급면적을 함께 비교해 같은 집의 서로 다른 평수 표기를 구분합니다.',
     name: '평수 계산기',

@@ -26,7 +26,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Scientific Calculator — Keyboard Input, Deg/Rad, History',
     description:
-      'A free scientific calculator with sin/cos/tan, log/ln, powers and factorials. Type full expressions on your keyboard and reuse any past result from history — no ads.',
+      'A free scientific calculator with sin/cos/tan, log/ln, powers and factorials. Type full expressions on your keyboard and reuse any past result from history.',
     h1: 'Scientific Calculator',
     tagline: 'Trig, logs, powers and more — type the whole expression or tap the keys, your choice.',
     name: 'Scientific Calculator',
@@ -90,7 +90,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '공학용 계산기 — 키보드 입력, 도(DEG)/라디안(RAD), 계산 기록',
     description:
-      'sin·cos·tan, log·ln, 거듭제곱, 계승(!)까지 지원하는 무료 온라인 공학용 계산기. 수식을 키보드로 직접 입력할 수 있고, 지난 계산 기록을 저장해 다시 불러올 수 있습니다. 광고 없음.',
+      'sin·cos·tan, log·ln, 거듭제곱, 계승(!)까지 지원하는 무료 온라인 공학용 계산기. 수식을 키보드로 직접 입력할 수 있고, 지난 계산 기록을 저장해 다시 불러올 수 있습니다.',
     h1: '공학용 계산기',
     tagline: '삼각함수·로그·거듭제곱까지. 버튼으로 눌러도 되고, 수식을 통째로 타이핑해도 됩니다.',
     name: '공학용 계산기',

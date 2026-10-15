@@ -28,7 +28,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Keyboard Tester — NKRO rollover, ghosting and layout check',
     description:
-      'Press any key to see it light up, find how many keys register at once (NKRO/rollover), and catch stuck or chattering keys — local only, no ads, no upload.',
+      'Press any key to see it light up, find how many keys register at once (NKRO/rollover), and catch stuck or chattering keys — local only, no upload.',
     h1: 'Keyboard Tester',
     tagline:
       'Press any key to see it light up, check how many register at once, and catch stuck or double-firing keys.',
@@ -94,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '키보드 테스트 — 동시 입력(NKRO)·고스팅·레이아웃 확인',
     description:
-      '아무 키나 눌러 불이 켜지는지 보고, 동시에 몇 개까지 인식되는지(NKRO)와 끼임·채터링 키를 찾아보세요. 브라우저에서만 동작하며 광고와 업로드가 없습니다.',
+      '아무 키나 눌러 불이 켜지는지 보고, 동시에 몇 개까지 인식되는지(NKRO)와 끼임·채터링 키를 찾아보세요. 브라우저에서만 동작하며 업로드가 없습니다.',
     h1: '키보드 테스트',
     tagline:
       '키를 누르면 바로 불이 켜지고, 동시에 몇 개까지 인식되는지, 끼이거나 이중 입력되는 키는 없는지 확인합니다.',

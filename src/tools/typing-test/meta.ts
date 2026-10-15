@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'zap',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'no-signup', 'accuracy', 'usability'],
+  edges: ['no-signup', 'accuracy', 'usability'],
   competitors: [
     {
       name: 'Monkeytype',

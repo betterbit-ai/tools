@@ -37,10 +37,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Random Number Generator — Secure, No Repeats, Bulk',
     description:
-      'Generate 1 to 10,000 random integers in any inclusive range, with no repeats and one-click copy. Browser Web Crypto keeps every draw local and ad-free.',
+      'Generate 1 to 10,000 random integers in any inclusive range, with no repeats and one-click copy. Browser Web Crypto keeps every draw local.',
     h1: 'Random Number Generator',
     tagline:
-      'Generate up to 10,000 secure random integers, with optional no-repeat draws, sorting, and one-click copy — no ads.',
+      'Generate up to 10,000 secure random integers, with optional no-repeat draws, sorting, and one-click copy.',
     name: 'Random Number Generator',
     keywords: [
       'random number generator',
@@ -101,7 +101,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       '원하는 범위에서 랜덤 정수를 최대 1만 개까지 생성합니다. 중복 없는 추첨, 정렬, 한 번에 복사를 지원하며 모든 숫자는 브라우저에서 안전하게 생성됩니다.',
     h1: '랜덤 숫자 생성기',
-    tagline: '범위와 개수만 정하면 중복 없는 랜덤 숫자를 최대 1만 개까지 생성하고 바로 복사합니다 — 광고가 없습니다.',
+    tagline: '범위와 개수만 정하면 중복 없는 랜덤 숫자를 최대 1만 개까지 생성하고 바로 복사합니다.',
     name: '랜덤 숫자 생성기',
     keywords: [
       '랜덤 숫자 생성기',

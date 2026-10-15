@@ -44,7 +44,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Fancy Text Generator — Unicode Styles to Copy',
     description:
-      'Create copy-ready Unicode fancy text for Instagram bios, display names and captions. See only styles that change your text, with no ads or upload.',
+      'Create copy-ready Unicode fancy text for Instagram bios, display names and captions. See only styles that change your text, with no upload.',
     h1: 'Fancy Text Generator',
     tagline:
       'Make copy-ready Unicode text for social bios and captions, with styles that genuinely change what you typed.',
@@ -103,7 +103,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '인스타 폰트 변환기 — 유니코드 특수 글씨체',
     description:
-      '인스타 소개글·닉네임에 쓸 유니코드 특수 글씨체를 바로 만들고 복사하세요. 실제로 바뀌는 결과만 보여 주며 광고나 서버 전송이 없습니다.',
+      '인스타 소개글·닉네임에 쓸 유니코드 특수 글씨체를 바로 만들고 복사하세요. 실제로 바뀌는 결과만 보여 주며 서버 전송이 없습니다.',
     h1: '인스타 폰트 변환기',
     tagline: '인스타 소개글과 닉네임용 유니코드 특수 글씨체를 만들고, 실제로 바뀐 결과만 바로 복사합니다.',
     name: '인스타 폰트 변환기',

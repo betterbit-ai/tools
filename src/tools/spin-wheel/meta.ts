@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'sparkle',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'Spin the Wheel Online',
@@ -18,13 +18,13 @@ export const meta: ToolMeta = {
       name: 'No Spin Wheel',
       url: 'https://nospinwheel.com/',
       weakness:
-        'Its opened FAQ calls the experience “ad-light,” rather than ad-free. Betterbit has no advertising or referral content, while still keeping browser-local saved lists, winner removal, and full-screen mode. (Strength: it encodes the current list into a shareable URL.)',
+        'Its opened FAQ calls the experience “ad-light,” rather than ad-free. Betterbit has no referral content and keeps browser-local saved lists, winner removal, and full-screen mode on one screen. (Strength: it encodes the current list into a shareable URL.)',
     },
     {
       name: 'SweepsWheel',
       url: 'https://sweepswheel.com/',
       weakness:
-        'The opened page puts four sweepstakes-casino offers and promotional bonus copy immediately below its spinner, and says it earns referral commissions from casinos. Betterbit has no ads or gambling referrals. (Strength: it supports sharing, swipe-to-spin, and preset wheel pages.)',
+        'The opened page puts four sweepstakes-casino offers and promotional bonus copy immediately below its spinner, and says it earns referral commissions from casinos. Betterbit has no gambling referrals. (Strength: it supports sharing, swipe-to-spin, and preset wheel pages.)',
     },
     {
       name: 'Random Spin App',

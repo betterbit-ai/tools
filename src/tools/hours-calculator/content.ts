@@ -41,7 +41,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Hours Calculator — Weekly Work Hours With Breaks',
     description:
-      'Calculate weekly work hours from daily start, end and unpaid-break times. See net time, decimal hours and weekly totals live in your browser, with no ads.',
+      'Calculate weekly work hours from daily start, end and unpaid-break times. See net time, decimal hours and weekly totals live in your browser.',
     h1: 'Hours Calculator',
     tagline: 'Add a week of shifts, deduct unpaid breaks, and get accurate hours and decimals immediately.',
     name: 'Hours Calculator',
@@ -95,7 +95,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '근무시간 계산기 — 휴게시간 제외 주간 합계',
     description:
-      '출퇴근 시각과 무급 휴게시간으로 주간 근무시간을 계산합니다. 일별 실근무시간, 시·분 합계와 소수 시간까지 입력 즉시 확인하세요. 광고 없이 브라우저에서만 처리합니다.',
+      '출퇴근 시각과 무급 휴게시간으로 주간 근무시간을 계산합니다. 일별 실근무시간, 시·분 합계와 소수 시간까지 입력 즉시 확인하세요. 브라우저에서만 처리합니다.',
     h1: '근무시간 계산기',
     tagline: '출퇴근 시각과 휴게시간을 넣으면 일별 실근무시간과 주간 합계를 바로 계산합니다.',
     name: '근무시간 계산기',

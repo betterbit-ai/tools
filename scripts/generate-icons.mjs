@@ -67,7 +67,7 @@ const og = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" hei
     <path d="${BOLT}" fill="#fff" transform="scale(3.5)"/>
   </g>
   <text x="96" y="370" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="76" font-weight="700" fill="#18181b">Betterbit Tools</text>
-  <text x="96" y="440" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="36" fill="#5f5f66">Fast, private, ad-free tools that just work.</text>
+  <text x="96" y="440" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="36" fill="#5f5f66">Fast, private tools that just work.</text>
   <text x="96" y="540" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="28" fill="${ACCENT}">betterbit.org</text>
 </svg>`);
 writeFileSync(out('og-default.png'), await sharp(og).png({ compressionLevel: 9 }).toBuffer());

@@ -28,7 +28,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Weight Converter — KG to LBS, Stone, and Korean Units',
     description:
-      'Convert kg, lbs, oz, stone, mg, tons and Korean units (don, nyang, geun, gwan) instantly as you type — no ads, no "Convert" button, with a quick reference table.',
+      'Convert kg, lbs, oz, stone, mg, tons and Korean units (don, nyang, geun, gwan) instantly as you type — no "Convert" button, with a quick reference table.',
     h1: 'Weight Converter',
     tagline: 'Kilograms, pounds, stone and more — converted live, including Korean don, nyang, geun and gwan.',
     name: 'Weight Converter',
@@ -89,7 +89,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '무게 변환기 — kg 파운드, 스톤, 근·돈 변환',
     description:
-      'kg, 파운드, 온스, 스톤, mg, 톤은 물론 돈·냥·근·관까지 입력하는 즉시 변환합니다. 광고와 "변환" 버튼 없이 바로 결과가 나오고, 빠른 참조표도 함께 제공합니다.',
+      'kg, 파운드, 온스, 스톤, mg, 톤은 물론 돈·냥·근·관까지 입력하는 즉시 변환합니다. "변환" 버튼 없이 바로 결과가 나오고, 빠른 참조표도 함께 제공합니다.',
     h1: '무게 변환기',
     tagline: 'kg, 파운드, 스톤부터 돈·냥·근·관까지, 입력하는 즉시 변환됩니다.',
     name: '무게 변환기',

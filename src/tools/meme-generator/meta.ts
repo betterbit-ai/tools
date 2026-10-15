@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'image',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['privacy', 'no-ads', 'performance', 'features', 'no-signup'],
+  edges: ['privacy', 'performance', 'features', 'no-signup'],
   competitors: [
     {
       name: 'QuickMeme',

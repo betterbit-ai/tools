@@ -35,7 +35,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Typing Test — Free WPM Speed Test, No Sign-Up',
     description:
-      'Test your typing speed in WPM with live accuracy, 15/30/60s runs and a personal best saved on this device. No ads, no account, nothing uploaded.',
+      'Test your typing speed in WPM with live accuracy, 15/30/60s runs and a personal best saved on this device. No account, nothing uploaded.',
     h1: 'Typing Test',
     tagline: 'Type the sample text and see your words-per-minute and accuracy update live.',
     name: 'Typing Test',
@@ -88,7 +88,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '타자 연습 — 무료 타자 속도 테스트, 회원가입 없음',
     description:
-      '한글 타수와 영문 WPM을 15·30·60초 동안 실시간으로 측정합니다. 개인 최고 기록은 이 브라우저에만 저장되고, 광고와 회원가입이 없습니다.',
+      '한글 타수와 영문 WPM을 15·30·60초 동안 실시간으로 측정합니다. 개인 최고 기록은 이 브라우저에만 저장되고, 회원가입이 없습니다.',
     h1: '타자 연습',
     tagline: '예문을 따라 입력하면 타수(또는 WPM)와 정확도가 실시간으로 올라갑니다.',
     name: '타자 연습',

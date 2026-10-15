@@ -28,7 +28,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Length Converter — cm to Inches, Feet to Meters & More',
     description:
-      'Convert cm, inches, feet, meters, yards, miles, mm and km instantly as you type — no ads, no "Convert" button, plus a quick table and a feet+inches height converter.',
+      'Convert cm, inches, feet, meters, yards, miles, mm and km instantly as you type — no "Convert" button, plus a quick table and a feet+inches height converter.',
     h1: 'Length Converter',
     tagline: 'cm, inches, feet, meters and more — converted live, with a feet+inches height converter built in.',
     name: 'Length Converter',
@@ -85,7 +85,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '길이 변환기 — cm 인치, 피트 미터, 마일 km 변환',
     description:
-      'cm, 인치, 피트, 미터, 야드, 마일, mm, km까지 입력하는 즉시 변환합니다. 광고와 "변환" 버튼 없이 바로 결과가 나오고, 빠른 참조표와 키(피트·인치) 변환기도 함께 제공합니다.',
+      'cm, 인치, 피트, 미터, 야드, 마일, mm, km까지 입력하는 즉시 변환합니다. "변환" 버튼 없이 바로 결과가 나오고, 빠른 참조표와 키(피트·인치) 변환기도 함께 제공합니다.',
     h1: '길이 변환기',
     tagline: 'cm, 인치, 피트, 미터 등을 즉시 변환하고, 키(피트·인치)도 같은 화면에서 바로 바꿔보세요.',
     name: '길이 변환기',

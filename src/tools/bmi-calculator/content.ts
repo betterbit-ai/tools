@@ -41,7 +41,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'BMI Calculator — WHO & Korean Adult Ranges',
     description:
-      'Calculate your BMI instantly with metric or US units. Compare WHO and Korean adult categories and healthy-weight ranges side by side, with no ads.',
+      'Calculate your BMI instantly with metric or US units. Compare WHO and Korean adult categories and healthy-weight ranges side by side.',
     h1: 'BMI Calculator',
     tagline: 'Enter height and weight to compare WHO and Korean adult BMI ranges at once.',
     name: 'BMI Calculator',
@@ -93,7 +93,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'BMI 계산기 — WHO·대한비만학회 기준 비교',
     description:
-      '키와 몸무게로 BMI를 바로 계산하고 WHO 국제 기준과 대한비만학회 성인 기준, 적정 체중 범위를 나란히 확인합니다. 광고 없이 브라우저에서 처리합니다.',
+      '키와 몸무게로 BMI를 바로 계산하고 WHO 국제 기준과 대한비만학회 성인 기준, 적정 체중 범위를 나란히 확인합니다. 브라우저에서 처리합니다.',
     h1: 'BMI 계산기',
     tagline: 'BMI와 WHO·대한비만학회 성인 판정, 키에 맞는 적정 체중 범위를 한 번에 확인합니다.',
     name: 'BMI 계산기',

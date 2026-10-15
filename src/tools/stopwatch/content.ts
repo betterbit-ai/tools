@@ -27,7 +27,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Stopwatch — Millisecond Laps and CSV Export',
     description:
-      'A free, ad-free online stopwatch with millisecond laps, CSV download and keyboard controls. Your running time and lap records survive a refresh in this browser.',
+      'A free online stopwatch with millisecond laps, CSV download and keyboard controls. Your running time and lap records survive a refresh in this browser.',
     h1: 'Online Stopwatch',
     tagline: 'Measure elapsed time to milliseconds, keep every lap after refresh, and download the record as CSV.',
     name: 'Stopwatch',
@@ -86,7 +86,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '스톱워치 — 밀리초 랩 기록·CSV 다운로드',
     description:
-      '밀리초 단위 랩 기록과 CSV 다운로드를 지원하는 무료 온라인 스톱워치입니다. 광고 없이 키보드로 조작하고, 새로고침해도 이 브라우저의 시간과 랩 기록이 유지됩니다.',
+      '밀리초 단위 랩 기록과 CSV 다운로드를 지원하는 무료 온라인 스톱워치입니다. 키보드로 조작하고, 새로고침해도 이 브라우저의 시간과 랩 기록이 유지됩니다.',
     h1: '온라인 스톱워치',
     tagline: '밀리초까지 재고, 새로고침 뒤에도 랩 기록을 유지한 뒤 CSV로 내려받습니다.',
     name: '스톱워치',

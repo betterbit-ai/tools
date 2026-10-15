@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'qrcode',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['privacy', 'no-ads'],
+  edges: ['privacy'],
   competitors: [
     {
       name: 'QRAiCode',
@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'QRCode Monkey',
       url: 'https://www.qrcode-monkey.com/en/?lang=en',
       weakness:
-        'The opened generator places repeated “Ad” blocks and sign-up/trial promotions beside the Create/Download flow, says its generated image files are cached on its server for 24 hours, and requires a separate Create QR Code step. Betterbit has no ads, generates the live preview locally, and never sends the selected logo to a server. (Strength: it has far more templates, shapes, and PDF/EPS export.)',
+        'The opened generator places repeated “Ad” blocks and sign-up/trial promotions beside the Create/Download flow, says its generated image files are cached on its server for 24 hours, and requires a separate Create QR Code step. Betterbit generates the live preview locally, and never sends the selected logo to a server. (Strength: it has far more templates, shapes, and PDF/EPS export.)',
     },
     {
       name: 'QRGen',

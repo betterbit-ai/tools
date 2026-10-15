@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'microphone',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'usability', 'no-signup'],
+  edges: ['privacy', 'usability', 'no-signup'],
   competitors: [
     {
       name: 'TextIntoAudio',

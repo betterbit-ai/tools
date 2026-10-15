@@ -50,7 +50,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Image Resizer — Resize Photos Online in Bulk, No Upload',
     description:
-      'Resize JPG, PNG and WebP images by pixels or percent — many at once — in your browser. Crop to exact Instagram or YouTube sizes. No upload, no ads, no watermark.',
+      'Resize JPG, PNG and WebP images by pixels or percent — many at once — in your browser. Crop to exact Instagram or YouTube sizes. No upload, no watermark.',
     h1: 'Image Resizer',
     tagline: 'Resize one photo or a batch of up to 50, by pixels or percent — privately, in your browser.',
     name: 'Image Resizer',
@@ -110,7 +110,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '이미지 크기 조절 — 사진 용량 줄이기, 여러 장 한번에 (업로드 없음)',
     description:
-      'JPG, PNG, WebP 이미지를 픽셀이나 퍼센트로 여러 장 한번에 줄이세요. 인스타그램·유튜브 규격으로 자르기 지원. 서버 업로드 없이 브라우저에서 처리, 광고·워터마크 없음.',
+      'JPG, PNG, WebP 이미지를 픽셀이나 퍼센트로 여러 장 한번에 줄이세요. 인스타그램·유튜브 규격으로 자르기 지원. 서버 업로드 없이 브라우저에서 처리, 워터마크 없음.',
     h1: '이미지 크기 조절',
     tagline: '사진 한 장부터 최대 50장까지, 픽셀이나 퍼센트로 — 업로드 없이 브라우저에서.',
     name: '이미지 크기 조절',

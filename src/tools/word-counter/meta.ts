@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'count',
   added: '2026-10-07',
   updated: '2026-10-13',
-  edges: ['no-ads', 'accuracy', 'privacy', 'features'],
+  edges: ['accuracy', 'privacy', 'features'],
   competitors: [
     {
       name: 'WordCounter.net',

@@ -38,7 +38,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'URL Encode & Decode — Editable Query Table',
     description:
-      'Encode or decode URL values, complete links, and HTML form data instantly. Inspect each query parameter in an editable table and rebuild the URL locally, with no ads.',
+      'Encode or decode URL values, complete links, and HTML form data instantly. Inspect each query parameter in an editable table and rebuild the URL locally.',
     h1: 'URL Encoder & Decoder',
     tagline:
       'Percent-encode a value or full link, then inspect and edit its query parameters without sending the URL anywhere.',

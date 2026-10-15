@@ -25,8 +25,8 @@ export const CATEGORIES = {
     icon: 'clock',
     name: { en: 'Time & date', ko: '시간·날짜' },
     description: {
-      en: 'Online timers, stopwatches, countdowns and date calculators that stay accurate in background tabs and work without ads.',
-      ko: '온라인 타이머, 스톱워치, 디데이 카운트다운, 날짜 계산기. 백그라운드 탭에서도 정확하고 광고가 없습니다.',
+      en: 'Online timers, stopwatches, countdowns and date calculators that stay accurate in background tabs.',
+      ko: '온라인 타이머, 스톱워치, 디데이 카운트다운, 날짜 계산기. 백그라운드 탭에서도 정확합니다.',
     },
   },
   calculator: {

@@ -31,7 +31,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Metronome — Accurate Web Audio Click and Tap Tempo',
     description:
-      'Start a free online metronome with pre-scheduled Web Audio clicks, tap tempo, 20–300 BPM, keyboard controls and saved settings. No ads or account needed.',
+      'Start a free online metronome with pre-scheduled Web Audio clicks, tap tempo, 20–300 BPM, keyboard controls and saved settings. No account needed.',
     h1: 'Online Metronome',
     tagline: 'Set a steady click in seconds with tap tempo, a clear first-beat accent and browser-saved settings.',
     name: 'Metronome',
@@ -83,7 +83,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '메트로놈 — 정확한 Web Audio 박자·탭 템포',
     description:
-      'Web Audio로 미리 예약한 박자와 탭 템포를 지원하는 무료 온라인 메트로놈입니다. 20~300 BPM, 단축키, 설정 저장을 광고나 가입 없이 제공합니다.',
+      'Web Audio로 미리 예약한 박자와 탭 템포를 지원하는 무료 온라인 메트로놈입니다. 20~300 BPM, 단축키, 설정 저장을 가입 없이 제공합니다.',
     h1: '온라인 메트로놈',
     tagline: '탭 템포로 바로 BPM을 맞추고, 첫 박 강세와 저장되는 설정으로 연습을 이어갑니다.',
     name: '메트로놈',

@@ -2,7 +2,7 @@ import type { Locale } from '../../i18n/locales';
 import type { ToolContent } from '../types';
 
 const uiEn = {
-  intro: 'Split a bill exactly, down to the last cent or won — no ads.',
+  intro: 'Split a bill exactly, down to the last cent or won.',
   autosaved: 'Saved in this browser',
   countryLabel: 'Where are you paying?',
   countryUs: 'United States (USD)',
@@ -50,10 +50,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Tip Calculator — Exact Bill Split, Country Presets',
     description:
-      'Calculate a tip, service charge, total, and exact per-person shares for USD, CAD, GBP, KRW, or JPY. Every cent or won is accounted for, with no ads.',
+      'Calculate a tip, service charge, total, and exact per-person shares for USD, CAD, GBP, KRW, or JPY. Every cent or won is accounted for.',
     h1: 'Tip Calculator',
     tagline:
-      'Calculate the tip and split the exact total without losing a cent or won — with country-aware starting rates and no ads.',
+      'Calculate the tip and split the exact total without losing a cent or won — with country-aware starting rates.',
     name: 'Tip Calculator',
     keywords: [
       'tip calculator',
@@ -115,10 +115,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '팁 계산기 — 더치페이와 국가별 기본값',
     description:
-      '팁, 서비스 요금, 최종 금액과 1인당 결제액을 바로 계산합니다. 원·엔·달러 등 통화의 최소 단위까지 정확히 나누고, 국가별 팁 기본값도 확인하세요. 광고가 없습니다.',
+      '팁, 서비스 요금, 최종 금액과 1인당 결제액을 바로 계산합니다. 원·엔·달러 등 통화의 최소 단위까지 정확히 나누고, 국가별 팁 기본값도 확인하세요.',
     h1: '팁 계산기',
-    tagline:
-      '팁과 더치페이를 최소 통화 단위까지 정확히 나누고, 국가별 팁 관행에 맞는 시작값도 확인합니다 — 광고가 없습니다.',
+    tagline: '팁과 더치페이를 최소 통화 단위까지 정확히 나누고, 국가별 팁 관행에 맞는 시작값도 확인합니다.',
     name: '팁 계산기',
     keywords: ['팁 계산기', '팁 계산', '더치페이 계산기', '해외여행 팁', '식당 팁 계산', 'n빵 계산기'],
     howTo: [
@@ -169,7 +168,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
     ],
     ui: {
-      intro: '1원·1센트까지 남김없이 나눕니다 — 광고가 없습니다.',
+      intro: '1원·1센트까지 남김없이 나눕니다.',
       autosaved: '이 브라우저에 저장됨',
       countryLabel: '결제 국가',
       countryUs: '미국 (USD)',

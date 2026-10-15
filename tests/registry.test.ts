@@ -13,7 +13,6 @@ import type { EdgeKind } from '../src/tools/types';
 
 const EDGE_KINDS: EdgeKind[] = [
   'privacy',
-  'no-ads',
   'performance',
   'usability',
   'design',
@@ -37,6 +36,8 @@ const RESERVED_SLUGS = new Set<string>([
 ]);
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const PLACEHOLDER = /\b(TODO|TBD|FIXME|lorem ipsum)\b/i;
+/** The site shows ads (Google AdSense), so tool copy must not claim otherwise. Competitor notes in meta.ts are exempt. */
+const AD_FREE_CLAIM = /\bno ads\b|\bad-free\b|\bwithout ads\b|광고\s?없|광고(와|·|나|도|가 없)/i;
 /** CJK text carries more meaning per character, so minimum lengths are lower. */
 const DENSE: Partial<Record<Locale, boolean>> = { ko: true };
 const len = (s: string) => [...s].length;
@@ -146,6 +147,10 @@ for (const { meta, content } of TOOL_DATA) {
         it('contains no placeholders', () => {
           expect(JSON.stringify(c)).not.toMatch(PLACEHOLDER);
         });
+
+        it('does not claim to be ad-free', () => {
+          expect(JSON.stringify(c)).not.toMatch(AD_FREE_CLAIM);
+        });
       });
     }
 
@@ -162,6 +167,7 @@ for (const { meta, content } of TOOL_DATA) {
             expect(vc.title).not.toBe(content[locale].title);
             expect(len(vc.description)).toBeLessThanOrEqual(170);
             expect(JSON.stringify(vc)).not.toMatch(PLACEHOLDER);
+            expect(JSON.stringify(vc), `${v.slug} [${locale}] claims no ads`).not.toMatch(AD_FREE_CLAIM);
           }
         }
       });

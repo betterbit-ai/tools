@@ -27,9 +27,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Online Timer — Free Countdown Timer with Alarm',
     description:
-      'A clean, ad-free online countdown timer with alarm, full screen mode and keyboard shortcuts. Keeps running if you refresh the page. Set any time up to 99 hours.',
+      'A clean online countdown timer with alarm, full screen mode and keyboard shortcuts. Keeps running if you refresh the page. Set any time up to 99 hours.',
     h1: 'Online Timer',
-    tagline: 'A big, clear countdown with an alarm — no ads, survives a page refresh.',
+    tagline: 'A big, clear countdown with an alarm — survives a page refresh.',
     name: 'Timer',
     keywords: ['countdown', 'countdown timer', 'alarm', 'kitchen timer', 'pomodoro', 'minute timer'],
     howTo: [
@@ -79,9 +79,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '온라인 타이머 — 알람 되는 무료 카운트다운 타이머',
     description:
-      '광고 없는 깔끔한 온라인 타이머. 알람, 전체화면, 키보드 단축키를 지원하고 새로고침해도 시간이 유지됩니다. 최대 99시간까지 설정할 수 있습니다.',
+      '깔끔한 온라인 타이머. 알람, 전체화면, 키보드 단축키를 지원하고 새로고침해도 시간이 유지됩니다. 최대 99시간까지 설정할 수 있습니다.',
     h1: '온라인 타이머',
-    tagline: '크고 선명한 카운트다운과 알람. 광고 없이, 새로고침해도 그대로.',
+    tagline: '크고 선명한 카운트다운과 알람. 새로고침해도 그대로.',
     name: '타이머',
     keywords: ['카운트다운', '스톱워치', '알람', '뽀모도로', '공부 타이머', '분 타이머', 'timer'],
     howTo: [

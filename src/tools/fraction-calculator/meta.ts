@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'usability', 'accuracy'],
+  edges: ['privacy', 'usability', 'accuracy'],
   competitors: [
     {
       name: 'Pearson — Fraction Calculator',

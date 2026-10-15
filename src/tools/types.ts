@@ -7,7 +7,6 @@ import type { CategoryId } from './categories';
  */
 export type EdgeKind =
   | 'privacy' // processes locally, nothing uploaded
-  | 'no-ads'
   | 'performance'
   | 'usability'
   | 'design'

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'timer',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['no-ads', 'accuracy', 'usability'],
+  edges: ['accuracy', 'usability'],
   competitors: [
     {
       name: 'Metronome Online',
@@ -24,7 +24,7 @@ export const meta: ToolMeta = {
       name: 'Metronome-Online.org',
       url: 'https://metronome-online.org/',
       weakness:
-        'Its page includes advertisement markup and presents many subdivisions, accent patterns, sound types and pitch choices before its large explanatory content. Betterbit has no ads and keeps the repeat-practice controls to one small panel. (Strength: it supports custom accents, visual pendulum mode and a wider 1/1–32/32 signature range.)',
+        'Its page includes advertisement markup and presents many subdivisions, accent patterns, sound types and pitch choices before its large explanatory content. Betterbit keeps the repeat-practice controls to one small panel. (Strength: it supports custom accents, visual pendulum mode and a wider 1/1–32/32 signature range.)',
     },
     {
       name: '온라인 메트로놈',
@@ -36,7 +36,7 @@ export const meta: ToolMeta = {
       name: 'moamoang 온라인 메트로놈',
       url: 'https://www.moamoang.co.kr/metronome/',
       weakness:
-        'Its Korean page loads Google AdSense and adds per-beat accent editing, grouping and subdivision controls around the core click. Betterbit is ad-free and gives a simple saved BPM, first-beat accent and tap-tempo workflow. (Strength: it supports odd metres, per-beat accents and detailed grouping.)',
+        'Its Korean page loads Google AdSense and adds per-beat accent editing, grouping and subdivision controls around the core click. Betterbit gives a simple saved BPM, first-beat accent and tap-tempo workflow. (Strength: it supports odd metres, per-beat accents and detailed grouping.)',
     },
   ],
   related: ['timer', 'stopwatch', 'interval-timer', 'pomodoro-timer'],

@@ -24,7 +24,7 @@ const SAMPLE = `{
   "name": "Betterbit Tools",
   "openSource": true,
   "stars": 3,
-  "tags": ["privacy", "no-ads", "fast"],
+  "tags": ["privacy", "offline", "fast"],
   "nested": { "ok": true }
 }`;
 
