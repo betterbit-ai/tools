@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "npm run format:check && npm run typecheck && npm run test && npm run build && npm run check:dist",
-    "new-tool": "node scripts/new-tool.mjs"
+    "new-tool": "node scripts/new-tool.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@astrojs/preact": "^6.0.6",
