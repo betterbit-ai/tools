@@ -160,7 +160,7 @@
 | regex-tester      | 정규식 테스트    | regex tester                               | 매치 하이라이트, 설명                | P1  | live |
 | diff-checker-code | 코드 비교        | diff checker                               | 구문 하이라이트 diff                 | P2  | todo |
 | cron-parser       | Cron 해석        | cron expression                            | 다음 실행 시각 목록                  | P2  | todo |
-| color-converter   | 색상 변환        | hex to rgb                                 | OKLCH 포함, 대비율                   | P1  | todo |
+| color-converter   | 색상 변환        | hex to rgb                                 | OKLCH 포함, 대비율                   | P1  | live |
 | css-minifier      | CSS/JS 압축      | minify css                                 | —                                    | P2  | todo |
 | sql-formatter     | SQL 포맷터       | sql formatter                              | 방언 선택                            | P2  | todo |
 | yaml-json         | YAML ↔ JSON      | yaml to json                               | 양방향                               | P2  | todo |

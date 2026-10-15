@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its indexed Korean result exposes g, i, m, s and u flags only, while a JavaScript RegExp can also use sticky y matching. Betterbit exposes y alongside the common flags and shows the match index and capture data without a separate run action. (Strength: it includes Korean-oriented preset patterns such as mobile numbers and business registration numbers.)',
     },
   ],
-  related: ['json-formatter', 'url-encoder', 'base64'],
+  related: ['json-formatter', 'url-encoder', 'base64', 'color-converter'],
 };
