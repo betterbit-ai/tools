@@ -6,10 +6,14 @@ import {
   coveragePercent,
   detectChatter,
   formatHeldSeconds,
+  isBoardCode,
   isLikelyStuck,
   keyLabel,
   MAIN_ROWS,
   modifierLabel,
+  NAVIGATION_ROWS,
+  NUMPAD_ROWS,
+  SYSTEM_ROWS,
 } from './logic';
 
 describe('MAIN_ROWS / ALL_CODES', () => {
@@ -22,12 +26,27 @@ describe('MAIN_ROWS / ALL_CODES', () => {
     for (const code of ARROW_CODES) expect(ALL_CODES).toContain(code);
   });
 
+  it('covers every key on a standard 104-key ANSI board', () => {
+    expect(ALL_CODES).toHaveLength(104);
+    for (const code of ['PrintScreen', 'Insert', 'PageDown', 'ContextMenu', 'NumLock', 'NumpadEnter', 'Numpad0']) {
+      expect(isBoardCode(code)).toBe(true);
+      expect(keyLabel('en', code)).not.toBe(code);
+    }
+    expect(isBoardCode('MediaPlayPause')).toBe(false);
+  });
+
   it('every row sums to a plausible keyboard width', () => {
     for (const r of MAIN_ROWS) {
       const width = r.reduce((sum, k) => sum + k.weight, 0);
       expect(width).toBeGreaterThan(10);
       expect(width).toBeLessThan(20);
     }
+  });
+
+  it('keeps system, navigation and numpad keys in dedicated groups', () => {
+    expect(SYSTEM_ROWS.flat().map((key) => key.code)).toEqual(['PrintScreen', 'ScrollLock', 'Pause']);
+    expect(NAVIGATION_ROWS.flat().map((key) => key.code)).toContain('PageDown');
+    expect(NUMPAD_ROWS.flat().map((key) => key.code)).toContain('NumpadEnter');
   });
 });
 
@@ -48,7 +67,7 @@ describe('keyLabel', () => {
   });
 
   it('falls back to the raw code for anything unmapped', () => {
-    expect(keyLabel('en', 'NumpadEnter')).toBe('NumpadEnter');
+    expect(keyLabel('en', 'MediaPlayPause')).toBe('MediaPlayPause');
   });
 
   it('labels every function key and digit', () => {
@@ -78,16 +97,16 @@ describe('modifierLabel', () => {
 });
 
 describe('classifyRollover', () => {
-  it('boundaries: 0 and 1 are single-key, 2 and 9 are partial, 10+ is full', () => {
+  it('boundaries: 0 and 1 are single-key, 2 and 9 are partial, 10+ is high', () => {
     expect(classifyRollover(0)).toBe('single');
     expect(classifyRollover(1)).toBe('single');
     expect(classifyRollover(2)).toBe('partial');
     expect(classifyRollover(9)).toBe('partial');
-    expect(classifyRollover(10)).toBe('full');
-    expect(classifyRollover(20)).toBe('full');
+    expect(classifyRollover(10)).toBe('high');
+    expect(classifyRollover(20)).toBe('high');
   });
 
-  it('does not call the common 6KRO ceiling "full" (6 keys alone does not prove NKRO)', () => {
+  it('does not call the common 6KRO ceiling high rollover', () => {
     expect(classifyRollover(6)).toBe('partial');
   });
 });
@@ -118,6 +137,7 @@ describe('detectChatter', () => {
       detectChatter(
         [
           { code: 'KeyA', type: 'down', t: 0 },
+          { code: 'KeyA', type: 'up', t: 20 },
           { code: 'KeyA', type: 'down', t: windowMs },
         ],
         windowMs,
@@ -127,6 +147,7 @@ describe('detectChatter', () => {
       detectChatter(
         [
           { code: 'KeyA', type: 'down', t: 0 },
+          { code: 'KeyA', type: 'up', t: 20 },
           { code: 'KeyA', type: 'down', t: windowMs - 1 },
         ],
         windowMs,
@@ -138,9 +159,19 @@ describe('detectChatter', () => {
     const codes = detectChatter([
       { code: 'KeyA', type: 'down', t: 0 },
       { code: 'KeyB', type: 'down', t: 5 },
+      { code: 'KeyA', type: 'up', t: 20 },
       { code: 'KeyA', type: 'down', t: 1000 },
     ]);
     expect(codes).toEqual([]);
+  });
+
+  it('does not mistake an auto-repeat-like keydown without a release for chatter', () => {
+    expect(
+      detectChatter([
+        { code: 'KeyA', type: 'down', t: 0 },
+        { code: 'KeyA', type: 'down', t: 30 },
+      ]),
+    ).toEqual([]);
   });
 
   it('returns an empty list for an empty log', () => {
@@ -184,6 +215,10 @@ describe('coveragePercent', () => {
 
   it('caps at 100% even if more codes were seen than exist (defensive)', () => {
     expect(coveragePercent(999, 61)).toBe(100);
+  });
+
+  it('never returns a negative percentage for malformed input', () => {
+    expect(coveragePercent(-1, 61)).toBe(0);
   });
 
   it('0 tested is 0%, full count is 100%', () => {

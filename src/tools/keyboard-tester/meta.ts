@@ -5,39 +5,27 @@ export const meta: ToolMeta = {
   category: 'device',
   icon: 'keyboard',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-15',
   edges: ['usability', 'features'],
   competitors: [
     {
       name: 'KeyboardTest.io',
       url: 'https://keyboardtest.io/',
       weakness:
-        'The main tester shows a fixed QWERTY key diagram with no layout switch, and its dedicated rollover page reports ghosting but not a running "most keys held at once" count on the test itself. (Strength: a focused NKRO/6KRO rollover sub-page with real-time conflict detection and a clear local-only privacy statement.)',
+        'Its current rollover page includes a full-size key map and a live maximum count, but it does not show Korean 2-set (두벌식) key labels or surface stuck/chattering status on that page. (Strength: separate latency, polling-rate and dedicated chatter tests.)',
     },
     {
-      name: 'KeyboardTester.com',
-      url: 'https://www.keyboardtester.com/',
+      name: 'Online Keyboard Tester',
+      url: 'https://onlinekeyboardtester.com/',
       weakness:
-        'The page carries PayPal tracking pixels and Amazon affiliate keyboard links around the tester, and gives no rollover, ghosting or simultaneous-key information at all.',
-    },
-    {
-      name: 'MechanicalKeyboard.net NKRO Test',
-      url: 'https://mechanicalkeyboard.net/tools/nkro-test/',
-      weakness:
-        'The rollover tester sits inside a keyboard review/shopping blog with a newsletter signup prompt, and makes you pick between three separate modes (Free Test, Challenge, Combos) before a simple answer appears. (Strength: 5 selectable board sizes, an S–F grade and saved results.)',
+        'A first visit opens a privacy-preferences dialog before the tester, even though it offers a substantial seven-layout diagnostic suite. (Strength: its 104-key, compact and Mac layouts, key-event inspector, and local CSV/TXT history export are broader than this focused tester.)',
     },
     {
       name: 'keytest.co.kr',
       url: 'https://keytest.co.kr/',
       weakness:
-        'The only "layout" choice is Windows vs Mac modifier labels, not an actual Korean 2-벌식 key layout, so letter keys still show plain QWERTY letters instead of the jamo printed on a real Korean keyboard; it also warns that a mouse\'s back/forward buttons may be caught by browser navigation first, a generic browser caveat unrelated to keyboard keys.',
-    },
-    {
-      name: 'onlinemictest.com 키보드 테스트',
-      url: 'https://onlinemictest.com/ko/keyboard-test/',
-      weakness:
-        'Bundled into a multi-device suite (mic, webcam, sound, mouse, controller) with a QWERTY-only key diagram, no layout selector and no rollover/simultaneous-key detail.',
+        'It offers Windows and Mac modifier labels but its visible letter keys remain QWERTY, not the 2-set Hangul jamo printed on a Korean keyboard; its keyboard test is also bundled with mouse testing. (Strength: it visualizes a full navigation cluster and numpad.)',
     },
   ],
-  related: ['mic-test', 'word-counter', 'stopwatch', 'timer', 'typing-test'],
+  related: ['mic-test', 'typing-test'],
 };
