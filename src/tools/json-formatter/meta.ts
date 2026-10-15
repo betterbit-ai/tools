@@ -36,5 +36,6 @@ export const meta: ToolMeta = {
     'uuid-generator',
     'hash-generator',
     'jwt-decoder',
+    'regex-tester',
   ],
 };

@@ -157,7 +157,7 @@
 | uuid-generator    | UUID 생성        | uuid generator                             | v4/v7, 대량, 형식 옵션               | P1  | live |
 | hash-generator    | 해시 생성        | sha256 generator / md5                     | 파일 해시, Web Crypto                | P1  | live |
 | jwt-decoder       | JWT 디코더       | jwt decode                                 | 만료 시간 사람이 읽는 형태로         | P1  | live |
-| regex-tester      | 정규식 테스트    | regex tester                               | 매치 하이라이트, 설명                | P1  | todo |
+| regex-tester      | 정규식 테스트    | regex tester                               | 매치 하이라이트, 설명                | P1  | live |
 | diff-checker-code | 코드 비교        | diff checker                               | 구문 하이라이트 diff                 | P2  | todo |
 | cron-parser       | Cron 해석        | cron expression                            | 다음 실행 시각 목록                  | P2  | todo |
 | color-converter   | 색상 변환        | hex to rgb                                 | OKLCH 포함, 대비율                   | P1  | todo |
