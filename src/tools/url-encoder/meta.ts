@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         'It has one undifferentiated text converter, so users cannot choose component, whole-URL, or form rules and cannot inspect a URL’s query values in separate editable rows. (Strength: its guide clearly lists RFC 3986 reserved and unreserved characters.)',
     },
   ],
-  related: ['base64', 'json-formatter', 'uuid-generator', 'regex-tester', 'color-converter'],
+  related: ['base64', 'json-formatter', 'uuid-generator', 'regex-tester', 'color-converter', 'csv-json'],
 };

@@ -38,5 +38,6 @@ export const meta: ToolMeta = {
     'jwt-decoder',
     'regex-tester',
     'color-converter',
+    'csv-json',
   ],
 };
