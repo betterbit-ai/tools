@@ -6,7 +6,10 @@ const uiEn = {
   fromLabel: 'From',
   toLabel: 'To',
   swap: 'Swap units',
-  resultLabel: 'Result',
+  resultLabel: 'Result ({unit})',
+  unavailableResult: '—',
+  invalidValue: 'Enter a finite number.',
+  resultTooLarge: 'This result is too large to display. Use a smaller value.',
   autosaved: 'Saved automatically',
   quickTableTitle: 'Quick reference',
   heightTitle: 'Height converter (feet & inches ↔ cm)',
@@ -51,7 +54,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Exact conversion factors',
-        body: 'This converter uses exact international definitions, not rounded approximations: 1 inch = 2.54 cm, 1 foot = 0.3048 m, 1 yard = 0.9144 m and 1 mile = 1609.344 m, all fixed by the 1959 international yard and pound agreement. Because the factors are exact, results stay accurate whether you convert 0.5 mm or 50,000 km — the error some rounded converters introduce at very small or very large values never appears here.',
+        body: 'This converter uses exact international definitions, not rounded approximations: 1 inch = 2.54 cm, 1 foot = 0.3048 m, 1 yard = 0.9144 m and 1 mile = 1609.344 m, all fixed by the 1959 international yard and pound agreement. The calculation keeps those full factors rather than substituting a rounded conversion rate. Very small and very large finite results use scientific notation so they remain readable.',
       },
       {
         heading: 'Converting a height in feet and inches',
@@ -77,7 +80,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Is this length converter accurate?',
-        a: 'Yes. It uses the exact international definitions (1 inch = 2.54 cm, 1 foot = 0.3048 m, 1 mile = 1609.344 m) rather than rounded approximations, so results stay accurate for both tiny and very large values.',
+        a: 'Yes. It uses the exact international definitions (1 inch = 2.54 cm, 1 foot = 0.3048 m, 1 mile = 1609.344 m) rather than rounded conversion factors. Very small and very large finite results are shown in scientific notation to keep the value readable.',
       },
     ],
     ui: uiEn,
@@ -107,7 +110,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '정확한 변환 비율',
-        body: '1인치는 정확히 2.54cm, 1피트는 정확히 0.3048m, 1야드는 정확히 0.9144m, 1마일은 정확히 1.609344km로 정의됩니다. 이 값들은 1959년 국제 야드-파운드 협정에서 정한 정확한 기준이며 반올림된 근사값이 아니기 때문에, 0.5mm처럼 아주 작은 값이나 50,000km처럼 아주 큰 값을 변환해도 오차가 쌓이지 않습니다.',
+        body: '1인치는 정확히 2.54cm, 1피트는 정확히 0.3048m, 1야드는 정확히 0.9144m, 1마일은 정확히 1.609344km로 정의됩니다. 이 값들은 1959년 국제 야드-파운드 협정에서 정한 정확한 기준입니다. 계산할 때도 반올림한 환산율로 바꾸지 않고 이 값을 그대로 사용합니다. 아주 작거나 큰 유한 값은 읽기 쉽도록 과학적 표기법으로 표시합니다.',
       },
       {
         heading: '키(피트·인치)를 센티미터로 변환하기',
@@ -133,7 +136,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '이 길이 변환기는 정확한가요?',
-        a: '네. 1인치=2.54cm, 1피트=0.3048m, 1마일=1609.344km처럼 반올림 없는 정확한 국제 정의를 사용하므로 아주 작은 값이나 큰 값에서도 오차 없이 정확합니다.',
+        a: '네. 1인치=2.54cm, 1피트=0.3048m, 1마일=1609.344km처럼 반올림하지 않은 정확한 국제 정의를 사용합니다. 아주 작거나 큰 유한 값은 과학적 표기법으로 표시해 숫자를 읽기 쉽게 합니다.',
       },
     ],
     ui: {
@@ -141,7 +144,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       fromLabel: '변환할 단위',
       toLabel: '결과 단위',
       swap: '단위 바꾸기',
-      resultLabel: '결과',
+      resultLabel: '결과 ({unit})',
+      unavailableResult: '—',
+      invalidValue: '유한한 숫자를 입력하세요.',
+      resultTooLarge: '결과가 너무 커서 표시할 수 없습니다. 더 작은 값을 입력하세요.',
       autosaved: '자동 저장됨',
       quickTableTitle: '빠른 참조표',
       heightTitle: '키 변환기 (피트·인치 ↔ cm)',
