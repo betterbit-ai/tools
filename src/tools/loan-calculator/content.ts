@@ -17,6 +17,7 @@ const uiEn = {
   invalidInput:
     'Enter a loan amount above 0, an annual rate from 0% to 100%, and a whole number of months from 1 to 600.',
   resultsHeading: 'Estimated repayment',
+  reset: 'Reset',
   firstPayment: 'First monthly payment',
   lastPayment: 'Final monthly payment',
   totalInterest: 'Total interest',
@@ -174,6 +175,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       bullet: '만기일시',
       invalidInput: '대출금액은 0보다 크게, 연 이자율은 0%~100% 사이로, 상환 기간은 1~600개월의 정수로 입력하세요.',
       resultsHeading: '예상 상환 결과',
+      reset: '초기화',
       firstPayment: '첫 달 납입액',
       lastPayment: '마지막 달 납입액',
       totalInterest: '총이자',
