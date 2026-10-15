@@ -93,59 +93,28 @@ export const meta: ToolMeta = {
   category: 'converter',
   icon: 'convert',
   added: '2026-10-11',
-  updated: '2026-10-11',
-  edges: ['usability', 'features'],
+  updated: '2026-10-15',
+  edges: ['usability'],
   competitors: [
     {
       name: 'RapidTables — CM to Inches Converter',
       url: 'https://www.rapidtables.com/convert/length/cm-to-inch.html',
       weakness:
-        'Its cm-to-inch page is fixed to converting cm into inches, with feet+inches only available as an output format there or on a separate "Height converter" page; every other unit pair (feet to cm, inch to feet, mm, km, yard, mile…) is its own standalone URL (e.g. feet-to-cm.html, inch-to-feet.html), so switching which units you compare means multiple page loads. Betterbit lets you pick any of 8 units on both sides of one converter, plus a live feet+inches height field, all on a single page. (Strength: no ads, and shows decimal, fractional and feet+inches output for that one pair.)',
+        'Its cm-to-inch page requires using its Convert control and sends many alternative pairs, such as feet-to-cm and miles-to-km, to separate pages. Betterbit keeps eight common units, a live current-unit reference table, and editable feet+inches↔cm height fields in one immediately updating panel. (Strength: it shows the nearest 1/64-inch fraction alongside decimal and feet+inches results.)',
     },
     {
-      name: 'TheCalculatorSite — Cm to Inches Converter',
-      url: 'https://www.thecalculatorsite.com/conversions/common/cm-inches.php',
+      name: 'LengthConverter.org — Length and Distance Conversion Tool',
+      url: 'https://www.lengthconverter.org/',
       weakness:
-        'Results require pressing a "Convert" button and first choosing a "decimal places" dropdown — nothing updates as you type — and a long related-calculators sidebar competes for attention, which is cramped on mobile. Betterbit updates the result and the quick-reference table on every keystroke with no button.',
+        'It displays a feet-and-inches result but does not provide editable feet and inches fields for a two-way height conversion; its height output follows the selected general conversion. Betterbit keeps a direct cm↔feet+inches form below the live length result, so a height can be entered from either convention. (Strength: it covers much smaller and larger units, including nano- and micrometres and nautical miles, and offers copy and formula output.)',
     },
     {
-      name: 'UnitConverters.net — Feet to Meters',
-      url: 'https://www.unitconverters.net/length/feet-to-meters.htm',
+      name: 'EverydayCalcPro — Length Converter',
+      url: 'https://www.everydaycalcpro.com/calculators/length-converter.php',
       weakness:
-        'The converter is fixed to one unit pair per URL; converting to millimeters, kilometers, yards or miles means following a separate list of "dozens" of alternate unit pages, and there is no feet+inches composite field anywhere on the feet-to-meters page. Betterbit lets you pick any of 8 units on both sides of a single converter.',
-    },
-    {
-      name: 'devcomma 인치 계산기',
-      url: 'https://tools.devcomma.com/calculators/inch',
-      weakness:
-        '배너 광고와 쿠팡 파트너스 제휴 링크가 페이지에 포함되어 있고, 센티미터·인치 두 필드만 제공해 피트+인치(예: 5\'7") 조합 입력은 지원하지 않으며 FAQ 텍스트로만 환산법을 설명한다. Betterbit는 피트+인치 입력 필드를 변환기에 바로 포함한다.',
-    },
-    {
-      name: 'enolasoft 센티미터-인치 변환 계산기',
-      url: 'https://enolasoft.com/centimeter.php',
-      weakness:
-        '부동산 게임, 투두리스트 앱 등 플로팅 배너 광고가 여러 개 떠 있고, "계산하기" 버튼을 눌러야 결과가 나오며(실시간 아님), 1cm~400cm 400행짜리 고정 표를 스크롤해서 원하는 값을 찾아야 한다. Betterbit는 입력 즉시 결과가 바뀌고, 표는 현재 선택한 단위에 맞는 실제로 자주 찾는 값만 보여준다.',
-    },
-    {
-      name: 'sunavin 인치·피트·센티미터 변환표',
-      url: 'https://www.sunavin.com/inches-feet-and-centimeters-conversion-table/',
-      weakness:
-        '피트+인치 조합 변환이 메인 변환기와 분리된 "Combined Unit Conversion" 섹션과 정적 표로만 제공되어, 하나의 입력창에서 cm·m·km·인치·피트 등 다른 단위로 바로 전환할 수 없다. Betterbit는 같은 패널에서 단위를 바로 바꾸고 키(피트+인치) 변환도 함께 보여준다. (Strength: 변환표를 PDF/JPG로 내려받을 수 있다.)',
+        'Its standard, feet+inches, height and fraction inputs are separate modes, and its results do not appear until its Convert button is pressed. Betterbit leaves the general conversion and editable height fields together and updates them on input. (Strength: it supports fractional-inch entry and an all-unit breakdown.)',
     },
   ],
-  related: [
-    'bmi-calculator',
-    'time-zone-converter',
-    'scientific-calculator',
-    'percentage-calculator',
-    'weight-converter',
-    'temperature-converter',
-    'pyeong-calculator',
-    'area-converter',
-    'volume-converter',
-    'speed-converter',
-    'data-size-converter',
-    'shoe-size-converter',
-  ],
+  related: ['weight-converter', 'temperature-converter', 'area-converter', 'volume-converter'],
   variants,
 };

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { cmToFeetInches, convertLength, feetInchesToCm, isLengthUnit, LENGTH_UNITS, quickTable } from './logic';
+import {
+  cmToFeetInches,
+  convertLength,
+  feetInchesToCm,
+  isLengthUnit,
+  LENGTH_UNITS,
+  quickTable,
+  swapLength,
+  usesScientificNotation,
+} from './logic';
 
 describe('convertLength', () => {
   it('converts cm to inches using the exact 2.54 factor', () => {
@@ -36,6 +45,12 @@ describe('convertLength', () => {
     expect(convertLength(1e9, 'mm', 'km')).toBeCloseTo(1000, 5);
   });
 
+  it('does not overflow in an intermediate step when the final huge result is representable', () => {
+    const result = convertLength(Number.MAX_VALUE, 'km', 'mi');
+    expect(Number.isFinite(result)).toBe(true);
+    expect(result).toBeCloseTo(Number.MAX_VALUE / 1.609344, 12);
+  });
+
   it('returns 0 for non-finite input', () => {
     expect(convertLength(NaN, 'cm', 'in')).toBe(0);
     expect(convertLength(Infinity, 'cm', 'in')).toBe(0);
@@ -47,6 +62,23 @@ describe('convertLength', () => {
         expect(Number.isFinite(convertLength(1, from, to))).toBe(true);
       }
     }
+  });
+});
+
+describe('swapLength', () => {
+  it('preserves full precision instead of swapping the rounded display value', () => {
+    const swapped = swapLength(1, 'mm', 'mi');
+    expect(swapped).toMatchObject({ from: 'mi', to: 'mm' });
+    expect(convertLength(swapped.value, swapped.from, swapped.to)).toBeCloseTo(1, 12);
+  });
+});
+
+describe('usesScientificNotation', () => {
+  it('keeps very small and very large finite values readable', () => {
+    expect(usesScientificNotation(0.0000001)).toBe(true);
+    expect(usesScientificNotation(1e15)).toBe(true);
+    expect(usesScientificNotation(0.000001)).toBe(false);
+    expect(usesScientificNotation(12.34)).toBe(false);
   });
 });
 
@@ -104,6 +136,11 @@ describe('feetInchesToCm / cmToFeetInches (height)', () => {
 
   it('ignores negative feet in feetInchesToCm (clamped to 0)', () => {
     expect(feetInchesToCm(-1, 6)).toBeCloseTo(6 * 2.54, 5);
+  });
+
+  it('does not let a negative inches field subtract from the height', () => {
+    expect(feetInchesToCm(5, -1)).toBeCloseTo(5 * 30.48, 5);
+    expect(feetInchesToCm(0, -1)).toBe(0);
   });
 
   it('returns 0 for non-finite inputs', () => {

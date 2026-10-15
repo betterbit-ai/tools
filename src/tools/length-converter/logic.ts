@@ -26,7 +26,26 @@ export function isLengthUnit(value: unknown): value is LengthUnit {
 export function convertLength(value: number, from: LengthUnit, to: LengthUnit): number {
   if (!Number.isFinite(value)) return 0;
   if (from === to) return value;
-  return (value * METERS_PER_UNIT[from]) / METERS_PER_UNIT[to];
+  // Calculate the ratio first. Multiplying by the source factor first can overflow
+  // for values near Number.MAX_VALUE even when the converted result is representable.
+  return value * (METERS_PER_UNIT[from] / METERS_PER_UNIT[to]);
+}
+
+export interface SwappedLength {
+  value: number;
+  from: LengthUnit;
+  to: LengthUnit;
+}
+
+/** Flips a conversion without rounding the value shown in the result. */
+export function swapLength(value: number, from: LengthUnit, to: LengthUnit): SwappedLength {
+  return { value: convertLength(value, from, to), from: to, to: from };
+}
+
+/** Keep extremely small or large, finite results readable without displaying them as zero or a 300-digit integer. */
+export function usesScientificNotation(value: number): boolean {
+  const abs = Math.abs(value);
+  return Number.isFinite(value) && abs !== 0 && (abs < 0.000001 || abs >= 1e15);
 }
 
 /** Common, realistically-searched values per unit, used to build a quick reference table. */
@@ -55,10 +74,10 @@ export interface FeetInches {
   inches: number;
 }
 
-/** Height input: feet + inches -> centimetres. */
+/** Height input: feet + inches -> centimetres. Negative parts are treated as zero. */
 export function feetInchesToCm(feet: number, inches: number): number {
   if (!Number.isFinite(feet) || !Number.isFinite(inches)) return 0;
-  const totalInches = Math.max(0, feet) * 12 + inches;
+  const totalInches = Math.max(0, feet) * 12 + Math.max(0, inches);
   return totalInches * METERS_PER_UNIT.in * 100;
 }
 

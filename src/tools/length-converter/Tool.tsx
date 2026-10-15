@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, Field, NumberInput, Panel, Select, Stat } from '../../components/ui';
+import { Button, Field, Notice, NumberInput, Panel, Select, Stat } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -11,7 +11,9 @@ import {
   isLengthUnit,
   LENGTH_UNITS,
   quickTable,
+  swapLength,
   type LengthUnit,
+  usesScientificNotation,
 } from './logic';
 
 const STORAGE_KEY = 'tools:length-converter:state';
@@ -87,7 +89,7 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
   useEffect(() => {
     if (!hasPreset) setState(restoreState());
     const savedHeight = Number(safeStorage.get(HEIGHT_KEY));
-    if (savedHeight > 0) setHeightCm(savedHeight);
+    if (Number.isFinite(savedHeight) && savedHeight >= 0) setHeightCm(savedHeight);
     setReady(true);
   }, []);
 
@@ -100,18 +102,23 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
   }, [ready, heightCm]);
 
   const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
+  const inputInvalid = state.value !== '' && !isFiniteNumber(state.value);
   const value = isFiniteNumber(state.value) ? state.value : 0;
   const result = useMemo(() => convertLength(value, state.from, state.to), [value, state.from, state.to]);
+  const resultOverflowed = !inputInvalid && !Number.isFinite(result);
   const rows = useMemo(() => quickTable(state.from, state.to), [state.from, state.to]);
   const height = useMemo(() => cmToFeetInches(heightCm), [heightCm]);
-  const n = (num: number) => formatNumber(num, locale, resultDecimals(num));
+  const n = (num: number) =>
+    usesScientificNotation(num)
+      ? new Intl.NumberFormat(locale, { notation: 'scientific', maximumFractionDigits: 6 }).format(num)
+      : formatNumber(num, locale, resultDecimals(num));
   const unitOptions = LENGTH_UNITS.map((u) => ({ value: u, label: ui[UNIT_LABEL_KEY[u]] }));
 
   const swap = () => {
-    const decimals = resultDecimals(result);
-    const factor = 10 ** decimals;
-    const rounded = Math.round(result * factor) / factor;
-    setState((s) => ({ value: rounded, from: s.to, to: s.from }));
+    setState((current) => {
+      if (!isFiniteNumber(current.value)) return { ...current, from: current.to, to: current.from };
+      return swapLength(current.value, current.from, current.to);
+    });
   };
 
   return (
@@ -148,10 +155,25 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
 
       <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div aria-live="polite">
-          <Stat label={ui.resultLabel} value={n(result)} emphasis />
+          <Stat
+            label={ui.resultLabel.replace('{unit}', ui[UNIT_LABEL_KEY[state.to]])}
+            value={inputInvalid || resultOverflowed ? ui.unavailableResult : n(result)}
+            emphasis
+          />
         </div>
         <span class="text-xs text-subtle">{ui.autosaved}</span>
       </div>
+
+      {inputInvalid && (
+        <div class="mt-4">
+          <Notice tone="danger">{ui.invalidValue}</Notice>
+        </div>
+      )}
+      {resultOverflowed && (
+        <div class="mt-4">
+          <Notice tone="danger">{ui.resultTooLarge}</Notice>
+        </div>
+      )}
 
       <div class="mt-6 border-t border-line pt-6">
         <h3 class="text-sm font-medium text-fg mb-3">{ui.quickTableTitle}</h3>
@@ -194,7 +216,6 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
             <NumberInput
               value={height.inches}
               min="0"
-              max="11.9"
               step="0.1"
               onValue={(inches) => setHeightCm(feetInchesToCm(height.feet, isFiniteNumber(inches) ? inches : 0))}
             />
