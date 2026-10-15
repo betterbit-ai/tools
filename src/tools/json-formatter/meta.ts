@@ -37,5 +37,6 @@ export const meta: ToolMeta = {
     'hash-generator',
     'jwt-decoder',
     'regex-tester',
+    'color-converter',
   ],
 };
