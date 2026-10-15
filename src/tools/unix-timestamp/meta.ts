@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean tool describes automatic 10-digit/13-digit detection but its visible interface does not expose a unit override for an ambiguous value. Betterbit labels the chosen unit and lets the user force seconds or milliseconds directly beside the input. (Strength: it gives a concise Korean explanation of the seconds-versus-milliseconds mistake.)',
     },
   ],
-  related: ['time-zone-converter', 'date-calculator', 'countdown', 'world-clock'],
+  related: ['time-zone-converter', 'date-calculator', 'countdown', 'world-clock', 'jwt-decoder'],
 };
