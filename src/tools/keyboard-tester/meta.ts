@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'keyboard',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'KeyboardTest.io',

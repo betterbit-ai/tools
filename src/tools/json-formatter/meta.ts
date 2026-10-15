@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'code',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['privacy', 'no-ads', 'performance', 'features'],
+  edges: ['privacy', 'performance', 'features'],
   competitors: [
     {
       name: 'CodeBeautify JSON Viewer',

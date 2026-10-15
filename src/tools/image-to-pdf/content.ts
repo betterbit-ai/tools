@@ -39,7 +39,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'JPG to PDF Converter — Reorder Pages, No Upload',
     description:
-      'Combine JPG, PNG or WebP photos into one PDF in your browser. Drag to reorder, fit the page to each image or use A4/Letter, no upload, no ads, no sign-up.',
+      'Combine JPG, PNG or WebP photos into one PDF in your browser. Drag to reorder, fit the page to each image or use A4/Letter, no upload, no sign-up.',
     h1: 'JPG to PDF',
     tagline: 'Turn photos into a PDF — drag to reorder, choose the page size — without uploading anything.',
     name: 'Image to PDF',
@@ -102,7 +102,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '사진 PDF 변환 — 순서 드래그, 업로드 없음',
     description:
-      'JPG, PNG, WebP 사진을 브라우저에서 PDF 한 장으로 합쳐보세요. 순서 드래그, 이미지 크기에 맞춤 또는 A4/Letter 선택, 업로드·광고·가입 없음.',
+      'JPG, PNG, WebP 사진을 브라우저에서 PDF 한 장으로 합쳐보세요. 순서 드래그, 이미지 크기에 맞춤 또는 A4/Letter 선택, 업로드·가입 없음.',
     h1: '사진 PDF 변환',
     tagline: '사진을 PDF로 — 순서는 드래그로, 페이지 크기는 원하는 대로, 업로드 없이.',
     name: '이미지 PDF 변환',

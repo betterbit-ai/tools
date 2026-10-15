@@ -47,10 +47,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'QR Code Generator — Private SVG & PNG Downloads',
     description:
-      'Create a static QR code for a URL, text, or Wi-Fi in your browser. Add a local logo and download clean SVG or PNG with no ads, account, watermark, or expiry.',
+      'Create a static QR code for a URL, text, or Wi-Fi in your browser. Add a local logo and download clean SVG or PNG with no account, watermark, or expiry.',
     h1: 'QR Code Generator',
     tagline:
-      'Make a static QR code locally, add a logo, and download a clean SVG or PNG — no ads, account, watermark, or service expiry.',
+      'Make a static QR code locally, add a logo, and download a clean SVG or PNG — no account, watermark, or service expiry.',
     name: 'QR Code Generator',
     keywords: [
       'qr code generator',
@@ -106,12 +106,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: uiEn,
   },
   ko: {
-    title: 'QR코드 만들기 — 로고·SVG·PNG, 광고 없음',
+    title: 'QR코드 만들기 — 로고·SVG·PNG, 워터마크 없음',
     description:
-      'URL·텍스트·와이파이 정보를 브라우저에서 정적 QR코드로 만드세요. 로고를 넣고 SVG 또는 PNG로 저장하며, 광고·회원가입·워터마크·만료가 없습니다.',
+      'URL·텍스트·와이파이 정보를 브라우저에서 정적 QR코드로 만드세요. 로고를 넣고 SVG 또는 PNG로 저장하며, 회원가입·워터마크·만료가 없습니다.',
     h1: 'QR코드 만들기',
     tagline:
-      'URL·텍스트·와이파이를 정적 QR코드로 만들고 로고·SVG·PNG까지 브라우저 안에서 처리합니다 — 광고와 워터마크가 없습니다.',
+      'URL·텍스트·와이파이를 정적 QR코드로 만들고 로고·SVG·PNG까지 브라우저 안에서 처리합니다 — 워터마크가 없습니다.',
     name: 'QR코드 만들기',
     keywords: ['qr코드 만들기', '큐알코드 만들기', 'qr코드 생성기', '무료 qr코드', 'URL QR코드', '와이파이 QR코드'],
     howTo: [

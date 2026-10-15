@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-11',
   updated: '2026-10-13',
-  edges: ['usability', 'no-ads'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'CDC — Adult BMI Calculator',
@@ -24,7 +24,7 @@ export const meta: ToolMeta = {
       name: 'Calculator.net — BMI Calculator',
       url: 'https://www.calculator.net/bmi-calculator.html',
       weakness:
-        'The page asks for age and gender before using a Calculate control and presents a long general-purpose calculator page, while its result uses one WHO-style table rather than comparing Korean adult thresholds in the result. Betterbit keeps the two measurements and five directly relevant results on one ad-free screen. (Strength: it also provides BMI Prime, Ponderal Index, and child/teen reference tables.)',
+        'The page asks for age and gender before using a Calculate control and presents a long general-purpose calculator page, while its result uses one WHO-style table rather than comparing Korean adult thresholds in the result. Betterbit keeps the two measurements and five directly relevant results on one screen. (Strength: it also provides BMI Prime, Ponderal Index, and child/teen reference tables.)',
     },
     {
       name: '데일리툴즈 — BMI 계산기',

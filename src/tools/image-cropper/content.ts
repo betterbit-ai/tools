@@ -43,7 +43,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Image Cropper — Crop Photos & Circle Profile Pictures, No Upload',
     description:
-      'Crop a photo to an exact pixel size, a locked aspect ratio, or a perfect circle for a profile picture — entirely in your browser. No upload, no ads, no sign-up.',
+      'Crop a photo to an exact pixel size, a locked aspect ratio, or a perfect circle for a profile picture — entirely in your browser. No upload, no sign-up.',
     h1: 'Image Cropper',
     tagline: 'Drag a box, lock an aspect ratio, or cut a perfect circle — privately, in your browser.',
     name: 'Image Cropper',
@@ -112,7 +112,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '이미지 자르기 — 비율 고정·원형 프로필 사진, 업로드 없이',
     description:
-      '사진을 정확한 픽셀 크기, 원하는 비율, 또는 프로필용 원형으로 브라우저에서 바로 자릅니다. 업로드·광고·회원가입이 없습니다.',
+      '사진을 정확한 픽셀 크기, 원하는 비율, 또는 프로필용 원형으로 브라우저에서 바로 자릅니다. 업로드·회원가입이 없습니다.',
     h1: '이미지 자르기',
     tagline: '박스를 드래그하거나 비율을 고정하고, 원형으로도 — 브라우저 안에서 그대로.',
     name: '이미지 자르기',

@@ -1,7 +1,7 @@
 {
   "name": "Betterbit Tools",
   "short_name": "Betterbit",
-  "description": "Fast, private, ad-free tools that just work.",
+  "description": "Fast, private tools that just work.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fbfbfa",

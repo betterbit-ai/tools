@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'cake',
   added: '2026-10-11',
   updated: '2026-10-13',
-  edges: ['usability', 'no-ads', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'Cuemath Age Calculator',
@@ -18,13 +18,13 @@ export const meta: ToolMeta = {
       name: 'Omni Calculator — Age Calculator',
       url: 'https://www.omnicalculator.com/everyday-life/age',
       weakness:
-        'Its age calculator focuses on elapsed time and does not show Korean counting age, year age, Chinese zodiac or a star sign next to the result. Betterbit makes those Korean conventions and date-based facts visible at once, without ads. (Strength: it can include a time of birth and express the result in units from milliseconds through years.)',
+        'Its age calculator focuses on elapsed time and does not show Korean counting age, year age, Chinese zodiac or a star sign next to the result. Betterbit makes those Korean conventions and date-based facts visible at once. (Strength: it can include a time of birth and express the result in units from milliseconds through years.)',
     },
     {
       name: 'Calculator.net Age Calculator',
       url: 'https://www.calculator.net/age-calculator.html',
       weakness:
-        'Requires a calculation action and presents a dense, ad-supported result page without Korean counting age, year age, Chinese zodiac or star sign. Betterbit updates immediately and keeps those Korean age conventions in an ad-free single panel. (Strength: it reports elapsed weeks, hours, minutes and seconds in addition to calendar years, months and days.)',
+        'Requires a calculation action and presents a dense, ad-supported result page without Korean counting age, year age, Chinese zodiac or star sign. Betterbit updates immediately and keeps those Korean age conventions in a single panel. (Strength: it reports elapsed weeks, hours, minutes and seconds in addition to calendar years, months and days.)',
     },
   ],
   related: ['date-calculator', 'countdown', 'bmi-calculator', 'pregnancy-calculator'],

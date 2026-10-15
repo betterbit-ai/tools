@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'clock',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'privacy', 'usability', 'accuracy'],
+  edges: ['privacy', 'usability', 'accuracy'],
   competitors: [
     {
       name: 'timezoneconverter.co',

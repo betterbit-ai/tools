@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'clock',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'The World Clock Meeting Planner',

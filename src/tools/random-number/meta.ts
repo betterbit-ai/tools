@@ -6,13 +6,13 @@ export const meta: ToolMeta = {
   icon: 'sparkle',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'InventiveHQ — Random Number Generator',
       url: 'https://inventivehq.com/tools/random/random-number-generator',
       weakness:
-        'The opened page places an “Advertisement” directly above its tool and says it uses Math.random(), explicitly noting that it is not cryptographically secure. Betterbit has no ads and visibly uses crypto.getRandomValues() with unbiased integer sampling. (Strength: it also offers decimal, Gaussian, dice, and base-2/8/16 modes.)',
+        'The opened page places an “Advertisement” directly above its tool and says it uses Math.random(), explicitly noting that it is not cryptographically secure. Betterbit visibly uses crypto.getRandomValues() with unbiased integer sampling. (Strength: it also offers decimal, Gaussian, dice, and base-2/8/16 modes.)',
     },
     {
       name: 'ToolLineup — Random Number Generator',

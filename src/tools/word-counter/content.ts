@@ -34,9 +34,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Word Counter — Count Words, Characters & Reading Time',
     description:
-      'Free word counter that counts words, characters, sentences and reading time as you type. Accurate for Chinese, Japanese and Korean. No ads, nothing uploaded.',
+      'Free word counter that counts words, characters, sentences and reading time as you type. Accurate for Chinese, Japanese and Korean. Nothing uploaded.',
     h1: 'Word Counter',
-    tagline: 'Live word, character and sentence counts — accurate in every language, with no ads.',
+    tagline: 'Live word, character and sentence counts — accurate in every language.',
     name: 'Word Counter',
     keywords: ['character counter', 'letter count', 'count words', 'reading time', 'text length'],
     howTo: [
@@ -86,9 +86,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '글자수 세기 — 공백 포함·제외, 바이트, 단어수 계산',
     description:
-      '자기소개서·리포트용 글자수 세기. 공백 포함/제외 글자수, 바이트(2byte·UTF-8), 단어수, 읽는 시간을 입력 즉시 계산합니다. 광고 없음, 서버 전송 없음.',
+      '자기소개서·리포트용 글자수 세기. 공백 포함/제외 글자수, 바이트(2byte·UTF-8), 단어수, 읽는 시간을 입력 즉시 계산합니다. 서버 전송 없음.',
     h1: '글자수 세기',
-    tagline: '공백 포함·제외, 바이트, 단어수를 입력하는 즉시 계산합니다. 광고 없이.',
+    tagline: '공백 포함·제외, 바이트, 단어수를 입력하는 즉시 계산합니다.',
     name: '글자수 세기',
     keywords: ['글자수 계산', '자소서 글자수', '바이트 계산', '단어수 세기', '문자수', 'word counter'],
     howTo: [

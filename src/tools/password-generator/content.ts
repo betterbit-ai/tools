@@ -51,8 +51,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       'Create a strong random password or memorable word passphrase locally. See an exact entropy estimate, copy in one click, and keep every generated password in your browser.',
     h1: 'Password Generator',
-    tagline:
-      'Create random passwords and memorable word passphrases with a visible entropy estimate — no ads or sign-up.',
+    tagline: 'Create random passwords and memorable word passphrases with a visible entropy estimate — no sign-up.',
     name: 'Password Generator',
     keywords: [
       'password generator',
@@ -111,7 +110,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       '강력한 랜덤 비밀번호와 기억하기 쉬운 단어 조합을 브라우저에서 만듭니다. 엔트로피를 바로 확인하고 한 번에 복사하며 생성한 비밀번호는 서버로 전송되지 않습니다.',
     h1: '비밀번호 생성기',
-    tagline: '랜덤 비밀번호와 외우기 쉬운 단어 조합을 만들고, 엔트로피를 바로 확인하세요 — 광고·가입이 없습니다.',
+    tagline: '랜덤 비밀번호와 외우기 쉬운 단어 조합을 만들고, 엔트로피를 바로 확인하세요 — 가입이 필요 없습니다.',
     name: '비밀번호 생성기',
     keywords: [
       '비밀번호 생성기',

@@ -96,7 +96,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '이미지 변환 — JPG, PNG, WebP 무료 변환 (업로드 없음)',
     description:
-      'JPG를 PNG로, PNG를 JPG로, WebP를 JPG로 바로 바꾸세요. 한 장이든 여러 장이든 브라우저에서 즉시 처리됩니다. 투명 배경을 JPG로 바꿀 때 배경색도 직접 고를 수 있어요. 업로드·가입·광고 없음.',
+      'JPG를 PNG로, PNG를 JPG로, WebP를 JPG로 바로 바꾸세요. 한 장이든 여러 장이든 브라우저에서 즉시 처리됩니다. 투명 배경을 JPG로 바꿀 때 배경색도 직접 고를 수 있어요. 업로드·가입 없음.',
     h1: '이미지 형식 변환',
     tagline: 'JPG, PNG, WebP를 서로 변환하세요 — 한 장부터 50장까지, 업로드 없이 브라우저에서.',
     name: '이미지 변환',

@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calendar',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'usability', 'features'],
+  edges: ['privacy', 'usability', 'features'],
   competitors: [
     {
       name: 'NHS — Due date calculator',
@@ -18,13 +18,13 @@ export const meta: ToolMeta = {
       name: 'Clearblue — Due Date Calculator',
       url: 'https://www.clearblue.com/am-i-pregnant/due-date-calculator',
       weakness:
-        'The calculator requires a Calculate action after the LMP and cycle-length controls, and the page says it uses cookies, pixels, and similar technologies for traffic analysis and personalized advertising, including health-condition-related data. Betterbit calculates locally with no ads or tracking and adds IVF-transfer dating with dated trimester milestones. (Strength: it offers a separate “how many weeks pregnant” path and related educational articles.)',
+        'The calculator requires a Calculate action after the LMP and cycle-length controls, and the page says it uses cookies, pixels, and similar technologies for traffic analysis and personalized advertising, including health-condition-related data. Betterbit calculates locally — the dates are never sent to a server — and adds IVF-transfer dating with dated trimester milestones. (Strength: it offers a separate “how many weeks pregnant” path and related educational articles.)',
     },
     {
       name: 'DueDateLab — Due Date Calculator',
       url: 'https://duedatelab.com/',
       weakness:
-        'The tool supports LMP, conception, and a known due date, but its result requires a dedicated “Calculate due date” click and the page includes affiliate disclosures and Amazon book links. Betterbit updates with each valid input and keeps the due date, current gestational age, and six key calendar milestones in a compact ad-free panel. (Strength: it has a richer week-by-week reading library and a known-due-date reverse calculation.)',
+        'The tool supports LMP, conception, and a known due date, but its result requires a dedicated “Calculate due date” click and the page includes affiliate disclosures and Amazon book links. Betterbit updates with each valid input and keeps the due date, current gestational age, and six key calendar milestones in a compact panel. (Strength: it has a richer week-by-week reading library and a known-due-date reverse calculation.)',
     },
     {
       name: 'MomCalc — 출산예정일 계산기',

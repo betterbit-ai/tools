@@ -6,13 +6,13 @@ export const meta: ToolMeta = {
   icon: 'sparkle',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'LastPass Password Generator',
       url: 'https://www.lastpass.com/features/password-generator',
       weakness:
-        'The opened page surrounds its generator with repeated personal/business trial calls to action and product-plan navigation. Betterbit keeps password creation in a compact, ad-free tool surface, shows the entropy estimate beside the result, and offers a distinct word-passphrase mode. (Strength: LastPass can save and autofill passwords through its password manager.)',
+        'The opened page surrounds its generator with repeated personal/business trial calls to action and product-plan navigation. Betterbit keeps password creation in a compact tool surface, shows the entropy estimate beside the result, and offers a distinct word-passphrase mode. (Strength: LastPass can save and autofill passwords through its password manager.)',
     },
     {
       name: 'Calculator.net Password Generator',

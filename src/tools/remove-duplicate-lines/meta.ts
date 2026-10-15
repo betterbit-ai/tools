@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'reorder',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['privacy', 'no-ads', 'usability', 'features', 'accuracy'],
+  edges: ['privacy', 'usability', 'features', 'accuracy'],
   competitors: [
     {
       name: 'BelayTab Remove Duplicate Lines',

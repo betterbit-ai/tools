@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'convert',
   added: '2026-10-11',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'features', 'accuracy'],
+  edges: ['privacy', 'features', 'accuracy'],
   competitors: [
     {
       name: 'CodeBeautify Base64 Decode',

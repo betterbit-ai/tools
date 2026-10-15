@@ -40,9 +40,9 @@ export type UI = typeof uiEn;
 
 export const content: Record<Locale, ToolContent<UI>> = {
   en: {
-    title: 'Spin the Wheel — Private, Ad-Free Random Picker',
+    title: 'Spin the Wheel — Private Random Picker',
     description:
-      'Spin a saved list of names or choices in a clean full-screen wheel. Every result uses browser Web Crypto, with automatic winner removal and no ads or sign-up.',
+      'Spin a saved list of names or choices in a clean full-screen wheel. Every result uses browser Web Crypto, with automatic winner removal and no sign-up.',
     h1: 'Spin the Wheel',
     tagline: 'Paste a list, spin a clean full-screen wheel, and keep your entries in this browser.',
     name: 'Spin the Wheel',
@@ -94,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '돌림판 — 저장되는 무료 랜덤 룰렛',
     description:
-      '이름·선택지를 저장해 바로 돌리는 광고 없는 돌림판입니다. 브라우저 난수, 당첨자 자동 제외, 전체화면을 지원하며 가입할 필요가 없습니다.',
+      '이름·선택지를 저장해 바로 돌리는 돌림판입니다. 브라우저 난수, 당첨자 자동 제외, 전체화면을 지원하며 가입할 필요가 없습니다.',
     h1: '돌림판',
     tagline: '명단을 붙여 넣고, 전체화면 룰렛으로 공정하게 뽑으세요. 목록은 이 브라우저에 저장됩니다.',
     name: '돌림판',

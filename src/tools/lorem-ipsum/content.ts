@@ -33,9 +33,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Lorem Ipsum Generator — Korean Dummy Text & HTML',
     description:
-      'Generate classic Latin or natural Korean dummy text by paragraph, sentence, word, or exact character count. See the result live, then copy plain text or HTML with no ads.',
+      'Generate classic Latin or natural Korean dummy text by paragraph, sentence, word, or exact character count. See the result live, then copy plain text or HTML.',
     h1: 'Lorem Ipsum Generator',
-    tagline: 'Create copy-ready Latin or Korean placeholder text live, with no ads around the result.',
+    tagline: 'Create copy-ready Latin or Korean placeholder text live.',
     name: 'Lorem Ipsum Generator',
     keywords: ['dummy text generator', 'placeholder text', 'Korean lorem', 'lipsum generator', 'HTML filler text'],
     howTo: [
@@ -86,7 +86,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '더미 텍스트 생성기 — 한글·로렘 입숨·HTML',
     description:
-      '한글 더미 텍스트와 로렘 입숨을 문단·문장·단어·글자 수로 즉시 생성합니다. 결과를 바로 확인하고 일반 텍스트 또는 HTML로 복사하며 광고가 없습니다.',
+      '한글 더미 텍스트와 로렘 입숨을 문단·문장·단어·글자 수로 즉시 생성합니다. 결과를 바로 확인하고 일반 텍스트 또는 HTML로 복사합니다.',
     h1: '더미 텍스트 생성기',
     tagline: '한글 시안에는 자연스러운 한글 문장, 영문 시안에는 로렘 입숨을 바로 채웁니다.',
     name: '더미 텍스트',

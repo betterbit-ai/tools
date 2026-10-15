@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-14',
   updated: '2026-10-14',
-  edges: ['no-ads', 'usability'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'gemini2k Tools — Pyeong ↔ ㎡ Calculator',
@@ -30,7 +30,7 @@ export const meta: ToolMeta = {
       name: 'EVERYCALC — 평수 변환 계산기',
       url: 'https://www.everycalc.pe.kr/pyeong',
       weakness:
-        'Its page explains that exclusive and supply area must be compared separately, but the interactive calculation is initially hidden behind a “로딩 중...” state and the page includes banner advertising. Betterbit is ad-free and makes the exclusive/supply comparison an immediately visible, editable part of the calculator. (장점: 전용·공급·계약면적의 차이를 긴 안내문과 환산표로 자세히 설명한다.)',
+        'Its page explains that exclusive and supply area must be compared separately, but the interactive calculation is initially hidden behind a “로딩 중...” state and the page includes banner advertising. Betterbit makes the exclusive/supply comparison an immediately visible, editable part of the calculator. (장점: 전용·공급·계약면적의 차이를 긴 안내문과 환산표로 자세히 설명한다.)',
     },
     {
       name: 'alwayscorp — 평수 계산기',

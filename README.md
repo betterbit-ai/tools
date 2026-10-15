@@ -1,6 +1,6 @@
 # Betterbit Tools
 
-Fast, private, ad-free online tools — every one better than the alternatives on at least one axis.
+Fast, private online tools — every one better than the alternatives on at least one axis.
 Static Astro site; all processing happens in the browser.
 
 ```bash

@@ -52,7 +52,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Date Calculator — Days Between Dates & Business Days',
     description:
-      'Find days between two dates, add or subtract days/months/years, and count business days with US or South Korean holidays built in — nothing leaves your browser, no ads.',
+      'Find days between two dates, add or subtract days/months/years, and count business days with US or South Korean holidays built in — nothing leaves your browser.',
     h1: 'Date Calculator',
     tagline:
       'Compare two dates or shift one by a calendar or business-day amount, with US and Korean public holidays built in.',
@@ -117,7 +117,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '날짜 계산기 — 날짜 차이·영업일 계산',
     description:
-      '두 날짜 사이의 일수를 구하고, 날짜에 일·주·개월·년을 더하거나 빼고, 미국·대한민국 공휴일을 제외한 영업일까지 계산합니다. 모든 계산은 브라우저에서 처리되고 광고가 없습니다.',
+      '두 날짜 사이의 일수를 구하고, 날짜에 일·주·개월·년을 더하거나 빼고, 미국·대한민국 공휴일을 제외한 영업일까지 계산합니다. 모든 계산은 브라우저에서 처리됩니다.',
     h1: '날짜 계산기',
     tagline:
       '두 날짜의 차이를 구하거나 날짜에 기간을 더하고 빼며, 미국·대한민국 공휴일을 자동으로 제외한 영업일도 함께 보여줍니다.',

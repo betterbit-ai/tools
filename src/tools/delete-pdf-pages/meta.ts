@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'delete',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['privacy', 'performance', 'no-ads'],
+  edges: ['privacy', 'performance'],
   competitors: [
     {
       name: 'Smallpdf (Delete PDF Pages)',

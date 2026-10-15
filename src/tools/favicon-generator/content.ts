@@ -40,7 +40,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Favicon Generator — ICO, PNG, Manifest & HTML',
     description:
-      'Make a complete favicon package from text, emoji, or an image: a real multi-size ICO, PNG icons, web manifest, and install code. Private, local, and ad-free.',
+      'Make a complete favicon package from text, emoji, or an image: a real multi-size ICO, PNG icons, web manifest, and install code. Private and local.',
     h1: 'Favicon Generator',
     tagline: 'Create a complete favicon set from an image, letters, or an emoji — with no upload.',
     name: 'Favicon Generator',

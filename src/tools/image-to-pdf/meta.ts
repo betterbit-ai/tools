@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'file',
   added: '2026-10-08',
   updated: '2026-10-13',
-  edges: ['privacy', 'performance', 'no-ads', 'no-signup'],
+  edges: ['privacy', 'performance', 'no-signup'],
   competitors: [
     {
       name: 'iLovePDF (JPG to PDF)',

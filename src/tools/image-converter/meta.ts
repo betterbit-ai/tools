@@ -52,13 +52,13 @@ const variants: ToolVariant[] = COMBOS.map((c): ToolVariant => {
     content: {
       en: {
         title: `${c.from} to ${toLabel} Converter — Free, No Upload`,
-        description: `Convert ${c.from} to ${toLabel} in your browser, one file or a batch. No upload, no sign-up, no ads — the file never leaves your device.`,
+        description: `Convert ${c.from} to ${toLabel} in your browser, one file or a batch. No upload, no sign-up — the file never leaves your device.`,
         h1: `${c.from} to ${toLabel} Converter`,
         intro: `Drop a ${c.from} file (or many) below to convert it to ${toLabel} instantly. ${c.use.en}`,
       },
       ko: {
         title: `${c.from} ${toLabel} 변환 — 무료, 업로드 없음`,
-        description: `${c.from} 파일을 브라우저에서 바로 ${toLabel}로 변환하세요. 한 장도, 여러 장도 가능. 업로드·가입·광고 없이 기기 안에서 처리됩니다.`,
+        description: `${c.from} 파일을 브라우저에서 바로 ${toLabel}로 변환하세요. 한 장도, 여러 장도 가능. 업로드·가입 없이 기기 안에서 처리됩니다.`,
         h1: `${c.from} ${toLabel} 변환`,
         intro: `아래에 ${c.from} 파일을 올리면 바로 ${toLabel}로 변환됩니다. ${c.use.ko}`,
       },
@@ -72,7 +72,7 @@ export const meta: ToolMeta = {
   icon: 'convert',
   added: '2026-10-08',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'no-signup', 'performance', 'usability'],
+  edges: ['privacy', 'no-signup', 'performance', 'usability'],
   competitors: [
     {
       name: 'Convertio (JPG to PNG)',

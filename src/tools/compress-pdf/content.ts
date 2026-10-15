@@ -14,7 +14,7 @@ const uiEn = {
   smallestHint: '80 dpi, JPEG quality 50% — use when a size limit matters most.',
   rasterWarning:
     'Pages are rebuilt as JPEG images. Selectable levels work best for scans and image-heavy PDFs; selectable text, links, forms, and signatures are flattened.',
-  privacyNote: 'Your PDF is compressed in this browser. Nothing is uploaded, and no ads are shown.',
+  privacyNote: 'Your PDF is compressed in this browser. Nothing is uploaded.',
   reading: 'Reading PDF…',
   processingPages: 'Compressing page {n} of {total}…',
   invalidPdf: "This file can't be read as a PDF.",
@@ -97,7 +97,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'PDF 용량 줄이기 — 업로드 없는 이미지 압축',
     description:
-      '스캔·이미지 중심 PDF를 화질 수준 3가지로 줄이세요. 파일은 브라우저에서만 처리되며 업로드·가입·광고 없이 결과를 바로 다운로드합니다.',
+      '스캔·이미지 중심 PDF를 화질 수준 3가지로 줄이세요. 파일은 브라우저에서만 처리되며 업로드·가입 없이 결과를 바로 다운로드합니다.',
     h1: 'PDF 용량 줄이기',
     tagline: '화질 수준을 직접 고르고, 스캔 PDF를 내 기기 안에서 가볍게 만듭니다.',
     name: 'PDF 용량 줄이기',
@@ -126,7 +126,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '업로드하지 않는 PDF 압축',
-        body: '검색 상위 결과인 iLovePDF, Smallpdf, PDF24는 모두 업로드 또는 클라우드 처리 단계를 보여 줍니다. Smallpdf는 업로드 파일을 1시간 뒤 자동 삭제한다고 안내하고, PDF24는 서버에서 처리한다고 밝힙니다. 여기서는 PDF를 읽고 렌더링하고 다시 만드는 전 과정이 브라우저에서만 이루어집니다. 파일을 서버에 보내지 않고, 회원가입이나 광고도 없으므로 신분증 사본, 계약서, 금융 서류, 재학 증명처럼 민감한 스캔본에 쓸 수 있습니다.',
+        body: '검색 상위 결과인 iLovePDF, Smallpdf, PDF24는 모두 업로드 또는 클라우드 처리 단계를 보여 줍니다. Smallpdf는 업로드 파일을 1시간 뒤 자동 삭제한다고 안내하고, PDF24는 서버에서 처리한다고 밝힙니다. 여기서는 PDF를 읽고 렌더링하고 다시 만드는 전 과정이 브라우저에서만 이루어집니다. 파일을 서버에 보내지 않고, 회원가입도 없으므로 신분증 사본, 계약서, 금융 서류, 재학 증명처럼 민감한 스캔본에 쓸 수 있습니다.',
       },
     ],
     faq: [
@@ -164,7 +164,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       smallestHint: '80dpi, JPEG 품질 50% — 용량 제한이 가장 중요할 때 사용합니다.',
       rasterWarning:
         '페이지를 JPEG 이미지로 다시 만듭니다. 수준 선택은 스캔·이미지 중심 PDF에 알맞고, 선택 가능한 글자·링크·입력 양식·전자서명은 평면화됩니다.',
-      privacyNote: 'PDF는 이 브라우저에서 압축합니다. 어디에도 업로드되지 않으며 광고도 없습니다.',
+      privacyNote: 'PDF는 이 브라우저에서 압축합니다. 어디에도 업로드되지 않습니다.',
       reading: 'PDF 읽는 중…',
       processingPages: '{total}페이지 중 {n}페이지 압축 중…',
       invalidPdf: '이 파일은 PDF로 읽을 수 없습니다.',

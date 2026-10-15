@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'shield',
   added: '2026-10-11',
   updated: '2026-10-15',
-  edges: ['privacy', 'no-ads', 'no-signup', 'usability', 'accuracy'],
+  edges: ['privacy', 'no-signup', 'usability', 'accuracy'],
   competitors: [
     {
       name: 'W3Schools Remove EXIF Data',

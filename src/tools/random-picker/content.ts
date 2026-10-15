@@ -37,12 +37,11 @@ export type UI = typeof uiEn;
 
 export const content: Record<Locale, ToolContent<UI>> = {
   en: {
-    title: 'Random Name Picker — Private, Ad-Free Draws',
+    title: 'Random Name Picker — Private, Instant Draws',
     description:
-      'Paste a list and pick a random name in one click. Draws use browser Web Crypto, remove winners automatically, and copy a shareable result without ads or sign-up.',
+      'Paste a list and pick a random name in one click. Draws use browser Web Crypto, remove winners automatically, and copy a shareable result without signing up.',
     h1: 'Random Name Picker',
-    tagline:
-      'Paste a list, watch the quick draw animation, and copy the result — all in your browser with no ads or account.',
+    tagline: 'Paste a list, watch the quick draw animation, and copy the result — all in your browser with no account.',
     name: 'Random Name Picker',
     keywords: ['random name picker', 'wheel of names', 'random picker', 'raffle winner picker', 'random choice maker'],
     howTo: [
@@ -86,11 +85,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: uiEn,
   },
   ko: {
-    title: '제비뽑기 — 광고 없이 바로 하는 랜덤 뽑기',
+    title: '제비뽑기 — 명단 붙여넣고 바로 하는 랜덤 뽑기',
     description:
-      '명단을 붙여 넣고 한 번에 랜덤으로 뽑으세요. 브라우저 난수로 추첨하고 당첨자를 자동 제외하며, 광고·가입 없이 결과를 복사해 공유할 수 있습니다.',
+      '명단을 붙여 넣고 한 번에 랜덤으로 뽑으세요. 브라우저 난수로 추첨하고 당첨자를 자동 제외하며, 가입 없이 결과를 복사해 공유할 수 있습니다.',
     h1: '제비뽑기',
-    tagline: '명단을 붙여 넣고 빠른 추첨 연출로 한 명을 뽑은 뒤 결과를 복사하세요 — 광고·가입이 없습니다.',
+    tagline: '명단을 붙여 넣고 빠른 추첨 연출로 한 명을 뽑은 뒤 결과를 복사하세요 — 가입이 필요 없습니다.',
     name: '제비뽑기',
     keywords: ['제비뽑기', '랜덤 뽑기', '이름 뽑기', '당첨자 추첨', '랜덤 룰렛'],
     howTo: [

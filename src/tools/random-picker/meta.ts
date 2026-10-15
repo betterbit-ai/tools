@@ -6,13 +6,13 @@ export const meta: ToolMeta = {
   icon: 'sparkle',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'no-signup'],
+  edges: ['usability', 'no-signup'],
   competitors: [
     {
       name: 'Wheel of Names',
       url: 'https://wheelofnames.com/',
       weakness:
-        'The opened page explicitly says it relies on ads, even though users can close them for the session; its extensive customization, cloud/local saving, images, 150+ audio options, and multiple-wheel controls surround a simple name draw. Betterbit is an ad-free, paste-and-draw surface with a one-key redraw, automatic winner removal, and a compact copied result record. (Strength: it supports cloud sharing, image slices, weighted wheels, large imported lists, and much richer visual customization.)',
+        'The opened page explicitly says it relies on ads, even though users can close them for the session; its extensive customization, cloud/local saving, images, 150+ audio options, and multiple-wheel controls surround a simple name draw. Betterbit is a focused paste-and-draw surface with a one-key redraw, automatic winner removal, and a compact copied result record. (Strength: it supports cloud sharing, image slices, weighted wheels, large imported lists, and much richer visual customization.)',
     },
     {
       name: 'Picker Wheel',

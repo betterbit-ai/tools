@@ -28,7 +28,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Temperature Converter — Celsius, Fahrenheit, Kelvin + Oven Table',
     description:
-      'Convert Celsius, Fahrenheit and Kelvin instantly as you type — no ads, no "Convert" button — with a gas-mark oven temperature table for recipes.',
+      'Convert Celsius, Fahrenheit and Kelvin instantly as you type — no "Convert" button — with a gas-mark oven temperature table for recipes.',
     h1: 'Temperature Converter',
     tagline: 'Celsius, Fahrenheit and Kelvin, converted live, with an oven temperature table built in.',
     name: 'Temperature Converter',
@@ -89,7 +89,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '온도 변환기 — 섭씨·화씨·켈빈, 오븐 온도표 포함',
     description:
-      '섭씨, 화씨, 켈빈을 입력하는 즉시 변환합니다. "변환" 버튼과 광고 없이 바로 결과가 나오고, 해외 레시피용 가스 마크 오븐 온도표도 함께 제공합니다.',
+      '섭씨, 화씨, 켈빈을 입력하는 즉시 변환합니다. "변환" 버튼 없이 바로 결과가 나오고, 해외 레시피용 가스 마크 오븐 온도표도 함께 제공합니다.',
     h1: '온도 변환기',
     tagline: '섭씨·화씨·켈빈을 입력 즉시 변환하고, 오븐 온도표까지 한 화면에서 확인하세요.',
     name: '온도 변환기',

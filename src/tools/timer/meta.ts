@@ -50,13 +50,13 @@ const variants: ToolVariant[] = Object.entries(USES).map(([minStr, use]) => {
     content: {
       en: {
         title: `${enLabel} Timer — Free Online Countdown with Alarm`,
-        description: `Set a ${enLabel.toLowerCase()} timer instantly. Ad-free countdown with alarm, full screen and keyboard shortcuts — keeps running if you refresh.`,
+        description: `Set a ${enLabel.toLowerCase()} timer instantly. Clean countdown with alarm, full screen and keyboard shortcuts — keeps running if you refresh.`,
         h1: `${enLabel} Timer`,
         intro: `A ${enLabel.toLowerCase()} countdown, ready to go — press Start or Space. ${use.en}`,
       },
       ko: {
         title: `${koLabel} 타이머 — 알람 되는 온라인 ${koLabel} 카운트다운`,
-        description: `바로 시작하는 ${koLabel} 타이머. 광고 없이 알람, 전체화면, 단축키를 지원하고 새로고침해도 시간이 유지됩니다.`,
+        description: `바로 시작하는 ${koLabel} 타이머. 알람, 전체화면, 단축키를 지원하고 새로고침해도 시간이 유지됩니다.`,
         h1: `${koLabel} 타이머`,
         intro: `${koLabel}으로 맞춰진 타이머입니다. 시작 버튼이나 스페이스바를 누르세요. ${use.ko}`,
       },
@@ -70,7 +70,7 @@ export const meta: ToolMeta = {
   icon: 'timer',
   added: '2026-10-07',
   updated: '2026-10-13',
-  edges: ['no-ads', 'accuracy', 'usability', 'design'],
+  edges: ['accuracy', 'usability', 'design'],
   competitors: [
     {
       name: 'vClock Timer',
@@ -82,13 +82,13 @@ export const meta: ToolMeta = {
       name: 'Online-Stopwatch',
       url: 'https://www.online-stopwatch.com/',
       weakness:
-        'Its countdown page promotes a paid ad-free upgrade and premium account alongside a site-wide menu of themed tools; Betterbit has no ads or account prompt and opens directly to a focused countdown. (Strength: it offers many themed classroom and specialty timers.)',
+        'Its countdown page promotes a paid ad-free upgrade and premium account alongside a site-wide menu of themed tools; Betterbit has no account prompt and opens directly to a focused countdown. (Strength: it offers many themed classroom and specialty timers.)',
     },
     {
       name: 'timeanddate Timer',
       url: 'https://www.timeanddate.com/timer/',
       weakness:
-        'Its timer page places the editor beneath a large global navigation and supporter pitch for ad-free browsing; Betterbit opens directly to its controls with no ads or account prompt. (Strength: it supports multiple named timers and selectable end alarms.)',
+        'Its timer page places the editor beneath a large global navigation and supporter pitch for ad-free browsing; Betterbit opens directly to its controls with no account prompt. (Strength: it supports multiple named timers and selectable end alarms.)',
     },
   ],
   related: [

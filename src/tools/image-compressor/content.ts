@@ -39,7 +39,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Image Compressor — Shrink Photos to a Target KB, No Upload',
     description:
-      'Compress JPG, PNG and WebP images by a target file size (KB/MB) or quality — many at once — entirely in your browser. No upload, no ads, no sign-up.',
+      'Compress JPG, PNG and WebP images by a target file size (KB/MB) or quality — many at once — entirely in your browser. No upload, no sign-up.',
     h1: 'Image Compressor',
     tagline: 'Tell it a target size in KB or MB and it finds the best quality to hit it — privately, on your device.',
     name: 'Image Compressor',
@@ -106,7 +106,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '이미지 압축 — 원하는 용량(KB)으로 줄이기, 업로드 없음',
     description:
-      'JPG, PNG, WebP 이미지를 원하는 용량(KB/MB)이나 품질로 여러 장 한번에 압축하세요. 브라우저에서 바로 처리, 업로드·광고·가입 없음.',
+      'JPG, PNG, WebP 이미지를 원하는 용량(KB/MB)이나 품질로 여러 장 한번에 압축하세요. 브라우저에서 바로 처리, 업로드·가입 없음.',
     h1: '이미지 압축',
     tagline: '목표 용량(KB·MB)만 입력하면 그에 맞는 품질을 자동으로 찾아줍니다 — 업로드 없이 기기에서.',
     name: '이미지 압축',

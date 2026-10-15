@@ -6,13 +6,13 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['usability', 'no-ads'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'Calculator.net — Scientific Calculator',
       url: 'https://www.calculator.net/scientific-calculator.html',
       weakness:
-        'Its page explicitly supports typing into the display, but it has no calculation history at all — every past result is gone the moment you compute the next one — and calculator.net has a long-running reputation (echoed in app-store and forum reviews of its mobile pages) for heavy ad load. Betterbit keeps the last 30 calculations in a saved history you can tap to reuse, and runs no ads anywhere. (Strength: it is the single best-known free scientific calculator, with very broad brand recognition.)',
+        'Its page explicitly supports typing into the display, but it has no calculation history at all — every past result is gone the moment you compute the next one — and calculator.net has a long-running reputation (echoed in app-store and forum reviews of its mobile pages) for heavy ad load. Betterbit keeps the last 30 calculations in a saved history you can tap to reuse. (Strength: it is the single best-known free scientific calculator, with very broad brand recognition.)',
     },
     {
       name: 'Desmos Scientific Calculator',

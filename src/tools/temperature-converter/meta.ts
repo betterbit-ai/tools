@@ -6,17 +6,17 @@ const variants: ToolVariant[] = [
     preset: { from: 'c', to: 'f', value: 20 },
     content: {
       en: {
-        title: 'Celsius to Fahrenheit Converter — Instant, No Ads',
+        title: 'Celsius to Fahrenheit Converter — Instant, Oven Chart',
         description:
-          'Convert Celsius to Fahrenheit instantly as you type. No "Convert" button, no ads — plus a gas-mark oven temperature table for recipes.',
+          'Convert Celsius to Fahrenheit instantly as you type. No "Convert" button — plus a gas-mark oven temperature table for recipes.',
         h1: 'Celsius to Fahrenheit',
         intro:
           'Celsius to Fahrenheit, live as you type. °F = °C × 9/5 + 32, so 0°C = 32°F and 100°C = 212°F — the result and the oven table below update with every keystroke.',
       },
       ko: {
-        title: '섭씨 화씨 변환 — 입력 즉시 결과, 광고 없음',
+        title: '섭씨 화씨 변환 — 입력 즉시 결과, 오븐 온도표',
         description:
-          '섭씨를 화씨로 입력하는 즉시 변환합니다. "변환" 버튼과 광고 없이 바로 결과가 나오고, 해외 레시피용 오븐 온도표도 함께 제공합니다.',
+          '섭씨를 화씨로 입력하는 즉시 변환합니다. "변환" 버튼 없이 바로 결과가 나오고, 해외 레시피용 오븐 온도표도 함께 제공합니다.',
         h1: '섭씨 화씨 변환',
         intro: '섭씨를 화씨로 실시간 변환합니다. °F = °C × 9/5 + 32이므로 0°C는 32°F, 100°C는 212°F입니다.',
       },
@@ -27,15 +27,15 @@ const variants: ToolVariant[] = [
     preset: { from: 'f', to: 'c', value: 98.6 },
     content: {
       en: {
-        title: 'Fahrenheit to Celsius Converter — Instant, No Ads',
+        title: 'Fahrenheit to Celsius Converter — Instant, Oven Chart',
         description:
-          'Convert Fahrenheit to Celsius instantly, no "Convert" button and no ads. Includes a gas-mark oven temperature table for recipes.',
+          'Convert Fahrenheit to Celsius instantly, no "Convert" button needed. Includes a gas-mark oven temperature table for recipes.',
         h1: 'Fahrenheit to Celsius',
         intro:
           'Fahrenheit to Celsius, updated live. °C = (°F − 32) × 5/9, so 98.6°F (normal body temperature) is 37°C — type any value and the result follows along.',
       },
       ko: {
-        title: '화씨 섭씨 변환 — 입력 즉시 결과, 광고 없음',
+        title: '화씨 섭씨 변환 — 입력 즉시 결과, 오븐 온도표',
         description:
           '화씨를 섭씨로 입력하는 즉시 변환합니다. "변환" 버튼 없이 바로 결과를 보여주고, 오븐 온도표도 함께 제공합니다.',
         h1: '화씨 섭씨 변환',
@@ -73,7 +73,7 @@ export const meta: ToolMeta = {
   icon: 'convert',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'RapidTables — Celsius to Fahrenheit Converter',
@@ -103,7 +103,7 @@ export const meta: ToolMeta = {
       name: 'enolasoft 섭씨 화씨 온도 변환 계산기',
       url: 'https://enolasoft.com/celsius.php',
       weakness:
-        '입력 후 "변환" 버튼을 직접 눌러야 결과가 나오며(실시간 아님), 페이지 하단에는 "오늘 하루 보지 않기"로만 닫을 수 있는 앱 광고 배너가 떠 있고 요리용 온도표도 없다. Betterbit는 버튼과 광고 없이 입력 즉시 결과와 오븐 온도표가 바뀐다.',
+        '입력 후 "변환" 버튼을 직접 눌러야 결과가 나오며(실시간 아님), 페이지 하단에는 "오늘 하루 보지 않기"로만 닫을 수 있는 앱 광고 배너가 떠 있고 요리용 온도표도 없다. Betterbit는 버튼 없이 입력 즉시 결과와 오븐 온도표가 바뀐다.',
     },
     {
       name: 'RapidTables 한국어 — 섭씨에서 화씨로 변환',

@@ -28,7 +28,7 @@ const uiEn = {
   totalPixelLimit:
     'The selected pages need too much image memory at this resolution. Choose fewer pages or a lower resolution.',
   conversionFailed: "This PDF couldn't be converted in this browser. Try a smaller PDF or a lower resolution.",
-  privacyNote: 'Your PDF is converted in this browser. Nothing is uploaded, and no ads are shown.',
+  privacyNote: 'Your PDF is converted in this browser. Nothing is uploaded.',
   resultReady: 'JPG images ready',
   fileCount: '{n} JPG file(s)',
   zipReady: 'ZIP file ready',
@@ -189,7 +189,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       totalPixelLimit:
         '선택한 페이지를 이 해상도로 만들려면 이미지 메모리가 너무 많이 필요합니다. 페이지 수나 해상도를 줄이세요.',
       conversionFailed: '이 브라우저에서 PDF를 JPG로 변환하지 못했습니다. 더 작은 PDF나 낮은 해상도로 시도하세요.',
-      privacyNote: 'PDF는 이 브라우저에서 변환합니다. 어디에도 업로드되지 않으며 광고도 없습니다.',
+      privacyNote: 'PDF는 이 브라우저에서 변환합니다. 어디에도 업로드되지 않습니다.',
       resultReady: 'JPG 이미지가 준비되었습니다',
       fileCount: 'JPG {n}개',
       zipReady: 'ZIP 파일 준비됨',

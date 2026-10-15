@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'sparkle',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['no-ads', 'usability'],
+  edges: ['usability'],
   competitors: [
     {
       name: 'Lorem Ipsum Generator (loremmaker.com)',

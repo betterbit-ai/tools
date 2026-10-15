@@ -2,7 +2,7 @@ import type { Locale } from '../../i18n/locales';
 import type { ToolContent } from '../types';
 
 const uiEn = {
-  intro: 'Exact fraction arithmetic updates as you type — no calculate button, no ads.',
+  intro: 'Exact fraction arithmetic updates as you type — no calculate button needed.',
   autosaved: 'Saved in this browser',
   firstLabel: 'First number',
   secondLabel: 'Second number',
@@ -40,10 +40,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Fraction Calculator — Exact Answers with Working',
     description:
-      'Add, subtract, multiply, and divide fractions, mixed numbers, and decimals exactly. See the simplified answer and clear working instantly — no ads.',
+      'Add, subtract, multiply, and divide fractions, mixed numbers, and decimals exactly. See the simplified answer and clear working instantly.',
     h1: 'Fraction Calculator',
     tagline:
-      'Type fractions naturally and see an exact answer, mixed number, decimal, and the working immediately — no button, no ads.',
+      'Type fractions naturally and see an exact answer, mixed number, decimal, and the working immediately — no button needed.',
     name: 'Fraction Calculator',
     keywords: [
       'fraction calculator',
@@ -102,10 +102,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '분수 계산기 — 풀이 과정과 기약분수 바로 보기',
     description:
-      '분수·대분수·유한소수의 덧셈, 뺄셈, 곱셈, 나눗셈을 정확하게 계산합니다. 기약분수와 풀이 과정을 입력 즉시 확인하며 광고가 없습니다.',
+      '분수·대분수·유한소수의 덧셈, 뺄셈, 곱셈, 나눗셈을 정확하게 계산합니다. 기약분수와 풀이 과정을 입력 즉시 확인합니다.',
     h1: '분수 계산기',
     tagline:
-      '분수와 대분수를 자연스럽게 입력하면 기약분수, 대분수, 소수, 풀이 과정을 바로 보여줍니다 — 버튼과 광고가 없습니다.',
+      '분수와 대분수를 자연스럽게 입력하면 기약분수, 대분수, 소수, 풀이 과정을 바로 보여줍니다 — 버튼을 누를 필요가 없습니다.',
     name: '분수 계산기',
     keywords: [
       '분수 계산기',
@@ -160,7 +160,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
     ],
     ui: {
-      intro: '정확한 분수 계산이 입력하는 즉시 갱신됩니다 — 계산 버튼도, 광고도 없습니다.',
+      intro: '정확한 분수 계산이 입력하는 즉시 갱신됩니다 — 계산 버튼이 필요 없습니다.',
       autosaved: '이 브라우저에 저장됨',
       firstLabel: '첫 번째 수',
       secondLabel: '두 번째 수',

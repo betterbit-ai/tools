@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'calculator',
   added: '2026-10-13',
   updated: '2026-10-13',
-  edges: ['no-ads', 'features', 'usability'],
+  edges: ['features', 'usability'],
   competitors: [
     {
       name: 'Pearson — Tip Calculator',
@@ -18,13 +18,13 @@ export const meta: ToolMeta = {
       name: 'TheTipCalc — Free Tip Calculator',
       url: 'https://www.thetipcalc.com/',
       weakness:
-        'The page places affiliate travel recommendations for Viator, Booking.com, and an eSIM below the calculator, with a commission disclosure. Betterbit has no ads or affiliate promotions. (Strength: it offers country guidance for more than 40 countries.)',
+        'The page places affiliate travel recommendations for Viator, Booking.com, and an eSIM below the calculator, with a commission disclosure. Betterbit has no affiliate promotions. (Strength: it offers country guidance for more than 40 countries.)',
     },
     {
       name: 'QuickCalc.ai — Tip Calculator',
       url: 'https://www.quickcalc.ai/tip-calculator',
       weakness:
-        'An “Advertisement” block appears directly after its result area and again between its explanatory sections. Betterbit has no ads, and shows exact split allocations when a total cannot divide evenly. (Strength: it has a clear before- or after-tax switch and a round-up option.)',
+        'An “Advertisement” block appears directly after its result area and again between its explanatory sections. Betterbit shows exact split allocations when a total cannot divide evenly. (Strength: it has a clear before- or after-tax switch and a round-up option.)',
     },
     {
       name: 'Calqu — Tip Calculator',

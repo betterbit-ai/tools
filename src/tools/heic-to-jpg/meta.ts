@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'convert',
   added: '2026-10-08',
   updated: '2026-10-13',
-  edges: ['privacy', 'no-ads', 'no-signup', 'features'],
+  edges: ['privacy', 'no-signup', 'features'],
   competitors: [
     {
       name: 'FreeConvert (HEIC to JPG)',

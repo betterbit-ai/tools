@@ -40,7 +40,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Invisible Character — Copy Unicode Blank Text',
     description:
-      'Copy an invisible Unicode character in one click, choose it by purpose, and inspect pasted code points locally. No ads, sign-up or uploads.',
+      'Copy an invisible Unicode character in one click, choose it by purpose, and inspect pasted code points locally. No sign-up or uploads.',
     h1: 'Invisible Character',
     tagline: 'Copy the right invisible Unicode character, then check exactly what a platform kept.',
     name: 'Invisible Character',
@@ -84,7 +84,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '투명 문자 — 공백 문자 복사·유니코드 확인',
     description:
-      '용도에 맞는 투명 문자·공백 문자를 한 번에 복사하고, 붙여넣은 텍스트의 유니코드 값을 브라우저에서 확인합니다. 광고·가입·업로드가 없습니다.',
+      '용도에 맞는 투명 문자·공백 문자를 한 번에 복사하고, 붙여넣은 텍스트의 유니코드 값을 브라우저에서 확인합니다. 가입·업로드가 없습니다.',
     h1: '공백 문자',
     tagline: '투명 문자를 용도별로 골라 복사하고, 남아 있는 유니코드 값을 직접 확인합니다.',
     name: '공백 문자',

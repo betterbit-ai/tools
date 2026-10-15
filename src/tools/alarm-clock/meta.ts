@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'clock',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['no-ads', 'usability', 'features'],
+  edges: ['usability', 'features'],
   competitors: [
     {
       name: 'Online Alarm Clock',
@@ -42,7 +42,7 @@ export const meta: ToolMeta = {
       name: 'EazyTimer Alarm Clock',
       url: 'https://eazytimer.org/alarm-clock/',
       weakness:
-        'Its Korean tool presents one time input and one “set alarm” action, and its FAQ says it is funded by advertising; Betterbit visibly manages up to 12 labeled alarms with no ads. (Strength: it gives a concise Korean explanation of the open-tab and sleep limitations.)',
+        'Its Korean tool presents one time input and one “set alarm” action, and its FAQ says it is funded by advertising; Betterbit visibly manages up to 12 labeled alarms. (Strength: it gives a concise Korean explanation of the open-tab and sleep limitations.)',
     },
   ],
   related: ['timer', 'stopwatch', 'pomodoro-timer', 'countdown', 'online-clock'],

@@ -40,7 +40,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Speech to Text — Private On-Device Dictation',
     description:
-      'Speak and turn your voice into editable text with private on-device speech recognition. No ads, account, transcript upload, or cloud-recognition fallback.',
+      'Speak and turn your voice into editable text with private on-device speech recognition. No account, transcript upload, or cloud-recognition fallback.',
     h1: 'Speech to Text',
     tagline: 'Private live dictation when your browser supports on-device speech recognition.',
     name: 'Speech to Text',
@@ -92,7 +92,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '음성 텍스트 변환 — 기기 내 처리 받아쓰기',
     description:
-      '말하면 음성을 바로 텍스트로 바꾸는 무료 받아쓰기입니다. 기기 내 음성 인식만 사용하며 광고·가입·녹음 업로드·클라우드 처리 전환이 없습니다.',
+      '말하면 음성을 바로 텍스트로 바꾸는 무료 받아쓰기입니다. 기기 내 음성 인식만 사용하며 가입·녹음 업로드·클라우드 처리 전환이 없습니다.',
     h1: '음성 텍스트 변환',
     tagline: '브라우저가 기기 내 음성 인식을 지원할 때만 안전하게 받아쓰기합니다.',
     name: '음성 텍스트 변환',

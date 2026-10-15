@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'microphone',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['privacy', 'no-ads', 'usability'],
+  edges: ['privacy', 'usability'],
   competitors: [
     {
       name: 'WebConverter Speech to Text',

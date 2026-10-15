@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'signature',
   added: '2026-10-11',
   updated: '2026-10-11',
-  edges: ['privacy', 'no-ads', 'no-signup'],
+  edges: ['privacy', 'no-signup'],
   competitors: [
     {
       name: 'Smallpdf (Sign PDF)',

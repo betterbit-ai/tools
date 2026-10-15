@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   icon: 'sparkle',
   added: '2026-10-12',
   updated: '2026-10-12',
-  edges: ['privacy', 'no-ads', 'no-signup', 'performance'],
+  edges: ['privacy', 'no-signup', 'performance'],
   competitors: [
     {
       name: 'remove.bg',
@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'Remove Background Online',
       url: 'https://removebackgroundonline.com/',
       weakness:
-        'Runs locally and exports full resolution, but its results page includes an advertisement and says its first-use AI download is 45–90 MB; this tool has no ads and lazily loads a 4.36 MiB model. (Strength: it also offers edge-softness, edge-shift and background-colour controls.)',
+        'Runs locally and exports full resolution, but its results page includes an advertisement and says its first-use AI download is 45–90 MB; this tool lazily loads a 4.36 MiB model. (Strength: it also offers edge-softness, edge-shift and background-colour controls.)',
     },
     {
       name: 'Remove.Live',

@@ -36,7 +36,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Remove Duplicate Lines — Sort & Match Options',
     description:
-      'Remove duplicate lines as you paste, with first/last occurrence, whitespace, Unicode and natural-sort controls. Runs locally with no ads or uploads.',
+      'Remove duplicate lines as you paste, with first/last occurrence, whitespace, Unicode and natural-sort controls. Runs locally with no uploads.',
     h1: 'Remove Duplicate Lines',
     tagline: 'Clean a list live, choose exactly what counts as the same line, and keep the result on your device.',
     name: 'Remove Duplicate Lines',

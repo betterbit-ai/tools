@@ -32,7 +32,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'World Clock — City Times and Meeting Overlap',
     description:
-      'See live world time for your cities and find their 09:00–17:00 meeting overlap with local, DST-aware browser calculations and no ads.',
+      'See live world time for your cities and find their 09:00–17:00 meeting overlap with local, DST-aware browser calculations.',
     h1: 'World Clock',
     tagline: 'Keep selected cities in view and see the whole-hour window when everyone is within local working hours.',
     name: 'World Clock',
@@ -84,7 +84,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '세계 시계 — 도시별 현재 시간과 회의 시간대',
     description:
-      '주요 도시의 세계 시간을 실시간으로 보고, 현지 09:00~17:00 업무시간이 겹치는 회의 시간대를 브라우저에서 바로 확인하세요. 광고가 없습니다.',
+      '주요 도시의 세계 시간을 실시간으로 보고, 현지 09:00~17:00 업무시간이 겹치는 회의 시간대를 브라우저에서 바로 확인하세요.',
     h1: '세계 시계',
     tagline: '선택한 도시의 현재 시간을 한눈에 보고, 모두의 현지 업무시간이 겹치는 시간을 찾습니다.',
     name: '세계 시계',
