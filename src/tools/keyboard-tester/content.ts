@@ -14,9 +14,9 @@ const uiEn = {
   lastKey: 'Last key',
   none: '—',
   spaceKeyLabel: 'Space',
-  rolloverFull: '10 or more keys held together without any being dropped — a strong sign of full NKRO.',
+  rolloverHigh: '10 or more keys registered together. This confirms at least 10-key rollover, not full NKRO by itself.',
   rolloverPartial:
-    'Limited rollover so far — many budget keyboards cap around 6 keys (USB 6KRO). Hold more to see if yours goes further.',
+    '2–9 keys registered together. This only confirms at least that many; try more of your usual key combinations.',
   rolloverSingle: 'Press and hold a few keys together to test how many register at once.',
   chatterWarning: 'Possible chattering on: {keys}. The same key registered twice within milliseconds of itself.',
   stuckWarning: 'Still reported as held: {keys}. If you have released it, the switch may be stuck.',
@@ -28,10 +28,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Keyboard Tester — NKRO rollover, ghosting and layout check',
     description:
-      'Press any key to see it light up, find how many keys register at once (NKRO/rollover), and catch stuck or chattering keys — local only, no upload.',
+      'Test all 104 keys on a full-size ANSI keyboard, check observed rollover, and catch stuck or chattering keys — local only, with no upload.',
     h1: 'Keyboard Tester',
     tagline:
-      'Press any key to see it light up, check how many register at once, and catch stuck or double-firing keys.',
+      'Test a full-size 104-key layout, check how many keys register together, and catch stuck or double-firing keys.',
     name: 'Keyboard Tester',
     keywords: [
       'keyboard test',
@@ -43,7 +43,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'online keyboard checker',
     ],
     howTo: [
-      'Click anywhere on this page, then press any key — it lights up on the diagram below.',
+      'Click away from the layout controls, then press a key — it lights up on the 104-key diagram below.',
       'Hold several keys together to see how many register at once (NKRO/rollover).',
       'Switch Layout to Korean to check the 2-set jamo printed on a Korean keyboard.',
       'Watch for a red warning if a key double-fires (chatters) or stays stuck.',
@@ -52,7 +52,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'What rollover (NKRO) actually means',
-        body: 'Every keyboard has a rollover limit: the number of keys it can register at the same time. Cheap keyboards with a simple key-matrix can "ghost" past 2–3 simultaneous keys, where extra presses are dropped or the wrong key appears. Full N-key rollover (NKRO) means every key you hold is reported independently, which matters for gaming combos and fast typing. This page tracks the highest number of keys you held down together this session, so you can find your own rollover limit by holding combinations like Shift+Ctrl+W+A+S+D.',
+        body: 'Rollover is the number of keys a keyboard reports at the same time. Some keyboard matrices block particular combinations; true ghosting is different, because it reports a key you did not press. Full N-key rollover (NKRO) means every key can be reported independently. This page records the largest combination the browser received, so a result of 10 proves at least 10-key rollover — it does not by itself prove full NKRO. Try combinations that matter to you, such as Shift+Ctrl+W+A+S+D, and watch whether every intended key lights up.',
       },
       {
         heading: 'Why some keys never make it to the browser',
@@ -60,11 +60,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Stuck keys and chattering switches',
-        body: 'A key that stays highlighted long after you lift your finger usually means a stuck switch or debris trapped under the keycap; this page flags any key still reported as held after 5 seconds. A key that registers twice from a single tap — chatter, or double-firing — is common on worn or dirty mechanical switches, and shows up here as the same key reporting a new press within milliseconds of its last one. Cleaning or replacing the switch is the usual fix for either problem.',
+        body: 'A key that stays highlighted long after you lift your finger can point to a stuck switch or debris under the keycap; this page flags any key still reported as held after 5 seconds. A key that registers twice from one tap can be switch chatter. This tester marks a quick press-release-press sequence within 60 milliseconds as a clue, not a hardware diagnosis — test the key several times before cleaning or replacing a switch.',
       },
       {
         heading: 'Matching a real Korean 2-set keyboard',
-        body: "Korean keyboards use the same physical ANSI shape as US keyboards — the keycaps just carry Hangul jamo instead of letters, following the 2-set (두벌식) standard layout used on virtually every Korean keyboard sold today. Switching Layout to Korean relabels each key with its printed jamo (ㅂ, ㅈ, ㄷ, ㄱ, ㅅ and so on), so you can confirm a Korean keyboard's labels line up with the physical key it actually reports — useful when buying a used or imported board.",
+        body: 'The Korean option relabels the letter positions in this full-size ANSI diagram with standard 2-set (두벌식) jamo such as ㅂ, ㅈ, ㄷ, ㄱ and ㅅ. That lets you confirm that an alphanumeric key reports its expected physical position even if your operating system input language is different. ISO, compact and laptop keyboards can have a different physical shape, and Fn or media keys often never reach the browser, so this diagram cannot test those keys.',
       },
     ],
     faq: [
@@ -74,7 +74,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: "What is NKRO and why does the 'max simultaneous' number matter?",
-        a: "NKRO (N-key rollover) describes how many keys a keyboard can report at once without dropping or confusing presses. If holding more than 5–6 keys together here never raises the 'Max simultaneous' stat past a low number, your keyboard likely has limited rollover (6KRO or less) rather than full NKRO.",
+        a: "NKRO (N-key rollover) means a keyboard can report all intended simultaneous keys independently. The 'Max simultaneous' value is only the largest combination this browser received: a result of 6 proves at least six keys registered, while a result of 10 proves at least 10. Test several real combinations because one successful combination cannot certify full NKRO.",
       },
       {
         q: "Why didn't Cmd+Tab, Alt+Tab or F11 register?",
@@ -82,7 +82,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'A key stays lit even after I let go — is my keyboard broken?',
-        a: "This page marks any key still reported as held after 5 seconds as likely stuck, which usually points to a jammed or faulty switch rather than a browser issue. Try pressing the same physical key again; if it still won't release here, the switch may need cleaning or replacing.",
+        a: 'This page marks any supported key still reported as held after 5 seconds as possibly stuck. Try the key again and test it several times; a repeating result can point to a jammed or faulty switch, while losing browser focus can also interrupt key events.',
       },
       {
         q: 'Does the Korean layout show the real shifted symbols too?',
@@ -94,10 +94,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: '키보드 테스트 — 동시 입력(NKRO)·고스팅·레이아웃 확인',
     description:
-      '아무 키나 눌러 불이 켜지는지 보고, 동시에 몇 개까지 인식되는지(NKRO)와 끼임·채터링 키를 찾아보세요. 브라우저에서만 동작하며 업로드가 없습니다.',
+      '104키 풀사이즈 ANSI 배열을 테스트하고, 확인된 동시 입력 수와 끼임·채터링 키를 살펴보세요. 브라우저에서만 동작하며 업로드하지 않습니다.',
     h1: '키보드 테스트',
-    tagline:
-      '키를 누르면 바로 불이 켜지고, 동시에 몇 개까지 인식되는지, 끼이거나 이중 입력되는 키는 없는지 확인합니다.',
+    tagline: '104키 풀사이즈 배열에서 키 반응, 동시 입력 수, 끼이거나 이중 입력되는 키를 확인합니다.',
     name: '키보드 테스트',
     keywords: [
       '키보드 테스트',
@@ -108,7 +107,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '키보드 채터링 테스트',
     ],
     howTo: [
-      '페이지를 클릭한 뒤 키보드의 아무 키나 눌러보세요. 아래 다이어그램에 불이 켜집니다.',
+      '레이아웃 조작 영역 밖을 클릭한 뒤 키보드의 키를 눌러보세요. 아래 104키 다이어그램에 불이 켜집니다.',
       '여러 키를 동시에 눌러 몇 개까지 한 번에 인식되는지(동시 입력, NKRO) 확인합니다.',
       '레이아웃을 한글로 바꾸면 두벌식 자판에 새겨진 자음·모음으로 표시됩니다.',
       '키가 이중으로 눌리거나(채터링) 손을 떼도 계속 눌린 채로 남으면 빨간 경고가 표시됩니다.',
@@ -117,7 +116,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '동시 입력(NKRO)이 의미하는 것',
-        body: '모든 키보드에는 동시에 인식할 수 있는 키의 개수, 즉 동시입력(롤오버) 한계가 있습니다. 회로 설계가 단순한 저가형 키보드는 2~3개를 넘기면 일부 입력이 사라지거나 엉뚱한 키가 눌리는 "고스팅" 현상이 나타납니다. 완전한 NKRO는 누르고 있는 모든 키를 각각 독립적으로 인식한다는 뜻으로, 게임 조합키나 빠른 타이핑에서 중요합니다. 이 도구는 이번 세션에서 동시에 누른 최대 키 개수를 계속 추적하므로 Shift+Ctrl+W+A+S+D 같은 조합으로 직접 한계를 확인할 수 있습니다.',
+        body: '동시 입력(롤오버)은 키보드가 한 번에 인식해 전달하는 키의 개수입니다. 특정 조합에서 입력이 막히는 현상과, 누르지 않은 키까지 입력되는 고스팅은 구분해야 합니다. 완전한 NKRO는 모든 키를 독립적으로 전달하는 기능입니다. 이 도구의 최대 동시 입력은 브라우저가 받은 가장 큰 조합을 보여주므로, 10이 나오면 최소 10키 동시 입력은 확인한 셈이지만 완전한 NKRO를 증명하지는 않습니다. Shift+Ctrl+W+A+S+D처럼 실제로 쓰는 조합을 여러 개 눌러 각 키가 모두 켜지는지 확인하세요.',
       },
       {
         heading: '일부 키가 브라우저까지 전달되지 않는 이유',
@@ -125,11 +124,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '끼인 키와 채터링(이중 입력) 구분하기',
-        body: '손을 뗀 뒤에도 한참 눌린 채로 표시되는 키는 보통 스위치가 끼었거나 이물질에 걸린 경우이며, 이 도구는 5초 넘게 눌린 키를 자동으로 표시합니다. 한 번만 눌렀는데 눌림이 두 번 등록되는 현상(채터링)은 오래되었거나 먼지가 낀 기계식 스위치에서 흔히 나타나며, 같은 키가 수십 밀리초 안에 다시 눌린 것으로 감지됩니다. 두 경우 모두 스위치를 청소하거나 교체하면 대부분 해결됩니다.',
+        body: '손을 뗀 뒤에도 한참 눌린 채로 표시되는 키는 스위치가 끼었거나 이물질에 걸린 신호일 수 있으며, 이 도구는 5초 넘게 눌린 키를 표시합니다. 한 번 눌렀는데 두 번 입력되는 채터링은 같은 키가 해제된 뒤 60밀리초 안에 다시 눌린 것으로 표시합니다. 이는 하드웨어 진단 확정이 아니라 점검 신호이므로, 여러 번 반복해 본 뒤 스위치 청소나 교체를 결정하세요.',
       },
       {
         heading: '실제 두벌식 한글 키보드와 맞춰보기',
-        body: '한국어 키보드는 미국 키보드와 같은 ANSI 물리 배열을 쓰며, 자리마다 영문 대신 한글 자모가 새겨져 있을 뿐입니다. 거의 모든 한글 키보드가 따르는 두벌식(2-set) 표준 자판을 기준으로, 레이아웃을 한글로 바꾸면 ㅂㅈㄷㄱㅅ 같은 자모가 각 키 위치에 그대로 표시됩니다. 중고 키보드나 해외 구매 제품의 자판 각인이 실제 눌리는 위치와 맞는지 확인할 때 유용합니다.',
+        body: '한글 레이아웃은 이 풀사이즈 ANSI 다이어그램의 영문 키 위치를 두벌식 표준 자모(ㅂ, ㅈ, ㄷ, ㄱ, ㅅ 등)로 바꿔 보여줍니다. 운영체제의 입력 언어와 관계없이 영숫자 키가 기대한 물리 위치로 인식되는지 확인할 수 있습니다. ISO, 노트북, 미니 키보드는 물리 모양이 다를 수 있고 Fn·미디어 키는 브라우저에 전달되지 않는 경우가 많아 이 다이어그램으로 확인할 수 없습니다.',
       },
     ],
     faq: [
@@ -139,7 +138,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: "동시 입력(NKRO)의 '최대 동시 입력' 수치는 무슨 뜻인가요?",
-        a: "NKRO는 키보드가 한 번에 왜곡 없이 인식할 수 있는 키의 개수를 뜻합니다. 5~6개 이상을 동시에 눌러도 '최대 동시 입력' 값이 낮게 멈춰 있다면 완전한 NKRO가 아니라 제한된 롤오버(6KRO 이하)일 가능성이 큽니다.",
+        a: "NKRO는 의도한 모든 동시 키 입력을 각각 인식하는 기능입니다. '최대 동시 입력'은 이 브라우저가 받은 가장 큰 조합일 뿐입니다. 6이 나오면 최소 6키, 10이 나오면 최소 10키가 인식된 것은 확인되지만, 한 조합만으로 완전한 NKRO를 확정할 수는 없습니다.",
       },
       {
         q: 'Cmd+Tab이나 Alt+Tab, F11은 왜 반응하지 않나요?',
@@ -147,7 +146,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '손을 뗐는데도 키가 계속 눌린 것으로 나와요. 고장인가요?',
-        a: '5초 넘게 계속 눌린 것으로 표시되는 키는 스위치가 끼었을 가능성이 높으며, 브라우저 문제가 아닙니다. 같은 키를 다시 눌러보고도 반응이 똑같다면 스위치 청소나 교체가 필요할 수 있습니다.',
+        a: '지원되는 키가 5초 넘게 눌린 것으로 표시되면 스위치가 끼었을 수 있습니다. 같은 키를 여러 번 다시 눌러 확인하세요. 반복된다면 스위치 청소나 교체가 필요할 수 있지만, 브라우저 포커스를 잃으면 키 해제 이벤트가 끊길 수도 있습니다.',
       },
       {
         q: '한국어 레이아웃에서 쌍자음(ㄲ, ㅆ 등)은 어떻게 표시되나요?',
@@ -167,10 +166,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       lastKey: '마지막 입력',
       none: '—',
       spaceKeyLabel: '스페이스',
-      rolloverFull:
-        '10개 이상의 키를 동시에 눌러도 빠짐없이 인식되었습니다. 완전한 동시 입력(NKRO)일 가능성이 높습니다.',
+      rolloverHigh:
+        '10개 이상의 키가 동시에 인식되었습니다. 최소 10키 동시 입력을 확인한 것이며, 이것만으로 완전한 NKRO를 증명하지는 않습니다.',
       rolloverPartial:
-        '아직 동시 입력 범위가 넓지 않습니다. 저가형 키보드는 보통 6개(6KRO)에서 한계에 부딪히니, 더 많은 키를 함께 눌러 한계를 확인해 보세요.',
+        '2~9개 키가 동시에 인식되었습니다. 해당 수 이상을 확인한 것일 뿐이니, 평소 쓰는 조합을 더 눌러 확인하세요.',
       rolloverSingle: '몇 개의 키를 함께 눌러 동시에 몇 개까지 인식되는지 확인해 보세요.',
       chatterWarning: '채터링 의심: {keys}. 같은 키가 수십 밀리초 안에 두 번 눌린 것으로 인식되었습니다.',
       stuckWarning: '계속 눌린 상태로 표시됨: {keys}. 손을 뗐다면 스위치가 끼었을 수 있습니다.',

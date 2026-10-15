@@ -8,10 +8,13 @@ import {
   coveragePercent,
   detectChatter,
   formatHeldSeconds,
+  isBoardCode,
   isLikelyStuck,
   keyLabel,
   MAIN_ROWS,
   modifierLabel,
+  NAVIGATION_ROWS,
+  SYSTEM_ROWS,
   type KeyTransition,
   type LayoutId,
 } from './logic';
@@ -48,18 +51,26 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
     const isInteractive = (target: EventTarget | null) =>
       target instanceof HTMLElement && !!target.closest(INTERACTIVE_SELECTOR);
 
+    const clearHeld = () => {
+      eventsRef.current = [];
+      setHeld({});
+      setChattering([]);
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (isInteractive(event.target)) return;
+      if (!isBoardCode(event.code)) return;
       if (event.code !== 'Tab' && !event.metaKey && !event.ctrlKey && !event.altKey) event.preventDefault();
       if (event.repeat) return;
 
+      const time = Date.now();
       setLastKey({ code: event.code, key: event.key });
-      if (ALL_CODES.includes(event.code)) markTested(event.code);
-      eventsRef.current = [...eventsRef.current.slice(-199), { code: event.code, type: 'down', t: Date.now() }];
+      markTested(event.code);
+      eventsRef.current = [...eventsRef.current.slice(-199), { code: event.code, type: 'down', t: time }];
       setChattering(detectChatter(eventsRef.current));
       setHeld((current) => {
         if (event.code in current) return current;
-        const next = { ...current, [event.code]: Date.now() };
+        const next = { ...current, [event.code]: time };
         setMaxSimultaneous((max) => Math.max(max, Object.keys(next).length));
         return next;
       });
@@ -67,6 +78,7 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
 
     const onKeyUp = (event: KeyboardEvent) => {
       if (isInteractive(event.target)) return;
+      if (!isBoardCode(event.code)) return;
       eventsRef.current = [...eventsRef.current.slice(-199), { code: event.code, type: 'up', t: Date.now() }];
       setHeld((current) => {
         if (!(event.code in current)) return current;
@@ -78,9 +90,11 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', clearHeld);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', clearHeld);
     };
   }, [markTested]);
 
@@ -97,7 +111,7 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
   const stuckCodes = heldCodes.filter((code) => isLikelyStuck(now - held[code], STUCK_THRESHOLD_MS));
   const rollover = classifyRollover(maxSimultaneous);
   const rolloverText =
-    rollover === 'full' ? ui.rolloverFull : rollover === 'partial' ? ui.rolloverPartial : ui.rolloverSingle;
+    rollover === 'high' ? ui.rolloverHigh : rollover === 'partial' ? ui.rolloverPartial : ui.rolloverSingle;
   const coverage = coveragePercent(tested.size, ALL_CODES.length);
 
   const keyState = (code: string): 'stuck' | 'chatter' | 'held' | 'tested' | 'idle' => {
@@ -119,6 +133,16 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
     );
 
   const renderKeyLabel = (code: string) => modifierLabel(code, isMac) ?? keyLabel(layout, code);
+  const renderKey = (code: string, weight = 1) => (
+    <div key={code} style={{ flexGrow: weight }} class={keyClass(keyState(code))} title={code} aria-hidden="true">
+      {renderKeyLabel(code)}
+    </div>
+  );
+  const renderNumpadKey = (code: string, className?: string) => (
+    <div key={code} class={cx(keyClass(keyState(code)), className)} title={code} aria-hidden="true">
+      {renderKeyLabel(code)}
+    </div>
+  );
 
   return (
     <Panel>
@@ -136,33 +160,52 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
       </div>
 
       <div class="mt-5 overflow-x-auto rounded-lg border border-line bg-surface p-3 sm:p-4">
-        <div class="flex min-w-[720px] flex-col gap-1.5">
-          {MAIN_ROWS.map((r, i) => (
-            <div key={i} class="flex gap-1.5">
-              {r.map((k) => (
-                <div
-                  key={k.code}
-                  style={{ flexGrow: k.weight }}
-                  class={keyClass(keyState(k.code))}
-                  title={k.code}
-                  aria-hidden="true"
-                >
-                  {renderKeyLabel(k.code)}
+        <div class="grid min-w-[980px] grid-cols-[minmax(0,1fr)_15rem] gap-3">
+          <div class="flex flex-col gap-1.5">
+            {MAIN_ROWS.map((r, i) => (
+              <div key={i} class="flex gap-1.5">
+                {r.map((k) => renderKey(k.code, k.weight))}
+              </div>
+            ))}
+            <div class="mt-1 grid w-28 grid-cols-3 gap-1.5 self-end">
+              <div />
+              <div class={cx(keyClass(keyState('ArrowUp')), 'col-start-2')} aria-hidden="true">
+                {renderKeyLabel('ArrowUp')}
+              </div>
+              <div />
+              {['ArrowLeft', 'ArrowDown', 'ArrowRight'].map((code) => (
+                <div key={code} class={keyClass(keyState(code))} aria-hidden="true">
+                  {renderKeyLabel(code)}
                 </div>
               ))}
             </div>
-          ))}
-          <div class="mt-1 grid w-28 grid-cols-3 gap-1.5 self-end">
-            <div />
-            <div class={cx(keyClass(keyState('ArrowUp')), 'col-start-2')} aria-hidden="true">
-              {renderKeyLabel('ArrowUp')}
+          </div>
+          <div class="flex flex-col gap-3">
+            <div class="grid grid-cols-3 gap-1.5">
+              {SYSTEM_ROWS.flat().map((key) => renderKey(key.code, key.weight))}
             </div>
-            <div />
-            {['ArrowLeft', 'ArrowDown', 'ArrowRight'].map((code) => (
-              <div key={code} class={keyClass(keyState(code))} aria-hidden="true">
-                {renderKeyLabel(code)}
-              </div>
-            ))}
+            <div class="grid grid-cols-3 gap-1.5">
+              {NAVIGATION_ROWS.flat().map((key) => renderKey(key.code, key.weight))}
+            </div>
+            <div class="grid grid-cols-4 grid-rows-5 gap-1.5">
+              {renderNumpadKey('NumLock')}
+              {renderNumpadKey('NumpadDivide')}
+              {renderNumpadKey('NumpadMultiply')}
+              {renderNumpadKey('NumpadSubtract')}
+              {renderNumpadKey('Numpad7')}
+              {renderNumpadKey('Numpad8')}
+              {renderNumpadKey('Numpad9')}
+              {renderNumpadKey('NumpadAdd', 'row-span-2')}
+              {renderNumpadKey('Numpad4')}
+              {renderNumpadKey('Numpad5')}
+              {renderNumpadKey('Numpad6')}
+              {renderNumpadKey('Numpad1')}
+              {renderNumpadKey('Numpad2')}
+              {renderNumpadKey('Numpad3')}
+              {renderNumpadKey('NumpadEnter', 'row-span-2')}
+              {renderNumpadKey('Numpad0', 'col-span-2')}
+              {renderNumpadKey('NumpadDecimal')}
+            </div>
           </div>
         </div>
         <p class="sr-only">{ui.visualHidden}</p>
@@ -179,7 +222,7 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
       </div>
 
       <div class="mt-3">
-        <Notice tone={rollover === 'full' ? 'success' : 'info'}>{rolloverText}</Notice>
+        <Notice tone={rollover === 'high' ? 'success' : 'info'}>{rolloverText}</Notice>
       </div>
 
       {chattering.length > 0 && (
