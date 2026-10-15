@@ -63,7 +63,11 @@ export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
 
   const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
   const result = useMemo(() => calculateLoan(state), [state]);
-  const money = (value: number) => formatNumber(value, locale, 0);
+  const money = (value: number) => formatNumber(value, locale, locale === 'en' ? 2 : 0);
+  const reset = () => {
+    setState(defaultState(locale));
+    setScheduleOpen(false);
+  };
 
   return (
     <Panel>
@@ -116,7 +120,12 @@ export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
         </div>
 
         <div class="flex flex-col gap-3">
-          <p class="text-sm font-medium text-fg">{ui.resultsHeading}</p>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-sm font-medium text-fg">{ui.resultsHeading}</p>
+            <Button size="sm" variant="ghost" onClick={reset}>
+              {ui.reset}
+            </Button>
+          </div>
           {!result ? (
             <Notice tone="danger">{ui.invalidInput}</Notice>
           ) : (
@@ -140,12 +149,17 @@ export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
               <p class="text-sm font-medium text-fg">{ui.scheduleHeading}</p>
               <p class="mt-1 text-xs text-subtle">{ui.scheduleHint}</p>
             </div>
-            <Button size="sm" onClick={() => setScheduleOpen((open) => !open)}>
+            <Button
+              size="sm"
+              aria-controls="loan-repayment-schedule"
+              aria-expanded={scheduleOpen}
+              onClick={() => setScheduleOpen((open) => !open)}
+            >
               {scheduleOpen ? ui.hideSchedule : ui.showSchedule.replace('{count}', String(result.schedule.length))}
             </Button>
           </div>
           {scheduleOpen && (
-            <div class="mt-4 max-h-96 overflow-auto rounded-md border border-line">
+            <div id="loan-repayment-schedule" class="mt-4 max-h-96 overflow-auto rounded-md border border-line">
               <table class="w-full min-w-[34rem] border-collapse text-right text-sm tabular">
                 <thead class="sticky top-0 bg-surface-2 text-xs text-muted">
                   <tr>
