@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean search result combines QR, EAN, UPC and Code 128 in one scanner and presents a generic text-or-number result. Betterbit stays focused on QR content, keeps a decoded URL inert until selected, and parses the common Wi-Fi payload into network fields. (장점: product barcodes such as EAN and UPC are within its broader scope.)',
     },
   ],
-  related: ['qr-code-generator', 'webcam-test', 'image-cropper'],
+  related: ['qr-code-generator', 'barcode-generator', 'webcam-test', 'image-cropper'],
 };

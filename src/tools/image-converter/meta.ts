@@ -99,6 +99,6 @@ export const meta: ToolMeta = {
         '브라우저에서 처리해 업로드가 없는 점은 같지만(Strength: 개인정보 보호 방식이 동일함), 제휴 광고가 표시되고 JPG·PNG·WebP 세 형식만 지원합니다. 변환 시작 버튼을 눌러야 하며 GIF·BMP·AVIF 원본을 읽을 수 없고, 여러 파일을 ZIP으로 받는 기능도 없습니다.',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-upscaler', 'heic-to-jpg'],
+  related: ['image-resizer', 'image-compressor', 'image-upscaler', 'heic-to-jpg', 'barcode-generator'],
   variants,
 };
