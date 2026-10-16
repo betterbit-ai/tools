@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'generator',
   icon: 'qrcode',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-16',
   edges: ['privacy'],
   competitors: [
     {
@@ -18,13 +18,13 @@ export const meta: ToolMeta = {
       name: 'QRCode Monkey',
       url: 'https://www.qrcode-monkey.com/en/?lang=en',
       weakness:
-        'The opened generator places repeated “Ad” blocks and sign-up/trial promotions beside the Create/Download flow, says its generated image files are cached on its server for 24 hours, and requires a separate Create QR Code step. Betterbit generates the live preview locally, and never sends the selected logo to a server. (Strength: it has far more templates, shapes, and PDF/EPS export.)',
+        'The opened generator places repeated “Ad” blocks and sign-up/trial promotions beside the Create/Download flow, says its generated image files are cached on its server for 24 hours, and requires a separate Create QR Code step. Betterbit generates the live preview locally, and never sends the selected logo to a server. (Strength: it has far more templates, shapes, gradients, and PDF/EPS export.)',
     },
     {
       name: 'QRGen',
       url: 'https://qrgenapp.com/',
       weakness:
-        'Its opened landing page combines the generator with history, templates, scan tools, API documentation, an SDK, MCP integration, and many QR types. Betterbit is intentionally a focused static-code screen with URL, text, and Wi-Fi inputs, clear correction guidance, and direct SVG/PNG downloads. (Strength: it supports considerably more QR types and developer integrations.)',
+        'Its opened landing page combines the generator with history, templates, scan tools, API documentation, an SDK, MCP integration, and many QR types. Betterbit is intentionally a focused static-code screen with URL, text, Wi-Fi, brand-color controls, clear correction guidance, and direct SVG/PNG downloads. (Strength: it supports considerably more QR types, styles, PDF export, and developer integrations.)',
     },
     {
       name: '모아몽 QR코드 생성기',
@@ -45,14 +45,5 @@ export const meta: ToolMeta = {
         'The opened Korean page presents a multi-step result flow and its visible download action is PNG; its accompanying guide focuses on URL/text settings. Betterbit exposes SVG and PNG together, supports Wi-Fi payloads, and explains the chosen correction level beside the live preview. (Strength: it provides a longer Korean safety guide and additional SMS/email examples.)',
     },
   ],
-  related: [
-    'image-resizer',
-    'image-converter',
-    'favicon-generator',
-    'word-counter',
-    'password-generator',
-    'random-picker',
-    'qr-code-scanner',
-    'barcode-generator',
-  ],
+  related: ['qr-code-scanner', 'barcode-generator'],
 };

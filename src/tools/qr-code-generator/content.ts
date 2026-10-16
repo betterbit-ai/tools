@@ -21,12 +21,17 @@ const uiEn = {
   errorCorrectionLabel: 'Error correction',
   errorCorrectionHint: 'M is a practical default for clean prints.',
   logoCorrectionHint: 'A logo uses H correction automatically.',
+  foregroundLabel: 'Code color',
+  backgroundLabel: 'Background color',
+  colorHint: 'Use a dark code on a light background.',
   logoLabel: 'Logo (optional)',
-  logoHint: 'Kept only in this browser tab.',
+  logoHint: 'PNG, JPG, WebP, or SVG up to 5 MB. Kept only in this browser tab.',
   logoDropTitle: 'Choose or drop a logo',
   logoDropHint: 'PNG, JPG, WebP, or SVG',
   removeLogo: 'Remove',
   logoError: 'This logo could not be read. Choose another image file.',
+  logoTypeError: 'Choose a PNG, JPG, WebP, or SVG logo file.',
+  logoSizeError: 'Choose a logo smaller than 5 MB.',
   privacyNote: 'The text, Wi-Fi password, and logo stay on this device. Only your settings are saved in this browser.',
   previewHeading: 'QR code preview',
   previewAlt: 'Generated QR code',
@@ -38,6 +43,7 @@ const uiEn = {
   emptyError: 'Enter a website address or text to make a QR code.',
   wifiNameError: 'Enter the Wi-Fi network name (SSID).',
   tooLongError: 'This content is too long for the selected correction level. Shorten it or choose a lower level.',
+  colorError: 'Use a darker code color and a lighter background color with stronger contrast.',
   generationError: 'This QR code could not be generated. Shorten the content and try again.',
   downloadError: 'The PNG could not be created in this browser. Download the SVG instead.',
 };
@@ -47,10 +53,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'QR Code Generator — Private SVG & PNG Downloads',
     description:
-      'Create a static QR code for a URL, text, or Wi-Fi in your browser. Add a local logo and download clean SVG or PNG with no account, watermark, or expiry.',
+      'Create a static QR code for a URL, text, or Wi-Fi in your browser. Add a logo and brand colors, then download clean SVG or PNG with no account, watermark, or expiry.',
     h1: 'QR Code Generator',
     tagline:
-      'Make a static QR code locally, add a logo, and download a clean SVG or PNG — no account, watermark, or service expiry.',
+      'Make a static QR code locally, add a logo or brand colors, and download a clean SVG or PNG — no account, watermark, or service expiry.',
     name: 'QR Code Generator',
     keywords: [
       'qr code generator',
@@ -63,7 +69,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       'Choose Website, Text, or Wi-Fi, then enter the information to encode.',
       'For a Wi-Fi code, enter the network name, security type, and password; reserved characters are escaped automatically.',
-      'Keep M correction for normal clean use, or add a logo to use H correction automatically.',
+      'Keep M correction for normal clean use, or add a logo to use H correction automatically. Use a dark code color on a light background.',
       'Check the live preview, then download SVG for scalable print or PNG for a bitmap image.',
       'Scan the final exported code with a phone before you print or publish it.',
     ],
@@ -74,7 +80,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Choose correction for the physical conditions',
-        body: 'QR error correction trades capacity for damage tolerance. DENSO WAVE lists approximate recovery levels of 7% for L, 15% for M, 25% for Q, and 30% for H. M is a good default for a clean screen or print. This generator switches to H when you add a logo, keeps a four-module quiet zone around every code, and limits the logo plate to 22% of the QR width. Still test the final image on a real phone before printing.',
+        body: 'QR error correction trades capacity for damage tolerance. DENSO WAVE lists approximate recovery levels of 7% for L, 15% for M, 25% for Q, and 30% for H. M is a good default for a clean screen or print. This generator switches to H when you add a logo, keeps a four-module quiet zone around every code, and limits the logo plate to 22% of the QR width. Brand colors work best with a dark pattern on a light, high-contrast background. Still test the final image on a real phone before printing.',
       },
       {
         heading: 'SVG stays sharp; PNG is ready to place',
@@ -108,16 +114,16 @@ export const content: Record<Locale, ToolContent<UI>> = {
   ko: {
     title: 'QR코드 만들기 — 로고·SVG·PNG, 워터마크 없음',
     description:
-      'URL·텍스트·와이파이 정보를 브라우저에서 정적 QR코드로 만드세요. 로고를 넣고 SVG 또는 PNG로 저장하며, 회원가입·워터마크·만료가 없습니다.',
+      'URL·텍스트·와이파이 정보를 브라우저에서 정적 QR코드로 만드세요. 로고·브랜드 색상을 넣고 SVG 또는 PNG로 저장하며, 회원가입·워터마크·만료가 없습니다.',
     h1: 'QR코드 만들기',
     tagline:
-      'URL·텍스트·와이파이를 정적 QR코드로 만들고 로고·SVG·PNG까지 브라우저 안에서 처리합니다 — 워터마크가 없습니다.',
+      'URL·텍스트·와이파이를 정적 QR코드로 만들고 로고·브랜드 색상·SVG·PNG까지 브라우저 안에서 처리합니다 — 워터마크가 없습니다.',
     name: 'QR코드 만들기',
     keywords: ['qr코드 만들기', '큐알코드 만들기', 'qr코드 생성기', '무료 qr코드', 'URL QR코드', '와이파이 QR코드'],
     howTo: [
       '웹사이트, 텍스트, 와이파이 중 담을 정보의 종류를 고르고 내용을 입력합니다.',
       '와이파이는 네트워크 이름(SSID), 보안 방식, 비밀번호를 입력합니다. 특수문자는 QR 규격에 맞게 자동 처리됩니다.',
-      '일반적인 깨끗한 인쇄물은 M을 쓰고, 로고를 넣으면 자동으로 H 오류 복원 수준을 사용합니다.',
+      '일반적인 깨끗한 인쇄물은 M을 쓰고, 로고를 넣으면 자동으로 H 오류 복원 수준을 사용합니다. 색상은 어두운 코드와 밝은 배경 조합을 사용합니다.',
       '미리보기를 확인한 뒤, 확대 인쇄에는 SVG를, 일반 이미지에는 PNG를 저장합니다.',
       '인쇄하거나 게시하기 전에 휴대폰으로 최종 파일을 직접 스캔합니다.',
     ],
@@ -128,7 +134,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '오류 복원 수준은 인쇄 환경에 맞게 고릅니다',
-        body: 'QR코드의 오류 복원은 저장 용량과 손상 복원력을 맞바꿉니다. 덴소 웨이브 자료의 대략적인 복원 비율은 L 7%, M 15%, Q 25%, H 30%입니다. 화면이나 깨끗한 인쇄물은 M이 기본으로 알맞습니다. 이 생성기는 로고를 넣으면 H를 자동으로 사용하고, QR코드 바깥에 4모듈의 여백을 두며, 로고 배경판은 QR 폭의 22%로 제한합니다. 그래도 인쇄 전 실제 휴대폰으로 스캔해야 합니다.',
+        body: 'QR코드의 오류 복원은 저장 용량과 손상 복원력을 맞바꿉니다. 덴소 웨이브 자료의 대략적인 복원 비율은 L 7%, M 15%, Q 25%, H 30%입니다. 화면이나 깨끗한 인쇄물은 M이 기본으로 알맞습니다. 이 생성기는 로고를 넣으면 H를 자동으로 사용하고, QR코드 바깥에 4모듈의 여백을 두며, 로고 배경판은 QR 폭의 22%로 제한합니다. 브랜드 색상은 어두운 코드와 밝고 대비가 큰 배경 조합이 읽기 좋습니다. 그래도 인쇄 전 실제 휴대폰으로 스캔해야 합니다.',
       },
       {
         heading: 'SVG는 크게 인쇄해도 선명하고 PNG는 바로 넣기 좋습니다',
@@ -177,12 +183,17 @@ export const content: Record<Locale, ToolContent<UI>> = {
       errorCorrectionLabel: '오류 복원 수준',
       errorCorrectionHint: '깨끗한 인쇄물에는 M이 기본으로 알맞습니다.',
       logoCorrectionHint: '로고를 넣으면 H 수준을 자동으로 사용합니다.',
+      foregroundLabel: '코드 색상',
+      backgroundLabel: '배경 색상',
+      colorHint: '코드는 어둡게, 배경은 밝게 설정하세요.',
       logoLabel: '로고 (선택)',
-      logoHint: '현재 브라우저 탭에서만 사용합니다.',
+      logoHint: 'PNG, JPG, WebP, SVG 파일을 5MB까지 사용할 수 있으며 현재 브라우저 탭에서만 사용합니다.',
       logoDropTitle: '로고를 선택하거나 놓으세요',
       logoDropHint: 'PNG, JPG, WebP, SVG',
       removeLogo: '제거',
       logoError: '로고를 읽을 수 없습니다. 다른 이미지 파일을 선택하세요.',
+      logoTypeError: 'PNG, JPG, WebP, SVG 로고 파일을 선택하세요.',
+      logoSizeError: '5MB보다 작은 로고를 선택하세요.',
       privacyNote:
         '입력한 텍스트·와이파이 비밀번호·로고는 이 기기 밖으로 나가지 않습니다. 설정만 이 브라우저에 저장합니다.',
       previewHeading: 'QR코드 미리보기',
@@ -194,6 +205,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       emptyError: 'QR코드로 만들 웹사이트 주소나 텍스트를 입력하세요.',
       wifiNameError: '와이파이 네트워크 이름(SSID)을 입력하세요.',
       tooLongError: '선택한 오류 복원 수준에 비해 내용이 너무 깁니다. 내용을 줄이거나 더 낮은 수준을 선택하세요.',
+      colorError: '코드는 더 어둡게, 배경은 더 밝게 설정해 대비를 높이세요.',
       generationError: 'QR코드를 만들 수 없습니다. 내용을 줄인 뒤 다시 시도하세요.',
       downloadError: '이 브라우저에서 PNG를 만들 수 없습니다. SVG를 저장해 사용하세요.',
     },
