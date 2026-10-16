@@ -4,7 +4,15 @@ import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { absoluteChange, findWhole, percentChange, percentOf, whatPercent } from './logic';
+import {
+  absoluteChange,
+  findWhole,
+  isCompleteNumberInput,
+  percentChange,
+  percentOf,
+  restoreNumberInput,
+  whatPercent,
+} from './logic';
 
 const STORAGE_KEY = 'tools:percentage-calculator:state';
 
@@ -30,9 +38,27 @@ const DEFAULT_STATE: PersistedState = {
   t4To: 75,
 };
 
-/** True for a value mid-typing (e.g. a lone "-" or "."), which Number() turns into NaN. */
-const isBadNumber = (v: number | ''): boolean => v !== '' && Number.isNaN(v);
-/** Safe number for arithmetic: blank or mid-typing both read as 0 while the field is incomplete. */
+const STATE_KEYS: (keyof PersistedState)[] = [
+  't1Percent',
+  't1Base',
+  't2Part',
+  't2Whole',
+  't3Part',
+  't3Percent',
+  't4From',
+  't4To',
+];
+
+function restoreState(saved: unknown): PersistedState {
+  if (!saved || typeof saved !== 'object') return DEFAULT_STATE;
+  const values = saved as Record<string, unknown>;
+  return STATE_KEYS.reduce<PersistedState>(
+    (restored, key) => ({ ...restored, [key]: restoreNumberInput(values[key], DEFAULT_STATE[key]) }),
+    DEFAULT_STATE,
+  );
+}
+
+/** Safe number for arithmetic while a field is incomplete. The incomplete state is never shown as a result. */
 const safeNumber = (v: number | ''): number => (v === '' || Number.isNaN(v) ? 0 : v);
 
 export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
@@ -42,7 +68,7 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
   useEffect(() => {
     try {
       const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-      if (saved && typeof saved === 'object') setState({ ...DEFAULT_STATE, ...saved });
+      setState(restoreState(saved));
     } catch {
       /* ignore corrupt state */
     }
@@ -59,22 +85,22 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
   const n = (v: number) => formatNumber(v, locale, 4);
   const signed = (v: number) => `${v > 0 ? '+' : ''}${n(v)}`;
 
-  const t1Invalid = isBadNumber(state.t1Percent) || isBadNumber(state.t1Base);
+  const t1Invalid = !isCompleteNumberInput(state.t1Percent) || !isCompleteNumberInput(state.t1Base);
   const t1Percent = safeNumber(state.t1Percent);
   const t1Base = safeNumber(state.t1Base);
   const t1Result = useMemo(() => percentOf(t1Percent, t1Base), [t1Percent, t1Base]);
 
-  const t2Invalid = isBadNumber(state.t2Part) || isBadNumber(state.t2Whole);
+  const t2Invalid = !isCompleteNumberInput(state.t2Part) || !isCompleteNumberInput(state.t2Whole);
   const t2Part = safeNumber(state.t2Part);
   const t2Whole = safeNumber(state.t2Whole);
   const t2Result = useMemo(() => whatPercent(t2Part, t2Whole), [t2Part, t2Whole]);
 
-  const t3Invalid = isBadNumber(state.t3Part) || isBadNumber(state.t3Percent);
+  const t3Invalid = !isCompleteNumberInput(state.t3Part) || !isCompleteNumberInput(state.t3Percent);
   const t3Part = safeNumber(state.t3Part);
   const t3Percent = safeNumber(state.t3Percent);
   const t3Result = useMemo(() => findWhole(t3Part, t3Percent), [t3Part, t3Percent]);
 
-  const t4Invalid = isBadNumber(state.t4From) || isBadNumber(state.t4To);
+  const t4Invalid = !isCompleteNumberInput(state.t4From) || !isCompleteNumberInput(state.t4To);
   const t4From = safeNumber(state.t4From);
   const t4To = safeNumber(state.t4To);
   const t4Percent = useMemo(() => percentChange(t4From, t4To), [t4From, t4To]);
@@ -101,13 +127,15 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
           <div class="mt-3">
             {t1Invalid ? (
               <Notice tone="danger">{ui.invalidNumberError}</Notice>
+            ) : !Number.isFinite(t1Result) ? (
+              <Notice tone="danger">{ui.resultTooLargeError}</Notice>
             ) : (
               <div aria-live="polite">
                 <Stat label={ui.resultLabel} value={n(t1Result)} emphasis />
               </div>
             )}
           </div>
-          {!t1Invalid && (
+          {!t1Invalid && Number.isFinite(t1Result) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type1Formula
                 .replaceAll('{percent}', n(t1Percent))
@@ -132,13 +160,15 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               <Notice tone="danger">{ui.invalidNumberError}</Notice>
             ) : Number.isNaN(t2Result) ? (
               <Notice tone="danger">{ui.zeroWholeError}</Notice>
+            ) : !Number.isFinite(t2Result) ? (
+              <Notice tone="danger">{ui.resultTooLargeError}</Notice>
             ) : (
               <div aria-live="polite">
                 <Stat label={ui.resultPercentLabel} value={`${n(t2Result)}%`} emphasis />
               </div>
             )}
           </div>
-          {!t2Invalid && !Number.isNaN(t2Result) && (
+          {!t2Invalid && Number.isFinite(t2Result) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type2Formula
                 .replaceAll('{part}', n(t2Part))
@@ -163,13 +193,15 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               <Notice tone="danger">{ui.invalidNumberError}</Notice>
             ) : Number.isNaN(t3Result) ? (
               <Notice tone="danger">{ui.zeroPercentError}</Notice>
+            ) : !Number.isFinite(t3Result) ? (
+              <Notice tone="danger">{ui.resultTooLargeError}</Notice>
             ) : (
               <div aria-live="polite">
                 <Stat label={ui.resultLabel} value={n(t3Result)} emphasis />
               </div>
             )}
           </div>
-          {!t3Invalid && !Number.isNaN(t3Result) && (
+          {!t3Invalid && Number.isFinite(t3Result) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type3Formula
                 .replaceAll('{part}', n(t3Part))
@@ -194,6 +226,8 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               <Notice tone="danger">{ui.invalidNumberError}</Notice>
             ) : Number.isNaN(t4Percent) ? (
               <Notice tone="danger">{ui.zeroFromError}</Notice>
+            ) : !Number.isFinite(t4Percent) || !Number.isFinite(t4Absolute) ? (
+              <Notice tone="danger">{ui.resultTooLargeError}</Notice>
             ) : (
               <div class="grid grid-cols-2 gap-2" aria-live="polite">
                 <Stat label={ui.resultChangeLabel} value={`${signed(t4Percent)}%`} emphasis />
@@ -201,7 +235,7 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               </div>
             )}
           </div>
-          {!t4Invalid && !Number.isNaN(t4Percent) && (
+          {!t4Invalid && Number.isFinite(t4Percent) && Number.isFinite(t4Absolute) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type4Formula
                 .replaceAll('{from}', n(t4From))

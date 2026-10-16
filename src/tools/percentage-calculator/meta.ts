@@ -5,52 +5,27 @@ export const meta: ToolMeta = {
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-16',
   edges: ['usability'],
   competitors: [
     {
       name: 'Calculator.net — Percentage Calculator',
       url: 'https://www.calculator.net/percent-calculator.html',
       weakness:
-        'Each of its three modes needs two values typed in and a separate "Calculate" button pressed before anything appears — nothing updates as you type — and a user review of the site specifically calls out mobile ads "getting heavy." Betterbit shows all four calculation types updating live with no button. (Strength: it also offers a symmetric "percentage difference" mode, which this calculator treats as a specialized case rather than a separate tool.)',
+        'Its percentage and percentage-change forms ask for two values and a separate “Calculate” click before showing an answer. Betterbit keeps its four core percentage questions visible at once and updates each result as numbers change. (Strength: it also has a dedicated percentage-difference calculator, which Betterbit does not include.)',
     },
     {
       name: 'CalculatorSoup — Percentage Calculator',
       url: 'https://www.calculatorsoup.com/calculators/math/percentage.php',
       weakness:
-        'Its worked formulas use generic placeholder letters, such as "(X / Y) * 100 = P%", instead of substituting the actual numbers you type, so you still have to do that substitution yourself to check the math, and the site is widely reported in reviews as carrying a lot of ads across its pages. Betterbit\'s formula line plugs in your real numbers automatically. (Strength: its written walkthroughs explain the underlying fraction/decimal conversion in more depth.)',
+        'Its calculator puts one percentage question behind a selector, so switching tasks hides the other forms. Betterbit keeps all four core questions and their actual-number formulas visible together for quick comparison. (Strength: its selector also offers direct add- and subtract-a-percentage calculations, which Betterbit leaves to its dedicated discount calculator.)',
     },
     {
-      name: '상담모아 퍼센트 계산기',
-      url: 'https://sangdammoa.com/calculator/percent',
-      weakness:
-        '여러 계산 유형을 한 화면에 나열하지만 "초기화" 버튼이 중심인 UI여서 입력 즉시 자동으로 결과가 갱신되는지 불명확하고, 부가세·증여세·부동산 중개 수수료 등 무관한 카테고리 메뉴와 뒤섞여 있어 모바일에서 원하는 계산기를 찾기까지 탐색이 길다. Betterbit는 퍼센트 계산만 다루며 입력 즉시 네 가지 결과가 모두 갱신된다. (장점: 부가세·양도세 등 다른 세금 계산기로 바로 이동할 수 있다.)',
-    },
-    {
-      name: 'OurCalc 퍼센트 계산기',
+      name: 'OurCalc — 퍼센트 계산기',
       url: 'https://ourcalc.com/percent-calculator/',
       weakness:
-        '네 가지 유형을 한 화면에 보여주지만 계산식이 "기준값 × (1 - 할인율)"처럼 짧은 수식 한 줄로만 표기돼 내가 입력한 숫자가 어디에 대입됐는지 바로 보이지 않고, 용도가 불분명한 "Payment options" 섹션이 계산기 사이에 끼어 있다. Betterbit는 입력한 숫자를 그대로 대입한 계산식을 각 결과 아래에 보여준다. (장점: 할인가 계산을 같은 화면에서 바로 이어서 보여준다.)',
+        'Its four calculator sections are followed immediately by an unrelated “Payment options” field, and its third and fourth sections calculate a discounted or raised final price rather than the change between two entered values. Betterbit keeps the surface focused on percentage questions and shows the substituted formula under each answer. (장점: 할인 후 가격과 인상 후 가격을 각각 바로 계산한다.)',
     },
   ],
-  related: [
-    'date-calculator',
-    'age-calculator',
-    'word-counter',
-    'bmi-calculator',
-    'loan-calculator',
-    'salary-calculator-kr',
-    'compound-interest',
-    'scientific-calculator',
-    'length-converter',
-    'weight-converter',
-    'random-number',
-    'tip-calculator',
-    'discount-calculator',
-    'vat-calculator',
-    'gpa-calculator',
-    'fraction-calculator',
-    'calorie-calculator',
-    'exchange-rate',
-  ],
+  related: ['discount-calculator', 'vat-calculator', 'tip-calculator', 'compound-interest'],
 };

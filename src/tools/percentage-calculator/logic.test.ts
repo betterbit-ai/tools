@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { absoluteChange, findWhole, percentChange, percentOf, round, whatPercent } from './logic';
+import {
+  absoluteChange,
+  findWhole,
+  isCompleteNumberInput,
+  percentChange,
+  percentOf,
+  restoreNumberInput,
+  round,
+  whatPercent,
+} from './logic';
 
 describe('round', () => {
   it('removes binary floating-point noise', () => {
@@ -19,6 +28,27 @@ describe('round', () => {
   it('handles zero and negative numbers', () => {
     expect(round(0)).toBe(0);
     expect(round(-0.1 - 0.2)).toBe(-0.3);
+  });
+
+  it('does not turn a representable large result into Infinity while rounding', () => {
+    expect(round(Number.MAX_VALUE)).toBe(Number.MAX_VALUE);
+    expect(percentOf(100, Number.MAX_VALUE)).toBe(Number.MAX_VALUE);
+  });
+});
+
+describe('number input state', () => {
+  it('requires a complete finite number before calculating', () => {
+    expect(isCompleteNumberInput(0)).toBe(true);
+    expect(isCompleteNumberInput('')).toBe(false);
+    expect(isCompleteNumberInput(NaN)).toBe(false);
+    expect(isCompleteNumberInput(Infinity)).toBe(false);
+  });
+
+  it('discards corrupt saved values while preserving blank saved fields', () => {
+    expect(restoreNumberInput(12.5, 20)).toBe(12.5);
+    expect(restoreNumberInput('', 20)).toBe('');
+    expect(restoreNumberInput('12.5', 20)).toBe(20);
+    expect(restoreNumberInput(Infinity, 20)).toBe(20);
   });
 });
 
@@ -109,9 +139,9 @@ describe('percentChange and absoluteChange (type 4: change from X to Y)', () => 
     expect(percentChange(0, 10)).toBeNaN();
   });
 
-  it('handles negative starting values', () => {
-    // (to - from) / from: moving from -50 to -25 is a -50% change by this ratio,
-    // even though -25 is numerically larger than -50.
-    expect(percentChange(-50, -25)).toBe(-50);
+  it('uses the magnitude of a negative starting value as the baseline', () => {
+    // A movement from -50 to -25 is an increase of 50%, not a decrease.
+    expect(percentChange(-50, -25)).toBe(50);
+    expect(percentChange(-50, -75)).toBe(-50);
   });
 });

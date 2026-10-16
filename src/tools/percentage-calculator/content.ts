@@ -4,7 +4,8 @@ import type { ToolContent } from '../types';
 const uiEn = {
   intro: 'All four calculations update as you type — no button needed.',
   autosaved: 'Your numbers are saved in this browser',
-  invalidNumberError: 'Enter a valid number.',
+  invalidNumberError: 'Enter a finite number in both fields.',
+  resultTooLargeError: 'These values produce a result that is too large to display.',
   type1Heading: 'Percent of a number',
   type1PercentLabel: 'Percent (%)',
   type1BaseLabel: 'Of this number',
@@ -27,7 +28,7 @@ const uiEn = {
   zeroFromError: 'Enter a starting value other than 0 — percent change from zero cannot be calculated.',
   resultChangeLabel: 'Change',
   resultAbsoluteLabel: 'Difference',
-  type4Formula: '({to} − {from}) ÷ {from} × 100 = {result}%',
+  type4Formula: '({to} − {from}) ÷ |{from}| × 100 = {result}%',
 };
 export type UI = typeof uiEn;
 
@@ -59,7 +60,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'The percentage formula behind each of the four calculators',
-        body: 'A percentage is just a fraction of 100, so every box on this page reduces to the same core formula: percent ÷ 100 × base = part. The first calculator applies it directly — multiply a percent by a number. The second calculator rearranges it to solve for the percent: part ÷ whole × 100. The third solves for the whole instead: part ÷ (percent ÷ 100). The fourth, percent change, compares two values with (new − old) ÷ old × 100, which is why it returns a negative number for a decrease and a positive one for an increase — the sign tells you the direction, not just the size, of the change.',
+        body: 'A percentage is just a fraction of 100, so every box on this page reduces to the same core formula: percent ÷ 100 × base = part. The first calculator applies it directly — multiply a percent by a number. The second calculator rearranges it to solve for the percent: part ÷ whole × 100. The third solves for the whole instead: part ÷ (percent ÷ 100). The fourth, percent change, compares two values with (new − old) ÷ |old| × 100. Using the magnitude of the starting value keeps the direction intuitive for negative values too: moving from −50 to −25 is a 50% increase.',
       },
       {
         heading: 'Why a percentage point and a percent are not the same thing',
@@ -67,7 +68,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Rounding and negative numbers',
-        body: 'All four calculators accept negative numbers and decimals — useful for comparing losses, temperature changes or any value that can go below zero — and round the final result to six decimal places to avoid the tiny floating-point errors (like 29.999999999999996 instead of 30) that plain JavaScript arithmetic can produce. Dividing by zero has no mathematical answer, so the "what percent" and "find the whole" calculators show a plain-language notice instead of a raw division-by-zero error when the denominator would be zero.',
+        body: 'All four calculators accept negative numbers and decimals — useful for comparing losses, temperature changes or any value that can go below zero. Calculations are rounded to six decimal places to remove tiny floating-point errors such as 29.999999999999996; results are then displayed to up to four decimal places for readability. Dividing by zero has no mathematical answer, so the "what percent" and "find the whole" calculators show a plain-language notice instead of a raw division-by-zero error when the denominator would be zero.',
       },
     ],
     faq: [
@@ -85,7 +86,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'What is the formula for percentage increase or decrease?',
-        a: 'Subtract the old value from the new value, divide by the old value, then multiply by 100: (new − old) ÷ old × 100. Going from 50 to 75 is a (75 − 50) ÷ 50 × 100 = 50% increase; going from 100 to 80 is a −20% change, a decrease.',
+        a: 'Subtract the old value from the new value, divide by the magnitude of the old value, then multiply by 100: (new − old) ÷ |old| × 100. Going from 50 to 75 is a (75 − 50) ÷ 50 × 100 = 50% increase; going from 100 to 80 is a −20% change, a decrease.',
       },
       {
         q: 'Does a percentage increase followed by the same percentage decrease return the original value?',
@@ -125,7 +126,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '네 가지 계산기에 모두 적용되는 퍼센트 공식',
-        body: '퍼센트는 결국 100을 기준으로 한 분수이므로, 이 페이지의 네 계산기는 모두 같은 공식 하나에서 출발합니다: 퍼센트 ÷ 100 × 기준값 = 부분값. 첫 번째 계산기는 이 공식을 그대로 적용해 퍼센트와 기준값으로 부분값을 구합니다. 두 번째 계산기는 이를 뒤집어 부분값 ÷ 전체값 × 100으로 퍼센트를 구하고, 세 번째 계산기는 부분값 ÷ (퍼센트 ÷ 100)으로 전체값을 구합니다. 네 번째인 증가·감소율 계산기는 (이후 값 − 이전 값) ÷ 이전 값 × 100으로 두 값을 비교하는데, 감소했을 때는 음수가, 증가했을 때는 양수가 나와 변화의 방향까지 한 번에 알 수 있습니다.',
+        body: '퍼센트는 결국 100을 기준으로 한 분수이므로, 이 페이지의 네 계산기는 모두 같은 공식 하나에서 출발합니다: 퍼센트 ÷ 100 × 기준값 = 부분값. 첫 번째 계산기는 이 공식을 그대로 적용해 퍼센트와 기준값으로 부분값을 구합니다. 두 번째 계산기는 이를 뒤집어 부분값 ÷ 전체값 × 100으로 퍼센트를 구하고, 세 번째 계산기는 부분값 ÷ (퍼센트 ÷ 100)으로 전체값을 구합니다. 네 번째인 증가·감소율 계산기는 (이후 값 − 이전 값) ÷ |이전 값| × 100으로 두 값을 비교합니다. 이전 값의 절댓값을 기준으로 삼으므로 음수에도 변화 방향이 자연스럽게 표시됩니다. 예를 들어 −50에서 −25로 바뀌면 50% 증가입니다.',
       },
       {
         heading: '퍼센트포인트(%p)와 퍼센트(%)는 다릅니다',
@@ -133,7 +134,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '음수·소수와 반올림 처리',
-        body: '네 계산기 모두 음수와 소수를 그대로 입력할 수 있어 손실액이나 온도 변화처럼 0보다 작아지는 값도 계산할 수 있습니다. 또한 자바스크립트의 부동소수점 연산에서 생기는 29.999999999999996 같은 미세한 오차를 없애기 위해 최종 결과를 소수점 아래 6자리에서 반올림합니다. 0으로 나누는 것은 수학적으로 답이 없으므로, "몇 퍼센트인지"와 "전체값 구하기" 계산기는 분모가 0이 되면 깨진 숫자 표시 대신 알아보기 쉬운 안내 문구를 보여줍니다.',
+        body: '네 계산기 모두 음수와 소수를 그대로 입력할 수 있어 손실액이나 온도 변화처럼 0보다 작아지는 값도 계산할 수 있습니다. 자바스크립트의 부동소수점 연산에서 생기는 29.999999999999996 같은 미세한 오차를 없애기 위해 계산값은 소수점 아래 6자리에서 반올림하고, 화면에는 읽기 쉽게 최대 소수점 아래 4자리까지 표시합니다. 0으로 나누는 것은 수학적으로 답이 없으므로, "몇 퍼센트인지"와 "전체값 구하기" 계산기는 분모가 0이 되면 깨진 숫자 표시 대신 알아보기 쉬운 안내 문구를 보여줍니다.',
       },
     ],
     faq: [
@@ -151,7 +152,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '증가율·감소율은 어떤 공식으로 계산하나요?',
-        a: '이후 값에서 이전 값을 뺀 뒤 이전 값으로 나누고 100을 곱합니다: (이후 값 − 이전 값) ÷ 이전 값 × 100. 50에서 75로 늘면 (75 − 50) ÷ 50 × 100 = 50% 증가이고, 100에서 80으로 줄면 −20%, 즉 감소입니다.',
+        a: '이후 값에서 이전 값을 뺀 뒤 이전 값의 절댓값으로 나누고 100을 곱합니다: (이후 값 − 이전 값) ÷ |이전 값| × 100. 50에서 75로 늘면 (75 − 50) ÷ 50 × 100 = 50% 증가이고, 100에서 80으로 줄면 −20%, 즉 감소입니다.',
       },
       {
         q: '20% 올린 뒤 다시 20% 내리면 원래 값으로 돌아오나요?',
@@ -165,7 +166,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       intro: '네 가지 계산이 입력하는 즉시 모두 갱신됩니다 — 버튼을 누를 필요가 없습니다.',
       autosaved: '입력한 숫자는 이 브라우저에 저장됩니다',
-      invalidNumberError: '올바른 숫자를 입력하세요.',
+      invalidNumberError: '두 칸에 유한한 숫자를 입력하세요.',
+      resultTooLargeError: '입력한 값으로는 표시할 수 없을 만큼 큰 결과가 나옵니다.',
       type1Heading: '숫자의 퍼센트',
       type1PercentLabel: '퍼센트(%)',
       type1BaseLabel: '기준 숫자',
@@ -188,7 +190,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       zeroFromError: '0이 아닌 이전 값을 입력하세요 — 0에서의 변화율은 정의되지 않습니다.',
       resultChangeLabel: '변화율',
       resultAbsoluteLabel: '변화량',
-      type4Formula: '({to} − {from}) ÷ {from} × 100 = {result}%',
+      type4Formula: '({to} − {from}) ÷ |{from}| × 100 = {result}%',
     },
   },
 };
