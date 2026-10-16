@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened Korean page documents one shared die type per roll, D4–D100, 1–20 dice, and notation limited to same-kind dice plus a ±1,000 modifier. Betterbit permits different groups in the same expression, d2–d1000, up to 100 dice, and 4d6kh3/2d20kl1 keep rules. (장점: 개별 재굴림, D6 빈도 통계, 설정 공유를 제공한다.)',
     },
   ],
-  related: ['random-number', 'random-picker', 'spin-wheel'],
+  related: ['random-number', 'random-picker', 'spin-wheel', 'coin-flip'],
 };

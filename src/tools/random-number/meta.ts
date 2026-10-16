@@ -56,5 +56,6 @@ export const meta: ToolMeta = {
     'team-generator',
     'uuid-generator',
     'dice-roller',
+    'coin-flip',
   ],
 };
