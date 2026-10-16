@@ -53,6 +53,7 @@ export const meta: ToolMeta = {
     'password-generator',
     'random-picker',
     'spin-wheel',
+    'team-generator',
     'uuid-generator',
   ],
 };
