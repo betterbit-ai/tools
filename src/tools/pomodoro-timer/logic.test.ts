@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_MINUTES,
+  MAX_TASKS,
   addTask,
   choosePhase,
   clampSettings,
@@ -60,6 +61,13 @@ describe('Pomodoro settings and tasks', () => {
     expect(normalizeTask('  여러\n\t공백 😀  ')).toBe('여러 공백 😀');
     expect(normalizeTask('')).toBe('');
     expect([...normalizeTask('가'.repeat(200))]).toHaveLength(120);
+    expect(normalizeTask(`a${'😀'.repeat(120)}`)).toBe(`a${'😀'.repeat(119)}`);
+  });
+
+  it('caps the number of saved tasks', () => {
+    let state = idle();
+    for (let index = 0; index < MAX_TASKS + 1; index += 1) state = addTask(state, String(index), `Task ${index}`);
+    expect(state.tasks).toHaveLength(MAX_TASKS);
   });
 
   it('counts only records from the local calendar day', () => {
@@ -81,5 +89,12 @@ describe('Pomodoro settings and tasks', () => {
     expect(formatClock(65_000)).toBe('01:05');
     expect(isPomodoroState(start(idle(), 123))).toBe(true);
     expect(isPomodoroState({ ...idle(), status: 'running', endAt: null })).toBe(false);
+    expect(
+      isPomodoroState({
+        ...idle(),
+        tasks: Array.from({ length: MAX_TASKS + 1 }, (_, id) => ({ id: String(id), title: 'Task', done: false })),
+      }),
+    ).toBe(false);
+    expect(isPomodoroState({ ...idle(), status: 'running', endAt: Number.MAX_VALUE })).toBe(false);
   });
 });

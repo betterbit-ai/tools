@@ -17,6 +17,7 @@ const uiEn = {
   taskPlaceholder: 'What will you focus on?',
   addTask: 'Add',
   noTasks: 'Add a task to attach it to completed focus sessions.',
+  taskLimit: 'You can keep up to 100 tasks. Remove a task to add another.',
   selectTask: 'Select {task}',
   select: 'Select',
   selected: 'Selected',
@@ -39,6 +40,7 @@ const uiEn = {
   sessionLog: 'Focus session log',
   sessionLogHint: 'The newest 100 completed focus sessions stay in this browser.',
   noSessions: 'Complete a focus session to add the first record.',
+  downloadData: 'Download data',
   untitledTask: 'Untitled focus session',
   startPause: 'Start / pause',
 };
@@ -48,7 +50,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Pomodoro Timer — Tasks, Session Log and Alerts',
     description:
-      'Run a free Pomodoro timer with an editable task list, local focus-session log and optional browser alerts. No account, ads or data leaving your browser.',
+      'Run a free Pomodoro timer with an editable task list, local focus-session log, backup download and optional browser alerts. No account; your data stays in this browser.',
     h1: 'Pomodoro Timer',
     tagline: 'Focus on one selected task, keep a local session record, and get optional alerts without signing in.',
     name: 'Pomodoro Timer',
@@ -74,7 +76,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Completed focus sessions stay on this device',
-        body: 'When a focus interval reaches zero, this tool stores its completion time and the selected task name in this browser’s local storage. It keeps the newest 100 focus records, and the “today” count compares the recorded local calendar date with the date on your device. There is no account, server request or third-party tracker behind that record. Clearing site data or using a different browser removes or separates the local history.',
+        body: 'When a focus interval reaches zero, this tool stores its completion time and the selected task name in this browser’s local storage. It keeps up to 100 tasks and the newest 100 focus records, and the “today” count compares the recorded local calendar date with the date on your device. Download a JSON copy before clearing site data or changing browsers; otherwise the local history is removed or kept separately.',
       },
       {
         heading: 'Why the countdown does not drift in a background tab',
@@ -127,7 +129,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '완료한 집중 세션은 이 기기에만 기록됩니다',
-        body: '집중 세션이 끝나면 완료 시각과 선택한 할 일 이름을 이 브라우저의 로컬 저장소에 기록합니다. 가장 최근 집중 세션 100개만 보관하고, 오늘 횟수는 기기에서 설정한 현지 날짜를 기준으로 셉니다. 이 기록을 위해 계정을 만들거나 서버에 요청을 보내지 않으며, 제3자 추적기도 사용하지 않습니다. 사이트 데이터를 지우거나 다른 브라우저를 사용하면 기록은 삭제되거나 서로 분리됩니다.',
+        body: '집중 세션이 끝나면 완료 시각과 선택한 할 일 이름을 이 브라우저의 로컬 저장소에 기록합니다. 할 일은 최대 100개, 집중 세션은 가장 최근 100개만 보관하며 오늘 횟수는 기기에서 설정한 현지 날짜를 기준으로 셉니다. 사이트 데이터를 지우거나 다른 브라우저를 사용하기 전에는 JSON 사본을 다운로드합니다. 그렇지 않으면 기록은 삭제되거나 서로 분리됩니다.',
       },
       {
         heading: '백그라운드 탭에서도 카운트다운이 밀리지 않는 방식',
@@ -172,6 +174,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       taskPlaceholder: '무엇에 집중할까요?',
       addTask: '추가',
       noTasks: '할 일을 추가하면 완료한 집중 세션에 함께 기록합니다.',
+      taskLimit: '할 일은 최대 100개까지 보관합니다. 새로 추가하려면 할 일을 삭제합니다.',
       selectTask: '{task} 선택',
       select: '선택',
       selected: '선택됨',
@@ -194,6 +197,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       sessionLog: '집중 세션 기록',
       sessionLogHint: '완료한 최근 집중 세션 100개를 이 브라우저에만 저장합니다.',
       noSessions: '집중 세션을 완료하면 첫 기록이 추가됩니다.',
+      downloadData: '데이터 다운로드',
       untitledTask: '이름 없는 집중 세션',
       startPause: '시작 / 일시정지',
     },
