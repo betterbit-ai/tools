@@ -1,0 +1,65 @@
+---
+/**
+ * Google Analytics 4. The only place site-wide tracking lives (see CLAUDE.md "하지 말 것").
+ * Renders nothing until GA_MEASUREMENT_ID is set.
+ *
+ * Consent mode: analytics cookies are off by default in the EEA, UK and Switzerland (GA sends
+ * cookieless pings there) until a consent banner exists; ad storage is off everywhere because
+ * the site shows no ads yet. Update the privacy policy (src/static-pages/content.ts) with any change here.
+ */
+import { GA_MEASUREMENT_ID } from '../../config/site';
+
+const CONSENT_REQUIRED_REGIONS = [
+  // EU
+  'AT',
+  'BE',
+  'BG',
+  'HR',
+  'CY',
+  'CZ',
+  'DK',
+  'EE',
+  'FI',
+  'FR',
+  'DE',
+  'GR',
+  'HU',
+  'IE',
+  'IT',
+  'LV',
+  'LT',
+  'LU',
+  'MT',
+  'NL',
+  'PL',
+  'PT',
+  'RO',
+  'SK',
+  'SI',
+  'ES',
+  'SE',
+  // EEA, UK, Switzerland
+  'IS',
+  'LI',
+  'NO',
+  'GB',
+  'CH',
+];
+const denied = { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' };
+const init = [
+  'window.dataLayer = window.dataLayer || [];',
+  'function gtag(){dataLayer.push(arguments);}',
+  'window.gtag = gtag;',
+  `gtag('consent', 'default', ${JSON.stringify({ ...denied, analytics_storage: 'denied', region: CONSENT_REQUIRED_REGIONS })});`,
+  `gtag('consent', 'default', ${JSON.stringify({ ...denied, analytics_storage: 'granted' })});`,
+  "gtag('js', new Date());",
+  `gtag('config', ${JSON.stringify(GA_MEASUREMENT_ID)});`,
+].join('\n');
+---
+
+{GA_MEASUREMENT_ID && (
+  <>
+    <script is:inline set:html={init} />
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
+  </>
+)}
