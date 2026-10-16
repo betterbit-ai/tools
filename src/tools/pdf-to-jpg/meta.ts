@@ -5,8 +5,8 @@ export const meta: ToolMeta = {
   category: 'pdf',
   icon: 'image',
   added: '2026-10-11',
-  updated: '2026-10-11',
-  edges: ['privacy', 'performance', 'features'],
+  updated: '2026-10-16',
+  edges: ['privacy', 'performance'],
   competitors: [
     {
       name: 'iLovePDF (PDF to JPG)',
@@ -18,14 +18,14 @@ export const meta: ToolMeta = {
       name: 'Smallpdf (PDF to JPG)',
       url: 'https://smallpdf.com/pdf-to-jpg',
       weakness:
-        'Uploads documents to Smallpdf servers and says copies are automatically deleted only after one hour. Its free workflow converts full pages; extracting individual images is a Pro trial feature. (Strength: can batch-upload multiple PDF files and save results to connected cloud storage.)',
+        'Uploads documents to Smallpdf servers and says uploaded and converted files are deleted only after one hour. Its free version has limited daily conversions, while multiple-PDF batch conversion is Pro-only. (Strength: it can extract embedded images and download converted pages individually as well as in a ZIP.)',
     },
     {
       name: 'Adobe Acrobat (PDF to JPG)',
       url: 'https://www.adobe.com/acrobat/online/pdf-to-jpg.html',
       weakness:
-        'States that the selected file is handled by Adobe servers, then prompts users to sign in to share or save the result. Its converter offers JPG, PNG, and TIFF output but does not expose a page-range field or 96/150/300 dpi choices on the tool page. (Strength: supports three image output formats.)',
+        'States that the selected file is handled by Adobe servers and requires an internet connection; it prompts users to sign in to share or save the result. Its converter does not expose 96/150/300 dpi choices before conversion. (Strength: supports JPG, PNG, and TIFF output, and lets people download only the pages they need after conversion.)',
     },
   ],
-  related: ['compress-pdf', 'split-pdf', 'image-to-pdf', 'image-converter', 'rotate-pdf'],
+  related: ['compress-pdf', 'image-to-pdf', 'rotate-pdf'],
 };

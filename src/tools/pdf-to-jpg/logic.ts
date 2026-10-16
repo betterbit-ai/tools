@@ -21,6 +21,8 @@ export const MAX_FILE_BYTES = 100 * 1024 * 1024;
 export const MAX_PAGE_COUNT = 100;
 export const MAX_RASTER_PIXELS = 20_000_000;
 export const MAX_TOTAL_RASTER_PIXELS = 100_000_000;
+/** Enough for an explicit list of every supported page, without allowing a pasted megabyte of text to block parsing. */
+export const MAX_PAGE_SELECTION_CHARS = 500;
 
 export type PdfToJpgLimit = 'file-size' | 'page-count' | 'page-pixels' | 'total-pixels';
 
@@ -47,7 +49,8 @@ export function totalRasterExceedsLimit(pixels: number): boolean {
 }
 
 export function isPdfFile(fileName: string, mimeType: string): boolean {
-  return mimeType === 'application/pdf' || /\.pdf$/i.test(fileName.trim());
+  const mediaType = mimeType.trim().toLowerCase().split(';', 1)[0];
+  return mediaType === 'application/pdf' || /\.pdf$/i.test(fileName.trim());
 }
 
 export class PageRangeSyntaxError extends Error {
@@ -67,6 +70,13 @@ export class PageRangeOutOfBoundsError extends Error {
   }
 }
 
+export class PageRangeTooLongError extends Error {
+  constructor() {
+    super(`Page selection must be ${MAX_PAGE_SELECTION_CHARS} characters or fewer.`);
+    this.name = 'PageRangeTooLongError';
+  }
+}
+
 /**
  * Parses familiar page selection notation such as "1, 3-5, 8". Empty and
  * "all" select every page. Output is ascending and deduplicated so a page
@@ -74,6 +84,7 @@ export class PageRangeOutOfBoundsError extends Error {
  */
 export function parsePageSelection(input: string, pageCount: number): number[] {
   if (!Number.isInteger(pageCount) || pageCount < 1) throw new PageRangeOutOfBoundsError(1, pageCount);
+  if (input.length > MAX_PAGE_SELECTION_CHARS) throw new PageRangeTooLongError();
   const normalized = input.trim().toLowerCase();
   if (!normalized || normalized === 'all') return Array.from({ length: pageCount }, (_, index) => index + 1);
 
@@ -101,14 +112,24 @@ export function renderScale(resolution: Resolution): number {
 
 /** Preserves Unicode file names and pads page numbers to the document's width. */
 export function jpgFileName(fileName: string, pageNumber: number, pageCount: number): string {
-  const base = fileName.trim().replace(/\.pdf$/i, '') || 'document';
+  const base = outputFileBase(fileName);
   const width = Math.max(1, String(Math.max(1, pageCount)).length);
   return `${base}_page-${String(pageNumber).padStart(width, '0')}.jpg`;
 }
 
 export function zipFileName(fileName: string): string {
-  const base = fileName.trim().replace(/\.pdf$/i, '') || 'document';
+  const base = outputFileBase(fileName);
   return `${base}_jpg.zip`;
+}
+
+/** Avoid path separators in ZIP entry names while preserving meaningful Unicode names. */
+function outputFileBase(fileName: string): string {
+  return (
+    fileName
+      .trim()
+      .replace(/[\\/\0]/g, '_')
+      .replace(/\.pdf$/i, '') || 'document'
+  );
 }
 
 export class InvalidPdfError extends Error {

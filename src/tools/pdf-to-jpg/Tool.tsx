@@ -10,8 +10,10 @@ import {
   InvalidPdfError,
   isPdfFile,
   jpgFileName,
+  MAX_PAGE_SELECTION_CHARS,
   PageRangeOutOfBoundsError,
   PageRangeSyntaxError,
+  PageRangeTooLongError,
   parsePageSelection,
   PdfLimitError,
   type Resolution,
@@ -27,6 +29,12 @@ function initialResolution(): Resolution {
   return saved === 'screen' || saved === 'standard' || saved === 'print' ? saved : 'standard';
 }
 
+function ownedArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
@@ -35,6 +43,8 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
   const [rangeInput, setRangeInput] = useState('');
   const [rangeError, setRangeError] = useState<string | null>(null);
   const [fileError, setFileError] = useState<FileError | null>(null);
+  const [downloadError, setDownloadError] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [output, setOutput] = useState<{ pageNumber: number; blob: Blob }[] | null>(null);
   const runId = useRef(0);
@@ -49,6 +59,8 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
     setRangeInput('');
     setRangeError(null);
     setFileError(null);
+    setDownloadError(false);
+    setDownloading(false);
     setProgress(null);
     setOutput(null);
   }, []);
@@ -61,6 +73,8 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
     setRangeInput('');
     setRangeError(null);
     setOutput(null);
+    setDownloadError(false);
+    setDownloading(false);
     if (!isPdfFile(picked.name, picked.type)) {
       setProgress(null);
       setFileError('invalid');
@@ -74,8 +88,8 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
     setFileError(null);
     setProgress({ done: 0, total: 0 });
     void (async () => {
-      const source = new Uint8Array(await picked.arrayBuffer());
       try {
+        const source = new Uint8Array(await picked.arrayBuffer());
         const { readPdfPageCount } = await import('./convert');
         // PDF.js can transfer its byte array to a worker, so retain `source` and inspect a copy.
         const count = await readPdfPageCount(source.slice(), picked.name);
@@ -112,7 +126,9 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
       setRangeError(
         caught instanceof PageRangeOutOfBoundsError
           ? ui.rangeOutOfBounds.replace('{page}', String(caught.page)).replace('{n}', String(caught.pageCount))
-          : ui.rangeSyntaxError.replace('{part}', caught instanceof PageRangeSyntaxError ? caught.part : rangeInput),
+          : caught instanceof PageRangeTooLongError
+            ? ui.rangeTooLong
+            : ui.rangeSyntaxError.replace('{part}', caught instanceof PageRangeSyntaxError ? caught.part : rangeInput),
       );
       return;
     }
@@ -157,23 +173,31 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
       clearTimeout(timeout);
       runId.current++;
     };
-  }, [bytes, file, fileError, pageCount, rangeInput, resolution, ui]);
+  }, [bytes, file, pageCount, rangeInput, resolution, ui]);
 
   const download = async () => {
     if (!output || !file || !pageCount) return;
-    if (output.length === 1) {
-      downloadBlob(output[0].blob, jpgFileName(file.name, output[0].pageNumber, pageCount));
-      return;
+    setDownloading(true);
+    setDownloadError(false);
+    try {
+      if (output.length === 1) {
+        downloadBlob(output[0].blob, jpgFileName(file.name, output[0].pageNumber, pageCount));
+        return;
+      }
+      const { zip } = await import('fflate');
+      const entries: Record<string, Uint8Array> = {};
+      for (const page of output) {
+        entries[jpgFileName(file.name, page.pageNumber, pageCount)] = new Uint8Array(await page.blob.arrayBuffer());
+      }
+      const archive = await new Promise<Uint8Array>((resolve, reject) => {
+        zip(entries, { level: 0 }, (error, data) => (error ? reject(error) : resolve(data)));
+      });
+      downloadBlob(new Blob([ownedArrayBuffer(archive)], { type: 'application/zip' }), zipFileName(file.name));
+    } catch {
+      setDownloadError(true);
+    } finally {
+      setDownloading(false);
     }
-    const { zipSync } = await import('fflate');
-    const entries: Record<string, Uint8Array> = {};
-    for (const page of output) {
-      entries[jpgFileName(file.name, page.pageNumber, pageCount)] = new Uint8Array(await page.blob.arrayBuffer());
-    }
-    downloadBlob(
-      new Blob([zipSync(entries, { level: 0 }) as BlobPart], { type: 'application/zip' }),
-      zipFileName(file.name),
-    );
   };
 
   const errorMessage =
@@ -241,9 +265,10 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
                 {ui.fileCount.replace('{n}', String(output.length))}
                 {output.length > 1 ? ` · ${ui.zipReady}` : ''}
               </p>
-              <Button class="mt-4" variant="primary" size="lg" onClick={() => void download()}>
-                {output.length > 1 ? ui.downloadZip : ui.downloadJpg}
+              <Button class="mt-4" variant="primary" size="lg" disabled={downloading} onClick={() => void download()}>
+                {downloading ? ui.downloading : output.length > 1 ? ui.downloadZip : ui.downloadJpg}
               </Button>
+              {downloadError && <Notice tone="danger">{ui.downloadFailed}</Notice>}
             </div>
           )}
 
@@ -275,6 +300,8 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
                 value={rangeInput}
                 onInput={(event) => setRangeInput((event.currentTarget as HTMLInputElement).value)}
                 placeholder={ui.rangePlaceholder}
+                maxLength={MAX_PAGE_SELECTION_CHARS}
+                aria-invalid={!!rangeError}
                 spellcheck={false}
               />
             </Field>

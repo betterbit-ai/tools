@@ -21,6 +21,10 @@ async function jpegBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   );
 }
 
+function yieldToBrowser(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 async function openPdf(bytes: Uint8Array, fileName: string) {
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.mjs', import.meta.url).toString();
@@ -68,20 +72,28 @@ export async function convertPdfToJpg(
       if (totalRasterExceedsLimit(totalPixels)) throw new PdfLimitError('total-pixels');
 
       const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.ceil(viewport.width));
-      canvas.height = Math.max(1, Math.ceil(viewport.height));
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Canvas is unavailable');
-      // JPEG has no alpha channel; paper white is the expected PDF page background.
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      await page.render({ canvas, viewport }).promise;
-      output.push({
-        pageNumber,
-        blob: await jpegBlob(canvas),
-      });
-      page.cleanup();
+      try {
+        canvas.width = Math.max(1, Math.ceil(viewport.width));
+        canvas.height = Math.max(1, Math.ceil(viewport.height));
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Canvas is unavailable');
+        // JPEG has no alpha channel; paper white is the expected PDF page background.
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvas, viewport }).promise;
+        output.push({
+          pageNumber,
+          blob: await jpegBlob(canvas),
+        });
+      } finally {
+        page.cleanup();
+        // Release the large canvas backing store before rendering the next page.
+        canvas.width = 0;
+        canvas.height = 0;
+      }
       onProgress(index + 1, pages.length);
+      // Yield between pages so progress can paint and input stays responsive.
+      await yieldToBrowser();
     }
     return output;
   } finally {

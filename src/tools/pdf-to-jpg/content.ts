@@ -19,6 +19,7 @@ const uiEn = {
   rangeHint: 'Use all, 1-3, 5, or 1, 3-5. Changing this starts conversion automatically.',
   rangePlaceholder: 'All pages',
   rangeSyntaxError: '“{part}” is not a valid page range. Try 1-3, 5.',
+  rangeTooLong: 'Keep the page selection to 500 characters or fewer.',
   rangeOutOfBounds: 'Page {page} is outside this {n}-page PDF.',
   invalidPdf: "This file can't be read as a PDF.",
   encryptedPdf: 'This PDF is password-protected. Remove its password before converting it.',
@@ -34,6 +35,8 @@ const uiEn = {
   zipReady: 'ZIP file ready',
   downloadJpg: 'Download JPG',
   downloadZip: 'Download ZIP',
+  downloading: 'Preparing download…',
+  downloadFailed: 'The download could not be prepared. Try again.',
 };
 export type UI = typeof uiEn;
 
@@ -41,7 +44,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'PDF to JPG — Choose Pages and Resolution Privately',
     description:
-      'Convert selected PDF pages to JPG at 96, 150, or 300 dpi in your browser. Download one image or a ZIP with no upload, ads, or account.',
+      'Convert selected PDF pages to JPG at 96, 150, or 300 dpi in your browser. Download one image or a ZIP without uploading your PDF.',
     h1: 'PDF to JPG Converter',
     tagline: 'Choose the pages and resolution, then get JPGs or a ZIP — without uploading your PDF.',
     name: 'PDF to JPG',
@@ -180,6 +183,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       rangeHint: 'all, 1-3, 5 또는 1, 3-5처럼 입력하세요. 바꾸면 자동으로 변환합니다.',
       rangePlaceholder: '전체 페이지',
       rangeSyntaxError: '“{part}”은(는) 올바른 페이지 범위가 아닙니다. 1-3, 5처럼 입력하세요.',
+      rangeTooLong: '페이지 범위는 500자 이하로 입력하세요.',
       rangeOutOfBounds: '{page}페이지는 이 PDF의 {n}페이지 범위를 벗어납니다.',
       invalidPdf: '이 파일은 PDF로 읽을 수 없습니다.',
       encryptedPdf: '암호로 보호된 PDF입니다. 암호를 해제한 뒤 변환하세요.',
@@ -195,6 +199,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       zipReady: 'ZIP 파일 준비됨',
       downloadJpg: 'JPG 다운로드',
       downloadZip: 'ZIP 다운로드',
+      downloading: '다운로드 준비 중…',
+      downloadFailed: '다운로드를 준비하지 못했습니다. 다시 시도하세요.',
     },
   },
 };
