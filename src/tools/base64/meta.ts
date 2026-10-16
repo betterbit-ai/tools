@@ -39,5 +39,6 @@ export const meta: ToolMeta = {
     'jwt-decoder',
     'regex-tester',
     'csv-json',
+    'screen-resolution',
   ],
 };
