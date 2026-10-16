@@ -1,10 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Field, Kbd, NumberInput, Panel, Segmented, Stat, TextInput, Toggle, cx } from '../../components/ui';
-import { safeStorage } from '../../lib/browser';
+import {
+  Button,
+  Field,
+  Kbd,
+  Notice,
+  NumberInput,
+  Panel,
+  Segmented,
+  Stat,
+  TextInput,
+  Toggle,
+  cx,
+} from '../../components/ui';
+import { downloadBlob, safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   MAX_MINUTES,
+  MAX_TASKS,
   addTask,
   choosePhase,
   countToday,
@@ -27,6 +40,7 @@ import {
 
 const STATE_KEY = 'tools:pomodoro-timer:state';
 const NOTIFICATIONS_KEY = 'tools:pomodoro-timer:notifications';
+const MAX_STORED_STATE_BYTES = 128 * 1024;
 
 export default function PomodoroTimer({ ui }: ToolProps<UI>) {
   const [state, setState] = useState<PomodoroState>(idle);
@@ -40,7 +54,8 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
   useEffect(() => {
     baseTitle.current = document.title;
     try {
-      const saved = JSON.parse(safeStorage.get(STATE_KEY) ?? 'null');
+      const serialized = safeStorage.get(STATE_KEY);
+      const saved = serialized && serialized.length <= MAX_STORED_STATE_BYTES ? JSON.parse(serialized) : null;
       if (isPomodoroState(saved)) {
         const current = Date.now();
         setNow(current);
@@ -141,6 +156,10 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
     setState((previous) => addTask(previous, id, taskDraft));
     setTaskDraft('');
   };
+  const downloadData = () => {
+    const backup = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), state }, null, 2);
+    downloadBlob(new Blob([backup], { type: 'application/json' }), 'pomodoro-timer-data.json');
+  };
   const phaseOptions: { value: Phase; label: string }[] = [
     { value: 'focus', label: ui.focus },
     { value: 'shortBreak', label: ui.shortBreak },
@@ -200,16 +219,22 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
                 if (event.key === 'Enter') addDraft();
               }}
             />
-            <Button onClick={addDraft} disabled={!taskDraft.trim()}>
+            <Button onClick={addDraft} disabled={!taskDraft.trim() || state.tasks.length >= MAX_TASKS}>
               {ui.addTask}
             </Button>
           </div>
+          {state.tasks.length >= MAX_TASKS && (
+            <div class="mt-3">
+              <Notice tone="info">{ui.taskLimit}</Notice>
+            </div>
+          )}
           {state.tasks.length === 0 ? (
             <p class="mt-3 rounded-md bg-surface-2 px-3 py-3 text-sm text-muted">{ui.noTasks}</p>
           ) : (
             <ul class="mt-3 space-y-2">
               {state.tasks.map((task) => (
                 <li
+                  key={task.id}
                   class={cx(
                     'flex flex-wrap items-center gap-2 rounded-md border border-line px-3 py-2',
                     task.id === state.selectedTaskId && 'border-accent',
@@ -307,14 +332,22 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
             <h2 class="text-sm font-medium text-fg">{ui.sessionLog}</h2>
             <p class="mt-1 text-xs text-muted">{ui.sessionLogHint}</p>
           </div>
-          <span class="tabular text-sm text-muted">{state.sessions.length}</span>
+          <div class="flex shrink-0 items-center gap-3">
+            <span class="tabular text-sm text-muted">{state.sessions.length}</span>
+            <Button size="sm" onClick={downloadData}>
+              {ui.downloadData}
+            </Button>
+          </div>
         </div>
         {state.sessions.length === 0 ? (
           <p class="mt-3 rounded-md bg-surface-2 px-3 py-3 text-sm text-muted">{ui.noSessions}</p>
         ) : (
           <ul class="mt-3 max-h-56 space-y-2 overflow-auto">
             {[...state.sessions].reverse().map((session) => (
-              <li class="flex items-center justify-between gap-3 rounded-md bg-surface-2 px-3 py-2 text-sm">
+              <li
+                key={session.id}
+                class="flex items-center justify-between gap-3 rounded-md bg-surface-2 px-3 py-2 text-sm"
+              >
                 <span class="min-w-0 truncate text-fg">{session.task || ui.untitledTask}</span>
                 <time class="shrink-0 tabular text-muted" dateTime={new Date(session.completedAt).toISOString()}>
                   {new Date(session.completedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}

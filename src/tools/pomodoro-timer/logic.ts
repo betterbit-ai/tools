@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
 export const MAX_MINUTES = 180;
 export const MAX_ROUNDS = 12;
 export const MAX_TASK_LENGTH = 120;
+export const MAX_TASKS = 100;
 export const MAX_SESSIONS = 100;
 
 export type Phase = 'focus' | 'shortBreak' | 'longBreak';
@@ -163,12 +164,12 @@ export function skip(state: PomodoroState): PomodoroState {
 }
 
 export function normalizeTask(value: string): string {
-  return value.trim().replace(/\s+/gu, ' ').slice(0, MAX_TASK_LENGTH);
+  return [...value.trim().replace(/\s+/gu, ' ')].slice(0, MAX_TASK_LENGTH).join('');
 }
 
 export function addTask(state: PomodoroState, id: string, title: string): PomodoroState {
   const normalized = normalizeTask(title);
-  if (!normalized || state.tasks.some((task) => task.id === id)) return state;
+  if (!normalized || state.tasks.length >= MAX_TASKS || state.tasks.some((task) => task.id === id)) return state;
   const task = { id, title: normalized, done: false };
   return { ...state, tasks: [...state.tasks, task], selectedTaskId: state.selectedTaskId ?? id };
 }
@@ -204,10 +205,14 @@ export function isPomodoroState(value: unknown): value is PomodoroState {
   )
     return false;
   if (!state.settings || JSON.stringify(clampSettings(state.settings)) !== JSON.stringify(state.settings)) return false;
-  if (state.status === 'running' ? !Number.isFinite(state.endAt) : state.endAt !== null) return false;
+  const isValidTimestamp = (timestamp: unknown) =>
+    typeof timestamp === 'number' && Number.isFinite(timestamp) && Number.isFinite(new Date(timestamp).getTime());
+  if (state.status === 'running' ? !isValidTimestamp(state.endAt) : state.endAt !== null) return false;
   if (
     state.status === 'paused'
-      ? !Number.isFinite(state.pausedRemainingMs) || state.pausedRemainingMs! < 0
+      ? !Number.isFinite(state.pausedRemainingMs) ||
+        state.pausedRemainingMs! < 0 ||
+        state.pausedRemainingMs! > phaseDurationMs(state.phase, state.settings)
       : state.pausedRemainingMs !== null
   )
     return false;
@@ -215,10 +220,15 @@ export function isPomodoroState(value: unknown): value is PomodoroState {
     Number.isInteger(state.completedFocus) &&
     state.completedFocus >= 0 &&
     Array.isArray(state.tasks) &&
+    state.tasks.length <= MAX_TASKS &&
     state.tasks.every(
       (task) =>
         task &&
         typeof task.id === 'string' &&
+        task.id.length > 0 &&
+        task.id.length <= 100 &&
+        typeof task.title === 'string' &&
+        task.title.length > 0 &&
         normalizeTask(task.title) === task.title &&
         typeof task.done === 'boolean',
     ) &&
@@ -229,7 +239,8 @@ export function isPomodoroState(value: unknown): value is PomodoroState {
         session &&
         Number.isFinite(session.id) &&
         typeof session.task === 'string' &&
-        Number.isFinite(session.completedAt) &&
+        normalizeTask(session.task) === session.task &&
+        isValidTimestamp(session.completedAt) &&
         Number.isFinite(session.durationMs) &&
         session.durationMs > 0,
     ) &&
