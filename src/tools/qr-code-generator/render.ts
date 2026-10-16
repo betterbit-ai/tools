@@ -1,5 +1,9 @@
 import qrcode from 'qrcode-generator';
-import type { ErrorCorrectionLevel } from './logic';
+import { utf8Bytes, type ErrorCorrectionLevel } from './logic';
+
+// qrcode-generator's ESM build defaults to truncating each UTF-16 code unit to a byte.
+// Use standard UTF-8 so Korean, CJK, emoji, and URL Unicode are encoded as entered.
+qrcode.stringToBytes = utf8Bytes;
 
 export interface RenderedQr {
   svg: string;
@@ -24,10 +28,10 @@ export function renderQrSvg(
 
   let svg = code
     .createSvgTag({ cellSize: 1, margin: 4, scalable: true })
-    .replace('<svg ', `<svg fill="${foreground}" `)
-    .replace('fill="white"', `fill="${background}"`);
+    .replace('fill="white"', `fill="${background}"`)
+    .replace('fill="black"', `fill="${foreground}"`);
   if (logoDataUrl) {
-    // A white plate keeps the center readable. 22% is deliberately conservative for H correction.
+    // A background-colour plate keeps the center readable. 22% is deliberately conservative for H correction.
     const side = code.getModuleCount() + 8;
     const plate = side * 0.22;
     const inset = plate * 0.1;

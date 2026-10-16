@@ -21,6 +21,8 @@ import {
   type ErrorCorrectionLevel,
   type QrSettings,
   type WifiSecurity,
+  isHexColor,
+  validateLogo,
   validateSettings,
 } from './logic';
 import { renderQrSvg } from './render';
@@ -34,6 +36,8 @@ const DEFAULT_SETTINGS: QrSettings = {
   wifiSecurity: 'WPA',
   wifiHidden: false,
   errorCorrection: 'M',
+  foreground: '#000000',
+  background: '#ffffff',
 };
 
 function isSettings(value: unknown): value is QrSettings {
@@ -46,7 +50,9 @@ function isSettings(value: unknown): value is QrSettings {
     typeof settings.wifiPassword === 'string' &&
     (settings.wifiSecurity === 'WPA' || settings.wifiSecurity === 'WEP' || settings.wifiSecurity === 'nopass') &&
     typeof settings.wifiHidden === 'boolean' &&
-    ERROR_CORRECTION_LEVELS.includes(settings.errorCorrection as ErrorCorrectionLevel)
+    ERROR_CORRECTION_LEVELS.includes(settings.errorCorrection as ErrorCorrectionLevel) &&
+    (settings.foreground === undefined || isHexColor(settings.foreground)) &&
+    (settings.background === undefined || isHexColor(settings.background))
   );
 }
 
@@ -87,13 +93,13 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<QrSettings>(DEFAULT_SETTINGS);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const [logoName, setLogoName] = useState('');
-  const [logoError, setLogoError] = useState(false);
+  const [logoError, setLogoError] = useState<'invalid-type' | 'too-large' | 'read-failed' | null>(null);
   const [downloadError, setDownloadError] = useState(false);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-      if (isSettings(saved)) setSettings(saved);
+      if (isSettings(saved)) setSettings({ ...DEFAULT_SETTINGS, ...saved });
     } catch {
       /* Ignore malformed local browser data. */
     }
@@ -107,15 +113,15 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
   const correction = logoDataUrl ? 'H' : settings.errorCorrection;
   const checkedSettings = { ...settings, errorCorrection: correction };
   const validation = validateSettings(checkedSettings);
-  const payload = useMemo(() => buildPayload(settings), [settings]);
+  const payload = useMemo(() => (validation ? '' : buildPayload(settings)), [settings, validation]);
   const rendered = useMemo(() => {
     if (validation) return null;
     try {
-      return renderQrSvg(payload, correction, '#000000', '#ffffff', logoDataUrl);
+      return renderQrSvg(payload, correction, settings.foreground, settings.background, logoDataUrl);
     } catch {
       return null;
     }
-  }, [correction, logoDataUrl, payload, validation]);
+  }, [correction, logoDataUrl, payload, settings.background, settings.foreground, validation]);
   const previewUrl = rendered ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(rendered.svg)}` : '';
   const errorText =
     validation === 'empty'
@@ -124,19 +130,26 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
         ? ui.wifiNameError
         : validation === 'too-long'
           ? ui.tooLongError
-          : !rendered && payload
-            ? ui.generationError
-            : null;
+          : validation === 'low-contrast'
+            ? ui.colorError
+            : !rendered && payload
+              ? ui.generationError
+              : null;
 
   const useLogo = async (files: File[]) => {
     const file = files[0];
     if (!file) return;
+    const fileError = validateLogo(file);
+    if (fileError) {
+      setLogoError(fileError);
+      return;
+    }
     try {
       setLogoDataUrl(await readLogo(file));
       setLogoName(file.name);
-      setLogoError(false);
+      setLogoError(null);
     } catch {
-      setLogoError(true);
+      setLogoError('read-failed');
     }
   };
 
@@ -214,6 +227,20 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
                 options={ERROR_CORRECTION_LEVELS.map((value) => ({ value, label: value }))}
               />
             </Field>
+            <Field label={ui.foregroundLabel} hint={ui.colorHint}>
+              <TextInput
+                type="color"
+                value={settings.foreground}
+                onInput={(e) => update({ foreground: e.currentTarget.value })}
+              />
+            </Field>
+            <Field label={ui.backgroundLabel} hint={ui.colorHint}>
+              <TextInput
+                type="color"
+                value={settings.background}
+                onInput={(e) => update({ background: e.currentTarget.value })}
+              />
+            </Field>
             <Field label={ui.logoLabel} hint={ui.logoHint}>
               {logoDataUrl ? (
                 <div class="flex items-center justify-between gap-2 rounded-md border border-line bg-surface-2 px-3 py-2">
@@ -241,7 +268,15 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
             </Field>
           </div>
 
-          {logoError ? <Notice tone="danger">{ui.logoError}</Notice> : null}
+          {logoError ? (
+            <Notice tone="danger">
+              {logoError === 'invalid-type'
+                ? ui.logoTypeError
+                : logoError === 'too-large'
+                  ? ui.logoSizeError
+                  : ui.logoError}
+            </Notice>
+          ) : null}
           {errorText ? <Notice tone="danger">{errorText}</Notice> : null}
           <p class="text-xs leading-5 text-subtle">{ui.privacyNote}</p>
         </div>
