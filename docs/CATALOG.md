@@ -178,7 +178,7 @@
 | qr-code-scanner     | QR 코드 스캐너 | qr code scanner online               | 카메라, 이미지 파일                               | P1  | live |
 | barcode-generator   | 바코드 생성    | barcode generator                    | EAN, Code128, SVG                                 | P1  | live |
 | random-picker       | 랜덤 뽑기      | random name picker / 제비뽑기        | 룰렛 애니메이션, 결과 공유                        | P0  | live |
-| team-generator      | 팀 나누기      | random team generator / 팀 나누기    | 실력 밸런스 옵션                                  | P1  | todo |
+| team-generator      | 팀 나누기      | random team generator / 팀 나누기    | 실력 밸런스 옵션                                  | P1  | live |
 | dice-roller         | 주사위         | roll dice / 주사위 굴리기            | 여러 개, D&D 다면체                               | P1  | todo |
 | coin-flip           | 동전 던지기    | flip a coin / 동전 던지기            | 통계 누적                                         | P1  | todo |
 | spin-wheel          | 돌림판         | spin the wheel / 돌림판              | 항목 저장, 전체화면                               | P0  | live |
