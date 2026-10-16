@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Matches us on local processing, no sign-up, circle crops and a live overlay, but offers only five ratios and visual dragging. It has no X/Y/width/height fields or keyboard nudging for exact placement. (Strength: its 4:5 Instagram portrait preset is not currently included here.)',
     },
   ],
-  related: ['image-resizer', 'image-rotate-flip', 'image-converter', 'passport-photo'],
+  related: ['image-resizer', 'image-rotate-flip', 'image-converter', 'meme-generator'],
 };

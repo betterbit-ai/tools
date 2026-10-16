@@ -3,6 +3,11 @@
 export const MAX_CAPTION_LENGTH = 280;
 export const MIN_FONT_SCALE = 4;
 export const MAX_FONT_SCALE = 20;
+/** Limits memory used by an exported canvas to roughly 64 MB of RGBA pixels. */
+export const MAX_OUTPUT_PIXELS = 16_000_000;
+/** Keeps the output within the maximum canvas dimension supported by common browsers. */
+export const MAX_OUTPUT_DIMENSION = 8_192;
+export const MAX_IMAGE_FILE_BYTES = 20 * 1024 * 1024;
 
 export type CanvasPreset = 'wide' | 'square';
 
@@ -36,10 +41,14 @@ export function clamp(value: number, min: number, max: number): number {
 
 export function normalizeOptions(value: Partial<MemeOptions>): MemeOptions {
   return {
-    topText: normalizeCaption(value.topText ?? DEFAULT_OPTIONS.topText),
-    bottomText: normalizeCaption(value.bottomText ?? DEFAULT_OPTIONS.bottomText),
-    fontScale: clamp(value.fontScale ?? DEFAULT_OPTIONS.fontScale, MIN_FONT_SCALE, MAX_FONT_SCALE),
-    allCaps: value.allCaps ?? DEFAULT_OPTIONS.allCaps,
+    topText: normalizeCaption(typeof value.topText === 'string' ? value.topText : DEFAULT_OPTIONS.topText),
+    bottomText: normalizeCaption(typeof value.bottomText === 'string' ? value.bottomText : DEFAULT_OPTIONS.bottomText),
+    fontScale: clamp(
+      typeof value.fontScale === 'number' ? value.fontScale : DEFAULT_OPTIONS.fontScale,
+      MIN_FONT_SCALE,
+      MAX_FONT_SCALE,
+    ),
+    allCaps: typeof value.allCaps === 'boolean' ? value.allCaps : DEFAULT_OPTIONS.allCaps,
   };
 }
 
@@ -87,6 +96,28 @@ export function wrapCaption(value: string, maxWidth: number, measure: (line: str
 
 export function presetDimensions(preset: CanvasPreset): { width: number; height: number } {
   return preset === 'square' ? { width: 1080, height: 1080 } : { width: 1200, height: 675 };
+}
+
+/** Returns a canvas-safe size while preserving the source image's aspect ratio. */
+export function constrainedImageDimensions(width: number, height: number): { width: number; height: number } {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    throw new RangeError('Image dimensions must be positive finite numbers');
+  }
+
+  const scale = Math.min(
+    1,
+    Math.sqrt(MAX_OUTPUT_PIXELS / (width * height)),
+    MAX_OUTPUT_DIMENSION / width,
+    MAX_OUTPUT_DIMENSION / height,
+  );
+  return {
+    width: Math.max(1, Math.floor(width * scale)),
+    height: Math.max(1, Math.floor(height * scale)),
+  };
+}
+
+export function isSupportedImageFileSize(size: number): boolean {
+  return Number.isFinite(size) && size >= 0 && size <= MAX_IMAGE_FILE_BYTES;
 }
 
 export function outputName(inputName?: string): string {
