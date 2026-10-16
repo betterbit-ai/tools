@@ -669,6 +669,7 @@ function startNextIssue(repo, clone) {
         ISSUE_BODY: issue.body,
         ISSUE_LABELS: issue.labels.map((l) => l.name).join(', '),
       });
+  const sessionStarted = Date.now();
   const session = runAgent(text, wt, logFile, {
     resume: resuming ? saved.sessionId : undefined,
     gitDir: join(clone, '.git'),
