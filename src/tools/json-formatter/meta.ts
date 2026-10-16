@@ -39,5 +39,6 @@ export const meta: ToolMeta = {
     'regex-tester',
     'color-converter',
     'csv-json',
+    'screen-resolution',
   ],
 };

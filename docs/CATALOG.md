@@ -167,7 +167,7 @@
 | csv-json          | CSV ↔ JSON       | csv to json                                | 미리보기 표                          | P1  | live |
 | html-entities     | HTML 엔티티      | html encode                                | —                                    | P2  | todo |
 | user-agent        | 내 브라우저 정보 | what is my browser / user agent            | 해석된 정보 + 복사                   | P2  | todo |
-| screen-resolution | 화면 해상도 확인 | what is my screen resolution / 해상도 확인 | DPR, 뷰포트 함께                     | P1  | todo |
+| screen-resolution | 화면 해상도 확인 | what is my screen resolution / 해상도 확인 | DPR, 뷰포트 함께                     | P1  | live |
 
 ## generator: 생성기
 
