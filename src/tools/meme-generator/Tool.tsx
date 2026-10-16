@@ -15,7 +15,14 @@ import { downloadBlob, safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import { canvasBlob, drawMeme, readImage } from './meme';
-import { normalizeCaption, normalizeOptions, outputName, type CanvasPreset, type MemeOptions } from './logic';
+import {
+  isSupportedImageFileSize,
+  normalizeCaption,
+  normalizeOptions,
+  outputName,
+  type CanvasPreset,
+  type MemeOptions,
+} from './logic';
 
 const STORAGE_KEY = 'tools:meme-generator:settings';
 
@@ -35,15 +42,18 @@ function storedOptions(ui: UI): MemeOptions {
 export default function MemeGenerator({ ui }: ToolProps<UI>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bitmapRef = useRef<ImageBitmap | null>(null);
+  const loadVersionRef = useRef(0);
   const [options, setOptions] = useState<MemeOptions>(() => storedOptions(ui));
   const [preset, setPreset] = useState<CanvasPreset>('wide');
   const [fileName, setFileName] = useState<string>();
   const [bitmapVersion, setBitmapVersion] = useState(0);
   const [error, setError] = useState('');
+  const [isRendering, setIsRendering] = useState(false);
 
   useEffect(() => safeStorage.set(STORAGE_KEY, JSON.stringify(options)), [options]);
   useEffect(
     () => () => {
+      loadVersionRef.current += 1;
       bitmapRef.current?.close();
     },
     [],
@@ -51,15 +61,23 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    try {
-      drawMeme(canvasRef.current, bitmapRef.current, preset, options);
-      setError('');
-    } catch {
-      setError(ui.renderError);
-    }
+    setIsRendering(true);
+    const timeout = setTimeout(() => {
+      try {
+        if (!canvasRef.current) return;
+        drawMeme(canvasRef.current, bitmapRef.current, preset, options);
+        setError('');
+      } catch {
+        setError(ui.renderError);
+      } finally {
+        setIsRendering(false);
+      }
+    }, 200);
+    return () => clearTimeout(timeout);
   }, [bitmapVersion, options, preset, ui.renderError]);
 
   const usePreset = (nextPreset: CanvasPreset) => {
+    loadVersionRef.current += 1;
     bitmapRef.current?.close();
     bitmapRef.current = null;
     setFileName(undefined);
@@ -72,18 +90,27 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
     async (files: File[]) => {
       const file = files[0];
       if (!file) return;
+      const loadVersion = ++loadVersionRef.current;
+      if (!isSupportedImageFileSize(file.size)) {
+        setError(ui.fileTooLarge);
+        return;
+      }
       try {
         const next = await readImage(file);
+        if (loadVersion !== loadVersionRef.current) {
+          next.close();
+          return;
+        }
         bitmapRef.current?.close();
         bitmapRef.current = next;
         setFileName(file.name);
         setBitmapVersion((version) => version + 1);
         setError('');
       } catch {
-        setError(ui.unsupported);
+        if (loadVersion === loadVersionRef.current) setError(ui.unsupported);
       }
     },
-    [ui.unsupported],
+    [ui.fileTooLarge, ui.unsupported],
   );
 
   const update = <K extends keyof MemeOptions>(key: K, value: MemeOptions[K]) =>
@@ -99,6 +126,7 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
   const download = async () => {
     if (!canvasRef.current) return;
     try {
+      drawMeme(canvasRef.current, bitmapRef.current, preset, options);
       downloadBlob(await canvasBlob(canvasRef.current), outputName(fileName));
       setError('');
     } catch {
@@ -111,7 +139,14 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
       <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div class="min-w-0">
           <div class="overflow-hidden rounded-lg border border-line bg-surface-2">
-            <canvas ref={canvasRef} role="img" aria-label={previewDescription} class="block h-auto w-full">
+            <canvas
+              ref={canvasRef}
+              width={1200}
+              height={675}
+              role="img"
+              aria-label={previewDescription}
+              class="block h-auto w-full"
+            >
               {previewDescription}
             </canvas>
           </div>
@@ -121,9 +156,10 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
           <p class="mt-2 text-xs text-subtle" aria-live="polite">
             {fileName ? `${ui.usingImage}: ${fileName}` : ui.blankCanvas}
           </p>
+          {isRendering && <p class="mt-1 text-xs text-subtle">{ui.rendering}</p>}
           <div class="mt-4">
             <Dropzone
-              accept="image/*"
+              accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif"
               onFiles={addFiles}
               compact
               title={fileName ? ui.replaceTitle : ui.dropTitle}

@@ -1,10 +1,35 @@
 /** Browser-only Canvas rendering for meme-generator. */
-import { normalizeOptions, presetDimensions, wrapCaption, type CanvasPreset, type MemeOptions } from './logic';
+import {
+  constrainedImageDimensions,
+  isSupportedImageFileSize,
+  normalizeOptions,
+  presetDimensions,
+  wrapCaption,
+  type CanvasPreset,
+  type MemeOptions,
+} from './logic';
 
 const FONT_FAMILY = 'Impact, "Arial Black", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif';
 
 export async function readImage(file: File): Promise<ImageBitmap> {
-  return createImageBitmap(file);
+  if (!isSupportedImageFileSize(file.size)) throw new Error('Image file is too large');
+
+  const source = await createImageBitmap(file);
+  try {
+    const dimensions = constrainedImageDimensions(source.width, source.height);
+    if (dimensions.width === source.width && dimensions.height === source.height) return source;
+
+    const resized = await createImageBitmap(source, {
+      resizeWidth: dimensions.width,
+      resizeHeight: dimensions.height,
+      resizeQuality: 'high',
+    });
+    source.close();
+    return resized;
+  } catch (error) {
+    source.close();
+    throw error;
+  }
 }
 
 export function drawMeme(

@@ -9,13 +9,15 @@ const uiEn = {
   usingImage: 'Using image',
   dropTitle: 'Drop a photo here, click to choose, or paste',
   replaceTitle: 'Replace the current photo',
-  dropHint: 'JPG, PNG, WebP, GIF, BMP and other browser-readable images',
+  dropHint: 'JPG, PNG, WebP, GIF, BMP and other browser-readable images up to 20 MB',
   pasteHint: 'Paste an image from your clipboard:',
   pasteKeys: 'Ctrl/⌘ V',
   defaultTopText: 'WHEN YOU NEED A MEME',
   defaultBottomText: 'IN TEN SECONDS',
   unsupported: 'This image can’t be read by your browser. Try a JPG, PNG, or WebP file.',
+  fileTooLarge: 'Choose an image that is 20 MB or smaller.',
   renderError: 'The preview could not be drawn. Try a smaller or different image.',
+  rendering: 'Updating preview…',
   downloadError: 'The meme could not be saved. Try a different image.',
   canvasLabel: 'Start with',
   canvasWide: 'Wide 16:9',
@@ -56,7 +58,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Two ready sizes, plus any photo you own',
-        body: 'The blank wide canvas is 1200×675 pixels, a 16:9 ratio suited to a presentation slide or chat preview. The blank square canvas is 1080×1080 pixels, a common square-post size. Uploading a photo keeps its pixel dimensions in the exported PNG, so the tool does not quietly crop your image. The preview scales down only for the page.',
+        body: 'The blank wide canvas is 1200×675 pixels, a 16:9 ratio suited to a presentation slide or chat preview. The blank square canvas is 1080×1080 pixels, a common square-post size. A photo up to 16 megapixels keeps its pixel dimensions in the exported PNG, so the tool does not quietly crop it. Larger photos are proportionally reduced to keep the browser preview responsive; the preview itself always scales down only for the page.',
       },
       {
         heading: 'Keep captions readable on images',
@@ -82,7 +84,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'What size is the blank square meme canvas?',
-        a: 'The square preset exports at 1080×1080 pixels. The wide preset exports at 1200×675 pixels, which is a 16:9 ratio. A photo upload instead exports at that photo’s original pixel dimensions.',
+        a: 'The square preset exports at 1080×1080 pixels. The wide preset exports at 1200×675 pixels, which is a 16:9 ratio. Uploaded photos up to 16 megapixels export at their original pixel dimensions; larger photos are proportionally reduced before the PNG is made.',
       },
       {
         q: 'Why does the result download as PNG?',
@@ -108,7 +110,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '빈 바탕은 16:9와 정사각형으로 바로 시작합니다',
-        body: '가로형 빈 캔버스는 1200×675px(16:9)라 발표 자료나 메신저 미리보기에 쓰기 좋고, 정사각형 캔버스는 1080×1080px입니다. 사진을 올리면 다운로드 파일은 사진의 픽셀 크기를 그대로 사용하므로, 도구가 임의로 사진을 자르지 않습니다. 페이지의 미리보기만 화면 크기에 맞춰 줄어듭니다.',
+        body: '가로형 빈 캔버스는 1200×675px(16:9)라 발표 자료나 메신저 미리보기에 쓰기 좋고, 정사각형 캔버스는 1080×1080px입니다. 1,600만 화소 이하 사진은 다운로드할 때 원본 픽셀 크기를 유지하므로, 도구가 임의로 사진을 자르지 않습니다. 더 큰 사진은 브라우저가 버거워지지 않도록 비율을 유지해 줄이고, 페이지의 미리보기만 화면 크기에 맞춰 줄어듭니다.',
       },
       {
         heading: '한글 짤은 문구를 짧게 나눠 씁니다',
@@ -134,7 +136,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '정사각형 빈 캔버스는 몇 픽셀인가요?',
-        a: '정사각형 프리셋은 1080×1080px이고, 가로형 프리셋은 1200×675px(16:9)입니다. 사진을 올리면 원본 사진의 픽셀 크기로 저장됩니다.',
+        a: '정사각형 프리셋은 1080×1080px이고, 가로형 프리셋은 1200×675px(16:9)입니다. 1,600만 화소 이하 사진은 원본 픽셀 크기로 저장하고, 그보다 큰 사진은 비율을 유지해 줄인 뒤 저장합니다.',
       },
       {
         q: '왜 PNG 파일로 저장되나요?',
@@ -149,13 +151,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
       usingImage: '사용 중인 사진',
       dropTitle: '사진을 놓거나, 클릭해서 고르거나, 붙여넣으세요',
       replaceTitle: '현재 사진 바꾸기',
-      dropHint: 'JPG, PNG, WebP, GIF, BMP 등 브라우저에서 읽을 수 있는 이미지',
+      dropHint: 'JPG, PNG, WebP, GIF, BMP 등 브라우저에서 읽을 수 있는 20MB 이하 이미지',
       pasteHint: '클립보드의 이미지를 붙여넣을 수도 있습니다:',
       pasteKeys: 'Ctrl/⌘ V',
       defaultTopText: '짤이 필요할 때',
       defaultBottomText: '10초면 충분합니다',
       unsupported: '브라우저에서 읽을 수 없는 이미지입니다. JPG, PNG, WebP 파일을 사용해 보세요.',
+      fileTooLarge: '20MB보다 작은 이미지를 선택하세요.',
       renderError: '미리보기를 그리지 못했습니다. 더 작은 이미지나 다른 이미지를 사용해 보세요.',
+      rendering: '미리보기를 업데이트하는 중…',
       downloadError: '짤을 저장하지 못했습니다. 다른 이미지를 사용해 보세요.',
       canvasLabel: '시작 바탕',
       canvasWide: '가로 16:9',
