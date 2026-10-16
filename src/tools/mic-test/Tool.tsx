@@ -12,6 +12,7 @@ import {
 } from './logic';
 import {
   closeMicrophone,
+  createSessionRequestGate,
   listMicrophones,
   openMicrophone,
   recordLocally,
@@ -36,6 +37,8 @@ export default function MicTest({ ui }: ToolProps<UI>) {
   const recordingTimerRef = useRef<number | null>(null);
   const recordingStartedRef = useRef(0);
   const urlRef = useRef('');
+  const sessionRequestGateRef = useRef(createSessionRequestGate());
+  const recordingRequestRef = useRef(0);
 
   const stopRecording = useCallback(() => {
     if (recordingTimerRef.current !== null) window.clearInterval(recordingTimerRef.current);
@@ -46,6 +49,8 @@ export default function MicTest({ ui }: ToolProps<UI>) {
   }, []);
 
   const stopTest = useCallback(() => {
+    sessionRequestGateRef.current.invalidate();
+    recordingRequestRef.current += 1;
     stopRecording();
     if (animationRef.current !== null) window.cancelAnimationFrame(animationRef.current);
     animationRef.current = null;
@@ -58,20 +63,29 @@ export default function MicTest({ ui }: ToolProps<UI>) {
   const startTest = useCallback(
     async (deviceId = selectedDeviceId) => {
       stopTest();
+      const request = sessionRequestGateRef.current.begin();
       setError('');
       try {
         const session = await openMicrophone(deviceId);
+        if (!sessionRequestGateRef.current.isCurrent(request)) {
+          closeMicrophone(session);
+          return;
+        }
         sessionRef.current = session;
         setActive(true);
-        setDevices(await listMicrophones());
+        const availableDevices = await listMicrophones().catch(() => []);
+        if (!sessionRequestGateRef.current.isCurrent(request)) return;
+        setDevices(availableDevices);
         const samples = new Uint8Array(session.analyser.fftSize);
         const update = () => {
+          if (!sessionRequestGateRef.current.isCurrent(request) || sessionRef.current !== session) return;
           session.analyser.getByteTimeDomainData(samples);
           setReading(analyseSignal(samples));
           animationRef.current = window.requestAnimationFrame(update);
         };
         update();
       } catch (caught) {
+        if (!sessionRequestGateRef.current.isCurrent(request)) return;
         const name = caught instanceof DOMException ? caught.name : '';
         setError(
           name === 'NotAllowedError' ? ui.permissionDenied : name === 'NotFoundError' ? ui.noMicrophone : ui.startError,
@@ -93,17 +107,30 @@ export default function MicTest({ ui }: ToolProps<UI>) {
     const session = sessionRef.current;
     if (!session) return;
     stopRecording();
+    const request = ++recordingRequestRef.current;
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = '';
     setRecordingUrl('');
     try {
-      recordingRef.current = recordLocally(session.stream, (blob) => {
-        const url = URL.createObjectURL(blob);
-        if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-        urlRef.current = url;
-        setRecordingUrl(url);
-        setRecording(false);
-      });
+      recordingRef.current = recordLocally(
+        session.stream,
+        (blob) => {
+          if (request !== recordingRequestRef.current) return;
+          const url = URL.createObjectURL(blob);
+          if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+          urlRef.current = url;
+          setRecordingUrl(url);
+          setRecording(false);
+        },
+        () => {
+          if (request !== recordingRequestRef.current) return;
+          if (recordingTimerRef.current !== null) window.clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+          recordingRef.current = null;
+          setRecording(false);
+          setError(ui.recordingFailed);
+        },
+      );
       recordingStartedRef.current = Date.now();
       setRecordingSeconds(0);
       setRecording(true);
@@ -115,10 +142,12 @@ export default function MicTest({ ui }: ToolProps<UI>) {
     } catch {
       setError(ui.recordingUnsupported);
     }
-  }, [stopRecording, ui.recordingUnsupported]);
+  }, [stopRecording, ui.recordingFailed, ui.recordingUnsupported]);
 
   useEffect(() => {
-    void listMicrophones().then(setDevices);
+    void listMicrophones()
+      .then(setDevices)
+      .catch(() => setDevices([]));
     return () => {
       stopTest();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);

@@ -30,6 +30,7 @@ const uiEn = {
   noMicrophone: 'No microphone was found. Connect one and try again.',
   startError: 'The microphone could not be started. Close other apps using it and try again.',
   recordingUnsupported: 'This browser can test the microphone but cannot make a local recording.',
+  recordingFailed: 'The recording could not be completed. Start a new 10-second sample and try again.',
   shortcutStartStop: 'start or stop',
   shortcutRecord: 'record a 10-second sample',
 };
@@ -174,6 +175,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       noMicrophone: '마이크를 찾지 못했습니다. 장치를 연결한 뒤 다시 시도합니다.',
       startError: '마이크를 시작하지 못했습니다. 마이크를 쓰는 다른 앱을 닫고 다시 시도합니다.',
       recordingUnsupported: '이 브라우저에서는 마이크 입력은 확인할 수 있지만 로컬 녹음은 지원하지 않습니다.',
+      recordingFailed: '녹음을 완료하지 못했습니다. 새 10초 녹음을 시작해 다시 시도합니다.',
       shortcutStartStop: '테스트 시작 또는 중지',
       shortcutRecord: '10초 녹음',
     },
