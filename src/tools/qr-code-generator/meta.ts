@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'word-counter',
     'password-generator',
     'random-picker',
+    'qr-code-scanner',
   ],
 };
