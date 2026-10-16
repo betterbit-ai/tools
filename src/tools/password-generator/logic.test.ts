@@ -52,7 +52,19 @@ describe('password-generator logic', () => {
       'no-character-set',
     );
     expect(validateSettings({ ...defaults, length: 3 })).toBe('invalid-length');
-    expect(validateSettings({ ...defaults, wordCount: 13 })).toBe('invalid-word-count');
+    expect(validateSettings({ ...defaults, mode: 'passphrase', wordCount: 13 })).toBe('invalid-word-count');
+  });
+
+  it('validates and calculates entropy only for the active generation mode', () => {
+    const passphrase = { ...defaults, mode: 'passphrase' as const, length: Number.NaN };
+    const password = { ...defaults, wordCount: Number.NaN };
+
+    expect(validateSettings(passphrase)).toBeNull();
+    expect(generatePassword(passphrase, zero)).toBe('amber-amber-amber-amber-amber-amber');
+    expect(validateSettings(password)).toBeNull();
+    expect(entropyBits(passphrase)).toBe(42);
+    expect(entropyBits(password)).toBeGreaterThan(100);
+    expect(entropyBits({ ...defaults, mode: 'passphrase', wordCount: 13 })).toBe(0);
   });
 
   it('creates a passphrase with a Unicode separator and counts Unicode code points', () => {

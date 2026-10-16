@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import {
   Button,
   CopyButton,
@@ -68,16 +68,19 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<ValidationError | 'crypto' | null>(null);
   const [ready, setReady] = useState(false);
-  const generatedInitially = useRef(false);
   const update = (patch: Partial<PasswordSettings>) => setSettings((current) => ({ ...current, ...patch }));
 
   const generate = useCallback(() => {
     const validationError = validateSettings(settings);
-    if (validationError) return setError(validationError);
+    if (validationError) {
+      setPassword('');
+      return setError(validationError);
+    }
     try {
       setPassword(generatePassword(settings, cryptoSource));
       setError(null);
     } catch {
+      setPassword('');
       setError('crypto');
     }
   }, [settings]);
@@ -95,8 +98,7 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
     if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
   }, [ready, settings]);
   useEffect(() => {
-    if (!ready || generatedInitially.current) return;
-    generatedInitially.current = true;
+    if (!ready) return;
     generate();
   }, [generate, ready]);
   useEffect(() => {

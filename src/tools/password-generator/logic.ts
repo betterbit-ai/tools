@@ -162,6 +162,16 @@ export interface PasswordSettings {
 export type ValidationError = 'invalid-length' | 'invalid-word-count' | 'no-character-set' | 'length-too-short';
 
 export function validateSettings(settings: PasswordSettings): ValidationError | null {
+  if (settings.mode === 'passphrase') {
+    if (
+      !Number.isInteger(settings.wordCount) ||
+      settings.wordCount < MIN_WORD_COUNT ||
+      settings.wordCount > MAX_WORD_COUNT
+    ) {
+      return 'invalid-word-count';
+    }
+    return null;
+  }
   if (
     !Number.isInteger(settings.length) ||
     settings.length < MIN_PASSWORD_LENGTH ||
@@ -169,17 +179,9 @@ export function validateSettings(settings: PasswordSettings): ValidationError | 
   ) {
     return 'invalid-length';
   }
-  if (
-    !Number.isInteger(settings.wordCount) ||
-    settings.wordCount < MIN_WORD_COUNT ||
-    settings.wordCount > MAX_WORD_COUNT
-  ) {
-    return 'invalid-word-count';
-  }
-  if (settings.mode === 'passphrase') return null;
   const sets = characterSets(settings);
   if (sets.length === 0) return 'no-character-set';
-  if (settings.mode === 'password' && settings.length < sets.length) return 'length-too-short';
+  if (settings.length < sets.length) return 'length-too-short';
   return null;
 }
 
@@ -237,6 +239,7 @@ export function generatePassphrase(wordCount: number, separator: string, source:
 
 /** Exact entropy for this generator's uniformly sampled result space, in bits. */
 export function entropyBits(settings: PasswordSettings): number {
+  if (validateSettings(settings)) return 0;
   if (settings.mode === 'passphrase') return settings.wordCount * Math.log2(WORDS.length);
   const sets = characterSets(settings);
   if (!sets.length || settings.length < sets.length) return 0;

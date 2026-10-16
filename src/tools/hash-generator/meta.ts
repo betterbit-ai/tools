@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'developer',
   icon: 'shield',
   added: '2026-10-15',
-  updated: '2026-10-15',
+  updated: '2026-10-16',
   edges: ['privacy', 'usability'],
   competitors: [
     {
@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened Korean result places text, file, and comparison in separate modes and asks for a “해시 생성” action. Betterbit keeps the currently selected input and expected-checksum result on one screen and recalculates it immediately. (장점: SHA-3도 선택할 수 있고 큰 파일의 진행 상황을 설명한다.)',
     },
   ],
-  related: ['base64', 'json-formatter', 'uuid-generator'],
+  related: ['base64', 'json-formatter', 'uuid-generator', 'password-generator'],
 };
