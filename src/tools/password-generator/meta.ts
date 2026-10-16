@@ -5,14 +5,20 @@ export const meta: ToolMeta = {
   category: 'generator',
   icon: 'sparkle',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-16',
   edges: ['usability', 'features'],
   competitors: [
+    {
+      name: 'Bitwarden Password Generator',
+      url: 'https://bitwarden.com/password-generator/',
+      weakness:
+        'The opened page includes account, trial, and vault calls to action around a generator that already supports passwords, passphrases, a strength label, and estimated crack time. Betterbit keeps the generated value, exact result-space entropy, and every setting together in one compact local tool. (Strength: Bitwarden can save, sync, autofill, and share credentials through its password manager.)',
+    },
     {
       name: 'LastPass Password Generator',
       url: 'https://www.lastpass.com/features/password-generator',
       weakness:
-        'The opened page surrounds its generator with repeated personal/business trial calls to action and product-plan navigation. Betterbit keeps password creation in a compact tool surface, shows the entropy estimate beside the result, and offers a distinct word-passphrase mode. (Strength: LastPass can save and autofill passwords through its password manager.)',
+        'The opened page surrounds its character-password generator with repeated personal and business trial calls to action and product-plan navigation. Betterbit keeps generation, a passphrase mode, and an exact result-space entropy estimate in one compact local surface. (Strength: LastPass offers easy-to-say and easy-to-read options and checks generated passwords with zxcvbn.)',
     },
     {
       name: 'Calculator.net Password Generator',
@@ -45,5 +51,5 @@ export const meta: ToolMeta = {
         'Its Korean result describes a strength estimate based on length and character types, but does not disclose the generated result space or provide a memorable-word mode in the visible result description. Betterbit labels entropy in bits, explains the 128-word selection source, and leaves generated passwords only in the browser. (장점: 생성기와 비밀번호 강도 판별기를 함께 제공한다.)',
     },
   ],
-  related: ['random-number', 'qr-code-generator', 'random-picker', 'spin-wheel'],
+  related: ['random-number', 'hash-generator', 'uuid-generator'],
 };
