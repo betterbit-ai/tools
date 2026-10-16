@@ -55,5 +55,6 @@ export const meta: ToolMeta = {
     'spin-wheel',
     'team-generator',
     'uuid-generator',
+    'dice-roller',
   ],
 };
