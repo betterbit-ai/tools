@@ -53,5 +53,6 @@ export const meta: ToolMeta = {
     'password-generator',
     'random-picker',
     'qr-code-scanner',
+    'barcode-generator',
   ],
 };
