@@ -21,3 +21,9 @@ export const SITE_VERIFICATION = {
   naver: 'e126fa845033397c49b7682d6c1d8fe7e82329d8',
   bing: '',
 };
+
+/**
+ * Google Analytics 4 measurement ID (G-…). Public, not a secret. Empty = no GA on the site.
+ * Rendered only by components/site/Analytics.astro.
+ */
+export const GA_MEASUREMENT_ID = 'G-65WPS26YBJ';

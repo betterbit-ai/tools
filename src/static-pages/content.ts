@@ -27,7 +27,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Who publishes this site',
-          body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts and no advertising. We use Cloudflare Web Analytics — cookieless, aggregate page-view statistics — to learn which tools people find useful; see our Privacy Policy for exactly what that means.`,
+          body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts and no advertising. We use Cloudflare Web Analytics and Google Analytics to learn which tools people find useful and how they find us; see our Privacy Policy for exactly what each one collects.`,
         },
       ],
     },
@@ -48,7 +48,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '운영 주체',
-          body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 이 사이트에는 회원가입과 광고가 없습니다. 어떤 도구가 실제로 쓰이는지 알기 위해 쿠키를 쓰지 않는 집계형 방문 통계인 Cloudflare Web Analytics를 사용하며, 자세한 내용은 개인정보처리방침에서 확인할 수 있습니다.`,
+          body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 이 사이트에는 회원가입과 광고가 없습니다. 어떤 도구가 실제로 쓰이고 사람들이 어떻게 찾아오는지 알기 위해 Cloudflare Web Analytics와 Google Analytics를 사용하며, 각각 무엇을 수집하는지는 개인정보처리방침에서 확인할 수 있습니다.`,
         },
       ],
     },
@@ -58,10 +58,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
     en: {
       title: `Privacy Policy — ${SITE_NAME}`,
       description:
-        'How Betterbit Tools handles your data: tools run locally in your browser, no accounts, no cookies, no ads — only cookieless, aggregate visit statistics.',
+        'How Betterbit Tools handles your data: tools run locally in your browser, with no accounts and no uploads. Visit statistics come from Cloudflare Web Analytics and Google Analytics.',
       h1: 'Privacy Policy',
       intro: 'In short: your files and text never leave your browser. We built the site this way on purpose.',
-      updated: '2026-10-08',
+      updated: '2026-10-16',
       sections: [
         {
           heading: 'What we collect',
@@ -69,7 +69,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Accounts and cookies',
-          body: `There is no sign-up and no account system. ${SITE_NAME} does not set any cookies.`,
+          body: `There is no sign-up and no account system. The tools themselves set no cookies. The only cookies on ${SITE_NAME} come from Google Analytics, described below — and in the EU/EEA, the UK and Switzerland it runs without cookies.`,
         },
         {
           heading: 'Local storage',
@@ -80,8 +80,8 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
           body: `${SITE_NAME} is a static site hosted on Cloudflare. Like any web host, Cloudflare's network generates standard server logs for requests (such as IP address, user agent, and requested URL) to keep the service running and secure. We don't run our own server-side tracking, and apart from the visit statistics described below we don't add anything to what Cloudflare logs by default.`,
         },
         {
-          heading: 'Visit statistics (added October 8, 2026)',
-          body: `To learn which tools are actually useful, ${SITE_NAME} uses Cloudflare Web Analytics. It is privacy-first by design: it sets no cookies, uses no localStorage, and does not fingerprint or track individual visitors across sites or visits. It reports aggregate numbers only — pages viewed, referring site, browser and device type, country, and page-load performance. It never sees the files or text you use in our tools.\n\n${SITE_NAME} shows no advertising. If that ever changes, we will update this page first and say plainly what is being added and why — before it goes live, not after.`,
+          heading: 'Visit statistics (updated October 16, 2026)',
+          body: `To learn which tools are actually useful, ${SITE_NAME} uses Cloudflare Web Analytics. It is privacy-first by design: it sets no cookies, uses no localStorage, and does not fingerprint or track individual visitors across sites or visits. It reports aggregate numbers only — pages viewed, referring site, browser and device type, country, and page-load performance. It never sees the files or text you use in our tools.\n\nSince October 16, 2026 we also use Google Analytics 4 to see how people find and use the site: which search engine or website sent a visit, which pages were viewed, and for how long. It sets first-party cookies (_ga and _ga_<ID>) holding a random identifier, so a returning browser can be counted once. Google receives your IP address to estimate your country and city; Google Analytics 4 does not log or store IP addresses. We have not turned on advertising features, Google signals, or user IDs, and the files and text you use in our tools are never sent. In the EU/EEA, the UK and Switzerland, Google Analytics runs in consent mode with analytics storage denied, so it sets no cookies there. You can opt out anywhere with Google's browser add-on (https://tools.google.com/dlpage/gaoptout) or by blocking cookies for this site.\n\n${SITE_NAME} shows no advertising. If that ever changes, we will update this page first and say plainly what is being added and why — before it goes live, not after.`,
         },
         {
           heading: 'Changes to this policy',
@@ -96,10 +96,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
     ko: {
       title: `개인정보처리방침 — ${SITE_NAME}`,
       description:
-        '도구는 브라우저에서 로컬로 동작하며 회원가입·쿠키·광고가 없습니다. 쿠키 없는 집계형 방문 통계만 사용합니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
+        '도구는 브라우저에서 로컬로 동작하며 회원가입과 업로드가 없습니다. 방문 통계는 Cloudflare Web Analytics와 Google Analytics로 수집합니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
       h1: '개인정보처리방침',
       intro: '요약하면 이렇습니다: 파일과 텍스트는 브라우저 밖으로 나가지 않습니다. 처음부터 그렇게 만들었습니다.',
-      updated: '2026-10-08',
+      updated: '2026-10-16',
       sections: [
         {
           heading: '수집하는 정보',
@@ -107,7 +107,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '계정과 쿠키',
-          body: `회원가입이나 계정 시스템이 없습니다. ${SITE_NAME}는 어떤 쿠키도 설치하지 않습니다.`,
+          body: `회원가입이나 계정 시스템이 없습니다. 도구 자체는 쿠키를 설치하지 않습니다. ${SITE_NAME}에서 쓰이는 쿠키는 아래에서 설명하는 Google Analytics의 쿠키뿐이며, EU/EEA·영국·스위스에서는 쿠키 없이 동작합니다.`,
         },
         {
           heading: '로컬 저장소(localStorage)',
@@ -118,8 +118,8 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
           body: `${SITE_NAME}는 Cloudflare에서 호스팅하는 정적 사이트입니다. 다른 웹 호스팅과 마찬가지로 Cloudflare 네트워크는 서비스 운영과 보안을 위해 요청에 대한 표준 서버 로그(IP 주소, 사용자 에이전트, 요청한 URL 등)를 생성합니다. 저희는 자체 서버 측 추적을 운영하지 않으며, 아래의 방문 통계를 제외하면 Cloudflare가 기본적으로 남기는 로그 외에 추가로 수집하는 것이 없습니다.`,
         },
         {
-          heading: '방문 통계 (2026년 10월 8일 추가)',
-          body: `어떤 도구가 실제로 쓸모 있는지 알기 위해 ${SITE_NAME}는 Cloudflare Web Analytics를 사용합니다. 개인정보 보호를 우선하도록 설계된 도구로, 쿠키나 localStorage를 사용하지 않고, 개별 방문자를 식별하거나 사이트·방문 간에 추적하지 않습니다. 조회된 페이지, 유입 경로, 브라우저와 기기 종류, 국가, 페이지 로딩 성능 같은 집계 수치만 보고하며, 도구에서 사용하는 파일이나 텍스트는 전혀 보지 못합니다.\n\n${SITE_NAME}에는 광고가 없습니다. 앞으로 광고를 추가하게 된다면, 적용 전에 먼저 이 페이지를 업데이트해 무엇을 왜 추가하는지 명확히 밝히겠습니다.`,
+          heading: '방문 통계 (2026년 10월 16일 변경)',
+          body: `어떤 도구가 실제로 쓸모 있는지 알기 위해 ${SITE_NAME}는 Cloudflare Web Analytics를 사용합니다. 개인정보 보호를 우선하도록 설계된 도구로, 쿠키나 localStorage를 사용하지 않고, 개별 방문자를 식별하거나 사이트·방문 간에 추적하지 않습니다. 조회된 페이지, 유입 경로, 브라우저와 기기 종류, 국가, 페이지 로딩 성능 같은 집계 수치만 보고하며, 도구에서 사용하는 파일이나 텍스트는 전혀 보지 못합니다.\n\n2026년 10월 16일부터는 사람들이 사이트를 어떻게 찾아오고 쓰는지 알기 위해 Google Analytics 4도 함께 사용합니다. 어떤 검색엔진이나 웹사이트를 통해 들어왔는지, 어떤 페이지를 얼마나 오래 봤는지를 수집합니다. 다시 방문한 브라우저를 한 번으로 세기 위해 무작위 식별자가 담긴 자사 쿠키(_ga, _ga_<ID>)를 설치합니다. Google은 국가와 도시를 추정하기 위해 IP 주소를 받지만, Google Analytics 4는 IP 주소를 기록하거나 저장하지 않습니다. 광고 기능, Google 신호, 사용자 ID 기능은 켜지 않았고, 도구에서 사용하는 파일과 텍스트는 전송되지 않습니다. EU/EEA·영국·스위스에서는 분석 저장소가 거부된 동의 모드로 동작해 쿠키를 설치하지 않습니다. 어디서든 Google의 브라우저 부가기능(https://tools.google.com/dlpage/gaoptout)이나 이 사이트의 쿠키 차단으로 수집을 거부할 수 있습니다.\n\n${SITE_NAME}에는 광고가 없습니다. 앞으로 광고를 추가하게 된다면, 적용 전에 먼저 이 페이지를 업데이트해 무엇을 왜 추가하는지 명확히 밝히겠습니다.`,
         },
         {
           heading: '방침 변경',
