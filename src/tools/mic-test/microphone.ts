@@ -7,6 +7,26 @@ export interface MicrophoneSession {
   track: MediaStreamTrack;
 }
 
+/**
+ * Keeps an older permission request from taking over after the user starts,
+ * stops, or switches devices again before it resolves.
+ */
+export function createSessionRequestGate() {
+  let currentRequest = 0;
+
+  return {
+    begin: () => {
+      currentRequest += 1;
+      return currentRequest;
+    },
+    invalidate: () => {
+      currentRequest += 1;
+      return currentRequest;
+    },
+    isCurrent: (request: number) => request === currentRequest,
+  };
+}
+
 export async function openMicrophone(deviceId: string): Promise<MicrophoneSession> {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('unsupported');
 
@@ -15,18 +35,20 @@ export async function openMicrophone(deviceId: string): Promise<MicrophoneSessio
     video: false,
   });
   const context = new AudioContext();
-  const analyser = context.createAnalyser();
-  analyser.fftSize = 2048;
-  analyser.smoothingTimeConstant = 0.75;
-  context.createMediaStreamSource(stream).connect(analyser);
-  await context.resume();
-  const track = stream.getAudioTracks()[0];
-  if (!track) {
+  try {
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.75;
+    context.createMediaStreamSource(stream).connect(analyser);
+    await context.resume();
+    const track = stream.getAudioTracks()[0];
+    if (!track) throw new Error('no-track');
+    return { stream, analyser, context, track };
+  } catch (error) {
     stream.getTracks().forEach((item) => item.stop());
     await context.close();
-    throw new Error('no-track');
+    throw error;
   }
-  return { stream, analyser, context, track };
 }
 
 export async function listMicrophones(): Promise<MediaDeviceInfo[]> {
@@ -45,15 +67,24 @@ export interface LocalRecording {
 }
 
 /** Record a MediaStream into an in-memory Blob; its lifetime is controlled by the caller. */
-export function recordLocally(stream: MediaStream, onComplete: (recording: Blob) => void): LocalRecording {
+export function recordLocally(
+  stream: MediaStream,
+  onComplete: (recording: Blob) => void,
+  onError?: () => void,
+): LocalRecording {
   if (typeof MediaRecorder === 'undefined') throw new Error('recording-unsupported');
   const chunks: BlobPart[] = [];
   const recorder = new MediaRecorder(stream);
+  let failed = false;
   recorder.addEventListener('dataavailable', (event) => {
     if (event.data.size > 0) chunks.push(event.data);
   });
+  recorder.addEventListener('error', () => {
+    failed = true;
+    onError?.();
+  });
   recorder.addEventListener('stop', () => {
-    onComplete(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }));
+    if (!failed) onComplete(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }));
   });
   recorder.start();
   return {

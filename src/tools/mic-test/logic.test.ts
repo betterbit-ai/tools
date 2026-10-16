@@ -39,5 +39,6 @@ describe('microphone display helpers', () => {
   it('keeps Korean, CJK and emoji device names while giving empty names a safe fallback', () => {
     expect(deviceLabel('  헤드셋 🎙️  ', 0, 'Microphone')).toBe('헤드셋 🎙️');
     expect(deviceLabel('', 2, '마이크')).toBe('마이크 3');
+    expect(deviceLabel(' ', Number.POSITIVE_INFINITY, 'Microphone')).toBe('Microphone 1');
   });
 });

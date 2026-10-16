@@ -53,5 +53,6 @@ export function formatRecordingTime(seconds: number): string {
 /** Device labels are often hidden until permission is granted; keep real Unicode labels intact. */
 export function deviceLabel(label: string, index: number, unnamed: string): string {
   const trimmed = label.trim();
-  return trimmed || `${unnamed} ${Math.max(1, Math.floor(index) + 1)}`;
+  const position = Number.isFinite(index) ? Math.max(1, Math.floor(index) + 1) : 1;
+  return trimmed || `${unnamed} ${position}`;
 }
