@@ -26,4 +26,4 @@ export const SITE_VERIFICATION = {
  * Google Analytics 4 measurement ID (G-…). Public, not a secret. Empty = no GA on the site.
  * Rendered only by components/site/Analytics.astro.
  */
-export const GA_MEASUREMENT_ID = '';
+export const GA_MEASUREMENT_ID = 'G-65WPS26YBJ';
