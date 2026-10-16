@@ -5,12 +5,14 @@ import {
   jpgFileName,
   MAX_FILE_BYTES,
   MAX_PAGE_COUNT,
+  MAX_PAGE_SELECTION_CHARS,
   MAX_RASTER_PIXELS,
   MAX_TOTAL_RASTER_PIXELS,
   pageCountExceedsLimit,
   pageExceedsRasterLimit,
   PageRangeOutOfBoundsError,
   PageRangeSyntaxError,
+  PageRangeTooLongError,
   parsePageSelection,
   renderScale,
   RESOLUTION_PRESETS,
@@ -38,6 +40,10 @@ describe('page selection', () => {
     expect(() => parsePageSelection('2-7', 6)).toThrow(PageRangeOutOfBoundsError);
     expect(() => parsePageSelection('1', 0)).toThrow(PageRangeOutOfBoundsError);
   });
+
+  it('rejects a pasted page selection before unbounded parsing work', () => {
+    expect(() => parsePageSelection('1,'.repeat(MAX_PAGE_SELECTION_CHARS), 100)).toThrow(PageRangeTooLongError);
+  });
 });
 
 describe('resolution presets', () => {
@@ -64,11 +70,17 @@ describe('file names', () => {
     expect(jpgFileName('   ', 1, 1)).toBe('document_page-1.jpg');
     expect(zipFileName('')).toBe('document_jpg.zip');
   });
+
+  it('keeps ZIP entries out of directory paths', () => {
+    expect(jpgFileName('../계약서.pdf', 1, 1)).toBe('.._계약서_page-1.jpg');
+    expect(zipFileName('folder\\report.pdf')).toBe('folder_report_jpg.zip');
+  });
 });
 
 describe('file and browser safety checks', () => {
   it('accepts only PDF MIME types or final extensions', () => {
     expect(isPdfFile('document', 'application/pdf')).toBe(true);
+    expect(isPdfFile('document', ' Application/PDF; charset=binary ')).toBe(true);
     expect(isPdfFile('보고서.PDF', '')).toBe(true);
     expect(isPdfFile('report.pdf.exe', '')).toBe(false);
     expect(isPdfFile('image.jpg', 'image/jpeg')).toBe(false);
