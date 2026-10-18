@@ -17,6 +17,18 @@ import { CLAUDE_ENV, CONFIG, DIRS, ENGINE, HOME, ROOT, log, notify, sh } from '.
 const engineConfig = () => CONFIG.engines?.[ENGINE] ?? {};
 export const ENGINE_LABEL = [ENGINE, engineConfig().model].filter(Boolean).join(' ');
 
+/**
+ * Per-issue model: a `model:<alias>` label picks config.engines[engine].models[alias]
+ * (e.g. `model:sol` → gpt-5.6-sol for careful audits). Unknown aliases use the default.
+ */
+export function modelFor(labels) {
+  const alias = labels
+    .map((l) => (typeof l === 'string' ? l : l.name))
+    .find((n) => n.startsWith('model:'))
+    ?.slice(6);
+  return (alias && engineConfig().models?.[alias]) || undefined;
+}
+
 export function runAgent(promptText, cwd, logFile, opts = {}) {
   if (ENGINE === 'codex') return runCodex(promptText, cwd, logFile, opts);
   if (ENGINE === 'claude') return runClaude(promptText, cwd, logFile, opts);
@@ -25,13 +37,13 @@ export function runAgent(promptText, cwd, logFile, opts = {}) {
 
 /* ───────────── Claude Code ───────────── */
 
-function runClaude(promptText, cwd, logFile, { resume } = {}) {
+function runClaude(promptText, cwd, logFile, { resume, model } = {}) {
   const { timeoutMinutes } = CONFIG.session;
   const args = ['-p', promptText];
   if (resume) args.push('--resume', resume);
   args.push('--permission-mode', 'acceptEdits', '--output-format', 'stream-json', '--verbose');
   args.push('--allowedTools', ...CONFIG.allowedTools);
-  if (engineConfig().model) args.push('--model', engineConfig().model);
+  if (model ?? engineConfig().model) args.push('--model', model ?? engineConfig().model);
   log(`claude session start (cwd=${cwd}${resume ? `, resume=${resume}` : ''}, log=${logFile})`);
   const res = sh('claude', args, { cwd, allowFail: true, timeoutMs: timeoutMinutes * 60_000, env: CLAUDE_ENV });
   writeFileSync(logFile, res.out + '\n' + res.err);
@@ -100,8 +112,9 @@ const tomlTable = (obj) =>
     .map(([k, v]) => `${k}=${toml(v)}`)
     .join(',')}}`;
 
-function runCodex(promptText, cwd, logFile, { resume, gitDir } = {}) {
+function runCodex(promptText, cwd, logFile, { resume, gitDir, model } = {}) {
   const c = engineConfig();
+  const useModel = model ?? c.model;
   const { timeoutMinutes } = CONFIG.session;
   syncAuthIn();
   const empty = join(HOME, 'empty');
@@ -118,7 +131,7 @@ function runCodex(promptText, cwd, logFile, { resume, gitDir } = {}) {
     GIT_CONFIG_VALUE_0: '',
   };
   const config = [
-    `model=${toml(c.model)}`,
+    `model=${toml(useModel)}`,
     `model_reasoning_effort=${toml(c.effort ?? 'high')}`,
     `approval_policy="never"`,
     `sandbox_mode="workspace-write"`,
@@ -132,7 +145,7 @@ function runCodex(promptText, cwd, logFile, { resume, gitDir } = {}) {
   if (resume) args.push('resume', resume);
   args.push(promptText);
 
-  log(`codex session start (${ENGINE_LABEL}, cwd=${cwd}${resume ? `, resume=${resume}` : ''}, log=${logFile})`);
+  log(`codex session start (codex ${useModel}, cwd=${cwd}${resume ? `, resume=${resume}` : ''}, log=${logFile})`);
   const res = sh('codex', args, {
     cwd,
     input: '',

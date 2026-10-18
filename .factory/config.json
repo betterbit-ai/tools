@@ -68,7 +68,12 @@
     },
     "codex": {
       "model": "gpt-5.6-terra",
-      "effort": "high"
+      "effort": "high",
+      "models": {
+        "sol": "gpt-5.6-sol",
+        "terra": "gpt-5.6-terra",
+        "luna": "gpt-5.6-luna"
+      }
     }
   }
 }

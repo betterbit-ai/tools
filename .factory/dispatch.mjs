@@ -28,7 +28,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, rmSync, statfsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ENGINE_LABEL, cooldownEnd, coolingDown, runAgent } from './engines.mjs';
+import { ENGINE_LABEL, cooldownEnd, coolingDown, modelFor, runAgent } from './engines.mjs';
 import {
   CI,
   CONFIG,
@@ -576,7 +576,12 @@ function startNextIssue(repo, clone) {
   // Alternate: after a new tool comes a quality audit of an existing one (when one is queued).
   const isAudit = (i) => i.labels.some((l) => l.name === 'type:audit');
   const lastKind = existsSync(LAST_KIND_FILE) ? readFileSync(LAST_KIND_FILE, 'utf8').trim() : '';
-  const issue = (lastKind !== 'audit' && issues.find(isAudit)) || issues.find((i) => !isAudit(i)) || issues[0];
+  // P0 jumps the alternation: it is what a human asked to happen first.
+  const issue =
+    (issues[0] && priorityOf(issues[0].labels) === 0 && issues[0]) ||
+    (lastKind !== 'audit' && issues.find(isAudit)) ||
+    issues.find((i) => !isAudit(i)) ||
+    issues[0];
   if (!issue) {
     log(`[${repo.name}] no ready issues`);
     return 'stop';
@@ -589,7 +594,8 @@ function startNextIssue(repo, clone) {
   const logFile = join(DIRS.logs, `${repo.name}-issue${n}-${stamp()}.log`);
   if (!claim(repo, n)) return 'stop';
   writeFileSync(LAST_KIND_FILE, isAudit(issue) ? 'audit' : 'build');
-  log(`[${repo.name}] starting issue #${n} with ${ENGINE_LABEL}: ${issue.title}`);
+  const model = modelFor(issue.labels);
+  log(`[${repo.name}] starting issue #${n} with ${model ? `${ENGINE} ${model}` : ENGINE_LABEL}: ${issue.title}`);
   gh([
     'issue',
     'edit',
@@ -673,6 +679,7 @@ function startNextIssue(repo, clone) {
   const session = runAgent(text, wt, logFile, {
     resume: resuming ? saved.sessionId : undefined,
     gitDir: join(clone, '.git'),
+    model,
   });
   killStrays(wt);
 
