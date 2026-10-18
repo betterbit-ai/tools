@@ -18,44 +18,53 @@ export function isSpeedUnit(value: unknown): value is SpeedUnit {
 }
 
 /**
- * Parses ordinary grouped numbers and full-width digits pasted from a Korean keyboard.
- * Unit-bearing strings are deliberately rejected so callers do not guess a unit.
+ * Parses decimal/scientific input with optional correctly grouped commas. NFKC normalization
+ * lets Korean users paste full-width digits and punctuation without weakening syntax checks.
  */
-export function parseSpeedNumber(value: number | string): number | null {
+export function parseSpeedNumber(value: number | string): number | '' | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
 
-  const normalized = value.normalize('NFKC').trim().replaceAll(',', '');
-  if (!normalized) return null;
-  const parsed = Number(normalized);
+  const normalized = value.normalize('NFKC').trim();
+  if (!normalized) return '';
+  const decimal = '(?:\\d+(?:\\.\\d*)?|\\.\\d+)';
+  const grouped = '(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d*)?)';
+  const pattern = new RegExp(`^[+-]?(?:${decimal}|${grouped})(?:[eE][+-]?\\d+)?$`);
+  if (!pattern.test(normalized)) return null;
+
+  const parsed = Number(normalized.replaceAll(',', ''));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function isValidSpeed(value: number): boolean {
+export function isSpeedInRange(value: number): boolean {
   return Number.isFinite(value) && value >= 0 && value <= MAX_SPEED;
 }
 
 /** Converts a non-negative scalar speed. Invalid values yield 0. */
 export function convertSpeed(value: number, from: SpeedUnit, to: SpeedUnit): number {
-  if (!isValidSpeed(value) || !isSpeedUnit(from) || !isSpeedUnit(to)) return 0;
+  if (!isSpeedInRange(value) || !isSpeedUnit(from) || !isSpeedUnit(to)) return 0;
   if (from === to) return value;
   return (value * METRES_PER_SECOND_PER_UNIT[from]) / METRES_PER_SECOND_PER_UNIT[to];
 }
 
 /** Returns a speed from a running pace written as whole minutes plus seconds per distance unit. */
-export function speedFromPace(minutes: number, seconds: number, distance: 'km' | 'mi'): number {
+export function isValidPace(minutes: number, seconds: number): boolean {
   if (!Number.isInteger(minutes) || !Number.isInteger(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) {
-    return 0;
+    return false;
   }
-
   const totalSeconds = minutes * 60 + seconds;
-  if (totalSeconds <= 0) return 0;
+  return Number.isFinite(totalSeconds) && totalSeconds > 0;
+}
+
+export function speedFromPace(minutes: number, seconds: number, distance: 'km' | 'mi'): number {
+  if (!isValidPace(minutes, seconds)) return 0;
+  const totalSeconds = minutes * 60 + seconds;
   const metres = distance === 'km' ? 1000 : 1609.344;
   return metres / totalSeconds;
 }
 
 /** Returns pace in seconds per kilometre or mile, or null for zero/invalid speeds. */
 export function paceSecondsFromSpeed(speed: number, unit: SpeedUnit, distance: 'km' | 'mi'): number | null {
-  if (!isValidSpeed(speed) || speed <= 0 || !isSpeedUnit(unit)) return null;
+  if (!isSpeedInRange(speed) || speed <= 0 || !isSpeedUnit(unit)) return null;
   const metresPerSecond = convertSpeed(speed, unit, 'ms');
   const metres = distance === 'km' ? 1000 : 1609.344;
   return metres / metresPerSecond;
@@ -68,6 +77,12 @@ export function formatPace(seconds: number | null): string {
   const minutes = Math.floor(rounded / 60);
   const remainingSeconds = rounded % 60;
   return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+}
+
+/** Keep tiny nonzero results readable instead of rounding them to a dishonest zero. */
+export function usesScientificNotation(value: number): boolean {
+  const absolute = Math.abs(value);
+  return Number.isFinite(value) && absolute !== 0 && absolute < 0.000001;
 }
 
 export interface QuickTableRow {

@@ -1,19 +1,33 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, NumberInput, Panel, Segmented, Select, Stat } from '../../components/ui';
+import {
+  Button,
+  CopyButton,
+  Field,
+  Notice,
+  NumberInput,
+  Panel,
+  Segmented,
+  Select,
+  Stat,
+  TextInput,
+} from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
-  MAX_SPEED,
   SPEED_UNITS,
   convertSpeed,
   formatPace,
+  isSpeedInRange,
   isSpeedUnit,
+  isValidPace,
   paceSecondsFromSpeed,
+  parseSpeedNumber,
   quickTable,
   speedFromPace,
   type SpeedUnit,
+  usesScientificNotation,
 } from './logic';
 
 const STORAGE_KEY = 'tools:speed-converter:state';
@@ -30,7 +44,7 @@ const UNIT_LABEL_KEY: Record<SpeedUnit, keyof UI> = {
 
 interface State {
   mode: Mode;
-  value: number | '';
+  value: string;
   from: SpeedUnit;
   to: SpeedUnit;
   paceMinutes: number | '';
@@ -40,7 +54,7 @@ interface State {
 
 const DEFAULT_STATE: State = {
   mode: 'speed',
-  value: 60,
+  value: '60',
   from: 'mph',
   to: 'kmh',
   paceMinutes: 5,
@@ -66,7 +80,12 @@ function restoreState(): State {
     if (!saved || typeof saved !== 'object') return DEFAULT_STATE;
     return {
       mode: isMode(saved.mode) ? saved.mode : DEFAULT_STATE.mode,
-      value: isFiniteNumber(saved.value) ? saved.value : DEFAULT_STATE.value,
+      value:
+        typeof saved.value === 'string'
+          ? saved.value
+          : isFiniteNumber(saved.value)
+            ? String(saved.value)
+            : DEFAULT_STATE.value,
       from: isSpeedUnit(saved.from) ? saved.from : DEFAULT_STATE.from,
       to: isSpeedUnit(saved.to) ? saved.to : DEFAULT_STATE.to,
       paceMinutes: isFiniteNumber(saved.paceMinutes) ? saved.paceMinutes : DEFAULT_STATE.paceMinutes,
@@ -94,7 +113,6 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
   const presetValue = isFiniteNumber(preset?.value) ? preset.value : undefined;
   const hasPreset =
     presetMode !== undefined || presetFrom !== undefined || presetTo !== undefined || presetValue !== undefined;
-  const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(() =>
     hasPreset
       ? {
@@ -102,46 +120,65 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
           mode: presetMode ?? DEFAULT_STATE.mode,
           from: presetFrom ?? DEFAULT_STATE.from,
           to: presetTo ?? DEFAULT_STATE.to,
-          value: presetValue ?? DEFAULT_STATE.value,
+          value: presetValue === undefined ? DEFAULT_STATE.value : String(presetValue),
         }
       : DEFAULT_STATE,
   );
 
   useEffect(() => {
     if (!hasPreset) setState(restoreState());
-    setReady(true);
   }, []);
 
-  useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
-  }, [ready, state]);
-
-  const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
-  const sourceSpeed =
-    state.mode === 'speed'
-      ? convertSpeed(isFiniteNumber(state.value) ? state.value : 0, state.from, 'ms')
-      : speedFromPace(
-          isFiniteNumber(state.paceMinutes) ? state.paceMinutes : 0,
-          isFiniteNumber(state.paceSeconds) ? state.paceSeconds : 0,
-          state.paceDistance,
-        );
-  const primaryResult = convertSpeed(sourceSpeed, 'ms', state.to);
+  const update = (patch: Partial<State>) => {
+    const next = { ...state, ...patch };
+    setState(next);
+    if (!hasPreset) safeStorage.set(STORAGE_KEY, JSON.stringify(next));
+  };
+  const parsedValue = parseSpeedNumber(state.value);
+  const speedSyntaxInvalid = parsedValue === null;
+  const speedRangeInvalid = typeof parsedValue === 'number' && !isSpeedInRange(parsedValue);
+  const speedEmpty = parsedValue === '';
+  const paceEmpty = state.paceMinutes === '' || state.paceSeconds === '';
+  const paceInvalid =
+    !paceEmpty &&
+    !isValidPace(
+      isFiniteNumber(state.paceMinutes) ? state.paceMinutes : Number.NaN,
+      isFiniteNumber(state.paceSeconds) ? state.paceSeconds : Number.NaN,
+    );
+  const activeInputInvalid = state.mode === 'speed' ? speedSyntaxInvalid || speedRangeInvalid : paceInvalid;
+  const inputUnavailable =
+    state.mode === 'speed' ? speedEmpty || speedSyntaxInvalid || speedRangeInvalid : paceEmpty || paceInvalid;
+  const sourceSpeed = inputUnavailable
+    ? null
+    : state.mode === 'speed'
+      ? convertSpeed(parsedValue as number, state.from, 'ms')
+      : speedFromPace(state.paceMinutes as number, state.paceSeconds as number, state.paceDistance);
+  const primaryResult = sourceSpeed === null ? null : convertSpeed(sourceSpeed, 'ms', state.to);
   const unitOptions = SPEED_UNITS.map((unit) => ({ value: unit, label: ui[UNIT_LABEL_KEY[unit]] }));
   const otherUnits = SPEED_UNITS.filter((unit) => unit !== state.to);
   const rows = useMemo(() => quickTable(state.from, state.to), [state.from, state.to]);
-  const n = (value: number) => formatNumber(value, locale, resultDecimals(value));
-  const paceKm = formatPace(paceSecondsFromSpeed(sourceSpeed, 'ms', 'km'));
-  const paceMi = formatPace(paceSecondsFromSpeed(sourceSpeed, 'ms', 'mi'));
-  const copyText = [
-    ...SPEED_UNITS.map((unit) => `${ui[UNIT_LABEL_KEY[unit]]}: ${n(convertSpeed(sourceSpeed, 'ms', unit))}`),
-    `${ui.paceKmResult}: ${paceKm}`,
-    `${ui.paceMiResult}: ${paceMi}`,
-  ].join('\n');
+  const n = (value: number) =>
+    usesScientificNotation(value)
+      ? new Intl.NumberFormat(locale, { notation: 'scientific', maximumFractionDigits: 6 }).format(value)
+      : formatNumber(value, locale, resultDecimals(value));
+  const resultFor = (unit: SpeedUnit) => (sourceSpeed === null ? null : convertSpeed(sourceSpeed, 'ms', unit));
+  const paceKm = formatPace(sourceSpeed === null ? null : paceSecondsFromSpeed(sourceSpeed, 'ms', 'km'));
+  const paceMi = formatPace(sourceSpeed === null ? null : paceSecondsFromSpeed(sourceSpeed, 'ms', 'mi'));
+  const copyText =
+    sourceSpeed === null
+      ? ''
+      : [
+          ...SPEED_UNITS.map((unit) => `${ui[UNIT_LABEL_KEY[unit]]}: ${n(convertSpeed(sourceSpeed, 'ms', unit))}`),
+          `${ui.paceKmResult}: ${paceKm}`,
+          `${ui.paceMiResult}: ${paceMi}`,
+        ].join('\n');
 
   const swap = () => {
-    const decimals = resultDecimals(primaryResult);
-    const rounded = Math.round(primaryResult * 10 ** decimals) / 10 ** decimals;
-    update({ value: rounded, from: state.to, to: state.from });
+    update({
+      value: primaryResult === null ? state.value : String(primaryResult),
+      from: state.to,
+      to: state.from,
+    });
   };
 
   return (
@@ -160,12 +197,13 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
         {state.mode === 'speed' ? (
           <div class="grid gap-4 sm:grid-cols-2">
             <Field label={ui.valueLabel} class="sm:col-span-2" hint={ui.speedHint}>
-              <NumberInput
+              <TextInput
                 value={state.value}
-                min="0"
-                max={MAX_SPEED}
-                step="any"
-                onValue={(value) => update({ value })}
+                inputMode="decimal"
+                autocomplete="off"
+                spellcheck={false}
+                aria-invalid={speedSyntaxInvalid || speedRangeInvalid}
+                onInput={(event) => update({ value: (event.currentTarget as HTMLInputElement).value })}
               />
             </Field>
             <Field label={ui.fromLabel}>
@@ -187,6 +225,7 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
                 value={state.paceMinutes}
                 min="0"
                 step="1"
+                aria-invalid={paceInvalid}
                 onValue={(paceMinutes) => update({ paceMinutes })}
               />
             </Field>
@@ -196,6 +235,7 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
                 min="0"
                 max="59"
                 step="1"
+                aria-invalid={paceInvalid}
                 onValue={(paceSeconds) => update({ paceSeconds })}
               />
             </Field>
@@ -215,7 +255,7 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
         <div class="flex flex-col gap-3" aria-live="polite">
           <Stat
             label={ui.resultLabel.replace('{unit}', ui[UNIT_LABEL_KEY[state.to]])}
-            value={n(primaryResult)}
+            value={primaryResult === null ? ui.unavailableResult : n(primaryResult)}
             emphasis
           />
           <CopyButton text={copyText} label={ui.copy} copiedLabel={ui.copied} />
@@ -223,11 +263,22 @@ export default function SpeedConverter({ locale, ui, preset }: ToolProps<UI>) {
         </div>
       </div>
 
+      {activeInputInvalid && (
+        <div class="mt-4">
+          <Notice tone="danger">
+            {state.mode === 'pace' ? ui.invalidPace : speedRangeInvalid ? ui.speedRange : ui.invalidSpeed}
+          </Notice>
+        </div>
+      )}
+
       <div class="mt-6 border-t border-line pt-6">
         <h3 class="text-sm font-medium text-fg">{ui.allResultsTitle}</h3>
         <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3" aria-live="polite">
           {otherUnits.map((unit) => (
-            <Stat label={ui[UNIT_LABEL_KEY[unit]]} value={n(convertSpeed(sourceSpeed, 'ms', unit))} />
+            <Stat
+              label={ui[UNIT_LABEL_KEY[unit]]}
+              value={resultFor(unit) === null ? ui.unavailableResult : n(resultFor(unit) as number)}
+            />
           ))}
           <Stat label={ui.paceKmResult} value={paceKm} />
           <Stat label={ui.paceMiResult} value={paceMi} />
