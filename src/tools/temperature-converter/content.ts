@@ -3,11 +3,15 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   valueLabel: 'Value',
+  valueHint: 'Commas and full-width digits accepted.',
   fromLabel: 'From',
   toLabel: 'To',
   swap: 'Swap units',
-  resultLabel: 'Result',
-  autosaved: 'Saved automatically',
+  resultLabel: 'Result in {unit}',
+  unavailableResult: '—',
+  invalidValue: 'Enter a valid number, for example -40 or 1,234.5.',
+  resultTooLarge: 'This result is too large to display. Use a smaller value.',
+  autosaved: 'Saved in this browser',
   belowAbsoluteZero: 'That is colder than absolute zero (-273.15°C / 0 K) — not a physically possible temperature.',
   cookingTableTitle: 'Oven temperature reference',
   gasMark: 'Gas mark',
@@ -43,7 +47,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'body temperature converter',
     ],
     howTo: [
-      'Type a value and pick the units to convert from and to.',
+      'Type a value and pick the units to convert from and to. Comma-grouped and full-width digits are accepted.',
       'Press the swap button to flip the two units instantly.',
       'Check the oven temperature table below for the gas-mark equivalent of any recipe temperature.',
       'If the result would be colder than absolute zero, a warning appears — that temperature is not physically possible.',
@@ -51,7 +55,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'The three formulas',
-        body: 'Celsius to Fahrenheit: °F = °C × 9/5 + 32. Fahrenheit to Celsius: °C = (°F − 32) × 5/9. Celsius to Kelvin: K = °C + 273.15 (Kelvin has no negative values — 0 K, or -273.15°C, is absolute zero, the coldest anything can get). The scales agree at exactly one point: -40°C equals -40°F. This converter uses the exact formulas above, not rounded shortcuts, so results stay accurate at any size of input.',
+        body: 'Celsius to Fahrenheit: °F = °C × 9/5 + 32. Fahrenheit to Celsius: °C = (°F − 32) × 5/9. Celsius to Kelvin: K = °C + 273.15 (Kelvin has no negative values — 0 K, or -273.15°C, is absolute zero, the coldest anything can get). The scales agree at exactly one point: -40°C equals -40°F. This converter uses the formulas above rather than rounded shortcuts. Very small and very large finite results use scientific notation so a nonzero value is never shown as zero.',
       },
       {
         heading: 'Oven temperatures and gas mark',
@@ -104,7 +108,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '화씨 온도 계산',
     ],
     howTo: [
-      '값을 입력하고 변환할 단위와 결과 단위를 선택하세요.',
+      '값을 입력하고 변환할 단위와 결과 단위를 선택하세요. 쉼표로 묶은 숫자와 전각 숫자도 입력할 수 있습니다.',
       '단위 바꾸기 버튼을 누르면 두 단위가 즉시 서로 바뀝니다.',
       '아래 오븐 온도표에서 해외 레시피 온도의 가스 마크·섭씨·화씨 값을 확인하세요.',
       '절대영도보다 낮은 값을 입력하면 물리적으로 불가능한 온도라는 경고가 표시됩니다.',
@@ -112,7 +116,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '세 가지 변환 공식',
-        body: '섭씨를 화씨로: °F = °C × 9/5 + 32. 화씨를 섭씨로: °C = (°F − 32) × 5/9. 섭씨를 켈빈으로: K = °C + 273.15 (켈빈에는 음수가 없습니다 — 0K, 즉 -273.15°C가 절대영도이며 이보다 낮은 온도는 존재할 수 없습니다). 두 스케일이 정확히 같아지는 지점은 단 하나, -40°C와 -40°F입니다. 이 변환기는 어림값이 아니라 정확한 공식을 그대로 쓰기 때문에 입력값의 크기와 상관없이 결과가 정확합니다.',
+        body: '섭씨를 화씨로: °F = °C × 9/5 + 32. 화씨를 섭씨로: °C = (°F − 32) × 5/9. 섭씨를 켈빈으로: K = °C + 273.15 (켈빈에는 음수가 없습니다 — 0K, 즉 -273.15°C가 절대영도이며 이보다 낮은 온도는 존재할 수 없습니다). 두 스케일이 정확히 같아지는 지점은 단 하나, -40°C와 -40°F입니다. 이 변환기는 어림값 대신 위 공식을 씁니다. 0이 아닌 아주 작은 값이 0으로 보이지 않도록 아주 작거나 큰 유한 결과는 과학적 표기법으로 보여 줍니다.',
       },
       {
         heading: '오븐 온도와 가스 마크',
@@ -147,11 +151,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       valueLabel: '값',
+      valueHint: '쉼표·전각 숫자 입력 가능',
       fromLabel: '변환할 단위',
       toLabel: '결과 단위',
       swap: '단위 바꾸기',
-      resultLabel: '결과',
-      autosaved: '자동 저장됨',
+      resultLabel: '결과 ({unit})',
+      unavailableResult: '—',
+      invalidValue: '올바른 숫자를 입력하세요. 예: -40 또는 1,234.5',
+      resultTooLarge: '결과가 너무 커서 표시할 수 없습니다. 더 작은 값을 입력하세요.',
+      autosaved: '이 브라우저에 저장됨',
       belowAbsoluteZero: '절대영도(-273.15°C / 0K)보다 낮은, 물리적으로 존재할 수 없는 온도입니다.',
       cookingTableTitle: '오븐 온도 참조표',
       gasMark: '가스 마크',

@@ -6,6 +6,8 @@ import {
   cookingTable,
   isBelowAbsoluteZero,
   isTemperatureUnit,
+  parseTemperatureInput,
+  usesScientificNotation,
 } from './logic';
 
 describe('convertTemperature', () => {
@@ -77,6 +79,35 @@ describe('isTemperatureUnit', () => {
   });
 });
 
+describe('temperature input and display helpers', () => {
+  it('accepts decimal, scientific, grouped, and full-width input', () => {
+    expect(parseTemperatureInput(' 37 ')).toBe(37);
+    expect(parseTemperatureInput('-40.5')).toBe(-40.5);
+    expect(parseTemperatureInput('.5')).toBe(0.5);
+    expect(parseTemperatureInput('1e3')).toBe(1000);
+    expect(parseTemperatureInput('1,234.5')).toBe(1234.5);
+    expect(parseTemperatureInput('１２，３４５．６')).toBe(12345.6);
+  });
+
+  it('distinguishes empty input from malformed and overflowing input', () => {
+    expect(parseTemperatureInput('')).toBe('');
+    expect(parseTemperatureInput('   ')).toBe('');
+    expect(parseTemperatureInput('12 K')).toBeNull();
+    expect(parseTemperatureInput('12,34')).toBeNull();
+    expect(parseTemperatureInput('1e309')).toBeNull();
+    expect(parseTemperatureInput('🌡️')).toBeNull();
+  });
+
+  it('uses scientific notation before finite nonzero values display as zero or huge integers', () => {
+    expect(usesScientificNotation(1e-7)).toBe(true);
+    expect(usesScientificNotation(-1e-7)).toBe(true);
+    expect(usesScientificNotation(1e15)).toBe(true);
+    expect(usesScientificNotation(1e-6)).toBe(false);
+    expect(usesScientificNotation(0)).toBe(false);
+    expect(usesScientificNotation(Infinity)).toBe(false);
+  });
+});
+
 describe('cookingTable', () => {
   it('has 9 gas-mark rows with increasing temperature', () => {
     const rows = cookingTable('c', 'f');
@@ -91,6 +122,8 @@ describe('cookingTable', () => {
     const row = cookingTable('c', 'f').find((r) => r.gasMark === 4)!;
     expect(row.celsius).toBe(180);
     expect(row.fahrenheit).toBe(350);
+    expect(row.fromValue).toBe(180);
+    expect(row.toValue).toBe(350);
     // The exact mathematical conversion of 350°F is ~176.7°C, not 180 — recipes round.
     expect(convertTemperature(350, 'f', 'c')).not.toBeCloseTo(180, 0);
   });
@@ -115,6 +148,12 @@ describe('cookingTable', () => {
     const rows = cookingTable('k', 'c');
     const mark4 = rows.find((r) => r.gasMark === 4)!;
     expect(mark4.fromValue).toBeCloseTo(180 + 273.15, 6);
+    expect(mark4.toValue).toBe(180);
+  });
+
+  it('keeps the canonical recipe pair when Fahrenheit is the source', () => {
+    const mark4 = cookingTable('f', 'c').find((r) => r.gasMark === 4)!;
+    expect(mark4.fromValue).toBe(350);
     expect(mark4.toValue).toBe(180);
   });
 });
