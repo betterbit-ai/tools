@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'device',
   icon: 'microphone',
   added: '2026-10-11',
-  updated: '2026-10-16',
+  updated: '2026-10-19',
   edges: ['usability'],
   competitors: [
     {

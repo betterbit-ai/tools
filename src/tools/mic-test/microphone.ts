@@ -7,6 +7,46 @@ export interface MicrophoneSession {
   track: MediaStreamTrack;
 }
 
+export interface MicrophoneCapabilities {
+  test: boolean;
+  recording: boolean;
+}
+
+interface MicrophoneEnvironment {
+  navigator?: {
+    mediaDevices?: {
+      getUserMedia?: unknown;
+    };
+  };
+  AudioContext?: unknown;
+  MediaRecorder?: unknown;
+}
+
+export type MicrophoneFailureKind =
+  'unsupported' | 'permission' | 'not-found' | 'busy' | 'device-unavailable' | 'unknown';
+
+/** Detect only the standard APIs exposed by current Chrome, Safari, and Firefox. */
+export function getMicrophoneCapabilities(
+  environment: MicrophoneEnvironment = globalThis as MicrophoneEnvironment,
+): MicrophoneCapabilities {
+  const capture = typeof environment.navigator?.mediaDevices?.getUserMedia === 'function';
+  const analysis = typeof environment.AudioContext === 'function';
+  return {
+    test: capture && analysis,
+    recording: capture && analysis && typeof environment.MediaRecorder === 'function',
+  };
+}
+
+export function microphoneFailureKind(error: unknown): MicrophoneFailureKind {
+  if (error instanceof Error && error.message === 'microphone-unsupported') return 'unsupported';
+  const name = error && typeof error === 'object' && 'name' in error ? String(error.name) : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') return 'permission';
+  if (name === 'NotFoundError') return 'not-found';
+  if (name === 'NotReadableError' || name === 'AbortError') return 'busy';
+  if (name === 'OverconstrainedError') return 'device-unavailable';
+  return 'unknown';
+}
+
 /**
  * Keeps an older permission request from taking over after the user starts,
  * stops, or switches devices again before it resolves.
@@ -28,7 +68,7 @@ export function createSessionRequestGate() {
 }
 
 export async function openMicrophone(deviceId: string): Promise<MicrophoneSession> {
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('unsupported');
+  if (!getMicrophoneCapabilities().test) throw new Error('microphone-unsupported');
 
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: deviceId ? { deviceId: { exact: deviceId } } : true,
@@ -71,25 +111,52 @@ export function recordLocally(
   stream: MediaStream,
   onComplete: (recording: Blob) => void,
   onError?: () => void,
+  maxDurationMs = 10_000,
 ): LocalRecording {
   if (typeof MediaRecorder === 'undefined') throw new Error('recording-unsupported');
-  const chunks: BlobPart[] = [];
+  const chunks: Blob[] = [];
   const recorder = new MediaRecorder(stream);
   let failed = false;
+  let finished = false;
+  let maximumTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const clearMaximumTimer = () => {
+    if (maximumTimer !== undefined) clearTimeout(maximumTimer);
+    maximumTimer = undefined;
+  };
+  const stopRecorder = () => {
+    if (recorder.state !== 'inactive') recorder.stop();
+  };
+  const fail = () => {
+    if (failed || finished) return;
+    failed = true;
+    clearMaximumTimer();
+    onError?.();
+    stopRecorder();
+  };
+
   recorder.addEventListener('dataavailable', (event) => {
     if (event.data.size > 0) chunks.push(event.data);
+    if (event.timecode >= maxDurationMs) stopRecorder();
   });
-  recorder.addEventListener('error', () => {
-    failed = true;
-    onError?.();
-  });
+  recorder.addEventListener('error', fail);
   recorder.addEventListener('stop', () => {
-    if (!failed) onComplete(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' }));
+    clearMaximumTimer();
+    if (failed || finished) return;
+    finished = true;
+    const type = recorder.mimeType || chunks.find((chunk) => chunk.type)?.type || 'audio/webm';
+    const recording = new Blob(chunks, { type });
+    if (recording.size === 0) {
+      onError?.();
+      return;
+    }
+    onComplete(recording);
   });
-  recorder.start();
+  // Periodic chunks bound the amount held by the recorder and give the media pipeline its own
+  // chance to enforce the cap if ordinary page timers are throttled in a background tab.
+  recorder.start(250);
+  maximumTimer = setTimeout(stopRecorder, Math.max(1, maxDurationMs));
   return {
-    stop: () => {
-      if (recorder.state !== 'inactive') recorder.stop();
-    },
+    stop: stopRecorder,
   };
 }
