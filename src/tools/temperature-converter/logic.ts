@@ -10,6 +10,30 @@ export function isTemperatureUnit(value: unknown): value is TemperatureUnit {
   return typeof value === 'string' && (TEMPERATURE_UNITS as string[]).includes(value);
 }
 
+/**
+ * Parses decimal/scientific input with optional correctly grouped commas. NFKC normalization
+ * lets users paste full-width digits and punctuation without accepting units or partial numbers.
+ */
+export function parseTemperatureInput(input: number | string): number | '' | null {
+  if (typeof input === 'number') return Number.isFinite(input) ? input : null;
+
+  const normalized = input.normalize('NFKC').trim();
+  if (!normalized) return '';
+  const decimal = '(?:\\d+(?:\\.\\d*)?|\\.\\d+)';
+  const grouped = '(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d*)?)';
+  const pattern = new RegExp(`^[+-]?(?:${decimal}|${grouped})(?:[eE][+-]?\\d+)?$`);
+  if (!pattern.test(normalized)) return null;
+
+  const parsed = Number(normalized.replaceAll(',', ''));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Keep extreme finite values readable without rounding a nonzero result to zero. */
+export function usesScientificNotation(value: number): boolean {
+  const absolute = Math.abs(value);
+  return Number.isFinite(value) && absolute !== 0 && (absolute < 0.000001 || absolute >= 1e15);
+}
+
 /** Absolute zero, the physical lower bound of every scale. */
 export const ABSOLUTE_ZERO_C = -273.15;
 export const ABSOLUTE_ZERO_F = -459.67;
@@ -72,11 +96,18 @@ export interface CookingTableRow extends CookingRow {
   toValue: number;
 }
 
-/** The cooking table re-expressed in whichever two units the user currently has selected. */
+/** Return the recipe-standard Celsius/Fahrenheit pair, deriving Kelvin from the Celsius convention. */
+function cookingValue(row: CookingRow, unit: TemperatureUnit): number {
+  if (unit === 'c') return row.celsius;
+  if (unit === 'f') return row.fahrenheit;
+  return row.celsius + 273.15;
+}
+
+/** The cooking table expressed in the selected units without changing its standard rounded recipe pairs. */
 export function cookingTable(from: TemperatureUnit, to: TemperatureUnit): CookingTableRow[] {
   return COOKING_TABLE.map((row) => ({
     ...row,
-    fromValue: fromCelsius(row.celsius, from),
-    toValue: fromCelsius(row.celsius, to),
+    fromValue: cookingValue(row, from),
+    toValue: cookingValue(row, to),
   }));
 }
