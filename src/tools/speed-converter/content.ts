@@ -6,11 +6,15 @@ const uiEn = {
   speedMode: 'Speed',
   paceMode: 'Running pace',
   valueLabel: 'Speed',
-  speedHint: 'Results update as you type.',
+  speedHint: 'Commas and full-width digits accepted; range 0 to 1 trillion.',
   fromLabel: 'From',
   toLabel: 'To',
   swap: 'Swap',
   resultLabel: 'Result in {unit}',
+  unavailableResult: '—',
+  invalidSpeed: 'Enter a valid number, for example 1,234.5.',
+  speedRange: 'Enter a speed from 0 to 1,000,000,000,000.',
+  invalidPace: 'Use whole minutes and seconds from 0 to 59; the total pace must be above zero.',
   allResultsTitle: 'All speed and pace results',
   quickTableTitle: 'Quick reference',
   paceMinutesLabel: 'Minutes',
@@ -51,7 +55,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'min per km to mph',
     ],
     howTo: [
-      'Choose Speed to convert a road, weather, scientific, or marine speed, then enter its value and source unit.',
+      'Choose Speed to convert a road, weather, scientific, or marine speed, then enter its value and source unit. Comma-grouped and full-width digits are accepted.',
       'Choose the result unit or use Swap to reverse the selected direction; all other units update at the same time.',
       'Choose Running pace to enter a minutes-and-seconds pace per kilometre or mile and see its speed immediately.',
       'Copy all results when you need the speed and both pace forms together.',
@@ -59,7 +63,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Exact mph, km/h, m/s and knot conversions',
-        body: 'One statute mile is exactly 1,609.344 metres, so 1 mph is exactly 1.609344 km/h and exactly 0.44704 m/s. To change mph to km/h, multiply by 1.609344; 60 mph is 96.56064 km/h. In the reverse direction, multiply km/h by 0.6213711922. A kilometre per hour is exactly 1/3.6 m/s, so 72 km/h is exactly 20 m/s. One knot is one nautical mile per hour; because a nautical mile is exactly 1,852 metres, 1 kn is exactly 1.852 km/h.',
+        body: 'One statute mile is exactly 1,609.344 metres, so 1 mph is exactly 1.609344 km/h and exactly 0.44704 m/s. To change mph to km/h, multiply by 1.609344; 60 mph is 96.56064 km/h. In the reverse direction, multiply km/h by 0.6213711922. A kilometre per hour is exactly 1/3.6 m/s, so 72 km/h is exactly 20 m/s. One knot is one nautical mile per hour; because a nautical mile is exactly 1,852 metres, 1 kn is exactly 1.852 km/h. Speed input accepts values from 0 through 1 trillion; malformed or out-of-range input is shown as an error rather than converted as zero.',
       },
       {
         heading: 'Speed and running pace are reciprocals',
@@ -113,7 +117,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '분 킬로미터 변환',
     ],
     howTo: [
-      '속도를 선택한 뒤 도로·날씨·과학·항해에서 쓰는 값을 입력하고 기준 단위를 고르세요.',
+      '속도를 선택한 뒤 도로·날씨·과학·항해에서 쓰는 값을 입력하고 기준 단위를 고르세요. 쉼표로 묶은 숫자와 전각 숫자도 입력할 수 있습니다.',
       '결과 단위를 선택하거나 단위 바꾸기를 누르면 반대 방향으로 즉시 환산합니다. 다른 단위 결과도 함께 바뀝니다.',
       '러닝 페이스를 선택하면 km 또는 마일당 분·초를 입력해 시속과 반대 페이스를 바로 확인할 수 있습니다.',
       '속도와 두 페이스 값을 함께 써야 하면 결과 모두 복사를 사용하세요.',
@@ -121,7 +125,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'mph·km/h·m/s·노트의 정확한 환산값',
-        body: '법정마일 1마일은 정확히 1,609.344m이므로 1mph는 정확히 1.609344km/h, 정확히 0.44704m/s입니다. mph를 km/h로 바꿀 때는 1.609344를 곱하므로 60mph는 96.56064km/h입니다. 반대로 km/h에 0.6213711922를 곱하면 mph가 됩니다. 1km/h는 정확히 1/3.6m/s이므로 72km/h는 정확히 20m/s입니다. 1노트(kn)는 1시간에 1해리를 가는 속도이며, 해리 1개가 정확히 1,852m라서 1kn는 정확히 1.852km/h입니다.',
+        body: '법정마일 1마일은 정확히 1,609.344m이므로 1mph는 정확히 1.609344km/h, 정확히 0.44704m/s입니다. mph를 km/h로 바꿀 때는 1.609344를 곱하므로 60mph는 96.56064km/h입니다. 반대로 km/h에 0.6213711922를 곱하면 mph가 됩니다. 1km/h는 정확히 1/3.6m/s이므로 72km/h는 정확히 20m/s입니다. 1노트(kn)는 1시간에 1해리를 가는 속도이며, 해리 1개가 정확히 1,852m라서 1kn는 정확히 1.852km/h입니다. 속도는 0부터 1조까지 입력할 수 있고, 잘못된 형식이나 범위를 벗어난 값은 0으로 계산하지 않고 오류로 알려 줍니다.',
       },
       {
         heading: '시속과 러닝 페이스의 관계',
@@ -159,11 +163,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
       speedMode: '속도',
       paceMode: '러닝 페이스',
       valueLabel: '속도',
-      speedHint: '값을 입력하면 결과가 바로 바뀝니다.',
+      speedHint: '쉼표·전각 숫자 입력 가능, 범위는 0~1조입니다.',
       fromLabel: '변환할 단위',
       toLabel: '결과 단위',
       swap: '바꾸기',
       resultLabel: '결과 ({unit})',
+      unavailableResult: '—',
+      invalidSpeed: '올바른 숫자를 입력하세요. 예: 1,234.5',
+      speedRange: '0 이상 1,000,000,000,000 이하의 속도를 입력하세요.',
+      invalidPace: '분은 정수, 초는 0~59의 정수로 입력하고 전체 페이스를 0보다 크게 설정하세요.',
       allResultsTitle: '모든 속도·페이스 결과',
       quickTableTitle: '빠른 참조표',
       paceMinutesLabel: '분',

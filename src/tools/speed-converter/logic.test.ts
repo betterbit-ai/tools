@@ -5,10 +5,13 @@ import {
   convertSpeed,
   formatPace,
   isSpeedUnit,
+  isSpeedInRange,
+  isValidPace,
   paceSecondsFromSpeed,
   parseSpeedNumber,
   quickTable,
   speedFromPace,
+  usesScientificNotation,
 } from './logic';
 
 describe('convertSpeed', () => {
@@ -57,6 +60,16 @@ describe('pace conversion', () => {
     expect(formatPace(null)).toBe('—');
   });
 
+  it('validates every pace field and rejects totals that overflow', () => {
+    expect(isValidPace(5, 0)).toBe(true);
+    expect(isValidPace(0, 1)).toBe(true);
+    expect(isValidPace(0, 0)).toBe(false);
+    expect(isValidPace(4.5, 0)).toBe(false);
+    expect(isValidPace(4, 60)).toBe(false);
+    expect(isValidPace(1e308, 0)).toBe(false);
+    expect(speedFromPace(1e308, 0, 'km')).toBe(0);
+  });
+
   it('rounds pace seconds and carries to the next minute', () => {
     expect(formatPace(299.5)).toBe('5:00');
     expect(formatPace(59.4)).toBe('0:59');
@@ -64,12 +77,38 @@ describe('pace conversion', () => {
 });
 
 describe('input and reference helpers', () => {
-  it('normalizes full-width Korean keyboard digits but rejects prose and units', () => {
+  it('normalizes valid grouped and full-width Korean keyboard digits', () => {
     expect(parseSpeedNumber('１２，３４５．６')).toBe(12345.6);
+    expect(parseSpeedNumber('1,234.5')).toBe(1234.5);
     expect(parseSpeedNumber(' 60 ')).toBe(60);
+    expect(parseSpeedNumber('.5')).toBe(0.5);
+    expect(parseSpeedNumber('1e3')).toBe(1000);
+  });
+
+  it('distinguishes empty input from malformed and non-finite input', () => {
+    expect(parseSpeedNumber('')).toBe('');
+    expect(parseSpeedNumber('   ')).toBe('');
     expect(parseSpeedNumber('60 mph')).toBeNull();
     expect(parseSpeedNumber('시속 60')).toBeNull();
+    expect(parseSpeedNumber('12,34')).toBeNull();
+    expect(parseSpeedNumber('1e309')).toBeNull();
     expect(parseSpeedNumber('😀')).toBeNull();
+  });
+
+  it('checks the documented speed range separately from number syntax', () => {
+    expect(isSpeedInRange(0)).toBe(true);
+    expect(isSpeedInRange(MAX_SPEED)).toBe(true);
+    expect(isSpeedInRange(-1)).toBe(false);
+    expect(isSpeedInRange(MAX_SPEED + 1)).toBe(false);
+    expect(isSpeedInRange(Infinity)).toBe(false);
+  });
+
+  it('uses scientific notation before a nonzero result would display as zero', () => {
+    expect(usesScientificNotation(1e-7)).toBe(true);
+    expect(usesScientificNotation(-1e-7)).toBe(true);
+    expect(usesScientificNotation(1e-6)).toBe(false);
+    expect(usesScientificNotation(1e12)).toBe(false);
+    expect(usesScientificNotation(0)).toBe(false);
   });
 
   it('recognizes only its units and builds a table from every source unit', () => {
