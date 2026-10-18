@@ -13,7 +13,9 @@ import {
 import {
   closeMicrophone,
   createSessionRequestGate,
+  getMicrophoneCapabilities,
   listMicrophones,
+  microphoneFailureKind,
   openMicrophone,
   recordLocally,
   type LocalRecording,
@@ -31,6 +33,9 @@ export default function MicTest({ ui }: ToolProps<UI>) {
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingUrl, setRecordingUrl] = useState('');
+  const [deviceWarning, setDeviceWarning] = useState('');
+  // Server rendering has no browser APIs, so replace these optimistic values after hydration.
+  const [capabilities, setCapabilities] = useState({ test: true, recording: true });
   const sessionRef = useRef<MicrophoneSession | null>(null);
   const recordingRef = useRef<LocalRecording | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -65,6 +70,7 @@ export default function MicTest({ ui }: ToolProps<UI>) {
       stopTest();
       const request = sessionRequestGateRef.current.begin();
       setError('');
+      setDeviceWarning('');
       try {
         const session = await openMicrophone(deviceId);
         if (!sessionRequestGateRef.current.isCurrent(request)) {
@@ -73,9 +79,15 @@ export default function MicTest({ ui }: ToolProps<UI>) {
         }
         sessionRef.current = session;
         setActive(true);
-        const availableDevices = await listMicrophones().catch(() => []);
-        if (!sessionRequestGateRef.current.isCurrent(request)) return;
-        setDevices(availableDevices);
+        session.track.addEventListener(
+          'ended',
+          () => {
+            if (!sessionRequestGateRef.current.isCurrent(request) || sessionRef.current !== session) return;
+            stopTest();
+            setError(ui.microphoneDisconnected);
+          },
+          { once: true },
+        );
         const samples = new Uint8Array(session.analyser.fftSize);
         const update = () => {
           if (!sessionRequestGateRef.current.isCurrent(request) || sessionRef.current !== session) return;
@@ -84,15 +96,43 @@ export default function MicTest({ ui }: ToolProps<UI>) {
           animationRef.current = window.requestAnimationFrame(update);
         };
         update();
+
+        let availableDevices: MediaDeviceInfo[];
+        try {
+          availableDevices = await listMicrophones();
+        } catch {
+          if (sessionRequestGateRef.current.isCurrent(request)) setDeviceWarning(ui.deviceListUnavailable);
+          availableDevices = [];
+        }
+        if (!sessionRequestGateRef.current.isCurrent(request)) return;
+        setDevices(availableDevices);
       } catch (caught) {
         if (!sessionRequestGateRef.current.isCurrent(request)) return;
-        const name = caught instanceof DOMException ? caught.name : '';
+        const failure = microphoneFailureKind(caught);
         setError(
-          name === 'NotAllowedError' ? ui.permissionDenied : name === 'NotFoundError' ? ui.noMicrophone : ui.startError,
+          {
+            unsupported: ui.unsupported,
+            permission: ui.permissionDenied,
+            'not-found': ui.noMicrophone,
+            busy: ui.microphoneBusy,
+            'device-unavailable': ui.deviceUnavailable,
+            unknown: ui.startError,
+          }[failure],
         );
       }
     },
-    [selectedDeviceId, stopTest, ui.noMicrophone, ui.permissionDenied, ui.startError],
+    [
+      selectedDeviceId,
+      stopTest,
+      ui.deviceListUnavailable,
+      ui.deviceUnavailable,
+      ui.microphoneBusy,
+      ui.microphoneDisconnected,
+      ui.noMicrophone,
+      ui.permissionDenied,
+      ui.startError,
+      ui.unsupported,
+    ],
   );
 
   const chooseDevice = useCallback(
@@ -107,6 +147,7 @@ export default function MicTest({ ui }: ToolProps<UI>) {
     const session = sessionRef.current;
     if (!session) return;
     stopRecording();
+    setError('');
     const request = ++recordingRequestRef.current;
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = '';
@@ -116,6 +157,9 @@ export default function MicTest({ ui }: ToolProps<UI>) {
         session.stream,
         (blob) => {
           if (request !== recordingRequestRef.current) return;
+          if (recordingTimerRef.current !== null) window.clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+          recordingRef.current = null;
           const url = URL.createObjectURL(blob);
           if (urlRef.current) URL.revokeObjectURL(urlRef.current);
           urlRef.current = url;
@@ -130,6 +174,7 @@ export default function MicTest({ ui }: ToolProps<UI>) {
           setRecording(false);
           setError(ui.recordingFailed);
         },
+        MAX_RECORDING_SECONDS * 1000,
       );
       recordingStartedRef.current = Date.now();
       setRecordingSeconds(0);
@@ -145,14 +190,20 @@ export default function MicTest({ ui }: ToolProps<UI>) {
   }, [stopRecording, ui.recordingFailed, ui.recordingUnsupported]);
 
   useEffect(() => {
-    void listMicrophones()
-      .then(setDevices)
-      .catch(() => setDevices([]));
+    const detected = getMicrophoneCapabilities();
+    setCapabilities(detected);
+    if (!detected.test) {
+      setError(ui.unsupported);
+    } else {
+      void listMicrophones()
+        .then(setDevices)
+        .catch(() => setDeviceWarning(ui.deviceListUnavailable));
+    }
     return () => {
       stopTest();
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     };
-  }, [stopTest]);
+  }, [stopTest, ui.deviceListUnavailable, ui.unsupported]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -204,7 +255,11 @@ export default function MicTest({ ui }: ToolProps<UI>) {
               <h2 class="text-sm font-medium text-fg">{ui.liveTest}</h2>
               <p class="mt-1 text-xs text-muted">{ui.localOnly}</p>
             </div>
-            <Button variant={active ? 'danger' : 'primary'} onClick={() => (active ? stopTest() : void startTest())}>
+            <Button
+              variant={active ? 'danger' : 'primary'}
+              disabled={!capabilities.test}
+              onClick={() => (active ? stopTest() : void startTest())}
+            >
               {active ? ui.stopTest : ui.startTest}
             </Button>
           </div>
@@ -236,7 +291,7 @@ export default function MicTest({ ui }: ToolProps<UI>) {
           </div>
 
           <div class="mt-5 flex flex-wrap items-center gap-2">
-            <Button onClick={recording ? stopRecording : startRecording} disabled={!active}>
+            <Button onClick={recording ? stopRecording : startRecording} disabled={!active || !capabilities.recording}>
               {recording ? ui.stopRecording : ui.startRecording}
             </Button>
             {recording && (
@@ -248,12 +303,22 @@ export default function MicTest({ ui }: ToolProps<UI>) {
             {!recording && recordingUrl && <span class="text-sm text-success">{ui.recordingReady}</span>}
           </div>
           <p class="mt-2 text-xs text-subtle">{ui.recordingHint}</p>
+          {!capabilities.recording && capabilities.test && (
+            <div class="mt-3">
+              <Notice>{ui.recordingUnsupported}</Notice>
+            </div>
+          )}
           {recordingUrl && <audio class="mt-3 w-full" aria-label={ui.playback} controls src={recordingUrl} />}
         </section>
 
         <aside class="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pt-0 lg:pl-6">
           <Field label={ui.microphone} hint={ui.deviceHint}>
-            <Select value={selectedDeviceId} onValue={chooseDevice} options={deviceOptions} />
+            <Select
+              value={selectedDeviceId}
+              onValue={chooseDevice}
+              options={deviceOptions}
+              disabled={!capabilities.test}
+            />
           </Field>
           <div class="mt-5 grid grid-cols-2 gap-2" aria-live="polite">
             <Stat label={ui.peakLevel} value={formatDbfs(reading.peakDbfs)} emphasis />
@@ -270,6 +335,11 @@ export default function MicTest({ ui }: ToolProps<UI>) {
           {error && (
             <div class="mt-3">
               <Notice tone="danger">{error}</Notice>
+            </div>
+          )}
+          {deviceWarning && (
+            <div class="mt-3">
+              <Notice>{deviceWarning}</Notice>
             </div>
           )}
         </aside>
