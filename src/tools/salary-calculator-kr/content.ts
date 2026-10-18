@@ -15,13 +15,18 @@ const uiEn = {
   childrenLabel: 'Children aged 8–20 (among dependents)',
   childrenHint:
     'Used for the 2026 monthly child withholding reduction; do not count children outside the dependent total.',
+  withholdingRateLabel: 'Income-tax withholding rate',
+  withholdingRateHint: 'Your employer uses 100% unless you submit the official 80% or 120% election.',
+  withholdingRate80: '80%',
+  withholdingRate100: '100%',
+  withholdingRate120: '120%',
   resultsHeading: 'Estimated monthly take-home pay',
   monthlyTakeHome: 'Monthly take-home',
   annualTakeHome: 'Estimated annual take-home',
   monthlyGross: 'Monthly gross pay',
   totalDeductions: 'Total monthly deductions',
   withholdingNotice:
-    'Uses the 100% monthly withholding table. Bonuses, year-end settlement, and your company’s rounding can change the actual payslip.',
+    'Uses your selected simplified-table withholding rate. Bonuses, year-end settlement, and your company’s rounding can change the actual payslip.',
   copyResult: 'Copy result',
   copiedResult: 'Copied',
   invalidInput:
@@ -46,7 +51,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Estimate Korean monthly take-home pay from annual salary with 2026 insurance rates, the withholding table, dependents, and non-taxable pay—entirely in your browser.',
     h1: 'Korea Salary Calculator',
     tagline:
-      'See your estimated 2026 Korean take-home pay and every payroll deduction, including non-taxable pay and the current withholding table.',
+      'See estimated 2026 Korean take-home pay and every deduction, including non-taxable pay and 80%, 100%, or 120% withholding.',
     name: 'Korea Salary Calculator',
     keywords: [
       'Korea salary calculator',
@@ -60,13 +65,14 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Enter the annual salary in Korean won before employee deductions.',
       'Enter the monthly total recorded as non-taxable pay on your payslip.',
       'Enter eligible dependents including yourself, then eligible children aged 8 to 20.',
+      'Select your income-tax withholding rate; 100% is the default unless you submitted a different election.',
       'Review the live monthly take-home result and the six deduction amounts.',
       'Copy the monthly and annual estimate if you need to compare a job offer.',
     ],
     sections: [
       {
         heading: '2026 employee-side social-insurance rates used here',
-        body: 'This calculator is for a standard workplace-insured employee in South Korea. From July 2026, the employee share of National Pension is 4.75%, applied to the standard monthly income band from KRW 410,000 to KRW 6,590,000. The employee share of Health Insurance is 3.595% (half of the 7.19% workplace rate), Long-term Care Insurance is 13.14% of the Health Insurance premium, and Employment Insurance for unemployment benefits is 0.9%. Industrial Accident Compensation Insurance is generally employer-paid, so it is not deducted from this take-home estimate. The National Pension Service, National Health Insurance Service, and Ministry of Employment and Labor publish these bases and rates.',
+        body: 'This calculator is for a standard workplace-insured employee in South Korea. From July 2026, the employee share of National Pension is 4.75%, applied to the standard monthly income band from KRW 410,000 to KRW 6,590,000. The employee share of Health Insurance is 3.595% (half of the 7.19% workplace rate), with a KRW 10,080 monthly employee minimum. Long-term Care Insurance is 13.14% of the Health Insurance premium, and Employment Insurance for unemployment benefits is 0.9%. Industrial Accident Compensation Insurance is generally employer-paid, so it is not deducted from this take-home estimate. The National Pension Service, National Health Insurance Service, and Ministry of Employment and Labor publish these bases and rates.',
       },
       {
         heading: 'How monthly income tax is estimated',
@@ -74,7 +80,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Why your payslip can be different',
-        body: 'The estimate assumes the annual salary is paid in 12 equal months, that the non-taxable total applies to the pay entered, and that you use the default 100% withholding rate. A bonus month, a different 80% or 120% withholding election, several jobs, a mid-year join or leave date, pension eligibility, and company-level rounding can produce another monthly figure. Year-end settlement also applies personal deductions and credits for items such as medical spending, education, card spending, and pension savings; it is not included here. Check your payslip and payroll team for a payment decision.',
+        body: 'The estimate assumes the annual salary is paid in 12 equal months and that the non-taxable total applies to the pay entered. Select 80%, 100%, or 120% to match an income-tax withholding election; 100% applies unless you choose another rate with your employer. A bonus month, several jobs, a mid-year join or leave date, pension eligibility, and company-level rounding can produce another monthly figure. Year-end settlement also applies personal deductions and credits for items such as medical spending, education, card spending, and pension savings; it is not included here. Check your payslip and payroll team for a payment decision.',
       },
     ],
     faq: [
@@ -95,6 +101,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: 'The Korean simplified withholding table changes with the number of eligible dependents, including the employee. For withholding from 1 March 2026, eligible children aged 8 to 20 receive an additional monthly reduction of KRW 20,830 for one child or KRW 45,830 for two children, so both counts can change the estimated income tax.',
       },
       {
+        q: 'Can I choose 80%, 100%, or 120% income-tax withholding?',
+        a: 'Yes. Korean employees can ask their employer to withhold 80%, 100%, or 120% of the simplified withholding-table amount. This calculator applies the selected rate after the eligible-child reduction; 100% is the default when no election is made.',
+      },
+      {
         q: 'Does this Korea salary calculator calculate year-end tax settlement?',
         a: 'No. This calculator estimates the monthly payroll withholding from an even 12-month salary, current social-insurance rates, non-taxable pay, and the simplified withholding table. The final year-end settlement can change after deductions and tax credits for actual spending and savings are applied.',
       },
@@ -110,7 +120,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
     description:
       '2026년 4대보험 요율과 근로소득 간이세액표를 적용해 연봉 실수령액을 계산합니다. 비과세·부양가족·자녀를 반영하고 입력값은 브라우저에서만 처리합니다.',
     h1: '연봉 실수령액 계산기',
-    tagline: '2026년 4대보험과 근로소득 간이세액표를 바탕으로 월 실수령액과 공제 항목을 즉시 확인합니다.',
+    tagline:
+      '2026년 4대보험과 간이세액표를 바탕으로, 80%·100%·120% 원천징수 비율별 월 실수령액과 공제 항목을 즉시 확인합니다.',
     name: '연봉 실수령액 계산기',
     keywords: [
       '연봉 실수령액 계산기',
@@ -125,21 +136,22 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '퇴직금을 뺀 세전 연봉을 원 단위로 입력하세요.',
       '급여명세서에 비과세로 잡히는 월 합계액을 입력하세요.',
       '본인을 포함한 공제대상 부양가족 수와 그중 8세 이상 20세 이하 자녀 수를 입력하세요.',
+      '소득세 원천징수 비율을 고르세요. 별도로 신청하지 않았다면 100%입니다.',
       '월 예상 실수령액과 국민연금·건강보험·세금 공제액을 바로 확인하세요.',
       '이직 제안이나 연봉 협상 비교에 쓸 수 있도록 결과를 복사하세요.',
     ],
     sections: [
       {
         heading: '2026년 근로자 부담 4대보험 요율',
-        body: '이 계산기는 일반적인 직장가입자와 2026년 7월 이후 기준을 가정합니다. 국민연금 근로자 부담은 4.75%이고 기준소득월액 41만 원~659만 원 범위에 적용합니다. 건강보험 근로자 부담은 직장가입자 보험료율 7.19%의 절반인 3.595%입니다. 장기요양보험료는 건강보험료의 13.14%, 고용보험 실업급여 보험료는 0.9%를 적용합니다. 산재보험료는 원칙적으로 사업주가 전액 부담하므로 실수령액 공제에 넣지 않습니다. 국민연금공단·국민건강보험공단·고용노동부가 각각 기준과 요율을 안내합니다.',
+        body: '이 계산기는 일반적인 직장가입자와 2026년 7월 이후 기준을 가정합니다. 국민연금 근로자 부담은 4.75%이고 기준소득월액 41만 원~659만 원 범위에 적용합니다. 건강보험 근로자 부담은 직장가입자 보험료율 7.19%의 절반인 3.595%이며, 근로자 월 최저 보험료 10,080원을 적용합니다. 장기요양보험료는 건강보험료의 13.14%, 고용보험 실업급여 보험료는 0.9%를 적용합니다. 산재보험료는 원칙적으로 사업주가 전액 부담하므로 실수령액 공제에 넣지 않습니다. 국민연금공단·국민건강보험공단·고용노동부가 각각 기준과 요율을 안내합니다.',
       },
       {
         heading: '소득세와 지방소득세를 계산하는 방식',
-        body: '회사는 비과세소득 등을 뺀 월급여액과 공제대상가족 수에 따라 국세청 근로소득 간이세액표의 소득세를 원천징수합니다. 이 계산기는 기본 100% 원천징수액을 사용하고, 소득세의 10%를 원 단위 절사한 개인지방소득세를 더합니다. 2026년 3월 1일 이후 원천징수분은 8세 이상 20세 이하 자녀가 1명이면 월 20,830원, 2명이면 45,830원, 3명째부터 1명당 33,330원을 간이세액표 금액에서 추가로 뺍니다.',
+        body: '회사는 비과세소득 등을 뺀 월급여액과 공제대상가족 수에 따라 국세청 근로소득 간이세액표의 소득세를 원천징수합니다. 이 계산기는 자녀 공제 후 선택한 80%·100%·120% 원천징수 비율을 적용하고, 소득세의 10%를 원 단위 절사한 개인지방소득세를 더합니다. 별도 신청하지 않았다면 100%가 기본입니다. 2026년 3월 1일 이후 원천징수분은 8세 이상 20세 이하 자녀가 1명이면 월 20,830원, 2명이면 45,830원, 3명째부터 1명당 33,330원을 간이세액표 금액에서 추가로 뺍니다.',
       },
       {
         heading: '실제 급여명세서와 차이 나는 경우',
-        body: '연봉을 12개월에 같은 금액으로 나눠 받는다고 가정한 추정치입니다. 상여금 지급월, 80%·120% 원천징수 선택, 입·퇴사월, 복수 근무지, 국민연금 가입 여부, 회사별 원 단위 처리에 따라 월 공제액은 달라질 수 있습니다. 의료비·교육비·신용카드·연금저축 등 실제 지출과 공제를 반영하는 연말정산 결정세액도 계산하지 않습니다. 계약이나 중요한 의사결정 전에는 급여명세서와 회사 급여 담당자의 안내를 확인하세요.',
+        body: '연봉을 12개월에 같은 금액으로 나눠 받는다고 가정한 추정치입니다. 소득세 원천징수는 80%·100%·120% 중 회사에 신청한 비율을 선택할 수 있으며, 신청하지 않았다면 기본 100%입니다. 상여금 지급월, 입·퇴사월, 복수 근무지, 국민연금 가입 여부, 회사별 원 단위 처리에 따라 월 공제액은 달라질 수 있습니다. 의료비·교육비·신용카드·연금저축 등 실제 지출과 공제를 반영하는 연말정산 결정세액도 계산하지 않습니다. 계약이나 중요한 의사결정 전에는 급여명세서와 회사 급여 담당자의 안내를 확인하세요.',
       },
     ],
     faq: [
@@ -158,6 +170,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: '부양가족 수에 본인도 포함하나요?',
         a: '포함합니다. 공제대상 부양가족 수는 본인과 요건을 충족한 배우자·자녀·부모 등을 합한 수이며, 혼자 일하고 공제대상 가족이 없으면 1명을 입력합니다. 8세 이상 20세 이하 자녀 수는 이 부양가족 수 안에 포함된 자녀만 따로 입력합니다.',
+      },
+      {
+        q: '소득세 원천징수 비율 80%·100%·120%는 무엇인가요?',
+        a: '근로자는 간이세액표 소득세의 80%, 100%, 120% 중 하나를 회사에 신청해 원천징수할 수 있습니다. 신청하지 않으면 100%가 기본이며, 이 계산기는 자녀 공제를 반영한 소득세에 선택한 비율을 적용합니다.',
       },
       {
         q: '연봉 실수령액 계산 결과와 실제 월급이 다른 이유는 무엇인가요?',
@@ -179,13 +195,19 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dependentsHint: '본인만 해당하면 1명을 입력하세요. 기본공제 요건을 충족한 가족만 셉니다.',
       childrenLabel: '8세 이상 20세 이하 자녀 수(부양가족 중)',
       childrenHint: '2026년 자녀 원천징수 공제에 사용합니다. 위 부양가족 수를 넘길 수 없습니다.',
+      withholdingRateLabel: '소득세 원천징수 비율',
+      withholdingRateHint:
+        '별도 신청하지 않았다면 기본 100%를 적용합니다. 회사에 신청하면 80% 또는 120%를 고를 수 있습니다.',
+      withholdingRate80: '80%',
+      withholdingRate100: '100%',
+      withholdingRate120: '120%',
       resultsHeading: '월 예상 실수령액',
       monthlyTakeHome: '월 실수령액',
       annualTakeHome: '예상 연 실수령액',
       monthlyGross: '월 세전 급여',
       totalDeductions: '월 공제액 합계',
       withholdingNotice:
-        '기본 100% 간이세액표 기준입니다. 상여금·연말정산·회사별 원 단위 처리에 따라 실제 급여명세서와 다를 수 있습니다.',
+        '선택한 간이세액표 원천징수 비율 기준입니다. 상여금·연말정산·회사별 원 단위 처리에 따라 실제 급여명세서와 다를 수 있습니다.',
       copyResult: '결과 복사',
       copiedResult: '복사됨',
       invalidInput: '세전 연봉은 0보다 크게, 월 비과세액은 한 달 급여 이하로, 부양가족 수는 정수로 입력하세요.',

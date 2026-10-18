@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { CopyButton, Field, Notice, NumberInput, Panel, Stat } from '../../components/ui';
+import { CopyButton, Field, Notice, NumberInput, Panel, Segmented, Stat } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculateSalary } from './logic';
+import { calculateSalary, type WithholdingRate } from './logic';
 
 const STORAGE_KEY = 'tools:salary-calculator-kr:state';
 
@@ -13,6 +13,7 @@ interface State {
   monthlyNonTaxable: number | '';
   dependents: number | '';
   childrenAge8To20: number | '';
+  withholdingRate: WithholdingRate;
 }
 
 const fallbackState: State = {
@@ -20,6 +21,7 @@ const fallbackState: State = {
   monthlyNonTaxable: 0,
   dependents: 1,
   childrenAge8To20: 0,
+  withholdingRate: 100,
 };
 
 function isStoredNumber(value: unknown): value is number {
@@ -39,6 +41,10 @@ function restoreState(): State {
       childrenAge8To20: isStoredNumber(saved.childrenAge8To20)
         ? saved.childrenAge8To20
         : fallbackState.childrenAge8To20,
+      withholdingRate:
+        saved.withholdingRate === 80 || saved.withholdingRate === 100 || saved.withholdingRate === 120
+          ? saved.withholdingRate
+          : fallbackState.withholdingRate,
     };
   } catch {
     return fallbackState;
@@ -110,6 +116,20 @@ export default function SalaryCalculatorKr({ locale, ui }: ToolProps<UI>) {
               onValue={(childrenAge8To20) => update({ childrenAge8To20 })}
             />
           </Field>
+          <div>
+            <p class="mb-1.5 text-sm font-medium text-fg">{ui.withholdingRateLabel}</p>
+            <Segmented<`${WithholdingRate}`>
+              label={ui.withholdingRateLabel}
+              value={String(state.withholdingRate) as `${WithholdingRate}`}
+              onValue={(value) => update({ withholdingRate: Number(value) as WithholdingRate })}
+              options={[
+                { value: '80', label: ui.withholdingRate80 },
+                { value: '100', label: ui.withholdingRate100 },
+                { value: '120', label: ui.withholdingRate120 },
+              ]}
+            />
+            <p class="mt-1 text-xs text-subtle">{ui.withholdingRateHint}</p>
+          </div>
         </div>
 
         <div class="flex flex-col gap-3">

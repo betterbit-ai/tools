@@ -5,51 +5,27 @@ export const meta: ToolMeta = {
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-10-18',
   edges: ['accuracy', 'usability'],
   competitors: [
     {
-      name: 'Easy Funny Life — Korea Salary Calculator',
-      url: 'https://www.easyfunnylife.com/en/calculator/salary',
+      name: 'Korea Tax — 2026 Salary Calculator',
+      url: 'https://kjuso.com/en/tools/finance/salary-calculator',
       weakness:
-        'Its page exposes a separate “Calculate Net Pay” action and describes its income tax as a simplified estimate. Betterbit recalculates while values change and uses the monthly simplified withholding table, including the 2026 child adjustment. (Strength: it clearly labels its annual and monthly net-pay outputs.)',
+        'Its page requires a separate “Calculate Net Pay” action and still lists the former employee insurance rates—National Pension 4.5%, Health Insurance 3.545%, and Long-term Care 12.95%. Betterbit recalculates while values change and applies the current 4.75%, 3.595%, and 13.14% basis. (Strength: it clearly labels its annual and monthly net-pay outputs.)',
     },
     {
-      name: 'KoreaCalc — Korea Salary Calculator',
-      url: 'https://www.koreacalc.com/en/korea-salary-calculator',
+      name: 'Korean Calculator — Salary Take-Home Calculator',
+      url: 'https://www.kor-calc.com/en/salary-calculator',
       weakness:
-        'Its published assumption is one taxpayer with standard basic deductions, so the visible calculator does not let a visitor enter eligible dependents or 8–20-year-old children. Betterbit exposes both inputs and applies the withholding-table child reduction. (Strength: it presents a readable live breakdown and states its estimate limits.)',
+        'Its current form requires a “Calculate Take-Home Salary” action before the result and its non-taxable presets do not show an itemized estimate until then. Betterbit updates the full deduction table live while preserving the locally entered conditions. (Strength: it includes meal/transport/childcare non-taxable presets and a reverse salary calculator.)',
     },
     {
-      name: 'CalcHub — Korea Salary Take-Home Pay Calculator',
-      url: 'https://calc.pe.kr/en/calculators/salary',
+      name: 'Kitfolio — Korea Take-Home Pay Calculator',
+      url: 'https://kitfolio.app/en/salary-calculator',
       weakness:
-        'Its published 2026 basis still lists the former employee rates—National Pension 4.5%, Health Insurance 3.545%, Long-term Care 12.95%—and a KRW 6,170,000 pension ceiling. Betterbit applies the current 4.75%, 3.595%, 13.14%, and KRW 6,590,000 July 2026 basis. (Strength: it explains how non-taxable pay affects its estimate.)',
-    },
-    {
-      name: '잡코리아 — 연봉 계산기',
-      url: 'https://www.jobkorea.co.kr/service/user/tool/incomepaycalc',
-      weakness:
-        'Its form requires a separate “계산하기” submission, and its published pension guidance still names the KRW 6,370,000 maximum rather than the KRW 6,590,000 limit effective from July 2026. Betterbit recalculates without a submit step using the current pension band. (장점: 퇴직금 포함 여부와 월급 입력을 함께 지원한다.)',
-    },
-    {
-      name: '사람인 — 연봉 계산기',
-      url: 'https://www.saramin.co.kr/zf_user/tools/salary-calculator?salary=14000',
-      weakness:
-        'Its calculator sits inside a long recruiting-platform page with account prompts, job-site navigation, analytics iframes, and a chatbot prompt; its child field is labelled broadly as “20세 이하 자녀수.” Betterbit keeps only the calculation surface, saves inputs locally, and makes the 2026 8–20-year-old withholding adjustment explicit. (장점: 퇴직금 포함·별도와 연봉·월급 기준을 모두 고를 수 있다.)',
-    },
-    {
-      name: '연봉체크 — 2026 연봉 실수령액 계산기',
-      url: 'https://salary.getcash.kr/calculator?salary=3089',
-      weakness:
-        'Its landing result is fixed to one dependent, no non-taxable pay, and 12 equal months before directing the visitor to a separate calculation flow; it also surrounds the result with company-salary matching. Betterbit starts with editable non-taxable pay, dependent, and child inputs beside the deduction result. (장점: 공개 국민연금 자료를 이용한 회사별 급여 참고 정보를 함께 제공한다.)',
+        'Its live calculator supports annual or monthly pay, withholding-rate selection, and an itemized result, but does not identify the 2026 workplace health-insurance minimum that affects very low monthly pay. Betterbit applies the KRW 10,080 employee minimum and keeps the current-rate assumptions in the result flow. (Strength: it supports monthly-pay input and a severance-included option.)',
     },
   ],
-  related: [
-    'loan-calculator',
-    'percentage-calculator',
-    'compound-interest',
-    'severance-pay-kr',
-    'unemployment-benefit-kr',
-  ],
+  related: ['severance-pay-kr', 'unemployment-benefit-kr'],
 };

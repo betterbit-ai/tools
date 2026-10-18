@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { NATIONAL_PENSION_MAX_BASE, RATES_2026, calculateSalary, childWithholdingReduction, parseWon } from './logic';
+import {
+  HEALTH_INSURANCE_MIN_EMPLOYEE_PREMIUM,
+  NATIONAL_PENSION_MAX_BASE,
+  RATES_2026,
+  calculateSalary,
+  childWithholdingReduction,
+  parseWon,
+} from './logic';
 
 describe('salary-calculator-kr', () => {
   it('calculates a 2026 monthly take-home using each statutory deduction', () => {
@@ -9,6 +16,7 @@ describe('salary-calculator-kr', () => {
         monthlyNonTaxable: 0,
         dependents: 1,
         childrenAge8To20: 0,
+        withholdingRate: 100,
       }),
     ).toMatchObject({
       monthlyGross: 3_500_000,
@@ -29,6 +37,7 @@ describe('salary-calculator-kr', () => {
       monthlyNonTaxable: 0,
       dependents: 4,
       childrenAge8To20: 2,
+      withholdingRate: 100,
     });
     expect(childWithholdingReduction(2)).toBe(45_830);
     expect(result?.incomeTax).toBe(3_510);
@@ -41,10 +50,35 @@ describe('salary-calculator-kr', () => {
       monthlyNonTaxable: 0,
       dependents: 1,
       childrenAge8To20: 0,
+      withholdingRate: 100,
     });
     expect(result?.nationalPension).toBe(
       Math.floor((NATIONAL_PENSION_MAX_BASE * RATES_2026.nationalPension) / 10) * 10,
     );
+  });
+
+  it('applies the statutory workplace health-insurance minimum to low monthly pay', () => {
+    const result = calculateSalary({
+      annualSalary: 1_200_000,
+      monthlyNonTaxable: 0,
+      dependents: 1,
+      childrenAge8To20: 0,
+      withholdingRate: 100,
+    });
+    expect(result?.healthInsurance).toBe(HEALTH_INSURANCE_MIN_EMPLOYEE_PREMIUM);
+    expect(result?.longTermCareInsurance).toBe(1_320);
+  });
+
+  it('applies the elected 80%, 100%, or 120% rate after the child reduction', () => {
+    const input = {
+      annualSalary: 42_000_000,
+      monthlyNonTaxable: 0,
+      dependents: 4,
+      childrenAge8To20: 2,
+    };
+    expect(calculateSalary({ ...input, withholdingRate: 80 })?.incomeTax).toBe(2_808);
+    expect(calculateSalary({ ...input, withholdingRate: 100 })?.incomeTax).toBe(3_510);
+    expect(calculateSalary({ ...input, withholdingRate: 120 })?.incomeTax).toBe(4_212);
   });
 
   it('parses ordinary, Korean-unit, and full-width Unicode money input', () => {
@@ -60,6 +94,7 @@ describe('salary-calculator-kr', () => {
         monthlyNonTaxable: 0,
         dependents: 1,
         childrenAge8To20: 0,
+        withholdingRate: 100,
       }),
     ).toBeNull();
     expect(
@@ -68,6 +103,7 @@ describe('salary-calculator-kr', () => {
         monthlyNonTaxable: 1_000_001,
         dependents: 1,
         childrenAge8To20: 0,
+        withholdingRate: 100,
       }),
     ).toBeNull();
     expect(
@@ -76,6 +112,16 @@ describe('salary-calculator-kr', () => {
         monthlyNonTaxable: 0,
         dependents: 1.5,
         childrenAge8To20: 0,
+        withholdingRate: 100,
+      }),
+    ).toBeNull();
+    expect(
+      calculateSalary({
+        annualSalary: 12_000_000,
+        monthlyNonTaxable: 0,
+        dependents: 1,
+        childrenAge8To20: 0,
+        withholdingRate: 90 as 80,
       }),
     ).toBeNull();
   });
