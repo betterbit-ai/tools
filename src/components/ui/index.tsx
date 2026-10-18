@@ -200,7 +200,12 @@ export function Segmented<T extends string>(props: {
   );
 }
 
-export function Toggle(props: { checked: boolean; onChecked: (v: boolean) => void; label: string }) {
+export function Toggle(props: {
+  checked: boolean;
+  onChecked: (v: boolean) => void;
+  label: string;
+  disabled?: boolean;
+}) {
   return (
     <label class="inline-flex items-center gap-2.5 cursor-pointer select-none text-sm text-fg">
       <span class="relative inline-flex">
@@ -208,9 +213,10 @@ export function Toggle(props: { checked: boolean; onChecked: (v: boolean) => voi
           type="checkbox"
           class="peer sr-only"
           checked={props.checked}
+          disabled={props.disabled}
           onChange={(e) => props.onChecked((e.currentTarget as HTMLInputElement).checked)}
         />
-        <span class="h-5 w-9 rounded-full bg-line-strong transition-colors peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]" />
+        <span class="h-5 w-9 rounded-full bg-line-strong transition-colors peer-checked:bg-accent peer-disabled:opacity-50 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--focus)]" />
         <span class="absolute top-0.5 left-0.5 size-4 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-4" />
       </span>
       {props.label}
