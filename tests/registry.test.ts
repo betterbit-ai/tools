@@ -37,7 +37,8 @@ const RESERVED_SLUGS = new Set<string>([
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const PLACEHOLDER = /\b(TODO|TBD|FIXME|lorem ipsum)\b/i;
 /** The site shows ads (Google AdSense), so tool copy must not claim otherwise. Competitor notes in meta.ts are exempt. */
-const AD_FREE_CLAIM = /\bno ads\b|\bad-free\b|\bwithout ads\b|광고\s?없|광고(와|·|나|도|가 없)/i;
+const AD_FREE_CLAIM =
+  /\bno ads\b|\bad-free\b|\bwithout ads\b|\bno\b[^."]{0,40}\b(or|and|nor) ads\b|광고\s?없|광고(와|·|나|도|가 없)/i;
 /** CJK text carries more meaning per character, so minimum lengths are lower. */
 const DENSE: Partial<Record<Locale, boolean>> = { ko: true };
 const len = (s: string) => [...s].length;

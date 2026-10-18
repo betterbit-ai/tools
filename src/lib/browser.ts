@@ -12,6 +12,22 @@ export function downloadBlob(blob: Blob, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
+/**
+ * Give the browser a chance to paint progress and handle cancellation between chunks of
+ * long work. Uses a MessageChannel hop, not setTimeout: Chrome throttles timers in background
+ * tabs to once a minute, which stalls long jobs when people switch tabs while waiting.
+ */
+export function yieldToBrowser(): Promise<void> {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      channel.port1.close();
+      resolve();
+    };
+    channel.port2.postMessage(null);
+  });
+}
+
 /** localStorage that never throws (private mode, blocked storage). */
 export const safeStorage = {
   get(key: string): string | null {

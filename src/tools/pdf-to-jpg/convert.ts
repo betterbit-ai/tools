@@ -1,4 +1,5 @@
 /** Browser-only PDF rendering. This module is dynamically imported after a PDF is chosen. */
+import { yieldToBrowser } from '../../lib/browser';
 import {
   EncryptedPdfError,
   InvalidPdfError,
@@ -19,10 +20,6 @@ async function jpegBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('JPEG encoding failed'))), 'image/jpeg', 0.92),
   );
-}
-
-function yieldToBrowser(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 async function openPdf(bytes: Uint8Array, fileName: string) {

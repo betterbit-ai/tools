@@ -25,10 +25,16 @@ interface RecognitionLike {
   stop(): void;
 }
 
+interface OnDeviceOptions {
+  langs: string[];
+  processLocally: true;
+  quality?: 'dictation';
+}
+
 interface RecognitionConstructor {
   new (): RecognitionLike;
-  available?(options: { langs: string[]; processLocally: true; quality: 'dictation' }): Promise<Availability>;
-  install?(options: { langs: string[]; processLocally: true; quality: 'dictation' }): Promise<boolean>;
+  available?(options: OnDeviceOptions): Promise<Availability>;
+  install?(options: OnDeviceOptions): Promise<boolean>;
 }
 
 export interface RecognitionCallbacks {
@@ -57,17 +63,30 @@ export async function startOnDeviceRecognition(
   const Constructor = getConstructor();
   if (!Constructor?.available || !Constructor.install) return { kind: 'unsupported' };
 
-  let availability: Availability;
-  try {
-    availability = await Constructor.available({ langs: [lang], processLocally: true, quality: 'dictation' });
-  } catch {
-    return { kind: 'unsupported' };
+  // Prefer the dictation-quality model, but don't require it: Chrome reports every language
+  // as 'unavailable' for quality 'dictation' while its default on-device model is
+  // 'downloadable', which made this tool say "unsupported" to every Chrome user.
+  let options: OnDeviceOptions | null = null;
+  let availability: Availability = 'unavailable';
+  for (const candidate of [
+    { langs: [lang], processLocally: true, quality: 'dictation' },
+    { langs: [lang], processLocally: true },
+  ] satisfies OnDeviceOptions[]) {
+    try {
+      availability = await Constructor.available(candidate);
+    } catch {
+      continue;
+    }
+    if (availability !== 'unavailable') {
+      options = candidate;
+      break;
+    }
   }
 
-  if (availability === 'unavailable') return { kind: 'unsupported' };
+  if (!options) return { kind: 'unsupported' };
   if (availability !== 'available') {
     try {
-      if (!(await Constructor.install({ langs: [lang], processLocally: true, quality: 'dictation' }))) {
+      if (!(await Constructor.install(options))) {
         return { kind: 'unsupported' };
       }
     } catch {

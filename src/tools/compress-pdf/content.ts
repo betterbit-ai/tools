@@ -31,6 +31,10 @@ const uiEn = {
   largerBy: '{n}% larger',
   sameSize: 'about the same size',
   download: 'Download compressed PDF',
+  notSmallerTitle: 'Keep your original — this PDF is already compact',
+  notSmallerBody:
+    'Rebuilding its pages as images would not make it smaller. This usually means the PDF is mostly text or already-optimized images, which this tool cannot shrink further.',
+  downloadAnyway: 'Download the rebuilt PDF anyway',
 };
 export type UI = typeof uiEn;
 
@@ -181,6 +185,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       largerBy: '{n}% 증가',
       sameSize: '용량이 거의 같습니다',
       download: '압축한 PDF 다운로드',
+      notSmallerTitle: '원본을 그대로 쓰세요 — 이미 용량이 작은 PDF입니다',
+      notSmallerBody:
+        '페이지를 이미지로 다시 만들어도 용량이 줄지 않습니다. 대부분 텍스트이거나 이미 최적화된 이미지로 된 PDF라서 이 도구로는 더 줄일 수 없습니다.',
+      downloadAnyway: '다시 만든 PDF라도 다운로드',
     },
   },
 };

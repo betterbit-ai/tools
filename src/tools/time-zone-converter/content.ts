@@ -36,7 +36,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Time Zone Converter — DST-Aware City Time',
     description:
-      'Convert a date and time between cities with current IANA time-zone rules, DST warnings, day-change labels and no sign-up or ads.',
+      'Convert a date and time between cities with current IANA time-zone rules, DST warnings, day-change labels and no sign-up.',
     h1: 'Time Zone Converter',
     tagline: 'Search cities, choose the date, and see the exact local time—including DST and the date change.',
     name: 'Time Zone Converter',

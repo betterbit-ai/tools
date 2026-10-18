@@ -36,7 +36,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Passport Photo — 4×6 Print Sheet, No Upload',
     description:
-      'Crop a passport photo to Korean, US or Japanese dimensions and download an exact-pixel photo or 4×6 print sheet. No upload or ads.',
+      'Crop a passport photo to Korean, US or Japanese dimensions and download an exact-pixel photo or 4×6 print sheet. No upload.',
     h1: 'Passport Photo Maker',
     tagline: 'Frame a photo to an official size and lay out copies for a 4×6 print — privately on your device.',
     name: 'Passport Photo Maker',

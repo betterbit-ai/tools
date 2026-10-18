@@ -31,7 +31,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Password Protect PDF — AES-256, No Upload',
     description:
-      'Password-protect a PDF with AES-256 encryption in your browser. Your file and password stay on your device, with no upload, account, or ads.',
+      'Password-protect a PDF with AES-256 encryption in your browser. Your file and password stay on your device, with no upload or account.',
     h1: 'Password Protect PDF',
     tagline: 'Add an opening password to one PDF locally — no upload or account needed.',
     name: 'Protect PDF',
