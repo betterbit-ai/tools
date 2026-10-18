@@ -54,5 +54,6 @@ export const meta: ToolMeta = {
     'dice-roller',
     'coin-flip',
     'ladder-game',
+    'lotto-generator',
   ],
 };
