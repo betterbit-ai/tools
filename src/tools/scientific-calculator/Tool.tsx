@@ -7,9 +7,12 @@ import {
   type AngleMode,
   type EvalErrorKind,
   type HistoryEntry,
+  MAX_EXPRESSION_LENGTH,
+  MAX_HISTORY,
   evaluate,
   formatResult,
   pushHistory,
+  toggleSign,
   toPlainString,
 } from './logic';
 
@@ -23,6 +26,29 @@ interface PersistedState {
 }
 
 const DEFAULT_STATE: PersistedState = { input: '', angleMode: 'deg', memory: 0, history: [] };
+
+function isHistoryEntry(value: unknown): value is HistoryEntry {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    typeof (value as HistoryEntry).expr === 'string' &&
+    typeof (value as HistoryEntry).result === 'number' &&
+    Number.isFinite((value as HistoryEntry).result) &&
+    typeof (value as HistoryEntry).at === 'number' &&
+    Number.isFinite((value as HistoryEntry).at)
+  );
+}
+
+function restoreState(value: unknown): PersistedState {
+  if (!value || typeof value !== 'object') return DEFAULT_STATE;
+  const saved = value as Partial<PersistedState>;
+  return {
+    input: typeof saved.input === 'string' ? saved.input.slice(0, MAX_EXPRESSION_LENGTH) : '',
+    angleMode: saved.angleMode === 'rad' ? 'rad' : 'deg',
+    memory: typeof saved.memory === 'number' && Number.isFinite(saved.memory) ? saved.memory : 0,
+    history: Array.isArray(saved.history) ? saved.history.filter(isHistoryEntry).slice(0, MAX_HISTORY) : [],
+  };
+}
 
 /** Keypad rows: label shown on the button, text inserted into the expression. */
 const SCIENTIFIC_KEYS: { label: string; insert: string }[][] = [
@@ -86,7 +112,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
   useEffect(() => {
     try {
       const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-      if (saved && typeof saved === 'object') setState({ ...DEFAULT_STATE, ...saved });
+      setState(restoreState(saved));
     } catch {
       /* ignore corrupt state */
     }
@@ -108,6 +134,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
     syntax: ui.errorSyntax,
     domain: ui.errorDomain,
     overflow: ui.errorOverflow,
+    'too-long': ui.errorTooLong,
   };
 
   const focusInput = () => inputRef.current?.focus();
@@ -166,13 +193,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
   };
 
   const handleSign = () => {
-    setSubmitError(null);
-    setState((s) => {
-      if (s.input === '') return s;
-      const input = s.input.startsWith('-') ? s.input.slice(1) : `-${s.input}`;
-      return { ...s, input };
-    });
-    setJustEvaluated(false);
+    setInput(toggleSign(state.input));
     focusInput();
   };
 
@@ -237,6 +258,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
               ref={inputRef}
               type="text"
               inputMode="text"
+              maxLength={MAX_EXPRESSION_LENGTH}
               autocomplete="off"
               spellcheck={false}
               aria-label={ui.expressionLabel}
@@ -340,8 +362,8 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
             <>
               <p class="mt-1 text-xs text-subtle">{ui.historyHint}</p>
               <ul class="mt-2 max-h-80 space-y-1 overflow-y-auto">
-                {state.history.map((h) => (
-                  <li key={h.at}>
+                {state.history.map((h, index) => (
+                  <li key={`${h.at}-${index}`}>
                     <button
                       type="button"
                       onClick={() => loadHistoryEntry(h)}
