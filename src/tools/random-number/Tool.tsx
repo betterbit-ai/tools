@@ -8,23 +8,26 @@ import {
   MAX_COUNT,
   MAX_VALUE,
   MIN_VALUE,
+  DEFAULT_SETTINGS,
   formatNumbers,
   generateNumbers,
+  isRandomSettings,
+  settingsFromPreset,
   type RandomSettings,
   type SortOrder,
   type ValidationError,
 } from './logic';
 
 const STORAGE_KEY = 'tools:random-number:settings';
-const DEFAULT_SETTINGS: RandomSettings = { min: 1, max: 100, count: 1, unique: false, sort: 'draw' };
 
 function cryptoSource(): number {
   if (!globalThis.crypto?.getRandomValues) throw new Error('Web Crypto unavailable');
   return globalThis.crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
 }
 
-export default function RandomNumber({ locale, ui }: ToolProps<UI>) {
-  const [settings, setSettings] = useState<RandomSettings>(DEFAULT_SETTINGS);
+export default function RandomNumber({ locale, ui, preset }: ToolProps<UI>) {
+  const hasPreset = isRandomSettings(preset);
+  const [settings, setSettings] = useState<RandomSettings>(() => settingsFromPreset(preset));
   const [values, setValues] = useState<number[]>([]);
   const [error, setError] = useState<ValidationError | 'crypto' | null>(null);
   const [ready, setReady] = useState(false);
@@ -35,12 +38,14 @@ export default function RandomNumber({ locale, ui }: ToolProps<UI>) {
     try {
       const result = generateNumbers(settings, cryptoSource);
       if (!result.ok) {
+        setValues([]);
         setError(result.error);
         return;
       }
       setValues(result.values);
       setError(null);
     } catch {
+      setValues([]);
       setError('crypto');
     }
   }, [settings]);
@@ -48,17 +53,7 @@ export default function RandomNumber({ locale, ui }: ToolProps<UI>) {
   useEffect(() => {
     try {
       const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-      if (
-        saved &&
-        typeof saved === 'object' &&
-        typeof saved.min === 'number' &&
-        typeof saved.max === 'number' &&
-        typeof saved.count === 'number' &&
-        typeof saved.unique === 'boolean' &&
-        ['draw', 'asc', 'desc'].includes(saved.sort)
-      ) {
-        setSettings(saved as RandomSettings);
-      }
+      if (!hasPreset && isRandomSettings(saved)) setSettings(saved);
     } catch {
       /* Ignore malformed local state. */
     }

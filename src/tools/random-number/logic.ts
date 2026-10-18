@@ -19,9 +19,39 @@ export interface RandomSettings {
   sort: SortOrder;
 }
 
+export const DEFAULT_SETTINGS: RandomSettings = { min: 1, max: 100, count: 1, unique: false, sort: 'draw' };
+
 export type ValidationError = 'invalid-bounds' | 'invalid-count' | 'range-order' | 'too-many-unique';
 
 export type GenerationResult = { ok: true; values: number[] } | { ok: false; error: ValidationError };
+
+export function isRandomSettings(value: unknown): value is RandomSettings {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  if (
+    typeof candidate.min !== 'number' ||
+    typeof candidate.max !== 'number' ||
+    typeof candidate.count !== 'number' ||
+    typeof candidate.unique !== 'boolean' ||
+    !isSortOrder(candidate.sort)
+  )
+    return false;
+
+  return (
+    validateSettings({
+      min: candidate.min,
+      max: candidate.max,
+      count: candidate.count,
+      unique: candidate.unique,
+      sort: candidate.sort,
+    }) === null
+  );
+}
+
+/** Returns a complete, valid settings object for a preset landing page. */
+export function settingsFromPreset(preset: Record<string, unknown> | undefined): RandomSettings {
+  return isRandomSettings(preset) ? { ...preset } : { ...DEFAULT_SETTINGS };
+}
 
 export function validateSettings(settings: RandomSettings): ValidationError | null {
   const { min, max, count, unique } = settings;
@@ -32,6 +62,10 @@ export function validateSettings(settings: RandomSettings): ValidationError | nu
   if (!Number.isSafeInteger(count) || count < 1 || count > MAX_COUNT) return 'invalid-count';
   if (unique && count > max - min + 1) return 'too-many-unique';
   return null;
+}
+
+function isSortOrder(value: unknown): value is SortOrder {
+  return value === 'draw' || value === 'asc' || value === 'desc';
 }
 
 /**
