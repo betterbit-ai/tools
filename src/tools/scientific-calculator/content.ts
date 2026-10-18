@@ -13,6 +13,7 @@ const uiEn = {
   errorDomain:
     "That's not mathematically defined for these inputs (divide by zero, a negative-number square root, an inverse-trig value outside [-1, 1], or a negative base with a fractional exponent).",
   errorOverflow: 'The result is too large to display.',
+  errorTooLong: 'That expression is too long. Keep it under 2,000 characters.',
   historyHeading: 'History',
   historyEmpty: 'No calculations yet.',
   historyHint: 'Tap a line to load its result back in.',
@@ -39,7 +40,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'degrees radians calculator',
     ],
     howTo: [
-      'Type an expression directly into the display, e.g. sin(30)+sqrt(16), or build it by tapping the keys.',
+      'Type an expression directly into the display, e.g. sin(30)+sqrt(16) or 1.25e-6, or build it by tapping the keys.',
       'Switch DEG/RAD before using any trig function — it changes how sin, cos, tan, asin, acos and atan read and return angles.',
       'Press Enter or "=" to calculate.',
       'Open History on the right and tap any past line to load that result back into the display and keep calculating.',
@@ -48,7 +49,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'What this calculator supports',
-        body: 'Arithmetic (+ − × ÷ ^ %), trigonometry (sin, cos, tan and their inverses asin, acos, atan) in degrees or radians, natural and base-10 logarithms (ln, log), square and cube roots (√, ∛), factorials up to 170! (171! overflows a standard double-precision float, so it is reported as an error instead of a wrong number), and the constants π and e.\n\nOperations with no defined result — dividing by zero, the square root of a negative number, an inverse-trig argument outside [-1, 1], tan at 90°/270° (and every odd multiple of 90°), or a negative base raised to a fractional power — are reported as errors instead of silently returning Infinity or a non-numeric result.',
+        body: 'Arithmetic (+ − × ÷ ^ %), scientific notation (for example, 1.25e-6), trigonometry (sin, cos, tan and their inverses asin, acos, atan) in degrees or radians, natural and base-10 logarithms (ln, log), square and cube roots (√, ∛), factorials up to 170! (171! overflows a standard double-precision float, so it is reported as an error instead of a wrong number), and the constants π and e are supported.\n\nOperations with no defined result — dividing by zero, the square root of a negative number, an inverse-trig argument outside [-1, 1], tan at 90°/270° (and every odd multiple of 90°), or a negative base raised to a fractional power — are reported as errors instead of silently returning Infinity or a non-numeric result.',
       },
       {
         heading: 'Degrees or radians',
@@ -81,6 +82,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: 'Pressing % divides the number immediately before it by 100. For example, 50% becomes 0.5, and 200+10% evaluates as 200 + (10/100) = 200.1 — the percent only applies to the number next to it, not to the whole expression.',
       },
       {
+        q: 'Can I enter numbers in scientific notation?',
+        a: 'Yes. Use e or E between the mantissa and exponent: 1.25e-6 means 1.25 × 10⁻⁶, and 2E+3 means 2,000. The e key by itself remains Euler’s number.',
+      },
+      {
         q: 'Is my data private?',
         a: "Yes. Every calculation runs in your browser; nothing is sent to a server, and the saved history lives only in your browser's local storage on this device.",
       },
@@ -103,7 +108,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '도 라디안 계산기',
     ],
     howTo: [
-      '입력창에 sin(30)+sqrt(16)처럼 수식을 바로 타이핑하거나, 버튼을 눌러 만듭니다.',
+      '입력창에 sin(30)+sqrt(16)이나 1.25e-6처럼 수식을 바로 타이핑하거나, 버튼을 눌러 만듭니다.',
       '삼각함수를 쓰기 전에 DEG/RAD를 먼저 맞춥니다 — sin, cos, tan, asin, acos, atan이 각도를 읽고 돌려주는 방식이 달라집니다.',
       'Enter 또는 "=" 버튼으로 계산합니다.',
       '오른쪽 기록(History)에서 지난 줄을 탭하면 그 결과를 입력창에 다시 불러와 이어서 계산할 수 있습니다.',
@@ -112,7 +117,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '지원하는 계산',
-        body: '사칙연산(+ − × ÷ ^ %), 삼각함수(sin, cos, tan과 역함수 asin, acos, atan)를 도(DEG)와 라디안(RAD) 단위로, 자연로그와 상용로그(ln, log), 제곱근·세제곱근(√, ∛), 170!까지의 계승(171!부터는 배정밀도 부동소수점 범위를 넘어서므로 틀린 숫자 대신 오류로 표시), 원주율 π와 자연상수 e를 계산할 수 있습니다.\n\n0으로 나누기, 음수의 제곱근, [-1, 1] 범위를 벗어난 역삼각함수 입력, 90°·270°(및 90°의 모든 홀수배)에서의 탄젠트, 분수 지수를 가진 음수 밑처럼 수학적으로 정의되지 않은 계산은 Infinity나 정의되지 않은 값을 그대로 보여주는 대신 오류로 알려줍니다.',
+        body: '사칙연산(+ − × ÷ ^ %), 과학적 표기법(예: 1.25e-6), 삼각함수(sin, cos, tan과 역함수 asin, acos, atan)를 도(DEG)와 라디안(RAD) 단위로, 자연로그와 상용로그(ln, log), 제곱근·세제곱근(√, ∛), 170!까지의 계승(171!부터는 배정밀도 부동소수점 범위를 넘어서므로 틀린 숫자 대신 오류로 표시), 원주율 π와 자연상수 e를 계산할 수 있습니다.\n\n0으로 나누기, 음수의 제곱근, [-1, 1] 범위를 벗어난 역삼각함수 입력, 90°·270°(및 90°의 모든 홀수배)에서의 탄젠트, 분수 지수를 가진 음수 밑처럼 수학적으로 정의되지 않은 계산은 Infinity나 정의되지 않은 값을 그대로 보여주는 대신 오류로 알려줍니다.',
       },
       {
         heading: 'DEG(도)와 RAD(라디안)',
@@ -145,6 +150,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: '% 키는 바로 앞의 숫자를 100으로 나눕니다. 예를 들어 50%는 0.5가 되고, 200+10%는 200 + (10/100) = 200.1로 계산됩니다 — 퍼센트는 수식 전체가 아니라 바로 앞의 숫자에만 적용됩니다.',
       },
       {
+        q: '과학적 표기법으로 숫자를 입력할 수 있나요?',
+        a: '네. 가수와 지수 사이에 e 또는 E를 넣어 1.25e-6처럼 입력합니다. 이는 1.25 × 10⁻⁶을 뜻하고, 2E+3은 2,000입니다. e만 단독으로 입력하면 자연상수 e를 뜻합니다.',
+      },
+      {
         q: '입력한 내용이 외부로 전송되나요?',
         a: '아니요. 모든 계산은 브라우저 안에서 이루어지며 서버로 전송되지 않고, 저장된 기록도 이 기기의 브라우저 로컬 저장소에만 남습니다.',
       },
@@ -161,6 +170,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       errorDomain:
         '이 입력값에서는 정의되지 않은 계산입니다(0으로 나누기, 음수의 제곱근, [-1, 1] 범위 밖의 역삼각함수, 분수 지수를 가진 음수 밑 등).',
       errorOverflow: '결과가 너무 커서 표시할 수 없습니다.',
+      errorTooLong: '수식이 너무 깁니다. 2,000자 이내로 입력하세요.',
       historyHeading: '계산 기록',
       historyEmpty: '아직 계산 기록이 없습니다.',
       historyHint: '줄을 탭하면 결과를 다시 불러옵니다.',

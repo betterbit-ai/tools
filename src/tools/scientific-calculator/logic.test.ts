@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { type HistoryEntry, MAX_HISTORY, evaluate, formatResult, pushHistory, toPlainString } from './logic';
+import {
+  type HistoryEntry,
+  MAX_EXPRESSION_LENGTH,
+  MAX_HISTORY,
+  evaluate,
+  formatResult,
+  pushHistory,
+  toggleSign,
+  toPlainString,
+} from './logic';
 
 function val(expr: string, mode: 'deg' | 'rad' = 'deg'): number {
   const r = evaluate(expr, mode);
@@ -109,6 +118,18 @@ describe('evaluate: constants and unicode symbols', () => {
     expect(val('10÷2')).toBe(5);
     expect(val('5−3')).toBe(2);
   });
+
+  it('accepts full-width digits, operators, parentheses and whitespace from IMEs', () => {
+    expect(val('（１２＋３）×４\u00a0')).toBe(60);
+    expect(val('１\t＋\n２')).toBe(3);
+  });
+
+  it('accepts scientific notation typed with the EXP/e key', () => {
+    expect(val('1.25e-6')).toBe(0.00000125);
+    expect(val('2E+3')).toBe(2000);
+    expect(err('1e')).toBe('syntax');
+    expect(err('1e+')).toBe('syntax');
+  });
 });
 
 describe('evaluate: domain errors and division by zero', () => {
@@ -140,6 +161,10 @@ describe('evaluate: invalid and boundary input', () => {
     expect(err('foo(1)')).toBe('syntax');
     expect(err('..5')).toBe('syntax');
   });
+
+  it('rejects excessively long expressions before recursive parsing can block the UI', () => {
+    expect(err('1'.repeat(MAX_EXPRESSION_LENGTH + 1))).toBe('too-long');
+  });
 });
 
 describe('formatResult', () => {
@@ -168,6 +193,20 @@ describe('toPlainString', () => {
   it('never switches to exponential notation, even for extreme magnitudes', () => {
     expect(toPlainString(1e20)).toBe('100000000000000000000');
     expect(toPlainString(5e-12)).toBe('0.000000000005');
+  });
+});
+
+describe('toggleSign', () => {
+  it('negates the complete expression and toggles it back without changing precedence', () => {
+    const negated = toggleSign('2+3');
+    expect(negated).toBe('-(2+3)');
+    expect(val(negated)).toBe(-5);
+    expect(toggleSign(negated)).toBe('2+3');
+  });
+
+  it('handles a negative number and leaves an empty display empty', () => {
+    expect(val(toggleSign('-5'))).toBe(5);
+    expect(toggleSign('')).toBe('');
   });
 });
 

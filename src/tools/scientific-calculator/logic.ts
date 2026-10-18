@@ -7,7 +7,7 @@
 import type { Locale } from '../../i18n/locales';
 
 export type AngleMode = 'deg' | 'rad';
-export type EvalErrorKind = 'empty' | 'syntax' | 'domain' | 'overflow';
+export type EvalErrorKind = 'empty' | 'syntax' | 'domain' | 'overflow' | 'too-long';
 export type EvalResult = { ok: true; value: number } | { ok: false; error: EvalErrorKind };
 
 export interface HistoryEntry {
@@ -17,6 +17,8 @@ export interface HistoryEntry {
 }
 
 export const MAX_HISTORY = 30;
+/** Keeps live evaluation responsive even after an accidentally huge paste. */
+export const MAX_EXPRESSION_LENGTH = 2_000;
 
 /** Functions that take one argument in parentheses, e.g. "sin(30)". */
 const FUNCTIONS = new Set(['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'ln', 'log', 'sqrt', 'cbrt', 'abs', 'exp']);
@@ -36,6 +38,7 @@ interface Cursor {
 export function evaluate(input: string, angleMode: AngleMode): EvalResult {
   const expr = input.trim();
   if (expr === '') return { ok: false, error: 'empty' };
+  if (expr.length > MAX_EXPRESSION_LENGTH) return { ok: false, error: 'too-long' };
   const c: Cursor = { s: normalize(expr), i: 0 };
   try {
     const value = parseAddSub(c, angleMode);
@@ -48,13 +51,13 @@ export function evaluate(input: string, angleMode: AngleMode): EvalResult {
   }
 }
 
-/** Maps the alternate symbols the keypad inserts onto the ASCII ones the parser reads. */
+/** Maps common full-width input and keypad symbols onto the syntax the parser reads. */
 function normalize(expr: string): string {
-  return expr.replaceAll('×', '*').replaceAll('÷', '/').replaceAll('−', '-');
+  return expr.normalize('NFKC').replaceAll('×', '*').replaceAll('÷', '/').replaceAll('−', '-');
 }
 
 function skipSpaces(c: Cursor): void {
-  while (c.i < c.s.length && c.s[c.i] === ' ') c.i++;
+  while (c.i < c.s.length && /\s/u.test(c.s[c.i])) c.i++;
 }
 
 function peekChar(c: Cursor): string | undefined {
@@ -160,6 +163,13 @@ function parseNumber(c: Cursor): number {
     } else {
       break;
     }
+  }
+  if (c.s[c.i]?.toLowerCase() === 'e') {
+    c.i++;
+    if (c.s[c.i] === '+' || c.s[c.i] === '-') c.i++;
+    const exponentStart = c.i;
+    while (c.i < c.s.length && c.s[c.i] >= '0' && c.s[c.i] <= '9') c.i++;
+    if (c.i === exponentStart) throw new CalcError('syntax');
   }
   const text = c.s.slice(start, c.i);
   if (text === '' || text === '.') throw new CalcError('syntax');
@@ -275,4 +285,10 @@ export function pushHistory(history: HistoryEntry[], entry: HistoryEntry): Histo
 export function toPlainString(n: number): string {
   if (!Number.isFinite(n)) return n > 0 ? 'Infinity' : '-Infinity';
   return new Intl.NumberFormat('en-US', { useGrouping: false, maximumFractionDigits: 20 }).format(n);
+}
+
+/** Wraps the current expression so ± always negates the full value, not just its first term. */
+export function toggleSign(input: string): string {
+  if (input === '') return '';
+  return input.startsWith('-(') && input.endsWith(')') ? input.slice(2, -1) : `-(${input})`;
 }
