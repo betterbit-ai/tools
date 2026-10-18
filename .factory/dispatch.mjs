@@ -795,7 +795,7 @@ function startNextIssue(repo, clone) {
     : session.result;
   writeFileSync(
     bodyFile,
-    `${report || '_No summary from the session._'}\n\nCloses #${n}\n\n---\n🏭 Built by the factory with **${ENGINE_LABEL}** (${HOST}). Merges automatically once all checks pass.\n`,
+    `${report || '_No summary from the session._'}\n\nCloses #${n}\n\n---\n🏭 Built by the factory with **${model ? `${ENGINE} ${model}` : ENGINE_LABEL}** (${HOST}). Merges automatically once all checks pass.\n`,
   );
   const pr = gh(
     [
