@@ -18,6 +18,9 @@ const uiEn = {
   timesUp: 'Time’s up!',
   sound: 'Alarm sound',
   testSound: 'Test sound',
+  restoredSound: 'This timer was restored. Press Test sound once to enable its alarm in this tab.',
+  soundUnavailable: 'This browser cannot play the alarm sound. The timer will still end visibly.',
+  soundBlocked: 'The browser blocked the alarm sound. Press Test sound to enable it, then try again.',
   fullscreenUnavailable: 'Full screen is unavailable in this browser.',
   keyStart: 'Start / pause',
 };
@@ -36,7 +39,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Pick a preset or type hours, minutes and seconds.',
       'Press Start (or the Space bar).',
       'Switch tabs freely — the remaining time is shown in the tab title.',
-      'Optional: press Test sound. When time is up, the enabled alarm plays for 30 seconds.',
+      'Press Test sound once to confirm that the browser allows audio. When time is up, the enabled alarm plays for 30 seconds.',
     ],
     sections: [
       {
@@ -55,7 +58,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'Will the alarm sound if the tab is in the background?',
-        a: 'After you press Start in the current browser session, the timer can play its alarm while the tab is in the background. Browsers may delay or mute background audio when a phone is locked or a device sleeps, so use the built-in clock app for a critical alarm. The tab title changes to “Time’s up!” when the page runs again.',
+        a: 'After you press Start or Test sound in the current page session, the timer can play its alarm while the tab is in the background. A restored timer asks you to press Test sound again because browsers require a new audio permission gesture after reload. Browsers may delay or mute background audio when a phone is locked or a device sleeps, so use the built-in clock app for a critical alarm. The tab title changes to “Time’s up!” when the page runs again.',
       },
       {
         q: 'What happens if I refresh or close the page?',
@@ -88,7 +91,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '프리셋을 고르거나 시·분·초를 직접 입력합니다.',
       '시작 버튼(또는 스페이스바)을 누릅니다.',
       '다른 탭으로 이동해도 탭 제목에 남은 시간이 표시됩니다.',
-      '필요하면 “소리 테스트”를 누릅니다. 시간이 끝나면 켜져 있는 알람이 30초 동안 울립니다.',
+      '“소리 테스트”를 한 번 눌러 브라우저에서 소리가 나는지 확인합니다. 시간이 끝나면 켜져 있는 알람이 30초 동안 울립니다.',
     ],
     sections: [
       {
@@ -107,7 +110,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: '다른 탭을 보고 있어도 알람이 울리나요?',
-        a: '현재 브라우저 세션에서 시작 버튼을 한 번 누른 뒤에는 다른 탭을 보고 있어도 알람을 재생할 수 있습니다. 다만 휴대폰 화면이 잠기거나 기기가 절전 상태이면 브라우저가 소리를 지연하거나 끌 수 있으므로, 중요한 알람은 기기 기본 시계 앱을 사용하세요. 페이지가 다시 실행되면 탭 제목이 “시간 종료!”로 바뀝니다.',
+        a: '현재 페이지에서 시작 버튼이나 소리 테스트를 한 번 누르면 다른 탭을 보고 있어도 알람을 재생할 수 있습니다. 새로고침 뒤 복원된 타이머는 브라우저의 소리 재생 허용을 다시 받아야 하므로 소리 테스트를 눌러 달라고 안내합니다. 휴대폰 화면이 잠기거나 기기가 절전 상태이면 브라우저가 소리를 지연하거나 끌 수 있으므로, 중요한 알람은 기기 기본 시계 앱을 사용하세요. 페이지가 다시 실행되면 탭 제목이 “시간 종료!”로 바뀝니다.',
       },
       {
         q: '새로고침하거나 창을 닫으면 어떻게 되나요?',
@@ -143,6 +146,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       timesUp: '시간 종료!',
       sound: '알람 소리',
       testSound: '소리 테스트',
+      restoredSound: '복원된 타이머입니다. 이 탭에서 알람을 켜려면 소리 테스트를 한 번 눌러 주세요.',
+      soundUnavailable: '이 브라우저에서는 알람 소리를 재생할 수 없습니다. 타이머 종료는 화면에 표시됩니다.',
+      soundBlocked: '브라우저가 알람 소리를 차단했습니다. 소리 테스트를 눌러 허용한 뒤 다시 시도하세요.',
       fullscreenUnavailable: '이 브라우저에서는 전체화면을 사용할 수 없습니다.',
       keyStart: '시작 / 일시정지',
     },
