@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, Field, Notice, NumberInput, Panel, Segmented, Stat } from '../../components/ui';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { Button, Field, Notice, NumberInput, Panel, Segmented, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -9,7 +9,7 @@ import { calculateLoan, type RepaymentMethod } from './logic';
 const STORAGE_KEY = 'tools:loan-calculator:state';
 
 interface State {
-  principal: number | '';
+  principal: string;
   annualRate: number | '';
   termMonths: number | '';
   method: RepaymentMethod;
@@ -17,7 +17,7 @@ interface State {
 
 function defaultState(locale: ToolProps<UI>['locale']): State {
   return {
-    principal: locale === 'ko' ? 300_000_000 : 10_000,
+    principal: locale === 'ko' ? '300000000' : '10000',
     annualRate: locale === 'ko' ? 4 : 6,
     termMonths: locale === 'ko' ? 360 : 12,
     method: 'amortized',
@@ -33,7 +33,12 @@ function restoreState(fallback: State): State {
     const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
     if (!saved || typeof saved !== 'object') return fallback;
     return {
-      principal: isFiniteNumber(saved.principal) ? saved.principal : fallback.principal,
+      principal:
+        typeof saved.principal === 'string'
+          ? saved.principal
+          : isFiniteNumber(saved.principal)
+            ? String(saved.principal)
+            : fallback.principal,
       annualRate: isFiniteNumber(saved.annualRate) ? saved.annualRate : fallback.annualRate,
       termMonths: isFiniteNumber(saved.termMonths) ? saved.termMonths : fallback.termMonths,
       method:
@@ -48,24 +53,29 @@ function restoreState(fallback: State): State {
 
 export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
   const initialState = defaultState(locale);
-  const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(initialState);
+  const stateRef = useRef(initialState);
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
   useEffect(() => {
-    setState(restoreState(initialState));
-    setReady(true);
+    const restored = restoreState(initialState);
+    stateRef.current = restored;
+    setState(restored);
   }, []);
 
-  useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
-  }, [ready, state]);
-
-  const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
+  const update = (patch: Partial<State>) => {
+    const next = { ...stateRef.current, ...patch };
+    stateRef.current = next;
+    setState(next);
+    safeStorage.set(STORAGE_KEY, JSON.stringify(next));
+  };
   const result = useMemo(() => calculateLoan(state), [state]);
   const money = (value: number) => formatNumber(value, locale, locale === 'en' ? 2 : 0);
   const reset = () => {
-    setState(defaultState(locale));
+    const next = defaultState(locale);
+    stateRef.current = next;
+    setState(next);
+    safeStorage.set(STORAGE_KEY, JSON.stringify(next));
     setScheduleOpen(false);
   };
 
@@ -79,12 +89,10 @@ export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
       <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div class="flex flex-col gap-4">
           <Field label={ui.principalLabel} hint={ui.principalHint}>
-            <NumberInput
+            <TextInput
               value={state.principal}
-              min="0"
-              max={String(Number.MAX_SAFE_INTEGER)}
-              step="1"
-              onValue={(principal) => update({ principal })}
+              inputMode="decimal"
+              onInput={(event) => update({ principal: event.currentTarget.value })}
             />
           </Field>
           <Field label={ui.rateLabel} hint={ui.rateHint}>
@@ -105,7 +113,8 @@ export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
               onValue={(termMonths) => update({ termMonths })}
             />
           </Field>
-          <Field label={ui.methodLabel}>
+          <fieldset>
+            <legend class="mb-1.5 block text-sm font-medium text-fg">{ui.methodLabel}</legend>
             <Segmented<RepaymentMethod>
               label={ui.methodLabel}
               value={state.method}
@@ -116,7 +125,7 @@ export default function LoanCalculator({ locale, ui }: ToolProps<UI>) {
                 { value: 'bullet', label: ui.bullet },
               ]}
             />
-          </Field>
+          </fieldset>
         </div>
 
         <div class="flex flex-col gap-3">
