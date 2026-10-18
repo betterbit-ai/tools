@@ -10,13 +10,19 @@ export const RATES_2026 = {
 
 export const NATIONAL_PENSION_MIN_BASE = 410_000;
 export const NATIONAL_PENSION_MAX_BASE = 6_590_000;
+/** Employee half of the KRW 20,160 monthly workplace health-insurance minimum. */
+export const HEALTH_INSURANCE_MIN_EMPLOYEE_PREMIUM = 10_080;
 export const MAX_ANNUAL_SALARY = 1_000_000_000;
+
+export const WITHHOLDING_RATES = [80, 100, 120] as const;
+export type WithholdingRate = (typeof WITHHOLDING_RATES)[number];
 
 export interface SalaryInput {
   annualSalary: number | string;
   monthlyNonTaxable: number | string;
   dependents: number | string;
   childrenAge8To20: number | string;
+  withholdingRate: WithholdingRate;
 }
 
 export interface SalaryResult {
@@ -67,7 +73,8 @@ export function calculateSalary(input: SalaryInput): SalaryResult | null {
     dependents < 1 ||
     dependents > 50 ||
     childrenAge8To20 < 0 ||
-    childrenAge8To20 > dependents
+    childrenAge8To20 > dependents ||
+    !WITHHOLDING_RATES.includes(input.withholdingRate)
   ) {
     return null;
   }
@@ -78,12 +85,18 @@ export function calculateSalary(input: SalaryInput): SalaryResult | null {
   const monthlyTaxable = monthlyGross - monthlyNonTaxable;
   const insuranceBase = Math.max(NATIONAL_PENSION_MIN_BASE, Math.min(monthlyTaxable, NATIONAL_PENSION_MAX_BASE));
   const nationalPension = roundDownToTen(insuranceBase * RATES_2026.nationalPension);
-  const healthInsurance = roundDownToTen(monthlyTaxable * RATES_2026.healthInsurance);
+  const healthInsurance = Math.max(
+    HEALTH_INSURANCE_MIN_EMPLOYEE_PREMIUM,
+    roundDownToTen(monthlyTaxable * RATES_2026.healthInsurance),
+  );
   const longTermCareInsurance = roundDownToTen(healthInsurance * RATES_2026.longTermCareOfHealth);
   const employmentInsurance = roundDownToTen(monthlyTaxable * RATES_2026.employmentInsurance);
   const incomeTax = Math.max(
     0,
-    lookupBaseWithholding(monthlyTaxable, dependents) - childWithholdingReduction(childrenAge8To20),
+    Math.floor(
+      (lookupBaseWithholding(monthlyTaxable, dependents) - childWithholdingReduction(childrenAge8To20)) *
+        (input.withholdingRate / 100),
+    ),
   );
   const localIncomeTax = roundDownToTen(incomeTax * 0.1);
   const totalDeductions =
