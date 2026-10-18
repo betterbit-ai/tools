@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Its current tool exposes optional browser-processing controls, a waveform, room-noise measurement and download before the basic sample check. Betterbit offers a shorter start-to-listen path with an always visible 10-second action and S/R keyboard shortcuts. (Strength: it provides room-noise measurement, processing controls and local WAV download.)',
     },
   ],
-  related: ['webcam-test', 'keyboard-tester', 'typing-test'],
+  related: ['webcam-test', 'keyboard-tester', 'typing-test', 'mouse-test'],
 };
