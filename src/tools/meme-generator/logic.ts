@@ -7,6 +7,9 @@ export const MAX_FONT_SCALE = 20;
 export const MAX_OUTPUT_PIXELS = 16_000_000;
 /** Keeps the output within the maximum canvas dimension supported by common browsers. */
 export const MAX_OUTPUT_DIMENSION = 8_192;
+/** Keeps repeated live-preview redraws light while retaining a sharp 2× display-sized canvas. */
+export const MAX_PREVIEW_PIXELS = 2_000_000;
+export const MAX_PREVIEW_DIMENSION = 2_048;
 export const MAX_IMAGE_FILE_BYTES = 20 * 1024 * 1024;
 
 export type CanvasPreset = 'wide' | 'square';
@@ -98,22 +101,31 @@ export function presetDimensions(preset: CanvasPreset): { width: number; height:
   return preset === 'square' ? { width: 1080, height: 1080 } : { width: 1200, height: 675 };
 }
 
-/** Returns a canvas-safe size while preserving the source image's aspect ratio. */
-export function constrainedImageDimensions(width: number, height: number): { width: number; height: number } {
+function constrainedDimensions(
+  width: number,
+  height: number,
+  maxPixels: number,
+  maxDimension: number,
+): { width: number; height: number } {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
     throw new RangeError('Image dimensions must be positive finite numbers');
   }
 
-  const scale = Math.min(
-    1,
-    Math.sqrt(MAX_OUTPUT_PIXELS / (width * height)),
-    MAX_OUTPUT_DIMENSION / width,
-    MAX_OUTPUT_DIMENSION / height,
-  );
+  const scale = Math.min(1, Math.sqrt(maxPixels / (width * height)), maxDimension / width, maxDimension / height);
   return {
     width: Math.max(1, Math.floor(width * scale)),
     height: Math.max(1, Math.floor(height * scale)),
   };
+}
+
+/** Returns a canvas-safe export size while preserving the source image's aspect ratio. */
+export function constrainedImageDimensions(width: number, height: number): { width: number; height: number } {
+  return constrainedDimensions(width, height, MAX_OUTPUT_PIXELS, MAX_OUTPUT_DIMENSION);
+}
+
+/** Returns a bounded live-preview size without changing the separately rendered export. */
+export function previewDimensions(width: number, height: number): { width: number; height: number } {
+  return constrainedDimensions(width, height, MAX_PREVIEW_PIXELS, MAX_PREVIEW_DIMENSION);
 }
 
 export function isSupportedImageFileSize(size: number): boolean {

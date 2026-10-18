@@ -4,12 +4,14 @@ import {
   MAX_IMAGE_FILE_BYTES,
   MAX_OUTPUT_DIMENSION,
   MAX_OUTPUT_PIXELS,
+  MAX_PREVIEW_PIXELS,
   constrainedImageDimensions,
   isSupportedImageFileSize,
   MAX_CAPTION_LENGTH,
   normalizeCaption,
   normalizeOptions,
   outputName,
+  previewDimensions,
   presetDimensions,
   wrapCaption,
 } from './logic';
@@ -56,6 +58,17 @@ describe('meme-generator logic', () => {
     expect(constrained).toEqual({ width: MAX_OUTPUT_DIMENSION, height: 1638 });
     expect(constrained.width * constrained.height).toBeLessThanOrEqual(MAX_OUTPUT_PIXELS);
     expect(() => constrainedImageDimensions(0, 100)).toThrow(RangeError);
+  });
+
+  it('bounds the live preview separately without changing the export dimensions', () => {
+    const phone = constrainedImageDimensions(4032, 3024);
+    expect(phone).toEqual({ width: 4032, height: 3024 });
+    expect(previewDimensions(phone.width, phone.height)).toEqual({ width: 1632, height: 1224 });
+
+    const panorama = previewDimensions(6000, 800);
+    expect(panorama).toEqual({ width: 2048, height: 273 });
+    expect(panorama.width * panorama.height).toBeLessThanOrEqual(MAX_PREVIEW_PIXELS);
+    expect(previewDimensions(64, 64)).toEqual({ width: 64, height: 64 });
   });
 
   it('rejects oversized or invalid file sizes before decoding', () => {

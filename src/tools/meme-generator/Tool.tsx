@@ -11,20 +11,28 @@ import {
   Textarea,
   Toggle,
 } from '../../components/ui';
-import { downloadBlob, safeStorage } from '../../lib/browser';
+import { downloadBlob, safeStorage, yieldToBrowser } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { canvasBlob, drawMeme, readImage } from './meme';
+import { drawMeme, readImage, renderMemeBlob } from './meme';
 import {
   isSupportedImageFileSize,
   normalizeCaption,
   normalizeOptions,
   outputName,
+  previewDimensions,
   type CanvasPreset,
   type MemeOptions,
 } from './logic';
 
 const STORAGE_KEY = 'tools:meme-generator:settings';
+
+interface ImageInfo {
+  originalWidth: number;
+  originalHeight: number;
+  width: number;
+  height: number;
+}
 
 function storedOptions(ui: UI): MemeOptions {
   try {
@@ -43,17 +51,24 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bitmapRef = useRef<ImageBitmap | null>(null);
   const loadVersionRef = useRef(0);
+  const loadAbortRef = useRef<AbortController | null>(null);
+  const saveVersionRef = useRef(0);
   const [options, setOptions] = useState<MemeOptions>(() => storedOptions(ui));
   const [preset, setPreset] = useState<CanvasPreset>('wide');
   const [fileName, setFileName] = useState<string>();
+  const [imageInfo, setImageInfo] = useState<ImageInfo>();
   const [bitmapVersion, setBitmapVersion] = useState(0);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [isRendering, setIsRendering] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => safeStorage.set(STORAGE_KEY, JSON.stringify(options)), [options]);
   useEffect(
     () => () => {
       loadVersionRef.current += 1;
+      loadAbortRef.current?.abort();
+      saveVersionRef.current += 1;
       bitmapRef.current?.close();
     },
     [],
@@ -65,7 +80,9 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
     const timeout = setTimeout(() => {
       try {
         if (!canvasRef.current) return;
-        drawMeme(canvasRef.current, bitmapRef.current, preset, options);
+        const bitmap = bitmapRef.current;
+        const dimensions = bitmap ? previewDimensions(bitmap.width, bitmap.height) : undefined;
+        drawMeme(canvasRef.current, bitmap, preset, options, dimensions);
         setError('');
       } catch {
         setError(ui.renderError);
@@ -78,9 +95,13 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
 
   const usePreset = (nextPreset: CanvasPreset) => {
     loadVersionRef.current += 1;
+    loadAbortRef.current?.abort();
+    loadAbortRef.current = null;
+    setIsLoading(false);
     bitmapRef.current?.close();
     bitmapRef.current = null;
     setFileName(undefined);
+    setImageInfo(undefined);
     setPreset(nextPreset);
     setBitmapVersion((version) => version + 1);
     setError('');
@@ -90,24 +111,43 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
     async (files: File[]) => {
       const file = files[0];
       if (!file) return;
+      loadAbortRef.current?.abort();
       const loadVersion = ++loadVersionRef.current;
       if (!isSupportedImageFileSize(file.size)) {
+        setIsLoading(false);
         setError(ui.fileTooLarge);
         return;
       }
+      const controller = new AbortController();
+      loadAbortRef.current = controller;
+      setIsLoading(true);
+      setError('');
       try {
-        const next = await readImage(file);
+        const next = await readImage(file, controller.signal);
         if (loadVersion !== loadVersionRef.current) {
-          next.close();
+          next.bitmap.close();
           return;
         }
         bitmapRef.current?.close();
-        bitmapRef.current = next;
+        bitmapRef.current = next.bitmap;
         setFileName(file.name);
+        setImageInfo({
+          originalWidth: next.originalWidth,
+          originalHeight: next.originalHeight,
+          width: next.bitmap.width,
+          height: next.bitmap.height,
+        });
         setBitmapVersion((version) => version + 1);
         setError('');
-      } catch {
-        if (loadVersion === loadVersionRef.current) setError(ui.unsupported);
+      } catch (cause) {
+        if (loadVersion === loadVersionRef.current && !(cause instanceof DOMException && cause.name === 'AbortError')) {
+          setError(ui.unsupported);
+        }
+      } finally {
+        if (loadVersion === loadVersionRef.current) {
+          loadAbortRef.current = null;
+          setIsLoading(false);
+        }
       }
     },
     [ui.fileTooLarge, ui.unsupported],
@@ -123,16 +163,43 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
       ? ui.previewImage
       : ui.previewBlank;
 
+  const cancelLoad = () => {
+    loadVersionRef.current += 1;
+    loadAbortRef.current?.abort();
+    loadAbortRef.current = null;
+    setIsLoading(false);
+  };
+
+  const cancelSave = () => {
+    saveVersionRef.current += 1;
+    setIsSaving(false);
+  };
+
   const download = async () => {
-    if (!canvasRef.current) return;
+    if (isSaving) return;
+    const saveVersion = ++saveVersionRef.current;
+    setIsSaving(true);
+    setError('');
     try {
-      drawMeme(canvasRef.current, bitmapRef.current, preset, options);
-      downloadBlob(await canvasBlob(canvasRef.current), outputName(fileName));
-      setError('');
+      await yieldToBrowser();
+      if (saveVersion !== saveVersionRef.current) return;
+      const blob = await renderMemeBlob(bitmapRef.current, preset, options);
+      if (saveVersion !== saveVersionRef.current) return;
+      downloadBlob(blob, outputName(fileName));
     } catch {
-      setError(ui.downloadError);
+      if (saveVersion === saveVersionRef.current) setError(ui.downloadError);
+    } finally {
+      if (saveVersion === saveVersionRef.current) setIsSaving(false);
     }
   };
+
+  const reduced =
+    imageInfo && (imageInfo.originalWidth !== imageInfo.width || imageInfo.originalHeight !== imageInfo.height);
+  const reducedMessage = reduced
+    ? ui.reducedImage
+        .replace('{original}', `${imageInfo.originalWidth}×${imageInfo.originalHeight}`)
+        .replace('{output}', `${imageInfo.width}×${imageInfo.height}`)
+    : '';
 
   return (
     <Panel>
@@ -157,6 +224,11 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
             {fileName ? `${ui.usingImage}: ${fileName}` : ui.blankCanvas}
           </p>
           {isRendering && <p class="mt-1 text-xs text-subtle">{ui.rendering}</p>}
+          {reduced && (
+            <div class="mt-3">
+              <Notice>{reducedMessage}</Notice>
+            </div>
+          )}
           <div class="mt-4">
             <Dropzone
               accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.heic,.heif"
@@ -170,6 +242,14 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
             <span>{ui.pasteHint}</span>
             <Kbd>{ui.pasteKeys}</Kbd>
           </div>
+          {isLoading && (
+            <div class="mt-4 flex flex-wrap items-center gap-3" aria-live="polite">
+              <span class="text-sm text-muted">{ui.readingImage}</span>
+              <Button variant="secondary" size="sm" onClick={cancelLoad}>
+                {ui.cancel}
+              </Button>
+            </div>
+          )}
           {error && (
             <div class="mt-4">
               <Notice tone="danger">{error}</Notice>
@@ -210,9 +290,16 @@ export default function MemeGenerator({ ui }: ToolProps<UI>) {
           </Field>
           <Toggle checked={options.allCaps} onChecked={(value) => update('allCaps', value)} label={ui.allCaps} />
           <div class="border-t border-line pt-5">
-            <Button variant="primary" size="lg" onClick={download}>
-              {ui.download}
-            </Button>
+            <div class="flex flex-wrap items-center gap-2">
+              <Button variant="primary" size="lg" onClick={download} disabled={isLoading || isSaving}>
+                {isSaving ? ui.saving : ui.download}
+              </Button>
+              {isSaving && (
+                <Button variant="secondary" size="md" onClick={cancelSave}>
+                  {ui.cancel}
+                </Button>
+              )}
+            </div>
             <p class="mt-2 text-xs text-subtle">{ui.downloadHint}</p>
           </div>
         </div>

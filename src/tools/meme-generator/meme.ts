@@ -8,27 +8,50 @@ import {
   type CanvasPreset,
   type MemeOptions,
 } from './logic';
+import { yieldToBrowser } from '../../lib/browser';
 
 const FONT_FAMILY = 'Impact, "Arial Black", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif';
 
-export async function readImage(file: File): Promise<ImageBitmap> {
+export interface LoadedImage {
+  bitmap: ImageBitmap;
+  originalWidth: number;
+  originalHeight: number;
+}
+
+function cancelled(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
+}
+
+export async function readImage(file: File, signal?: AbortSignal): Promise<LoadedImage> {
   if (!isSupportedImageFileSize(file.size)) throw new Error('Image file is too large');
 
-  const source = await createImageBitmap(file);
+  cancelled(signal);
+  let source: ImageBitmap | null = await createImageBitmap(file);
   try {
+    cancelled(signal);
+    const originalWidth = source.width;
+    const originalHeight = source.height;
     const dimensions = constrainedImageDimensions(source.width, source.height);
-    if (dimensions.width === source.width && dimensions.height === source.height) return source;
+    if (dimensions.width === source.width && dimensions.height === source.height) {
+      const bitmap = source;
+      source = null;
+      return { bitmap, originalWidth, originalHeight };
+    }
 
+    await yieldToBrowser();
+    cancelled(signal);
     const resized = await createImageBitmap(source, {
       resizeWidth: dimensions.width,
       resizeHeight: dimensions.height,
       resizeQuality: 'high',
     });
-    source.close();
-    return resized;
-  } catch (error) {
-    source.close();
-    throw error;
+    if (signal?.aborted) {
+      resized.close();
+      cancelled(signal);
+    }
+    return { bitmap: resized, originalWidth, originalHeight };
+  } finally {
+    source?.close();
   }
 }
 
@@ -37,16 +60,18 @@ export function drawMeme(
   source: ImageBitmap | null,
   preset: CanvasPreset,
   rawOptions: MemeOptions,
+  targetDimensions?: { width: number; height: number },
 ): { width: number; height: number } {
   const options = normalizeOptions(rawOptions);
-  const dimensions = source ? { width: source.width, height: source.height } : presetDimensions(preset);
+  const dimensions =
+    targetDimensions ?? (source ? { width: source.width, height: source.height } : presetDimensions(preset));
   canvas.width = dimensions.width;
   canvas.height = dimensions.height;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is unavailable');
 
   if (source) {
-    context.drawImage(source, 0, 0);
+    context.drawImage(source, 0, 0, dimensions.width, dimensions.height);
   } else {
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -89,4 +114,20 @@ export function canvasBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Unable to encode the meme'))), 'image/png'),
   );
+}
+
+/** Renders the full-resolution result on a short-lived canvas so the live preview stays lightweight. */
+export async function renderMemeBlob(
+  source: ImageBitmap | null,
+  preset: CanvasPreset,
+  options: MemeOptions,
+): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  try {
+    drawMeme(canvas, source, preset, options);
+    return await canvasBlob(canvas);
+  } finally {
+    canvas.width = 1;
+    canvas.height = 1;
+  }
 }
