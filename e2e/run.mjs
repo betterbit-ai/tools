@@ -169,6 +169,9 @@ const LAUNCH_ARGS = [
   '--no-zygote',
   '--single-process',
   '--disable-features=MachPortRendezvous',
+  // Mic/camera tools get a fake device and auto-accepted permission prompts.
+  '--use-fake-device-for-media-stream',
+  '--use-fake-ui-for-media-stream',
 ];
 
 const server = remoteBase ? null : await serveDist();
@@ -184,7 +187,11 @@ for (const slug of wanted) {
   }
   // A fresh browser per spec: with --single-process, closing a context ends the browser.
   const browser = await chromium.launch({ headless: true, args: LAUNCH_ARGS });
-  const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } });
+  const context = await browser.newContext({
+    acceptDownloads: true,
+    viewport: { width: 1280, height: 900 },
+    permissions: ['microphone', 'camera', 'clipboard-read', 'clipboard-write'],
+  });
   const page = await context.newPage();
   const errors = { page: [], console: [] };
   page.on('pageerror', (e) => errors.page.push(String(e)));
