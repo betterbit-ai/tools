@@ -130,4 +130,36 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Diagnostic fields intentionally use exact display primaries, not theme colours. */
+  .screen-test-surface {
+    min-height: 12rem;
+  }
+  .screen-test-white {
+    background-color: #fff;
+  }
+  .screen-test-black {
+    background-color: #000;
+  }
+  .screen-test-red {
+    background-color: #f00;
+  }
+  .screen-test-green {
+    background-color: #0f0;
+  }
+  .screen-test-blue {
+    background-color: #00f;
+  }
+  .screen-test-gray {
+    background-color: #808080;
+  }
+  .screen-test-cyan {
+    background-color: #0ff;
+  }
+  .screen-test-magenta {
+    background-color: #f0f;
+  }
+  .screen-test-yellow {
+    background-color: #ff0;
+  }
 }
