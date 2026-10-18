@@ -103,7 +103,7 @@ export async function removeBackground(file: File, options: RemovalOptions = {})
     onProgress?.({ phase: 'processing', completed: 0, total: 1 });
 
     // Code split: ONNX Runtime itself is fetched only after a user starts a job.
-    const ort = await import('onnxruntime-web/webgpu');
+    const ort = await import('onnxruntime-web');
     ort.env.wasm.wasmPaths = {
       mjs: '/ort/ort-wasm-simd-threaded.jsep.mjs',
       wasm: '/ort/ort-wasm-simd-threaded.jsep.wasm',

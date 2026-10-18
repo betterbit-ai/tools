@@ -143,9 +143,10 @@ export async function upscaleImage(
     const model = await fetchModel(signal, onProgress);
     cancelled(signal);
 
-    // This code split keeps the normal page bundle small. The runtime's WebGPU
-    // execution provider is preferred; ONNX Runtime falls back to WebAssembly.
-    const ort = await import('onnxruntime-web/webgpu');
+    // This code split keeps the normal page bundle small. Use the default (JSEP) build: it
+    // matches the self-hosted public/ort/*.jsep files. 'onnxruntime-web/webgpu' needs the
+    // asyncify build (27 MB, over Cloudflare's 25 MiB asset limit) and silently fell back to CPU.
+    const ort = await import('onnxruntime-web');
     ort.env.wasm.wasmPaths = {
       mjs: '/ort/ort-wasm-simd-threaded.jsep.mjs',
       wasm: '/ort/ort-wasm-simd-threaded.jsep.wasm',
