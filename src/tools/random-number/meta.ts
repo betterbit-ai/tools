@@ -74,6 +74,6 @@ export const meta: ToolMeta = {
         'Its opened page documents up to 1,000 draws at a time, while Betterbit visibly permits up to 10,000 and shows the allowed count beside the input. Betterbit also saves valid settings locally for the next visit. (Strength: it accepts any exact JavaScript safe-integer range and gives a clear explanation of when a draw needs an auditable record.)',
     },
   ],
-  related: ['random-picker', 'dice-roller', 'coin-flip', 'uuid-generator'],
+  related: ['random-picker', 'dice-roller', 'coin-flip', 'uuid-generator', 'lotto-generator'],
   variants,
 };
