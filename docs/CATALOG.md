@@ -185,7 +185,7 @@
 | ladder-game         | 사다리 타기    | 사다리 타기                          | 애니메이션, 결과 공유                             | P1  | live |
 | lotto-generator     | 로또 번호      | 로또 번호 생성기                     | 제외수, 고정수                                    | P1  | live |
 | username-generator  | 닉네임 생성    | username generator / 닉네임 추천     | 한글 닉네임                                       | P2  | todo |
-| signature-generator | 서명 만들기    | signature generator / 서명 만들기    | 손글씨, 폰트 서명, 투명 PNG                       | P1  | todo |
+| signature-generator | 서명 만들기    | signature generator / 서명 만들기    | 손글씨, 폰트 서명, 투명 PNG                       | P1  | live |
 
 ## device: 기기 테스트 (신규 카테고리)
 
