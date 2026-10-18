@@ -22,6 +22,7 @@ const STATE_KEY = 'tools:timer:state';
 const SOUND_KEY = 'tools:timer:sound';
 const PRESET_MINUTES = [1, 3, 5, 10, 15, 25, 30, 60];
 const ALARM_SECONDS = 30;
+type AudioIssue = 'restored' | 'unavailable' | 'blocked' | null;
 
 export default function Timer({ ui, preset }: ToolProps<UI>) {
   const presetMinutes = typeof preset?.minutes === 'number' ? preset.minutes : 5;
@@ -31,26 +32,36 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
   const [alarming, setAlarming] = useState(false);
   const [restored, setRestored] = useState(false);
   const [fullscreenError, setFullscreenError] = useState(false);
+  const [audioIssue, setAudioIssue] = useState<AudioIssue>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const audio = useRef<AudioContext | null>(null);
   const alarmTimer = useRef<number | null>(null);
   const baseTitle = useRef('');
+  const soundRef = useRef(sound);
+
+  soundRef.current = sound;
 
   // Restore a running/paused timer after reload. Preset pages start fresh unless a timer is active.
   useEffect(() => {
     baseTitle.current = document.title;
+    const soundEnabled = safeStorage.get(SOUND_KEY) !== 'off';
     try {
       const saved = JSON.parse(safeStorage.get(STATE_KEY) ?? 'null');
       if (isTimerState(saved) && (saved.status === 'running' || saved.status === 'paused')) {
         const t = Date.now();
         setState(settle(saved, t));
         setNow(t);
+        if (soundEnabled) setAudioIssue('restored');
       }
     } catch {
       /* ignore corrupt state */
     }
-    setSound(safeStorage.get(SOUND_KEY) !== 'off');
+    setSound(soundEnabled);
     setRestored(true);
+    return () => {
+      if (baseTitle.current) document.title = baseTitle.current;
+      if (audio.current) void audio.current.close().catch(() => undefined);
+    };
   }, []);
 
   useEffect(() => {
@@ -79,18 +90,29 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
   useEffect(() => {
     if (state.status !== 'done') return;
     setAlarming(true);
-    if (!sound) return;
+    if (!soundRef.current) return;
+    const context = audio.current;
+    if (!context || context.state !== 'running') {
+      setAudioIssue(typeof window.AudioContext === 'undefined' ? 'unavailable' : 'blocked');
+      return;
+    }
     let count = 0;
-    beep(audio.current);
+    if (!beep(context)) {
+      setAudioIssue('blocked');
+      return;
+    }
     alarmTimer.current = window.setInterval(() => {
       count++;
       if (count >= ALARM_SECONDS) return stopAlarm();
-      beep(audio.current);
+      if (context.state !== 'running' || !beep(context)) {
+        setAudioIssue('blocked');
+        stopAlarm();
+      }
     }, 1000);
     return () => {
       if (alarmTimer.current) clearInterval(alarmTimer.current);
     };
-  }, [state.status, sound, stopAlarm]);
+  }, [state.status, stopAlarm]);
 
   const left = remaining(state, now);
   const clock = formatClock(left);
@@ -103,20 +125,36 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
     else document.title = baseTitle.current;
   }, [clock, state.status, ui.timesUp]);
 
-  const unlockAudio = () => {
-    if (!audio.current && typeof AudioContext !== 'undefined') audio.current = new AudioContext();
-    void audio.current?.resume();
-  };
+  const unlockAudio = useCallback(async (): Promise<AudioContext | null> => {
+    const AudioContextConstructor = window.AudioContext;
+    if (!AudioContextConstructor) {
+      setAudioIssue('unavailable');
+      return null;
+    }
+    try {
+      const context = (audio.current ??= new AudioContextConstructor());
+      await context.resume();
+      if (context.state !== 'running') {
+        setAudioIssue('blocked');
+        return null;
+      }
+      setAudioIssue(null);
+      return context;
+    } catch {
+      setAudioIssue('blocked');
+      return null;
+    }
+  }, []);
 
   const toggle = useCallback(() => {
-    unlockAudio();
+    if (soundRef.current) void unlockAudio();
     stopAlarm();
     const t = Date.now();
     setNow(t);
     setState((s) =>
       s.status === 'running' ? pause(s, t) : s.status === 'done' ? start(idle(s.durationMs), t) : start(s, t),
     );
-  }, [stopAlarm]);
+  }, [stopAlarm, unlockAudio]);
 
   const reset = useCallback(() => {
     stopAlarm();
@@ -129,7 +167,7 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
   };
 
   const plusMinute = () => {
-    unlockAudio();
+    if (sound) void unlockAudio();
     stopAlarm();
     const t = Date.now();
     setNow(t);
@@ -148,9 +186,9 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
     }
   }, []);
 
-  const testSound = () => {
-    unlockAudio();
-    beep(audio.current);
+  const testSound = async () => {
+    const context = await unlockAudio();
+    if (context && !beep(context)) setAudioIssue('blocked');
   };
 
   // Keyboard shortcuts (ignored while typing in inputs).
@@ -240,6 +278,18 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
         {fullscreenError && <Notice tone="danger">{ui.fullscreenUnavailable}</Notice>}
       </div>
 
+      {audioIssue && (
+        <div class="mt-4">
+          <Notice tone={audioIssue === 'restored' ? 'info' : 'danger'}>
+            {audioIssue === 'restored'
+              ? ui.restoredSound
+              : audioIssue === 'unavailable'
+                ? ui.soundUnavailable
+                : ui.soundBlocked}
+          </Notice>
+        </div>
+      )}
+
       <div class="mt-6 border-t border-line pt-6 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
         <div>
           <p class="text-sm font-medium text-fg mb-2">{ui.presets}</p>
@@ -284,7 +334,11 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
           onChecked={(v) => {
             setSound(v);
             safeStorage.set(SOUND_KEY, v ? 'on' : 'off');
-            if (!v) stopAlarm();
+            if (v) void unlockAudio();
+            else {
+              setAudioIssue(null);
+              stopAlarm();
+            }
           }}
           label={ui.sound}
         />
@@ -308,23 +362,27 @@ export default function Timer({ ui, preset }: ToolProps<UI>) {
 }
 
 /** Short two-tone beep via Web Audio — no audio files to download. */
-function beep(ctx: AudioContext | null) {
-  if (!ctx) return;
-  const t = ctx.currentTime;
-  for (const [offset, freq] of [
-    [0, 880],
-    [0.18, 880],
-    [0.36, 1175],
-  ] as const) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, t + offset);
-    gain.gain.exponentialRampToValueAtTime(0.35, t + offset + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + offset + 0.15);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(t + offset);
-    osc.stop(t + offset + 0.16);
+function beep(ctx: AudioContext): boolean {
+  try {
+    const t = ctx.currentTime;
+    for (const [offset, freq] of [
+      [0, 880],
+      [0.18, 880],
+      [0.36, 1175],
+    ] as const) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t + offset);
+      gain.gain.exponentialRampToValueAtTime(0.35, t + offset + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + offset + 0.15);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t + offset);
+      osc.stop(t + offset + 0.16);
+    }
+    return true;
+  } catch {
+    return false;
   }
 }
