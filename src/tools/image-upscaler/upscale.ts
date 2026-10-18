@@ -1,7 +1,7 @@
 /** Browser-only Real-ESRGAN inference. Never import this module from server code. */
 import {
-  MODEL_INPUT_SIZE,
   MODEL_SCALE,
+  TILE_SIZE,
   imageDimensionsFromHeader,
   makeTileGrid,
   outputDimensions,
@@ -10,13 +10,18 @@ import {
   type Tile,
 } from './logic';
 
-const MODEL_URL = '/models/realesr-general-x4v3.onnx';
+// Same weights as upstream realesr-general-x4v3, re-exported with dynamic height/width.
+const MODEL_URL = '/models/realesr-general-x4v3-dyn.onnx';
 const MAX_HEADER_BYTES = 256 * 1024;
 
 export interface UpscaleProgress {
   phase: 'model' | 'tiles';
   completed: number;
   total: number;
+  /** Which engine runs the model; set once tiles start. */
+  engine?: 'gpu' | 'cpu';
+  /** Milliseconds spent on tiles so far. */
+  elapsedMs?: number;
 }
 
 export interface UpscaleOptions {
@@ -38,9 +43,20 @@ export async function readImageDimensions(file: File) {
   return dimensions;
 }
 
-/** Let cancellation and progress paint before processing the next tile. */
+/**
+ * Let cancellation and progress paint before processing the next tile. A MessageChannel
+ * hop, not setTimeout: Chrome throttles timers in background tabs to once a minute, which
+ * stalled long jobs when people switched tabs while waiting.
+ */
 function yieldToBrowser(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      channel.port1.close();
+      resolve();
+    };
+    channel.port2.postMessage(null);
+  });
 }
 
 async function fetchModel(signal: AbortSignal | undefined, onProgress?: UpscaleOptions['onProgress']) {
@@ -76,53 +92,12 @@ function makeCanvas(width: number, height: number) {
   return canvas;
 }
 
-function drawPaddedTile(source: HTMLCanvasElement, tile: Tile) {
-  const canvas = makeCanvas(MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-  ctx.drawImage(
-    source,
-    tile.inputX,
-    tile.inputY,
-    tile.inputWidth,
-    tile.inputHeight,
-    0,
-    0,
-    tile.inputWidth,
-    tile.inputHeight,
-  );
-  // Real-ESRGAN was exported with a fixed 128×128 input. Repeat edge pixels
-  // rather than stretching the image when an edge tile is smaller.
-  if (tile.inputWidth < MODEL_INPUT_SIZE) {
-    ctx.drawImage(
-      canvas,
-      tile.inputWidth - 1,
-      0,
-      1,
-      tile.inputHeight,
-      tile.inputWidth,
-      0,
-      MODEL_INPUT_SIZE - tile.inputWidth,
-      tile.inputHeight,
-    );
-  }
-  if (tile.inputHeight < MODEL_INPUT_SIZE) {
-    ctx.drawImage(
-      canvas,
-      0,
-      tile.inputHeight - 1,
-      MODEL_INPUT_SIZE,
-      1,
-      0,
-      tile.inputHeight,
-      MODEL_INPUT_SIZE,
-      MODEL_INPUT_SIZE - tile.inputHeight,
-    );
-  }
-  return ctx.getImageData(0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
+function readTile(source: CanvasRenderingContext2D, tile: Tile) {
+  return source.getImageData(tile.inputX, tile.inputY, tile.inputWidth, tile.inputHeight);
 }
 
 function pixelsToTensor(pixels: ImageData) {
-  const area = MODEL_INPUT_SIZE * MODEL_INPUT_SIZE;
+  const area = pixels.width * pixels.height;
   const data = new Float32Array(area * 3);
   for (let pixel = 0; pixel < area; pixel++) {
     const source = pixel * 4;
@@ -133,10 +108,9 @@ function pixelsToTensor(pixels: ImageData) {
   return data;
 }
 
-function tensorToImageData(data: Float32Array) {
-  const size = MODEL_INPUT_SIZE * MODEL_SCALE;
-  const area = size * size;
-  const pixels = new ImageData(size, size);
+function tensorToImageData(data: Float32Array, width: number, height: number) {
+  const area = width * height;
+  const pixels = new ImageData(width, height);
   for (let pixel = 0; pixel < area; pixel++) {
     const destination = pixel * 4;
     pixels.data[destination] = Math.round(Math.min(1, Math.max(0, data[pixel])) * 255);
@@ -163,22 +137,27 @@ export async function upscaleImage(
   const bitmap = await createImageBitmap(file);
   try {
     const source = makeCanvas(bitmap.width, bitmap.height);
-    source.getContext('2d')!.drawImage(bitmap, 0, 0);
+    const sourceCtx = source.getContext('2d', { willReadFrequently: true })!;
+    sourceCtx.drawImage(bitmap, 0, 0);
     const tiles = makeTileGrid(bitmap.width, bitmap.height);
     const model = await fetchModel(signal, onProgress);
     cancelled(signal);
 
-    // This code split keeps the normal page bundle small. The runtime's WebGPU
-    // execution provider is preferred; ONNX Runtime falls back to WebAssembly.
-    const ort = await import('onnxruntime-web/webgpu');
+    // This code split keeps the normal page bundle small. Use the default (JSEP) build: it
+    // matches the self-hosted public/ort/*.jsep files. 'onnxruntime-web/webgpu' needs the
+    // asyncify build (27 MB, over Cloudflare's 25 MiB asset limit) and silently fell back to CPU.
+    const ort = await import('onnxruntime-web');
     ort.env.wasm.wasmPaths = {
       mjs: '/ort/ort-wasm-simd-threaded.jsep.mjs',
       wasm: '/ort/ort-wasm-simd-threaded.jsep.wasm',
     };
+    let engine: 'gpu' | 'cpu' = 'gpu';
     const session = await (async () => {
       try {
-        return await ort.InferenceSession.create(model, { executionProviders: ['webgpu', 'wasm'] });
+        if (!('gpu' in navigator)) throw new Error('WebGPU unavailable');
+        return await ort.InferenceSession.create(model, { executionProviders: ['webgpu'] });
       } catch {
+        engine = 'cpu';
         return ort.InferenceSession.create(model, { executionProviders: ['wasm'] });
       }
     })();
@@ -187,20 +166,28 @@ export async function upscaleImage(
       const modelOutput = outputDimensions(bitmap.width, bitmap.height, MODEL_SCALE);
       const enlarged = makeCanvas(modelOutput.width, modelOutput.height);
       const enlargedCtx = enlarged.getContext('2d')!;
-      const tileCanvas = makeCanvas(MODEL_INPUT_SIZE * MODEL_SCALE, MODEL_INPUT_SIZE * MODEL_SCALE);
+      const tileCanvas = makeCanvas(TILE_SIZE * MODEL_SCALE, TILE_SIZE * MODEL_SCALE);
       const tileCtx = tileCanvas.getContext('2d')!;
+      const tilesStarted = performance.now();
+      onProgress?.({ phase: 'tiles', completed: 0, total: tiles.length, engine, elapsedMs: 0 });
 
       for (let index = 0; index < tiles.length; index++) {
         cancelled(signal);
-        const tensor = new ort.Tensor(
-          'float32',
-          pixelsToTensor(drawPaddedTile(source, tiles[index])),
-          [1, 3, 128, 128],
-        );
+        const tile = tiles[index];
+        const tensor = new ort.Tensor('float32', pixelsToTensor(readTile(sourceCtx, tile)), [
+          1,
+          3,
+          tile.inputHeight,
+          tile.inputWidth,
+        ]);
         const outputs = await session.run({ image: tensor });
         const output = outputs.upscaled_image.data as Float32Array;
-        tileCtx.putImageData(tensorToImageData(output), 0, 0);
-        const rect = stitchRect(tiles[index]);
+        tileCtx.putImageData(
+          tensorToImageData(output, tile.inputWidth * MODEL_SCALE, tile.inputHeight * MODEL_SCALE),
+          0,
+          0,
+        );
+        const rect = stitchRect(tile);
         enlargedCtx.drawImage(
           tileCanvas,
           rect.sourceX,
@@ -212,7 +199,13 @@ export async function upscaleImage(
           rect.destinationWidth,
           rect.destinationHeight,
         );
-        onProgress?.({ phase: 'tiles', completed: index + 1, total: tiles.length });
+        onProgress?.({
+          phase: 'tiles',
+          completed: index + 1,
+          total: tiles.length,
+          engine,
+          elapsedMs: performance.now() - tilesStarted,
+        });
         await yieldToBrowser();
       }
       cancelled(signal);

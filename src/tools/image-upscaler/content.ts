@@ -16,7 +16,8 @@ const uiEn = {
   formatWebp: 'WebP (smaller web images)',
   originalSize: 'Original',
   outputSize: 'AI output',
-  limitNote: 'Maximum input: 1,000,000 pixels and 4,096 px on either side. Large images are split into 128 px tiles.',
+  limitNote:
+    'Maximum input: 1,000,000 pixels and 4,096 px on either side. Large images are split into tiles of up to 256 px.',
   start: 'Upscale with AI',
   cancel: 'Cancel processing',
   download: 'Download upscaled image',
@@ -27,6 +28,11 @@ const uiEn = {
   modelLoading: 'Loading the local AI model…',
   modelProgress: 'Loading AI model: {done} of {total}',
   tileProgress: 'Rebuilding detail: tile {done} of {total}',
+  timeLeft: 'about {time} left',
+  seconds: '{n} s',
+  minutes: '{n} min',
+  cpuNote:
+    'Running on the CPU because this browser has no WebGPU. A desktop Chrome or Edge is usually several times faster.',
   errorRead: 'This image cannot be read by your browser.',
   errorPixels: 'This image has more than {max} pixels. Choose a smaller image first.',
   errorDimension: 'One side is over {max} px. Choose a smaller image first.',
@@ -60,7 +66,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'AI super-resolution, not ordinary resizing',
-        body: 'A normal resizer interpolates existing pixels. This tool sends each 128×128-pixel tile through Real-ESRGAN General x4v3, a super-resolution neural network, then stitches only the non-overlapping tile cores together. Each tile has 16 pixels of surrounding context to reduce visible seams. 2× output is produced from the AI-generated 4× image with a high-quality downscale, so both choices use the model rather than plain enlargement.',
+        body: 'A normal resizer interpolates existing pixels. This tool sends the image through Real-ESRGAN General x4v3 in tiles of up to 256×256 pixels, a super-resolution neural network, then stitches only the non-overlapping tile cores together. Each tile has 16 pixels of surrounding context to reduce visible seams. 2× output is produced from the AI-generated 4× image with a high-quality downscale, so both choices use the model rather than plain enlargement.',
       },
       {
         heading: 'Model, privacy and limits',
@@ -68,7 +74,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Set realistic expectations',
-        body: 'Upscaling predicts plausible texture; it cannot retrieve text, facial features or object detail that was never captured. At 4×, faces, lettering and repeating patterns can look painted or invented, so inspect the 100% comparison before using a result for print or evidence. A 1,000,000-pixel image can create as many as 148 model tiles: a WebGPU-capable desktop normally feels much quicker than a phone using the WebAssembly fallback. Start with 2× on a phone or when the original is already fairly clear.',
+        body: 'Upscaling predicts plausible texture; it cannot retrieve text, facial features or object detail that was never captured. At 4×, faces, lettering and repeating patterns can look painted or invented, so inspect the 100% comparison before using a result for print or evidence. A 1,000,000-pixel image needs at most 38 model tiles: a WebGPU-capable desktop normally feels much quicker than a phone using the WebAssembly fallback. Start with 2× on a phone or when the original is already fairly clear.',
       },
     ],
     faq: [
@@ -82,7 +88,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How long does AI upscaling take?',
-        a: 'Processing time depends on the device, browser and image size. This tool shows model-download progress and every 128-pixel inference tile; a 1,000,000-pixel maximum-size image can require as many as 148 tiles. Desktop WebGPU is generally faster than phone WebAssembly.',
+        a: 'Processing time depends on the device, browser and image size. This tool shows model-download progress, each inference tile and an estimate of the time left; a 1,000,000-pixel maximum-size image needs at most 38 tiles. Desktop WebGPU is generally several times faster than phone WebAssembly. You can switch tabs while it works.',
       },
       {
         q: 'Does image upscaling recover unreadable text or blurred faces?',
@@ -120,7 +126,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '일반 확대와 AI 업스케일의 차이',
-        body: '일반 이미지 크기 조절은 기존 픽셀 사이를 채울 뿐입니다. 이 도구는 Real-ESRGAN General x4v3 초해상도 모델에 이미지를 128×128px 타일로 나누어 넣고, AI가 추론한 결과를 다시 합칩니다. 타일마다 주변 16px을 함께 처리하고 서로 겹치지 않는 중심 부분만 붙여 경계가 도드라지는 현상을 줄입니다. 2배도 먼저 AI 4배 결과를 만든 뒤 고품질로 줄이므로, 단순 보간 확대가 아닙니다.',
+        body: '일반 이미지 크기 조절은 기존 픽셀 사이를 채울 뿐입니다. 이 도구는 Real-ESRGAN General x4v3 초해상도 모델에 이미지를 최대 256×256px 타일로 나누어 넣고, AI가 추론한 결과를 다시 합칩니다. 타일마다 주변 16px을 함께 처리하고 서로 겹치지 않는 중심 부분만 붙여 경계가 도드라지는 현상을 줄입니다. 2배도 먼저 AI 4배 결과를 만든 뒤 고품질로 줄이므로, 단순 보간 확대가 아닙니다.',
       },
       {
         heading: '사용한 모델과 처리 한도',
@@ -128,7 +134,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '화질 개선의 한계와 처리 시간',
-        body: 'AI 업스케일은 사라진 정보를 사실대로 되찾는 기능이 아니라 주변 픽셀을 바탕으로 그럴듯한 질감을 예측하는 기능입니다. 원본에 없는 글자, 심하게 흔들린 얼굴, 작은 인물의 세부 정보는 복원하지 못할 수 있고 4배에서는 글자·얼굴·반복 무늬가 인위적으로 보일 수 있습니다. 최대 100만 픽셀 이미지는 모델 타일이 최대 148개가 될 수 있으므로, WebGPU를 쓸 수 있는 데스크톱이 휴대폰의 WebAssembly 처리보다 대체로 빠릅니다. 휴대폰에서는 2배부터 확인하는 편이 좋습니다.',
+        body: 'AI 업스케일은 사라진 정보를 사실대로 되찾는 기능이 아니라 주변 픽셀을 바탕으로 그럴듯한 질감을 예측하는 기능입니다. 원본에 없는 글자, 심하게 흔들린 얼굴, 작은 인물의 세부 정보는 복원하지 못할 수 있고 4배에서는 글자·얼굴·반복 무늬가 인위적으로 보일 수 있습니다. 최대 100만 픽셀 이미지도 모델 타일은 최대 38개이며, WebGPU를 쓸 수 있는 데스크톱이 휴대폰의 WebAssembly 처리보다 대체로 빠릅니다. 휴대폰에서는 2배부터 확인하는 편이 좋습니다.',
       },
     ],
     faq: [
@@ -142,7 +148,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'AI 사진 화질 개선에는 얼마나 걸리나요?',
-        a: '처리 시간은 이미지 크기, 브라우저, 기기 성능에 따라 달라집니다. 이 도구는 모델 다운로드와 128px 타일별 진행 상황을 보여 주며, 최대 100만 픽셀 이미지는 최대 148개 타일을 처리합니다. 일반적으로 WebGPU 데스크톱이 휴대폰 WebAssembly보다 빠릅니다.',
+        a: '처리 시간은 이미지 크기, 브라우저, 기기 성능에 따라 달라집니다. 이 도구는 모델 다운로드, 타일별 진행 상황, 남은 예상 시간을 보여 주며, 최대 100만 픽셀 이미지도 타일은 최대 38개입니다. 일반적으로 WebGPU 데스크톱이 휴대폰 WebAssembly보다 몇 배 빠릅니다. 처리 중에 다른 탭으로 옮겨도 계속 진행됩니다.',
       },
       {
         q: '흐린 글자나 얼굴도 정확하게 복원되나요?',
@@ -168,7 +174,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       formatWebp: 'WebP (웹용 용량 작게)',
       originalSize: '원본',
       outputSize: 'AI 결과',
-      limitNote: '입력 한도: 최대 1,000,000픽셀, 한 변 4,096px. 큰 이미지는 128px 타일로 나누어 처리합니다.',
+      limitNote: '입력 한도: 최대 1,000,000픽셀, 한 변 4,096px. 큰 이미지는 최대 256px 타일로 나누어 처리합니다.',
       start: 'AI 업스케일 시작',
       cancel: '처리 취소',
       download: '업스케일 이미지 다운로드',
@@ -179,6 +185,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       modelLoading: '기기 안의 AI 모델을 불러오는 중…',
       modelProgress: 'AI 모델 불러오는 중: {done} / {total}',
       tileProgress: '디테일 복원 중: 타일 {done} / {total}',
+      timeLeft: '약 {time} 남음',
+      seconds: '{n}초',
+      minutes: '{n}분',
+      cpuNote:
+        '이 브라우저는 WebGPU를 지원하지 않아 CPU로 처리합니다. 데스크톱 크롬이나 엣지에서는 보통 몇 배 빠릅니다.',
       errorRead: '브라우저에서 읽을 수 없는 이미지입니다.',
       errorPixels: '이미지 픽셀이 {max}개를 초과합니다. 더 작은 이미지를 선택하세요.',
       errorDimension: '한 변이 {max}px를 넘습니다. 더 작은 이미지를 선택하세요.',

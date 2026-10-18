@@ -8,6 +8,7 @@ import {
   MAX_INPUT_DIMENSION,
   MAX_FILE_BYTES,
   MAX_INPUT_PIXELS,
+  etaSeconds,
   outputDimensions,
   outputName,
   validateInput,
@@ -172,6 +173,14 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
       ? { width: result.width, height: result.height }
       : outputDimensions(item.width, item.height, scale)
     : null;
+  const tileStatus = (p: UpscaleProgress) => {
+    const text = ui.tileProgress.replace('{done}', String(p.completed)).replace('{total}', String(p.total));
+    const eta = etaSeconds(p.completed, p.total, p.elapsedMs ?? 0);
+    if (eta === null) return text;
+    const time =
+      eta < 90 ? ui.seconds.replace('{n}', String(eta)) : ui.minutes.replace('{n}', String(Math.round(eta / 60)));
+    return `${text} · ${ui.timeLeft.replace('{time}', time)}`;
+  };
   const status = progress
     ? progress.phase === 'model'
       ? progress.total
@@ -179,7 +188,7 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
             .replace('{done}', formatBytes(progress.completed, locale))
             .replace('{total}', formatBytes(progress.total, locale))
         : ui.modelLoading
-      : ui.tileProgress.replace('{done}', String(progress.completed)).replace('{total}', String(progress.total))
+      : tileStatus(progress)
     : isWorking
       ? ui.modelLoading
       : '';
@@ -276,6 +285,7 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
 
           <Notice>{ui.limitNote}</Notice>
           {isWorking && <Notice>{status}</Notice>}
+          {isWorking && progress?.engine === 'cpu' && <Notice>{ui.cpuNote}</Notice>}
 
           {isWorking ? (
             <Button variant="danger" size="lg" onClick={cancel}>

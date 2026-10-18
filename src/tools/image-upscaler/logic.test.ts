@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_INPUT_PIXELS,
-  MODEL_INPUT_SIZE,
+  TILE_SIZE,
+  etaSeconds,
   imageDimensionsFromHeader,
   makeTileGrid,
   outputDimensions,
@@ -17,10 +18,11 @@ describe('image-upscaler planning', () => {
   });
 
   it('covers every source pixel exactly once with tile cores and provides overlap context', () => {
-    const tiles = makeTileGrid(200, 130);
+    const tiles = makeTileGrid(200, 130, 128);
     expect(tiles).toHaveLength(6);
-    expect(tiles[0]).toMatchObject({ inputX: 0, inputY: 0, inputWidth: 112, inputHeight: 112, coreWidth: 96 });
-    expect(tiles.at(-1)).toMatchObject({ coreX: 192, coreY: 96, coreWidth: 8, coreHeight: 34 });
+    // Cores are split evenly (67/67/66 × 65/65) instead of leaving an 8px sliver at the edge.
+    expect(tiles[0]).toMatchObject({ inputX: 0, inputY: 0, inputWidth: 83, inputHeight: 81, coreWidth: 67 });
+    expect(tiles.at(-1)).toMatchObject({ coreX: 134, coreY: 65, coreWidth: 66, coreHeight: 65 });
 
     const covered = new Uint8Array(200 * 130);
     for (const tile of tiles) {
@@ -29,33 +31,41 @@ describe('image-upscaler planning', () => {
       }
     }
     expect([...covered].every((count) => count === 1)).toBe(true);
-    expect(makeTileGrid(289, 3457)).toHaveLength(148);
+    expect(makeTileGrid(1280, 720)).toHaveLength(24);
+    expect(makeTileGrid(225, 4096)).toHaveLength(38);
+    expect(makeTileGrid(1280, 720).every((t) => t.inputWidth <= TILE_SIZE && t.inputHeight <= TILE_SIZE)).toBe(true);
   });
 
   it('maps edge tile cores to correct 4× stitch coordinates', () => {
-    const last = makeTileGrid(200, 130).at(-1)!;
+    const last = makeTileGrid(200, 130, 128).at(-1)!;
     expect(stitchRect(last)).toEqual({
       sourceX: 64,
       sourceY: 64,
-      sourceWidth: 32,
-      sourceHeight: 136,
-      destinationX: 768,
-      destinationY: 384,
-      destinationWidth: 32,
-      destinationHeight: 136,
+      sourceWidth: 264,
+      sourceHeight: 260,
+      destinationX: 536,
+      destinationY: 260,
+      destinationWidth: 264,
+      destinationHeight: 260,
     });
   });
 
-  it('handles a small image in one padded model tile and rejects invalid bounds', () => {
+  it('handles a small image in one model tile and rejects invalid bounds', () => {
     expect(makeTileGrid(1, 1)).toEqual([
       { inputX: 0, inputY: 0, inputWidth: 1, inputHeight: 1, coreX: 0, coreY: 0, coreWidth: 1, coreHeight: 1 },
     ]);
     expect(makeTileGrid(0, 10)).toEqual([]);
-    expect(() => makeTileGrid(10, 10, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE / 2)).toThrow(RangeError);
+    expect(() => makeTileGrid(10, 10, TILE_SIZE, TILE_SIZE / 2)).toThrow(RangeError);
     expect(validateInput(1000, 1000)).toEqual({ ok: true });
     expect(validateInput(1001, 1000)).toEqual({ ok: false, reason: 'pixels' });
     expect(validateInput(0, 1)).toEqual({ ok: false, reason: 'invalid' });
     expect(validateInput(1, MAX_INPUT_PIXELS + 1)).toEqual({ ok: false, reason: 'dimension' });
+  });
+
+  it('estimates time left only once a tile has been measured', () => {
+    expect(etaSeconds(0, 24, 0)).toBeNull();
+    expect(etaSeconds(4, 24, 8000)).toBe(40);
+    expect(etaSeconds(24, 24, 48000)).toBeNull();
   });
 
   it('keeps Unicode and emoji filenames readable', () => {
