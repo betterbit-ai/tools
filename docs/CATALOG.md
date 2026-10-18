@@ -196,7 +196,7 @@
 | mic-test           | 마이크 테스트   | mic test / 마이크 테스트             | 레벨 미터, 녹음 재생, 장치 선택 | P0  | live |
 | webcam-test        | 웹캠 테스트     | webcam test / 웹캠 테스트            | 해상도, FPS 표시, 스냅샷        | P0  | live |
 | keyboard-tester    | 키보드 테스트   | keyboard test / 키보드 테스트        | 레이아웃 선택, 동시 입력(NKRO)  | P0  | live |
-| mouse-test         | 마우스 테스트   | mouse test / 더블클릭 테스트         | 더블클릭 오작동 감지            | P1  | todo |
+| mouse-test         | 마우스 테스트   | mouse test / 더블클릭 테스트         | 더블클릭 오작동 감지            | P1  | live |
 | dead-pixel-test    | 불량화소 테스트 | dead pixel test / 불량화소           | 전체화면 색 순환                | P1  | todo |
 | speaker-test       | 스피커 테스트   | speaker test / 좌우 스피커 테스트    | 좌우, 주파수 스윕               | P1  | todo |
 | typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM             | P0  | live |
