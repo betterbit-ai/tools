@@ -4,7 +4,7 @@ import type { ToolMeta } from '../types';
  * Bundled model: Real-ESRGAN General x4v3 (`realesr-general-x4v3`).
  * Source: https://huggingface.co/qualcomm/Real-ESRGAN-General-x4v3
  * Original project: https://github.com/xinntao/Real-ESRGAN
- * License: BSD-3-Clause. Self-hosted as public/models/realesr-general-x4v3.onnx
+ * License: BSD-3-Clause. Self-hosted as public/models/realesr-general-x4v3-dyn.onnx (same weights, re-exported with dynamic height/width)
  * (4,872,481 bytes / 4.87 MB), below Cloudflare's 25 MiB static-asset limit.
  */
 export const meta: ToolMeta = {
