@@ -33,6 +33,11 @@ describe('random-picker', () => {
     expect(validateEntries(['A', 'B'])).toBeNull();
   });
 
+  it('counts Unicode code points rather than UTF-16 code units in entry limits', () => {
+    expect(validateEntries(['A', '😀'.repeat(MAX_ENTRY_LENGTH)])).toBeNull();
+    expect(validateEntries(['A', '😀'.repeat(MAX_ENTRY_LENGTH + 1)])).toBe('entry-too-long');
+  });
+
   it('selects every boundary and rejects the modulo-bias tail', () => {
     expect(randomIndex(3, sourceFrom([0]))).toBe(0);
     expect(randomIndex(3, sourceFrom([2]))).toBe(2);

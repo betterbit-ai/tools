@@ -2,6 +2,12 @@
 
 export const MAX_ENTRIES = 1_000;
 export const MAX_ENTRY_LENGTH = 200;
+/**
+ * A textarea measures UTF-16 code units, while entry validation counts Unicode code
+ * points. This leaves room for a full list of two-code-unit characters
+ * (such as emoji), separators, and CRLF line endings.
+ */
+export const MAX_INPUT_LENGTH = MAX_ENTRIES * (MAX_ENTRY_LENGTH * 2 + 2);
 const UINT32_RANGE = 0x1_0000_0000;
 
 export type RandomSource = () => number;
@@ -27,8 +33,17 @@ export function parseEntries(input: string): string[] {
 export function validateEntries(entries: string[]): PickerError | null {
   if (entries.length < 2) return 'not-enough-entries';
   if (entries.length > MAX_ENTRIES) return 'too-many-entries';
-  if (entries.some((entry) => entry.length > MAX_ENTRY_LENGTH)) return 'entry-too-long';
+  if (entries.some(hasTooManyCodePoints)) return 'entry-too-long';
   return null;
+}
+
+function hasTooManyCodePoints(entry: string): boolean {
+  let count = 0;
+  for (const _ of entry) {
+    count += 1;
+    if (count > MAX_ENTRY_LENGTH) return true;
+  }
+  return false;
 }
 
 /**

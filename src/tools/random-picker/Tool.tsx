@@ -3,10 +3,11 @@ import { Button, CopyButton, Field, Kbd, Notice, Panel, Stat, Textarea, Toggle }
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { parseEntries, pickEntry, removeEntryAt, validateEntries, type PickerError } from './logic';
+import { MAX_INPUT_LENGTH, parseEntries, pickEntry, removeEntryAt, validateEntries, type PickerError } from './logic';
 
 const STORAGE_KEY = 'tools:random-picker:settings';
 const SPIN_DURATION_MS = 800;
+const PERSIST_DELAY_MS = 300;
 
 interface Winner {
   value: string;
@@ -38,14 +39,15 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
 
   const entries = useMemo(() => parseEntries(input), [input]);
   const validationError = validateEntries(entries);
+  const activeError = error ?? validationError;
   const errorText =
-    error === 'not-enough-entries'
+    activeError === 'not-enough-entries'
       ? ui.notEnoughEntriesError
-      : error === 'too-many-entries'
+      : activeError === 'too-many-entries'
         ? ui.tooManyEntriesError
-        : error === 'entry-too-long'
+        : activeError === 'entry-too-long'
           ? ui.entryTooLongError
-          : error === 'crypto'
+          : activeError === 'crypto'
             ? ui.cryptoError
             : null;
 
@@ -63,7 +65,11 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify({ input, removeWinner } satisfies SavedSettings));
+    if (!ready) return;
+    const timeout = window.setTimeout(() => {
+      safeStorage.set(STORAGE_KEY, JSON.stringify({ input, removeWinner } satisfies SavedSettings));
+    }, PERSIST_DELAY_MS);
+    return () => window.clearTimeout(timeout);
   }, [input, ready, removeWinner]);
 
   useEffect(
@@ -151,9 +157,10 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
                 setInput((event.currentTarget as HTMLTextAreaElement).value);
                 setError(null);
               }}
-              maxLength={201_000}
+              maxLength={MAX_INPUT_LENGTH}
               spellcheck={false}
               aria-describedby="random-picker-entry-count"
+              disabled={spinning}
             />
           </Field>
           <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -161,16 +168,16 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
               {ui.entryCount.replace('{n}', String(entries.length)).replace('{max}', ui.maxEntries)}
             </span>
             <div class="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setInput(ui.defaultEntries)}>
+              <Button size="sm" onClick={() => setInput(ui.defaultEntries)} disabled={spinning}>
                 {ui.restoreSample}
               </Button>
-              <Button size="sm" onClick={() => setInput('')} disabled={!input}>
+              <Button size="sm" onClick={() => setInput('')} disabled={spinning || !input}>
                 {ui.clear}
               </Button>
             </div>
           </div>
           <div class="mt-4">
-            <Toggle checked={removeWinner} onChecked={setRemoveWinner} label={ui.removeWinner} />
+            <Toggle checked={removeWinner} onChecked={setRemoveWinner} label={ui.removeWinner} disabled={spinning} />
             <p class="mt-1 text-xs text-subtle">{ui.removeWinnerHint}</p>
           </div>
           <div class="mt-5 flex flex-wrap items-center gap-3">
@@ -194,7 +201,7 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
             <CopyButton text={shareText} label={ui.copyResult} copiedLabel={ui.copied} />
           </div>
           <output
-            aria-live="polite"
+            aria-live={spinning ? 'off' : 'polite'}
             class="mt-4 flex min-h-32 items-center justify-center break-words rounded-lg border border-line bg-surface px-4 py-6 text-center text-xl font-semibold text-fg"
           >
             {spinning ? preview : (winner?.value ?? ui.waitingResult)}
@@ -210,7 +217,7 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
       <div class="mt-6 border-t border-line pt-5">
         <div class="flex items-center justify-between gap-3">
           <p class="text-sm font-medium text-fg">{ui.historyHeading}</p>
-          <Button size="sm" onClick={() => setHistory([])} disabled={!history.length}>
+          <Button size="sm" onClick={() => setHistory([])} disabled={spinning || !history.length}>
             {ui.clearHistory}
           </Button>
         </div>
