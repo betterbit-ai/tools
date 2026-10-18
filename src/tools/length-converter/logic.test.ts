@@ -5,10 +5,29 @@ import {
   feetInchesToCm,
   isLengthUnit,
   LENGTH_UNITS,
+  parseLengthInput,
   quickTable,
   swapLength,
   usesScientificNotation,
 } from './logic';
+
+describe('parseLengthInput', () => {
+  it('accepts ordinary decimals, scientific notation, and comma-grouped pasted values', () => {
+    expect(parseLengthInput('1234.5')).toBe(1234.5);
+    expect(parseLengthInput('1,234.5')).toBe(1234.5);
+    expect(parseLengthInput('-12,345')).toBe(-12345);
+    expect(parseLengthInput('1e-7')).toBe(1e-7);
+    expect(parseLengthInput('  .5  ')).toBe(0.5);
+  });
+
+  it('distinguishes empty input from malformed or non-finite input', () => {
+    expect(parseLengthInput('')).toBe('');
+    expect(parseLengthInput('   ')).toBe('');
+    expect(parseLengthInput('12cm')).toBeNull();
+    expect(parseLengthInput('12,34')).toBeNull();
+    expect(parseLengthInput('1e309')).toBeNull();
+  });
+});
 
 describe('convertLength', () => {
   it('converts cm to inches using the exact 2.54 factor', () => {

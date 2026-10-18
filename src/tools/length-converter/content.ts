@@ -3,12 +3,13 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   valueLabel: 'Value',
+  valueHint: 'Commas and scientific notation accepted',
   fromLabel: 'From',
   toLabel: 'To',
   swap: 'Swap units',
   resultLabel: 'Result ({unit})',
   unavailableResult: '—',
-  invalidValue: 'Enter a finite number.',
+  invalidValue: 'Enter a valid number, for example 1,234.5.',
   resultTooLarge: 'This result is too large to display. Use a smaller value.',
   autosaved: 'Saved automatically',
   quickTableTitle: 'Quick reference',
@@ -54,7 +55,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Exact conversion factors',
-        body: 'This converter uses exact international definitions, not rounded approximations: 1 inch = 2.54 cm, 1 foot = 0.3048 m, 1 yard = 0.9144 m and 1 mile = 1609.344 m, all fixed by the 1959 international yard and pound agreement. The calculation keeps those full factors rather than substituting a rounded conversion rate. Very small and very large finite results use scientific notation so they remain readable.',
+        body: 'This converter uses exact international definitions, not rounded approximations: 1 inch = 2.54 cm, 1 foot = 0.3048 m, 1 yard = 0.9144 m and 1 mile = 1609.344 m, all fixed by the 1959 international yard and pound agreement. The calculation keeps those full factors rather than substituting a rounded conversion rate. You can paste comma-grouped numbers such as 1,234.5, and very small or large finite results use scientific notation so they remain readable.',
       },
       {
         heading: 'Converting a height in feet and inches',
@@ -64,7 +65,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'How many inches is 1 cm?',
-        a: 'One centimeter equals exactly 0.3937 inch, since 1 inch is defined as exactly 2.54 cm.',
+        a: 'One centimeter is approximately 0.3937 inch. The underlying calculation uses the exact definition 1 inch = 2.54 cm before rounding the displayed result.',
       },
       {
         q: 'How many cm is 1 foot?',
@@ -110,7 +111,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '정확한 변환 비율',
-        body: '1인치는 정확히 2.54cm, 1피트는 정확히 0.3048m, 1야드는 정확히 0.9144m, 1마일은 정확히 1.609344km로 정의됩니다. 이 값들은 1959년 국제 야드-파운드 협정에서 정한 정확한 기준입니다. 계산할 때도 반올림한 환산율로 바꾸지 않고 이 값을 그대로 사용합니다. 아주 작거나 큰 유한 값은 읽기 쉽도록 과학적 표기법으로 표시합니다.',
+        body: '1인치는 정확히 2.54cm, 1피트는 정확히 0.3048m, 1야드는 정확히 0.9144m, 1마일은 정확히 1.609344km로 정의됩니다. 이 값들은 1959년 국제 야드-파운드 협정에서 정한 정확한 기준입니다. 계산할 때도 반올림한 환산율로 바꾸지 않고 이 값을 그대로 사용합니다. 1,234.5처럼 쉼표가 든 숫자도 붙여넣을 수 있고, 아주 작거나 큰 유한 값은 과학적 표기법으로 표시합니다.',
       },
       {
         heading: '키(피트·인치)를 센티미터로 변환하기',
@@ -120,7 +121,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: '1cm는 몇 인치인가요?',
-        a: '1cm는 정확히 0.3937인치입니다. 1인치가 정확히 2.54cm로 정의되기 때문입니다.',
+        a: '1cm는 약 0.3937인치입니다. 계산은 1인치=2.54cm인 정확한 정의를 사용하고, 표시할 때만 반올림합니다.',
       },
       {
         q: '1피트는 몇 cm인가요?',
@@ -136,17 +137,18 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '이 길이 변환기는 정확한가요?',
-        a: '네. 1인치=2.54cm, 1피트=0.3048m, 1마일=1609.344km처럼 반올림하지 않은 정확한 국제 정의를 사용합니다. 아주 작거나 큰 유한 값은 과학적 표기법으로 표시해 숫자를 읽기 쉽게 합니다.',
+        a: '네. 1인치=2.54cm, 1피트=0.3048m, 1마일=1.609344km처럼 반올림하지 않은 정확한 국제 정의를 사용합니다. 아주 작거나 큰 유한 값은 과학적 표기법으로 표시해 숫자를 읽기 쉽게 합니다.',
       },
     ],
     ui: {
       valueLabel: '값',
+      valueHint: '쉼표와 과학적 표기법 입력 가능',
       fromLabel: '변환할 단위',
       toLabel: '결과 단위',
       swap: '단위 바꾸기',
       resultLabel: '결과 ({unit})',
       unavailableResult: '—',
-      invalidValue: '유한한 숫자를 입력하세요.',
+      invalidValue: '올바른 숫자를 입력하세요. 예: 1,234.5',
       resultTooLarge: '결과가 너무 커서 표시할 수 없습니다. 더 작은 값을 입력하세요.',
       autosaved: '자동 저장됨',
       quickTableTitle: '빠른 참조표',

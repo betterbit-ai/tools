@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, Field, Notice, NumberInput, Panel, Select, Stat } from '../../components/ui';
+import { Button, Field, Notice, NumberInput, Panel, Select, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -10,6 +10,7 @@ import {
   feetInchesToCm,
   isLengthUnit,
   LENGTH_UNITS,
+  parseLengthInput,
   quickTable,
   swapLength,
   type LengthUnit,
@@ -31,12 +32,12 @@ const UNIT_LABEL_KEY: Record<LengthUnit, keyof UI> = {
 };
 
 interface State {
-  value: number | '';
+  value: string;
   from: LengthUnit;
   to: LengthUnit;
 }
 
-const DEFAULT_STATE: State = { value: 170, from: 'cm', to: 'in' };
+const DEFAULT_STATE: State = { value: '170', from: 'cm', to: 'in' };
 const DEFAULT_HEIGHT_CM = 170;
 
 function isFiniteNumber(value: unknown): value is number {
@@ -48,7 +49,12 @@ function restoreState(): State {
     const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
     if (!saved || typeof saved !== 'object') return DEFAULT_STATE;
     return {
-      value: isFiniteNumber(saved.value) ? saved.value : DEFAULT_STATE.value,
+      value:
+        typeof saved.value === 'string'
+          ? saved.value
+          : isFiniteNumber(saved.value)
+            ? String(saved.value)
+            : DEFAULT_STATE.value,
       from: isLengthUnit(saved.from) ? saved.from : DEFAULT_STATE.from,
       to: isLengthUnit(saved.to) ? saved.to : DEFAULT_STATE.to,
     };
@@ -73,11 +79,10 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
   const presetValue = isFiniteNumber(preset?.value) ? preset.value : undefined;
   const hasPreset = presetFrom !== undefined || presetTo !== undefined || presetValue !== undefined;
 
-  const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(() =>
     hasPreset
       ? {
-          value: presetValue ?? DEFAULT_STATE.value,
+          value: presetValue === undefined ? DEFAULT_STATE.value : String(presetValue),
           from: presetFrom ?? DEFAULT_STATE.from,
           to: presetTo ?? DEFAULT_STATE.to,
         }
@@ -88,22 +93,25 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
   // Variant (preset) pages always start in the promised state; the plain tool page restores it.
   useEffect(() => {
     if (!hasPreset) setState(restoreState());
-    const savedHeight = Number(safeStorage.get(HEIGHT_KEY));
-    if (Number.isFinite(savedHeight) && savedHeight >= 0) setHeightCm(savedHeight);
-    setReady(true);
+    const savedHeightRaw = safeStorage.get(HEIGHT_KEY);
+    if (savedHeightRaw !== null) {
+      const savedHeight = Number(savedHeightRaw);
+      if (Number.isFinite(savedHeight) && savedHeight >= 0) setHeightCm(savedHeight);
+    }
   }, []);
 
-  useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
-  }, [ready, state]);
-
-  useEffect(() => {
-    if (ready) safeStorage.set(HEIGHT_KEY, String(heightCm));
-  }, [ready, heightCm]);
-
-  const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
-  const inputInvalid = state.value !== '' && !isFiniteNumber(state.value);
-  const value = isFiniteNumber(state.value) ? state.value : 0;
+  const update = (patch: Partial<State>) => {
+    const next = { ...state, ...patch };
+    setState(next);
+    if (!hasPreset) safeStorage.set(STORAGE_KEY, JSON.stringify(next));
+  };
+  const updateHeight = (next: number) => {
+    setHeightCm(next);
+    safeStorage.set(HEIGHT_KEY, String(next));
+  };
+  const parsedValue = parseLengthInput(state.value);
+  const inputInvalid = parsedValue === null;
+  const value = typeof parsedValue === 'number' ? parsedValue : 0;
   const result = useMemo(() => convertLength(value, state.from, state.to), [value, state.from, state.to]);
   const resultOverflowed = !inputInvalid && !Number.isFinite(result);
   const rows = useMemo(() => quickTable(state.from, state.to), [state.from, state.to]);
@@ -115,17 +123,27 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
   const unitOptions = LENGTH_UNITS.map((u) => ({ value: u, label: ui[UNIT_LABEL_KEY[u]] }));
 
   const swap = () => {
-    setState((current) => {
-      if (!isFiniteNumber(current.value)) return { ...current, from: current.to, to: current.from };
-      return swapLength(current.value, current.from, current.to);
-    });
+    const parsed = parseLengthInput(state.value);
+    if (typeof parsed === 'number') {
+      const swapped = swapLength(parsed, state.from, state.to);
+      update({ ...swapped, value: String(swapped.value) });
+    } else {
+      update({ from: state.to, to: state.from });
+    }
   };
 
   return (
     <Panel>
       <div class="flex flex-wrap items-end gap-3">
-        <Field label={ui.valueLabel} class="w-32">
-          <NumberInput value={state.value} onValue={(v) => update({ value: v })} />
+        <Field label={ui.valueLabel} hint={ui.valueHint} class="w-40">
+          <TextInput
+            value={state.value}
+            inputMode="decimal"
+            autocomplete="off"
+            spellcheck={false}
+            aria-invalid={inputInvalid}
+            onInput={(event) => update({ value: (event.currentTarget as HTMLInputElement).value })}
+          />
         </Field>
         <Field label={ui.fromLabel} class="w-40">
           <Select value={state.from} onValue={(from) => update({ from })} options={unitOptions} />
@@ -209,7 +227,7 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
               value={height.feet}
               min="0"
               step="1"
-              onValue={(feet) => setHeightCm(feetInchesToCm(isFiniteNumber(feet) ? feet : 0, height.inches))}
+              onValue={(feet) => updateHeight(feetInchesToCm(isFiniteNumber(feet) ? feet : 0, height.inches))}
             />
           </Field>
           <Field label={ui.heightInchesLabel}>
@@ -217,7 +235,7 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
               value={height.inches}
               min="0"
               step="0.1"
-              onValue={(inches) => setHeightCm(feetInchesToCm(height.feet, isFiniteNumber(inches) ? inches : 0))}
+              onValue={(inches) => updateHeight(feetInchesToCm(height.feet, isFiniteNumber(inches) ? inches : 0))}
             />
           </Field>
           <Field label={ui.heightCmLabel}>
@@ -225,7 +243,7 @@ export default function LengthConverter({ locale, ui, preset }: ToolProps<UI>) {
               value={Math.round(heightCm * 10) / 10}
               min="0"
               step="0.1"
-              onValue={(cm) => setHeightCm(isFiniteNumber(cm) ? cm : 0)}
+              onValue={(cm) => updateHeight(isFiniteNumber(cm) ? cm : 0)}
             />
           </Field>
         </div>

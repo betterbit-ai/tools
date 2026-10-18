@@ -22,6 +22,20 @@ export function isLengthUnit(value: unknown): value is LengthUnit {
   return typeof value === 'string' && (LENGTH_UNITS as string[]).includes(value);
 }
 
+/** Parses decimal/scientific input with optional correctly grouped thousands separators. */
+export function parseLengthInput(input: string): number | '' | null {
+  const trimmed = input.trim();
+  if (trimmed === '') return '';
+
+  const decimal = '(?:\\d+(?:\\.\\d*)?|\\.\\d+)';
+  const grouped = '(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d*)?)';
+  const pattern = new RegExp(`^[+-]?(?:${decimal}|${grouped})(?:[eE][+-]?\\d+)?$`);
+  if (!pattern.test(trimmed)) return null;
+
+  const value = Number(trimmed.replaceAll(',', ''));
+  return Number.isFinite(value) ? value : null;
+}
+
 /** Converts a length between any two supported units. Non-finite input yields 0. */
 export function convertLength(value: number, from: LengthUnit, to: LengthUnit): number {
   if (!Number.isFinite(value)) return 0;
