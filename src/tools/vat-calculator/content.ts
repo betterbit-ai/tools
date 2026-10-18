@@ -2,7 +2,7 @@ import type { Locale } from '../../i18n/locales';
 import type { ToolContent } from '../types';
 
 const uiEn = {
-  intro: 'Add VAT or extract it from an inclusive total instantly — no account or ads.',
+  intro: 'Add VAT or extract it from an inclusive total instantly — no account needed.',
   autosaved: 'Your settings stay in this browser',
   modeLabel: 'Calculation direction',
   modeHint: 'Choose what the amount you have represents.',

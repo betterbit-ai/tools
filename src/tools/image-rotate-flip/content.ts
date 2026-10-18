@@ -39,7 +39,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Rotate Image — Batch Rotate & Flip Photos, No Upload',
     description:
-      'Rotate or mirror photos in a batch, correct phone-photo orientation, and download one file or a ZIP — privately in your browser, with no upload or ads.',
+      'Rotate or mirror photos in a batch, correct phone-photo orientation, and download one file or a ZIP — privately in your browser, with no upload.',
     h1: 'Rotate & Flip Images',
     tagline: 'Turn, mirror, and batch-export photos on your device — phone orientation is corrected automatically.',
     name: 'Rotate & Flip Images',

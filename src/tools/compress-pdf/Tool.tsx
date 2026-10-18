@@ -185,17 +185,20 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
 
           {output && file && change && (
             <div class="mt-4 rounded-lg border border-line bg-surface-2 p-4" aria-live="polite">
-              <p class="text-sm font-medium text-fg">{ui.resultReady}</p>
+              <p class="text-sm font-medium text-fg">
+                {change.kind === 'smaller' ? ui.resultReady : ui.notSmallerTitle}
+              </p>
               <p class="mt-1 tabular text-sm text-muted">
                 {formatBytes(file.size, locale)} → {formatBytes(output.blob.size, locale)} · {changeLabel}
               </p>
+              {change.kind !== 'smaller' && <p class="mt-2 text-sm text-muted">{ui.notSmallerBody}</p>}
               <Button
                 class="mt-4"
-                variant="primary"
-                size="lg"
+                variant={change.kind === 'smaller' ? 'primary' : 'secondary'}
+                size={change.kind === 'smaller' ? 'lg' : 'md'}
                 onClick={() => downloadBlob(output.blob, compressedFileName(file.name))}
               >
-                {ui.download}
+                {change.kind === 'smaller' ? ui.download : ui.downloadAnyway}
               </Button>
             </div>
           )}

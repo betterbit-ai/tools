@@ -29,7 +29,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Remove Background — Private AI, Full-Size PNG',
     description:
-      'Remove an image background with a private AI model that runs in your browser. Download a transparent PNG at the original dimensions — no upload, account, credits or ads.',
+      'Remove an image background with a private AI model that runs in your browser. Download a transparent PNG at the original dimensions — no upload, account or credits.',
     h1: 'Remove Background from an Image',
     tagline: 'Make a transparent PNG with local AI processing. Your image never leaves this browser.',
     name: 'Background Remover',

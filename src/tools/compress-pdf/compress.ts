@@ -1,4 +1,5 @@
 /** Browser-only PDF rendering and rebuilding. */
+import { yieldToBrowser } from '../../lib/browser';
 import type { CompressionPreset } from './logic';
 import {
   CompressionCancelledError,
@@ -12,11 +13,6 @@ import {
 
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw new CompressionCancelledError();
-}
-
-/** Let pending progress and cancellation updates reach the browser between pages. */
-function yieldToBrowser(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 async function canvasJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Uint8Array> {

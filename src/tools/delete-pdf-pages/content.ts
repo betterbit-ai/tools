@@ -38,7 +38,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Delete Pages from PDF — Private Local Page Remover',
     description:
-      'Delete PDF pages by clicking thumbnails or typing page ranges. Your document stays in your browser, with no upload or ads.',
+      'Delete PDF pages by clicking thumbnails or typing page ranges. Your document stays in your browser, with no upload.',
     h1: 'Delete Pages from PDF',
     tagline: 'Click the pages to remove, check what remains, and download a new PDF — entirely on your device.',
     name: 'Delete PDF Pages',

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { zipSync } from 'fflate';
 import { Button, Dropzone, Field, Notice, Panel, Segmented, Select, Toggle } from '../../components/ui';
-import { downloadBlob, safeStorage } from '../../lib/browser';
+import { downloadBlob, safeStorage, yieldToBrowser } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -319,8 +319,4 @@ export default function ImageRotateFlip({ locale, ui }: ToolProps<UI>) {
       </div>
     </Panel>
   );
-}
-
-function yieldToBrowser(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
 }

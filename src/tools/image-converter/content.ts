@@ -33,7 +33,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Image Converter — JPG, PNG & WebP, No Upload',
     description:
-      'Convert JPG, PNG and WebP — one image or a batch — right in your browser. Pick the JPG background colour for transparent sources. No upload, sign-up or ads.',
+      'Convert JPG, PNG and WebP — one image or a batch — right in your browser. Pick the JPG background colour for transparent sources. No upload or sign-up.',
     h1: 'Image Converter',
     tagline: 'Convert between JPG, PNG and WebP — one image or a batch of 50, privately in your browser.',
     name: 'Image Converter',

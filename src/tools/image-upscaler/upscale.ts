@@ -1,4 +1,5 @@
 /** Browser-only Real-ESRGAN inference. Never import this module from server code. */
+import { yieldToBrowser } from '../../lib/browser';
 import {
   MODEL_SCALE,
   TILE_SIZE,
@@ -41,22 +42,6 @@ export async function readImageDimensions(file: File) {
   const dimensions = imageDimensionsFromHeader(header);
   if (!dimensions) throw new Error('Unsupported or invalid image header.');
   return dimensions;
-}
-
-/**
- * Let cancellation and progress paint before processing the next tile. A MessageChannel
- * hop, not setTimeout: Chrome throttles timers in background tabs to once a minute, which
- * stalled long jobs when people switched tabs while waiting.
- */
-function yieldToBrowser(): Promise<void> {
-  return new Promise((resolve) => {
-    const channel = new MessageChannel();
-    channel.port1.onmessage = () => {
-      channel.port1.close();
-      resolve();
-    };
-    channel.port2.postMessage(null);
-  });
 }
 
 async function fetchModel(signal: AbortSignal | undefined, onProgress?: UpscaleOptions['onProgress']) {

@@ -48,7 +48,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Base64 Encode & Decode — URL-Safe, Files Supported',
     description:
-      'Encode or decode Base64 text and files in your browser. URL-safe (-_) is auto-detected, and invalid input shows its exact position. No uploads or ads.',
+      'Encode or decode Base64 text and files in your browser. URL-safe (-_) is auto-detected, and invalid input shows its exact position. No uploads.',
     h1: 'Base64 Encode & Decode',
     tagline: 'Convert text and files to Base64 and back — URL-safe, offline-capable, nothing leaves your browser.',
     name: 'Base64 Encode/Decode',
