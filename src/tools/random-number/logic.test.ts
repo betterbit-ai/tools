@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_SETTINGS,
   MAX_COUNT,
   MAX_VALUE,
   MIN_VALUE,
   formatNumbers,
   generateNumbers,
+  isRandomSettings,
   randomInteger,
+  settingsFromPreset,
   validateSettings,
   type RandomSource,
 } from './logic';
@@ -46,6 +49,17 @@ describe('random-number', () => {
     expect(validateSettings({ ...defaults, count: 0 })).toBe('invalid-count');
     expect(validateSettings({ ...defaults, count: MAX_COUNT + 1 })).toBe('invalid-count');
     expect(validateSettings({ ...defaults, min: 1, max: 2, count: 3, unique: true })).toBe('too-many-unique');
+  });
+
+  it('accepts only complete, valid settings from saved state or a landing-page preset', () => {
+    const lottery = { min: 1, max: 45, count: 6, unique: true, sort: 'asc' as const };
+    expect(isRandomSettings(lottery)).toBe(true);
+    expect(settingsFromPreset(lottery)).toEqual(lottery);
+
+    expect(isRandomSettings({ ...lottery, count: 46 })).toBe(false);
+    expect(isRandomSettings({ ...lottery, sort: 'random' })).toBe(false);
+    expect(isRandomSettings({ ...lottery, min: '1' })).toBe(false);
+    expect(settingsFromPreset({ min: 1, max: 45 })).toEqual(DEFAULT_SETTINGS);
   });
 
   it('keeps large valid boundaries exact', () => {
