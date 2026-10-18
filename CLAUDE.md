@@ -26,6 +26,7 @@ npm run verify         # format:check → typecheck → test → build → check
 npm run new-tool -- <slug> <category>   # 새 도구 스캐폴딩
 npm run format         # Prettier
 npm test               # Vitest만
+npm run e2e -- <slug>  # 실제 브라우저(헤드리스 Chromium) E2E. 먼저 npm run build. 스펙: e2e/tools/<slug>.e2e.mjs
 ```
 
 ## 스택
@@ -95,6 +96,7 @@ docs/                       전략·디자인·플레이북·경쟁사·카탈�
 ## 완료 정의 (Definition of Done)
 
 - [ ] `npm run verify` 통과
+- [ ] 파일을 받거나 무거운 처리를 하는 도구(이미지·PDF·AI·오디오 등)는 `e2e/tools/<slug>.e2e.mjs`가 있고 `npm run e2e -- <slug>` 통과. 실제 사용자가 넣을 입력(휴대폰 사진 12MP, 여러 쪽 PDF 등)으로 결과 파일까지 확인한다.
 - [ ] 브라우저에서 실제로 사용해 봄: 데스크톱, 375px 모바일, 다크모드
 - [ ] 키보드만으로 조작 가능, 포커스 링 보임
 - [ ] 모든 로케일 콘텐츠가 자연스럽고, 사실 관계(수치, 규격, 공식)를 확인함
