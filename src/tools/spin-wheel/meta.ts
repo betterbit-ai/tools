@@ -45,5 +45,13 @@ export const meta: ToolMeta = {
         'Its fetched search result promotes custom entries and automatic winner removal, but does not expose a saved-list or full-screen control in that visible tool description. Betterbit makes both local saving and room-ready full screen part of the primary interface. (장점: 자동 제외 방식의 반복 추첨을 안내한다.)',
     },
   ],
-  related: ['random-picker', 'random-number', 'password-generator', 'team-generator', 'dice-roller', 'coin-flip'],
+  related: [
+    'random-picker',
+    'random-number',
+    'password-generator',
+    'team-generator',
+    'dice-roller',
+    'coin-flip',
+    'ladder-game',
+  ],
 };

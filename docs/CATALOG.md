@@ -182,7 +182,7 @@
 | dice-roller         | 주사위         | roll dice / 주사위 굴리기            | 여러 개, D&D 다면체                               | P1  | live |
 | coin-flip           | 동전 던지기    | flip a coin / 동전 던지기            | 통계 누적                                         | P1  | live |
 | spin-wheel          | 돌림판         | spin the wheel / 돌림판              | 항목 저장, 전체화면                               | P0  | live |
-| ladder-game         | 사다리 타기    | 사다리 타기                          | 애니메이션, 결과 공유                             | P1  | todo |
+| ladder-game         | 사다리 타기    | 사다리 타기                          | 애니메이션, 결과 공유                             | P1  | live |
 | lotto-generator     | 로또 번호      | 로또 번호 생성기                     | 제외수, 고정수                                    | P1  | todo |
 | username-generator  | 닉네임 생성    | username generator / 닉네임 추천     | 한글 닉네임                                       | P2  | todo |
 | signature-generator | 서명 만들기    | signature generator / 서명 만들기    | 손글씨, 폰트 서명, 투명 PNG                       | P1  | todo |

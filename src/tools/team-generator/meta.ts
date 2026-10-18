@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened Korean tool supports team count or size, local saving, and together/apart rules, but its visible input is a name list and it does not offer a numeric skill-score field or team-score totals. Betterbit adds that focused balance workflow. (장점: 같은 팀·다른 팀 규칙, 팀 이름 변경, 공유를 지원한다.)',
     },
   ],
-  related: ['random-picker', 'spin-wheel', 'random-number'],
+  related: ['random-picker', 'spin-wheel', 'random-number', 'ladder-game'],
 };
