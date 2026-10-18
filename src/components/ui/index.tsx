@@ -384,3 +384,10 @@ export function Kbd(props: { children: ComponentChildren }) {
     </kbd>
   );
 }
+
+/** Solid colour field for display diagnostics. Colours are defined in global.css. */
+export type ScreenTestColor = 'white' | 'black' | 'red' | 'green' | 'blue' | 'gray' | 'cyan' | 'magenta' | 'yellow';
+
+export function ScreenTestSurface(props: { color: ScreenTestColor; children?: ComponentChildren; class?: string }) {
+  return <div class={cx('screen-test-surface', `screen-test-${props.color}`, props.class)}>{props.children}</div>;
+}

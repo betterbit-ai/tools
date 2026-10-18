@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its visible test starts as a single generic click box with defect, double-click and single-click totals plus a log; its instructions do not provide a bounded slow single-click sample or per-button progress. Betterbit provides an explicit 20-press controlled flow for left, middle or right input. (Strength: it pairs the tester with a broader mouse-performance tool directory.)',
     },
   ],
-  related: ['keyboard-tester', 'mic-test', 'webcam-test'],
+  related: ['keyboard-tester', 'mic-test', 'webcam-test', 'dead-pixel-test'],
 };

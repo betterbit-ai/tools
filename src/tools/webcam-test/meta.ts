@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean tool presents start, stop, retry, fullscreen and snapshot actions plus many device parameters, but its published test flow does not include a mirror setting, framing grid or keyboard controls. Betterbit makes mirrorable framing and a local PNG capture immediately available next to the core readings. (Strength: it reports brightness, facing mode and device ID.)',
     },
   ],
-  related: ['mic-test', 'image-cropper', 'qr-code-scanner', 'mouse-test'],
+  related: ['mic-test', 'image-cropper', 'qr-code-scanner', 'mouse-test', 'dead-pixel-test'],
 };
