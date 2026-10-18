@@ -9,8 +9,10 @@ import {
   MAX_FILE_BYTES,
   MAX_INPUT_PIXELS,
   etaSeconds,
+  MAX_WORK_PIXELS,
   outputDimensions,
   outputName,
+  workDimensions,
   validateInput,
   type Scale,
 } from './logic';
@@ -283,7 +285,16 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
             </div>
           )}
 
-          <Notice>{ui.limitNote}</Notice>
+          {item && workDimensions(item.width, item.height, scale).reduced ? (
+            <Notice>
+              {ui.reducedNote
+                .replace('{w}', formatNumber(workDimensions(item.width, item.height, scale).width, locale))
+                .replace('{h}', formatNumber(workDimensions(item.width, item.height, scale).height, locale))
+                .replace('{mp}', String(MAX_WORK_PIXELS[scale] / 1_000_000))}
+            </Notice>
+          ) : (
+            <Notice>{ui.limitNote}</Notice>
+          )}
           {isWorking && <Notice>{status}</Notice>}
           {isWorking && progress?.engine === 'cpu' && <Notice>{ui.cpuNote}</Notice>}
 

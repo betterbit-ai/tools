@@ -6,9 +6,15 @@
 export const TILE_SIZE = 256;
 export const MODEL_SCALE = 4;
 export const TILE_OVERLAP = 16;
-export const MAX_INPUT_PIXELS = 1_000_000;
-export const MAX_INPUT_DIMENSION = 4096;
-export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+/** Largest source the browser is asked to decode. Bigger photos are reduced before the AI runs. */
+export const MAX_INPUT_PIXELS = 50_000_000;
+export const MAX_INPUT_DIMENSION = 16_384;
+export const MAX_FILE_BYTES = 50 * 1024 * 1024;
+/**
+ * Pixels the AI works on per scale. Larger sources are reduced to this first, so a 12 MP phone
+ * photo still works and the result stays within ~10–16 MP (memory and time on phones/CPU).
+ */
+export const MAX_WORK_PIXELS: Record<Scale, number> = { 2: 2_500_000, 4: 1_000_000 };
 
 export type Scale = 2 | 4;
 
@@ -37,8 +43,22 @@ export interface ImageDimensions {
 
 const coreSize = (tileSize: number, overlap: number) => tileSize - overlap * 2;
 
+/** The size the AI actually processes: the source, or a proportional reduction of it. */
+export function workDimensions(width: number, height: number, scale: Scale): ImageDimensions & { reduced: boolean } {
+  const max = MAX_WORK_PIXELS[scale];
+  if (width * height <= max) return { width, height, reduced: false };
+  const factor = Math.sqrt(max / (width * height));
+  return {
+    width: Math.max(1, Math.floor(width * factor)),
+    height: Math.max(1, Math.floor(height * factor)),
+    reduced: true,
+  };
+}
+
+/** Final output size for a source image, after any reduction. */
 export function outputDimensions(width: number, height: number, scale: Scale): { width: number; height: number } {
-  return { width: width * scale, height: height * scale };
+  const work = workDimensions(width, height, scale);
+  return { width: work.width * scale, height: work.height * scale };
 }
 
 /** Cores along one axis, evenly sized so no edge tile is a thin sliver. */

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_INPUT_PIXELS,
+  MAX_WORK_PIXELS,
   TILE_SIZE,
   etaSeconds,
+  workDimensions,
   imageDimensionsFromHeader,
   makeTileGrid,
   outputDimensions,
@@ -15,6 +17,21 @@ describe('image-upscaler planning', () => {
   it('calculates 2× and 4× dimensions exactly', () => {
     expect(outputDimensions(320, 180, 2)).toEqual({ width: 640, height: 360 });
     expect(outputDimensions(320, 180, 4)).toEqual({ width: 1280, height: 720 });
+  });
+
+  it('reduces large photos to the per-scale work size instead of rejecting them', () => {
+    // A 12 MP phone photo.
+    expect(workDimensions(4032, 3024, 2)).toEqual({ width: 1825, height: 1369, reduced: true });
+    expect(workDimensions(4032, 3024, 4)).toEqual({ width: 1154, height: 866, reduced: true });
+    expect(outputDimensions(4032, 3024, 2)).toEqual({ width: 3650, height: 2738 });
+    expect(workDimensions(1280, 720, 2)).toEqual({ width: 1280, height: 720, reduced: false });
+    expect(workDimensions(1280, 720, 4)).toMatchObject({ reduced: false });
+    expect(workDimensions(1500, 1000, 4)).toMatchObject({ reduced: true });
+    for (const scale of [2, 4] as const) {
+      const work = workDimensions(8000, 6000, scale);
+      expect(work.width * work.height).toBeLessThanOrEqual(MAX_WORK_PIXELS[scale]);
+      expect(Math.abs(work.width / work.height - 4 / 3)).toBeLessThan(0.01);
+    }
   });
 
   it('covers every source pixel exactly once with tile cores and provides overlap context', () => {
@@ -56,8 +73,8 @@ describe('image-upscaler planning', () => {
     ]);
     expect(makeTileGrid(0, 10)).toEqual([]);
     expect(() => makeTileGrid(10, 10, TILE_SIZE, TILE_SIZE / 2)).toThrow(RangeError);
-    expect(validateInput(1000, 1000)).toEqual({ ok: true });
-    expect(validateInput(1001, 1000)).toEqual({ ok: false, reason: 'pixels' });
+    expect(validateInput(4032, 3024)).toEqual({ ok: true });
+    expect(validateInput(8000, 6251)).toEqual({ ok: false, reason: 'pixels' });
     expect(validateInput(0, 1)).toEqual({ ok: false, reason: 'invalid' });
     expect(validateInput(1, MAX_INPUT_PIXELS + 1)).toEqual({ ok: false, reason: 'dimension' });
   });

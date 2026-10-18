@@ -5,8 +5,8 @@ import {
   TILE_SIZE,
   imageDimensionsFromHeader,
   makeTileGrid,
-  outputDimensions,
   stitchRect,
+  workDimensions,
   type Scale,
   type Tile,
 } from './logic';
@@ -121,10 +121,13 @@ export async function upscaleImage(
   cancelled(signal);
   const bitmap = await createImageBitmap(file);
   try {
-    const source = makeCanvas(bitmap.width, bitmap.height);
+    // Large photos are reduced first so the AI runs on at most MAX_WORK_PIXELS.
+    const work = workDimensions(bitmap.width, bitmap.height, scale);
+    const source = makeCanvas(work.width, work.height);
     const sourceCtx = source.getContext('2d', { willReadFrequently: true })!;
-    sourceCtx.drawImage(bitmap, 0, 0);
-    const tiles = makeTileGrid(bitmap.width, bitmap.height);
+    sourceCtx.imageSmoothingQuality = 'high';
+    sourceCtx.drawImage(bitmap, 0, 0, work.width, work.height);
+    const tiles = makeTileGrid(work.width, work.height);
     const model = await fetchModel(signal, onProgress);
     cancelled(signal);
 
@@ -148,9 +151,12 @@ export async function upscaleImage(
     })();
 
     try {
-      const modelOutput = outputDimensions(bitmap.width, bitmap.height, MODEL_SCALE);
-      const enlarged = makeCanvas(modelOutput.width, modelOutput.height);
-      const enlargedCtx = enlarged.getContext('2d')!;
+      // Each tile comes out at 4×; for 2× it is drawn at half size straight into the output, so a
+      // full 4× canvas (4× the memory) is never allocated.
+      const output = makeCanvas(work.width * scale, work.height * scale);
+      const outputCtx = output.getContext('2d')!;
+      outputCtx.imageSmoothingQuality = 'high';
+      const ratio = scale / MODEL_SCALE;
       const tileCanvas = makeCanvas(TILE_SIZE * MODEL_SCALE, TILE_SIZE * MODEL_SCALE);
       const tileCtx = tileCanvas.getContext('2d')!;
       const tilesStarted = performance.now();
@@ -173,16 +179,16 @@ export async function upscaleImage(
           0,
         );
         const rect = stitchRect(tile);
-        enlargedCtx.drawImage(
+        outputCtx.drawImage(
           tileCanvas,
           rect.sourceX,
           rect.sourceY,
           rect.sourceWidth,
           rect.sourceHeight,
-          rect.destinationX,
-          rect.destinationY,
-          rect.destinationWidth,
-          rect.destinationHeight,
+          rect.destinationX * ratio,
+          rect.destinationY * ratio,
+          rect.destinationWidth * ratio,
+          rect.destinationHeight * ratio,
         );
         onProgress?.({
           phase: 'tiles',
@@ -197,16 +203,9 @@ export async function upscaleImage(
 
       // The model is RGB. Apply separately-resampled alpha after inference so
       // transparent PNG/WebP pixels stay transparent instead of being flattened.
-      enlargedCtx.globalCompositeOperation = 'destination-in';
-      enlargedCtx.drawImage(source, 0, 0, modelOutput.width, modelOutput.height);
-      enlargedCtx.globalCompositeOperation = 'source-over';
-
-      const output = scale === MODEL_SCALE ? enlarged : makeCanvas(bitmap.width * scale, bitmap.height * scale);
-      if (scale !== MODEL_SCALE) {
-        const ctx = output.getContext('2d')!;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(enlarged, 0, 0, output.width, output.height);
-      }
+      outputCtx.globalCompositeOperation = 'destination-in';
+      outputCtx.drawImage(source, 0, 0, output.width, output.height);
+      outputCtx.globalCompositeOperation = 'source-over';
       if (mime === 'image/jpeg') {
         const opaque = makeCanvas(output.width, output.height);
         const ctx = opaque.getContext('2d')!;

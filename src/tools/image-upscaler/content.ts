@@ -3,7 +3,7 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop an image here, click to choose, or paste',
-  dropHint: 'JPG, PNG or WebP · one image at a time · up to 1,000,000 pixels',
+  dropHint: 'JPG, PNG or WebP · one image at a time · phone photos welcome',
   privacyNote: 'Your image and the AI model stay in this browser. Nothing is uploaded.',
   clear: 'Remove',
   scaleLabel: 'Upscale factor',
@@ -17,7 +17,9 @@ const uiEn = {
   originalSize: 'Original',
   outputSize: 'AI output',
   limitNote:
-    'Maximum input: 1,000,000 pixels and 4,096 px on either side. Large images are split into tiles of up to 256 px.',
+    'Best for small or low-resolution images. Photos larger than 2.5 MP (2×) or 1 MP (4×) are reduced first, and the AI works in tiles of up to 256 px.',
+  reducedNote:
+    'This photo is already large, so the AI works on a {w}×{h} copy (up to {mp} MP at this scale). Upscaling adds the most to small or blurry images.',
   start: 'Upscale with AI',
   cancel: 'Cancel processing',
   download: 'Download upscaled image',
@@ -36,7 +38,7 @@ const uiEn = {
   errorRead: 'This image cannot be read by your browser.',
   errorPixels: 'This image has more than {max} pixels. Choose a smaller image first.',
   errorDimension: 'One side is over {max} px. Choose a smaller image first.',
-  errorFile: 'This file is over 25 MB. Choose a smaller file first.',
+  errorFile: 'This file is over 50 MB. Choose a smaller file first.',
   errorProcess: 'The AI model could not process this image. Try a smaller JPG, PNG or WebP.',
 };
 export type UI = typeof uiEn;
@@ -74,7 +76,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Set realistic expectations',
-        body: 'Upscaling predicts plausible texture; it cannot retrieve text, facial features or object detail that was never captured. At 4×, faces, lettering and repeating patterns can look painted or invented, so inspect the 100% comparison before using a result for print or evidence. A 1,000,000-pixel image needs at most 38 model tiles: a WebGPU-capable desktop normally feels much quicker than a phone using the WebAssembly fallback. Start with 2× on a phone or when the original is already fairly clear.',
+        body: 'Upscaling predicts plausible texture; it cannot retrieve text, facial features or object detail that was never captured. At 4×, faces, lettering and repeating patterns can look painted or invented, so inspect the 100% comparison before using a result for print or evidence. The AI works on at most 2.5 MP at 2× and 1 MP at 4× (larger photos are reduced first), so a typical photo needs about 60 model tiles: a WebGPU-capable desktop normally feels much quicker than a phone using the WebAssembly fallback. Start with 2× on a phone or when the original is already fairly clear.',
       },
     ],
     faq: [
@@ -88,7 +90,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How long does AI upscaling take?',
-        a: 'Processing time depends on the device, browser and image size. This tool shows model-download progress, each inference tile and an estimate of the time left; a 1,000,000-pixel maximum-size image needs at most 38 tiles. Desktop WebGPU is generally several times faster than phone WebAssembly. You can switch tabs while it works.',
+        a: 'Processing time depends on the device, browser and image size. This tool shows model-download progress, each inference tile and an estimate of the time left; photos are reduced to at most 2.5 MP (2×) or 1 MP (4×) first, so a typical photo needs about 60 tiles. Desktop WebGPU is generally several times faster than phone WebAssembly. You can switch tabs while it works.',
       },
       {
         q: 'Does image upscaling recover unreadable text or blurred faces?',
@@ -134,7 +136,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '화질 개선의 한계와 처리 시간',
-        body: 'AI 업스케일은 사라진 정보를 사실대로 되찾는 기능이 아니라 주변 픽셀을 바탕으로 그럴듯한 질감을 예측하는 기능입니다. 원본에 없는 글자, 심하게 흔들린 얼굴, 작은 인물의 세부 정보는 복원하지 못할 수 있고 4배에서는 글자·얼굴·반복 무늬가 인위적으로 보일 수 있습니다. 최대 100만 픽셀 이미지도 모델 타일은 최대 38개이며, WebGPU를 쓸 수 있는 데스크톱이 휴대폰의 WebAssembly 처리보다 대체로 빠릅니다. 휴대폰에서는 2배부터 확인하는 편이 좋습니다.',
+        body: 'AI 업스케일은 사라진 정보를 사실대로 되찾는 기능이 아니라 주변 픽셀을 바탕으로 그럴듯한 질감을 예측하는 기능입니다. 원본에 없는 글자, 심하게 흔들린 얼굴, 작은 인물의 세부 정보는 복원하지 못할 수 있고 4배에서는 글자·얼굴·반복 무늬가 인위적으로 보일 수 있습니다. AI는 2배에서 최대 250만, 4배에서 최대 100만 픽셀만 처리하므로(더 큰 사진은 먼저 줄임) 일반 사진 기준 타일은 약 60개이며, WebGPU를 쓸 수 있는 데스크톱이 휴대폰의 WebAssembly 처리보다 대체로 빠릅니다. 휴대폰에서는 2배부터 확인하는 편이 좋습니다.',
       },
     ],
     faq: [
@@ -148,7 +150,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'AI 사진 화질 개선에는 얼마나 걸리나요?',
-        a: '처리 시간은 이미지 크기, 브라우저, 기기 성능에 따라 달라집니다. 이 도구는 모델 다운로드, 타일별 진행 상황, 남은 예상 시간을 보여 주며, 최대 100만 픽셀 이미지도 타일은 최대 38개입니다. 일반적으로 WebGPU 데스크톱이 휴대폰 WebAssembly보다 몇 배 빠릅니다. 처리 중에 다른 탭으로 옮겨도 계속 진행됩니다.',
+        a: '처리 시간은 이미지 크기, 브라우저, 기기 성능에 따라 달라집니다. 이 도구는 모델 다운로드, 타일별 진행 상황, 남은 예상 시간을 보여 주며, 큰 사진은 먼저 2배 기준 250만, 4배 기준 100만 픽셀로 줄이므로 일반 사진 기준 타일은 약 60개입니다. 일반적으로 WebGPU 데스크톱이 휴대폰 WebAssembly보다 몇 배 빠릅니다. 처리 중에 다른 탭으로 옮겨도 계속 진행됩니다.',
       },
       {
         q: '흐린 글자나 얼굴도 정확하게 복원되나요?',
@@ -161,7 +163,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       dropTitle: '이미지를 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
-      dropHint: 'JPG, PNG, WebP · 한 장씩 · 최대 1,000,000픽셀',
+      dropHint: 'JPG, PNG, WebP · 한 장씩 · 휴대폰 사진도 가능',
       privacyNote: '이미지와 AI 모델은 이 브라우저 안에서만 처리됩니다. 어디에도 업로드되지 않습니다.',
       clear: '삭제',
       scaleLabel: '업스케일 배율',
@@ -174,7 +176,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       formatWebp: 'WebP (웹용 용량 작게)',
       originalSize: '원본',
       outputSize: 'AI 결과',
-      limitNote: '입력 한도: 최대 1,000,000픽셀, 한 변 4,096px. 큰 이미지는 최대 256px 타일로 나누어 처리합니다.',
+      limitNote:
+        '작거나 해상도가 낮은 이미지에 가장 효과적입니다. 2배는 250만, 4배는 100만 픽셀보다 큰 사진을 먼저 줄인 뒤 최대 256px 타일로 처리합니다.',
+      reducedNote:
+        '이미 큰 사진이라 AI는 {w}×{h} 크기로 줄인 사본을 처리합니다(이 배율에서 최대 {mp}MP). 업스케일은 작거나 흐린 이미지에서 효과가 가장 큽니다.',
       start: 'AI 업스케일 시작',
       cancel: '처리 취소',
       download: '업스케일 이미지 다운로드',
@@ -193,7 +198,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       errorRead: '브라우저에서 읽을 수 없는 이미지입니다.',
       errorPixels: '이미지 픽셀이 {max}개를 초과합니다. 더 작은 이미지를 선택하세요.',
       errorDimension: '한 변이 {max}px를 넘습니다. 더 작은 이미지를 선택하세요.',
-      errorFile: '파일이 25MB를 초과합니다. 더 작은 파일을 선택하세요.',
+      errorFile: '파일이 50MB를 초과합니다. 더 작은 파일을 선택하세요.',
       errorProcess: 'AI 모델이 이 이미지를 처리하지 못했습니다. 더 작은 JPG, PNG, WebP로 다시 시도하세요.',
     },
   },
