@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Button, Dropzone, Field, Notice, Panel, Segmented, Select, cx } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
@@ -12,7 +12,7 @@ import {
   type FormatChoice,
   type LayoutId,
 } from './logic';
-import { renderCollage, type RenderOptions } from './render';
+import { renderCollage, type RenderOptions, type RenderProgress } from './render';
 
 const STORAGE_KEY = 'tools:collage-maker:settings';
 const LONG_SIDES = [1080, 2048, 3000, MAX_EXPORT_LONG_SIDE] as const;
@@ -61,7 +61,12 @@ export default function CollageMaker({ ui }: ToolProps<UI>) {
   const [preview, setPreview] = useState('');
   const [previewing, setPreviewing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [previewProgress, setPreviewProgress] = useState('');
+  const [exportProgress, setExportProgress] = useState('');
+  const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+  const previewController = useRef<AbortController | null>(null);
+  const exportController = useRef<AbortController | null>(null);
 
   useEffect(() => safeStorage.set(STORAGE_KEY, JSON.stringify(settings)), [settings]);
 
@@ -69,42 +74,66 @@ export default function CollageMaker({ ui }: ToolProps<UI>) {
   useEffect(() => {
     if (files.length < 2) {
       setPreview('');
+      setPreviewing(false);
+      setPreviewProgress('');
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
+    previewController.current = controller;
     let url = '';
     setPreviewing(true);
+    setPreviewProgress(ui.previewing);
     setError('');
-    const timeout = setTimeout(async () => {
+    void (async () => {
       try {
         const previewSide = 720;
-        const blob = await renderCollage(files, {
-          ...settings,
-          longSide: previewSide,
-          gap: Math.max(0, Math.round((settings.gap * previewSide) / settings.longSide)),
-          format: 'image/png',
-        });
-        if (cancelled) return;
+        const blob = await renderCollage(
+          files,
+          {
+            ...settings,
+            longSide: previewSide,
+            gap: Math.max(0, Math.round((settings.gap * previewSide) / settings.longSide)),
+            format: 'image/png',
+          },
+          {
+            signal: controller.signal,
+            onProgress: (progress) =>
+              setPreviewProgress(progressText(progress, 'PNG', ui.processingPhoto, ui.encoding)),
+          },
+        );
+        if (controller.signal.aborted) return;
         url = URL.createObjectURL(blob);
         setPreview(url);
-      } catch {
-        if (!cancelled) setError(ui.unreadable);
+      } catch (renderError) {
+        if (!isAbortError(renderError)) setError(ui.renderFailed);
       } finally {
-        if (!cancelled) setPreviewing(false);
+        if (previewController.current === controller) {
+          previewController.current = null;
+          setPreviewing(false);
+          setPreviewProgress('');
+        }
       }
-    }, 200);
+    })();
     return () => {
-      cancelled = true;
-      clearTimeout(timeout);
+      controller.abort();
+      if (previewController.current === controller) previewController.current = null;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [fileKey, files, settings, ui.unreadable]);
+  }, [fileKey, files, settings, ui.encoding, ui.previewing, ui.processingPhoto, ui.renderFailed]);
+
+  useEffect(
+    () => () => {
+      previewController.current?.abort();
+      exportController.current?.abort();
+    },
+    [],
+  );
 
   const addFiles = useCallback(
     (incoming: File[]) => {
       setFiles((current) => {
         const available = MAX_IMAGES - current.length;
-        if (incoming.length > available) setError(ui.limitReached.replace('{n}', String(MAX_IMAGES)));
+        setStatus(incoming.length > available ? ui.limitReached.replace('{n}', String(MAX_IMAGES)) : '');
         return [...current, ...incoming.slice(0, Math.max(0, available))];
       });
     },
@@ -121,7 +150,14 @@ export default function CollageMaker({ ui }: ToolProps<UI>) {
       return next;
     });
   const reset = () => {
+    previewController.current?.abort();
+    exportController.current?.abort();
     setFiles([]);
+    setPreviewing(false);
+    setDownloading(false);
+    setPreviewProgress('');
+    setExportProgress('');
+    setStatus('');
     setError('');
   };
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) =>
@@ -134,16 +170,43 @@ export default function CollageMaker({ ui }: ToolProps<UI>) {
   const settingsForRender: RenderOptions = settings;
   const download = async () => {
     if (files.length < 2) return;
+    const controller = new AbortController();
+    exportController.current?.abort();
+    exportController.current = controller;
     setDownloading(true);
+    setExportProgress(ui.exporting);
+    setStatus('');
     setError('');
     try {
-      const blob = await renderCollage(files, settingsForRender);
+      const blob = await renderCollage(files, settingsForRender, {
+        signal: controller.signal,
+        onProgress: (progress) =>
+          setExportProgress(progressText(progress, formatLabel(settings.format, ui), ui.processingPhoto, ui.encoding)),
+      });
+      if (controller.signal.aborted) return;
       downloadBlob(blob, outputName(settings.format, dimensions.width, dimensions.height));
-    } catch {
-      setError(ui.unreadable);
+    } catch (renderError) {
+      if (!isAbortError(renderError)) setError(ui.renderFailed);
     } finally {
-      setDownloading(false);
+      if (exportController.current === controller) {
+        exportController.current = null;
+        setDownloading(false);
+        setExportProgress('');
+      }
     }
+  };
+
+  const cancelPreview = () => {
+    previewController.current?.abort();
+    setPreviewing(false);
+    setPreviewProgress('');
+    setStatus(ui.previewCancelled);
+  };
+  const cancelDownload = () => {
+    exportController.current?.abort();
+    setDownloading(false);
+    setExportProgress('');
+    setStatus(ui.cancelled);
   };
 
   const outputSize = ui.outputSize
@@ -214,8 +277,15 @@ export default function CollageMaker({ ui }: ToolProps<UI>) {
           )}
 
           {files.length >= 2 && (
-            <div class="mt-5" aria-live="polite">
-              <p class="mb-2 text-sm font-medium text-fg">{previewing ? ui.previewing : ui.previewLabel}</p>
+            <div class="mt-5" aria-live="polite" aria-busy={previewing}>
+              <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p class="text-sm font-medium text-fg">{previewing ? previewProgress : ui.previewLabel}</p>
+                {previewing && (
+                  <Button size="sm" variant="ghost" onClick={cancelPreview}>
+                    {ui.cancelPreview}
+                  </Button>
+                )}
+              </div>
               <div class="overflow-hidden rounded-lg border border-line bg-surface-2">
                 {preview ? (
                   <img src={preview} alt={ui.previewAlt} class="mx-auto block max-h-[440px] max-w-full" />
@@ -308,12 +378,47 @@ export default function CollageMaker({ ui }: ToolProps<UI>) {
               />
             </Field>
           )}
-          <Button variant="primary" size="lg" disabled={files.length < 2 || downloading} onClick={download}>
-            {downloading ? ui.exporting : ui.download}
-          </Button>
+          <div class="flex gap-2" aria-live="polite" aria-busy={downloading}>
+            <Button
+              class="min-w-0 flex-1"
+              variant="primary"
+              size="lg"
+              disabled={files.length < 2 || downloading}
+              onClick={download}
+            >
+              {downloading ? ui.exporting : ui.download}
+            </Button>
+            {downloading && (
+              <Button size="lg" onClick={cancelDownload}>
+                {ui.cancel}
+              </Button>
+            )}
+          </div>
+          {exportProgress && <p class="text-sm text-muted">{exportProgress}</p>}
+          {status && <Notice>{status}</Notice>}
           <p class={cx('text-xs text-subtle', files.length < 2 && 'hidden')}>{ui.localNote}</p>
         </div>
       </div>
     </Panel>
   );
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
+function progressText(
+  progress: RenderProgress,
+  format: string,
+  photoTemplate: string,
+  encodingTemplate: string,
+): string {
+  if (progress.stage === 'encoding') return encodingTemplate.replace('{format}', format);
+  return photoTemplate.replace('{current}', String(progress.current)).replace('{total}', String(progress.total));
+}
+
+function formatLabel(format: FormatChoice, ui: UI): string {
+  if (format === 'image/png') return ui.formatPng;
+  if (format === 'image/webp') return ui.formatWebp;
+  return ui.formatJpg;
 }

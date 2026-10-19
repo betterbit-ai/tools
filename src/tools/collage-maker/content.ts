@@ -15,6 +15,8 @@ const uiEn = {
   clear: 'Clear photos',
   previewLabel: 'Live preview',
   previewing: 'Updating preview…',
+  processingPhoto: 'Processing photo {current} of {total}…',
+  encoding: 'Encoding {format}…',
   previewAlt: 'Preview of the finished photo collage',
   layout: 'Layout',
   layoutAuto: 'Auto layout',
@@ -42,7 +44,13 @@ const uiEn = {
   qualityBest: 'Best quality',
   download: 'Download collage',
   exporting: 'Creating collage…',
-  localNote: 'The preview and download are created locally in your browser.',
+  cancel: 'Cancel',
+  cancelPreview: 'Cancel preview',
+  cancelled: 'Collage creation cancelled.',
+  previewCancelled: 'Preview update cancelled.',
+  renderFailed:
+    'A photo could not be decoded or the collage could not be encoded. Remove an unreadable photo or try a smaller export size.',
+  localNote: 'The preview and download are created locally, decoding one photo at a time to limit memory use.',
 };
 export type UI = typeof uiEn;
 
@@ -83,7 +91,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your photos do not leave your device',
-        body: 'The page uses your browser’s image decoder and Canvas to make both the preview and final file. It does not send your photos to a server, store them in an account or add a watermark. After the page has loaded, the collage can also be made without an internet connection.',
+        body: 'The page uses your browser’s image decoder and Canvas to make both the preview and final file. It decodes and releases one photo at a time to keep memory bounded, shows progress, and lets you cancel during long work. It does not send your photos to a server, store them in an account or add a watermark. After the page has loaded, the collage can also be made without an internet connection.',
       },
     ],
     faq: [
@@ -139,7 +147,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진은 기기 밖으로 전송되지 않습니다',
-        body: '미리 보기와 최종 파일은 브라우저의 이미지 처리 기능과 Canvas로 만듭니다. 사진을 서버로 보내거나 계정에 저장하지 않으며 워터마크도 넣지 않습니다. 페이지가 열린 뒤에는 인터넷을 끊어도 콜라주를 만들 수 있습니다.',
+        body: '미리 보기와 최종 파일은 브라우저의 이미지 처리 기능과 Canvas로 만듭니다. 메모리 사용량이 갑자기 커지지 않도록 사진을 한 장씩 읽고 해제하며, 진행 상황을 표시하고 오래 걸리는 작업은 취소할 수 있습니다. 사진을 서버로 보내거나 계정에 저장하지 않으며 워터마크도 넣지 않습니다. 페이지가 열린 뒤에는 인터넷을 끊어도 콜라주를 만들 수 있습니다.',
       },
     ],
     faq: [
@@ -178,6 +186,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       clear: '사진 지우기',
       previewLabel: '실시간 미리 보기',
       previewing: '미리 보기 만드는 중…',
+      processingPhoto: '{total}장 중 {current}번째 사진 처리 중…',
+      encoding: '{format} 파일로 저장 중…',
       previewAlt: '완성될 사진 콜라주 미리 보기',
       layout: '레이아웃',
       layoutAuto: '자동 배치',
@@ -205,7 +215,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       qualityBest: '최고 화질',
       download: '콜라주 다운로드',
       exporting: '콜라주 만드는 중…',
-      localNote: '미리 보기와 다운로드 파일은 브라우저 안에서 만들어집니다.',
+      cancel: '취소',
+      cancelPreview: '미리 보기 취소',
+      cancelled: '콜라주 만들기를 취소했습니다.',
+      previewCancelled: '미리 보기 업데이트를 취소했습니다.',
+      renderFailed:
+        '사진을 읽거나 콜라주 파일로 저장하지 못했습니다. 열리지 않는 사진을 빼거나 더 작은 저장 크기로 다시 시도하세요.',
+      localNote: '미리 보기와 다운로드 파일은 브라우저 안에서 사진을 한 장씩 읽어 메모리 사용량을 줄이며 만듭니다.',
     },
   },
 };
