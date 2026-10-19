@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'device',
   icon: 'display',
   added: '2026-10-18',
-  updated: '2026-10-18',
+  updated: '2026-10-19',
   edges: ['usability', 'features'],
   competitors: [
     {
