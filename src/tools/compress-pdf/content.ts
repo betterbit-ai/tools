@@ -5,6 +5,7 @@ const uiEn = {
   dropTitle: 'Drop a PDF here, or click to choose',
   dropHint: 'One PDF at a time — it stays on this device',
   remove: 'Remove',
+  cancel: 'Cancel',
   levelLabel: 'Image compression level',
   balanced: 'Balanced',
   smaller: 'Smaller',
@@ -20,9 +21,7 @@ const uiEn = {
   invalidPdf: "This file can't be read as a PDF.",
   encryptedPdf: 'This PDF is password-protected. Remove its password before compressing it.',
   fileSizeLimit: 'This PDF is over the 100 MB browser-safety limit.',
-  pageCountLimit: 'This PDF has more than 100 pages, the browser-safety limit for this tool.',
-  pagePixelLimit: 'A page is too large to render safely in this browser. Try a smaller PDF.',
-  totalPixelLimit: 'This PDF needs too much total image memory to compress safely in this browser.',
+  pageCountLimit: 'This PDF has more than 500 pages, the browser-safety limit for this tool.',
   compressionFailed: "This PDF couldn't be compressed in this browser. Try a smaller file or another PDF.",
   retry: 'Try again',
   pageCount: '{n} page(s)',
@@ -34,6 +33,7 @@ const uiEn = {
   notSmallerTitle: 'Keep your original — this PDF is already compact',
   notSmallerBody:
     'Rebuilding its pages as images would not make it smaller. This usually means the PDF is mostly text or already-optimized images, which this tool cannot shrink further.',
+  largePagesReduced: '{n} unusually large page(s) were rendered below the selected DPI to fit browser limits.',
   downloadAnyway: 'Download the rebuilt PDF anyway',
 };
 export type UI = typeof uiEn;
@@ -42,7 +42,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Compress PDF — Private Image Compression',
     description:
-      'Compress a scan or image-heavy PDF with three visible quality levels, entirely in your browser. No upload, account, ads, or server copy of your document.',
+      'Compress a scan or image-heavy PDF with three visible quality levels, entirely in your browser. No upload, account, or server copy of your document.',
     h1: 'Compress PDF',
     tagline: 'Make scan-heavy PDFs smaller with a quality level you can see — without uploading the file.',
     name: 'Compress PDF',
@@ -67,11 +67,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'What this compressor changes',
-        body: 'This tool renders each source page and rebuilds it as a JPEG image on a PDF page of the same physical dimensions. That makes it particularly useful for scanned paperwork, photographed pages, and image-heavy handouts, where large embedded images dominate the file size. The trade-off is intentional: searchable or selectable text, links, fillable form fields, layers, and digital-signature information are flattened into the page image. Keep the original PDF if you need any of those features later.',
+        body: 'This tool renders each source page and rebuilds it as a JPEG image on a PDF page of the same physical dimensions. That makes it particularly useful for scanned paperwork, photographed pages, and image-heavy handouts, where large embedded images dominate the file size. It accepts one PDF up to 100 MB and 500 pages. Pages are processed one at a time, and an unusually large page is rendered below the selected DPI when needed to stay within a 20-megapixel canvas instead of rejecting the whole document. The trade-off is intentional: searchable or selectable text, links, fillable form fields, layers, and digital-signature information are flattened into the page image. Keep the original PDF if you need any of those features later.',
       },
       {
         heading: 'Private compression, not an upload workflow',
-        body: 'The leading online results iLovePDF, Smallpdf, and PDF24 all show an upload or cloud-processing step. Smallpdf says uploaded files are automatically deleted after one hour, while PDF24 says processing happens on its servers. Here, the PDF is read, rendered, and rebuilt in your browser; no file is sent to a server, no account is required, and there are no advertisements around the document workflow. This is useful for scans containing IDs, contracts, financial records, or student documents.',
+        body: 'The leading online results iLovePDF, Smallpdf, and PDF24 all show an upload or cloud-processing step. Smallpdf says uploaded files are automatically deleted after one hour, while PDF24 says processing happens on its servers. Here, the PDF is read, rendered, and rebuilt in your browser; no file is sent to a server and no account is required. This is useful for scans containing IDs, contracts, financial records, or student documents.',
       },
     ],
     faq: [
@@ -126,7 +126,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '이 도구가 바꾸는 것',
-        body: '이 도구는 원본의 각 페이지를 이미지로 렌더링한 뒤, 같은 용지 크기의 PDF 페이지에 JPEG로 다시 담습니다. 따라서 큰 이미지가 대부분을 차지하는 스캔 서류, 촬영한 문서, 이미지 중심 안내문에 특히 알맞습니다. 대신 선택·검색 가능한 텍스트, 링크, 입력 양식, 레이어, 전자서명 정보는 페이지 이미지로 평면화됩니다. 이런 기능이 나중에 필요하다면 원본 PDF를 반드시 보관하세요.',
+        body: '이 도구는 원본의 각 페이지를 이미지로 렌더링한 뒤, 같은 용지 크기의 PDF 페이지에 JPEG로 다시 담습니다. 따라서 큰 이미지가 대부분을 차지하는 스캔 서류, 촬영한 문서, 이미지 중심 안내문에 특히 알맞습니다. PDF 1개당 100MB·500페이지까지 처리하며, 페이지를 한 장씩 작업합니다. 비정상적으로 큰 용지는 문서 전체를 거부하지 않고 2,000만 화소 캔버스 안에 들어오도록 선택한 DPI보다 낮춰 렌더링합니다. 대신 선택·검색 가능한 텍스트, 링크, 입력 양식, 레이어, 전자서명 정보는 페이지 이미지로 평면화됩니다. 이런 기능이 나중에 필요하다면 원본 PDF를 반드시 보관하세요.',
       },
       {
         heading: '업로드하지 않는 PDF 압축',
@@ -159,6 +159,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropTitle: 'PDF를 끌어다 놓거나 클릭해서 선택하세요',
       dropHint: '한 번에 PDF 1개 — 파일은 이 기기에만 남습니다',
       remove: '삭제',
+      cancel: '취소',
       levelLabel: '이미지 압축 수준',
       balanced: '균형',
       smaller: '더 작게',
@@ -174,9 +175,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       invalidPdf: '이 파일은 PDF로 읽을 수 없습니다.',
       encryptedPdf: '암호로 보호된 PDF입니다. 암호를 해제한 뒤 압축하세요.',
       fileSizeLimit: '이 PDF는 브라우저 안전 제한인 100MB를 넘습니다.',
-      pageCountLimit: '이 PDF는 100페이지를 넘어 이 도구의 브라우저 안전 제한을 넘습니다.',
-      pagePixelLimit: '페이지가 너무 커서 이 브라우저에서 안전하게 렌더링할 수 없습니다. 더 작은 PDF로 시도하세요.',
-      totalPixelLimit: '이 PDF는 브라우저에서 안전하게 압축하기에 전체 이미지 메모리가 너무 많이 필요합니다.',
+      pageCountLimit: '이 PDF는 500페이지를 넘어 이 도구의 브라우저 안전 제한을 넘습니다.',
       compressionFailed: '이 브라우저에서 PDF를 압축하지 못했습니다. 더 작은 파일이나 다른 PDF로 시도해 보세요.',
       retry: '다시 시도',
       pageCount: '{n}페이지',
@@ -188,6 +187,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       notSmallerTitle: '원본을 그대로 쓰세요 — 이미 용량이 작은 PDF입니다',
       notSmallerBody:
         '페이지를 이미지로 다시 만들어도 용량이 줄지 않습니다. 대부분 텍스트이거나 이미 최적화된 이미지로 된 PDF라서 이 도구로는 더 줄일 수 없습니다.',
+      largePagesReduced: '비정상적으로 큰 페이지 {n}장은 브라우저 제한에 맞춰 선택한 DPI보다 낮게 렌더링했습니다.',
       downloadAnyway: '다시 만든 PDF라도 다운로드',
     },
   },

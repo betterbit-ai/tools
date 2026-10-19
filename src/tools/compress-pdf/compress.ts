@@ -6,9 +6,8 @@ import {
   EncryptedPdfError,
   InvalidPdfError,
   pageCountExceedsLimit,
-  pageExceedsRasterLimit,
   PdfLimitError,
-  totalRasterExceedsLimit,
+  rasterScaleForPage,
 } from './logic';
 
 function throwIfAborted(signal?: AbortSignal): void {
@@ -37,7 +36,7 @@ export async function compressPdf(
   preset: CompressionPreset,
   onProgress: (completedPages: number, totalPages: number) => void,
   signal?: AbortSignal,
-): Promise<{ bytes: Uint8Array; pageCount: number }> {
+): Promise<{ bytes: Uint8Array; pageCount: number; reducedPageCount: number }> {
   throwIfAborted(signal);
   const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const { PDFDocument } = await import('pdf-lib');
@@ -59,18 +58,16 @@ export async function compressPdf(
     const output = await PDFDocument.create();
     const totalPages = source.numPages;
     if (pageCountExceedsLimit(totalPages)) throw new PdfLimitError('page-count');
-    let totalRasterPixels = 0;
+    let reducedPageCount = 0;
     for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
       throwIfAborted(signal);
       const page = await source.getPage(pageNumber);
       try {
         const displayViewport = page.getViewport({ scale: 1 });
-        const renderViewport = page.getViewport({ scale: preset.dpi / 72 });
-        if (pageExceedsRasterLimit(renderViewport.width, renderViewport.height)) {
-          throw new PdfLimitError('page-pixels');
-        }
-        totalRasterPixels += Math.ceil(renderViewport.width) * Math.ceil(renderViewport.height);
-        if (totalRasterExceedsLimit(totalRasterPixels)) throw new PdfLimitError('total-pixels');
+        const renderScale = rasterScaleForPage(displayViewport.width, displayViewport.height, preset.dpi);
+        if (!renderScale) throw new InvalidPdfError(fileName);
+        if (renderScale < preset.dpi / 72) reducedPageCount++;
+        const renderViewport = page.getViewport({ scale: renderScale });
         const canvas = document.createElement('canvas');
         try {
           canvas.width = Math.max(1, Math.ceil(renderViewport.width));
@@ -115,7 +112,7 @@ export async function compressPdf(
     throwIfAborted(signal);
     const result = await output.save();
     throwIfAborted(signal);
-    return { bytes: result, pageCount: totalPages };
+    return { bytes: result, pageCount: totalPages, reducedPageCount };
   } finally {
     signal?.removeEventListener('abort', abortLoading);
     await loadingTask.destroy();

@@ -25,12 +25,12 @@ function initialLevel(): CompressionLevel {
   return saved === 'smaller' || saved === 'smallest' || saved === 'balanced' ? saved : 'balanced';
 }
 
-type FileError = 'invalid' | 'encrypted' | 'file-size' | 'page-count' | 'page-pixels' | 'total-pixels' | 'failed';
+type FileError = 'invalid' | 'encrypted' | 'file-size' | 'page-count' | 'failed';
 
 export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
   const [level, setLevel] = useState<CompressionLevel>(initialLevel);
-  const [output, setOutput] = useState<{ blob: Blob; pageCount: number } | null>(null);
+  const [output, setOutput] = useState<{ blob: Blob; pageCount: number; reducedPageCount: number } | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<FileError | null>(null);
   const runId = useRef(0);
@@ -79,6 +79,7 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
         setOutput({
           blob: new Blob([result.bytes as BlobPart], { type: 'application/pdf' }),
           pageCount: result.pageCount,
+          reducedPageCount: result.reducedPageCount,
         });
         setProgress(null);
       } catch (caught) {
@@ -123,11 +124,7 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
           ? ui.fileSizeLimit
           : error === 'page-count'
             ? ui.pageCountLimit
-            : error === 'page-pixels'
-              ? ui.pagePixelLimit
-              : error === 'total-pixels'
-                ? ui.totalPixelLimit
-                : ui.compressionFailed;
+            : ui.compressionFailed;
   const changeLabel =
     change?.kind === 'smaller'
       ? ui.smallerBy.replace('{n}', String(change.percent))
@@ -156,8 +153,8 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
                   {output ? ` · ${ui.pageCount.replace('{n}', String(output.pageCount))}` : ''}
                 </p>
               </div>
-              <Button size="sm" variant="ghost" onClick={clear} aria-label={ui.remove}>
-                {ui.remove}
+              <Button size="sm" variant="ghost" onClick={clear} aria-label={progress ? ui.cancel : ui.remove}>
+                {progress ? ui.cancel : ui.remove}
               </Button>
             </div>
           )}
@@ -192,6 +189,11 @@ export default function CompressPdf({ ui, locale }: ToolProps<UI>) {
                 {formatBytes(file.size, locale)} → {formatBytes(output.blob.size, locale)} · {changeLabel}
               </p>
               {change.kind !== 'smaller' && <p class="mt-2 text-sm text-muted">{ui.notSmallerBody}</p>}
+              {output.reducedPageCount > 0 && (
+                <p class="mt-2 text-sm text-muted">
+                  {ui.largePagesReduced.replace('{n}', String(output.reducedPageCount))}
+                </p>
+              )}
               <Button
                 class="mt-4"
                 variant={change.kind === 'smaller' ? 'primary' : 'secondary'}
