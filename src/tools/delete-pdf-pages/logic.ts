@@ -1,9 +1,9 @@
 /** Pure, browser-independent decisions for local PDF page deletion. */
 
-export const MAX_FILE_BYTES = 100 * 1024 * 1024;
-export const MAX_PAGE_COUNT = 100;
-export const PREVIEW_SCALE = 0.25;
-export const MAX_PREVIEW_PIXELS = 1_000_000;
+export const MAX_FILE_BYTES = 250 * 1024 * 1024;
+export const MAX_PAGE_COUNT = 500;
+export const PREVIEW_SCALE = 0.2;
+export const MAX_PREVIEW_PIXELS = 120_000;
 
 export function isPdfFile(fileName: string, mimeType: string): boolean {
   return mimeType === 'application/pdf' || /\.pdf$/i.test(fileName.trim());
@@ -120,5 +120,12 @@ export class EncryptedPdfError extends Error {
 export class PdfLimitError extends Error {
   constructor() {
     super(`PDF has more than ${MAX_PAGE_COUNT} pages.`);
+  }
+}
+
+export class PdfOperationCancelledError extends Error {
+  constructor() {
+    super('PDF processing was cancelled.');
+    this.name = 'PdfOperationCancelledError';
   }
 }

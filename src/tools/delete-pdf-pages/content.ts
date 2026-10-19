@@ -3,15 +3,18 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop a PDF here, or click to choose',
-  dropHint: 'Up to 100 pages and 100 MB — it stays on this device',
+  dropHint: 'Up to 500 pages and 250 MB — it stays on this device',
   remove: 'Remove',
-  reading: 'Reading pages and creating local previews…',
-  pageCount: '{n} page(s)',
+  cancel: 'Cancel',
+  reading: 'Reading the PDF…',
+  previewProgress: 'Creating preview {n} of {total}…',
+  pageCountOne: '1 page',
+  pageCount: '{n} pages',
   invalidPdf: "This file can't be read as a PDF.",
   encryptedPdf: 'This PDF is password-protected. Remove its password before deleting pages.',
-  fileSizeLimit: 'This PDF is over the 100 MB browser-safety limit.',
-  pageCountLimit: 'This PDF has more than 100 pages, the browser-safety limit for page previews.',
-  deleteFailed: "This PDF couldn't be saved in this browser. Try a smaller PDF.",
+  fileSizeLimit: 'This PDF is over the 250 MB browser-safety limit.',
+  pageCountLimit: 'This PDF has more than 500 pages, the browser-safety limit for page previews.',
+  deleteFailed: "This PDF couldn't be saved in this browser. The original file is unchanged.",
   privacyNote: 'Your PDF is read and saved in this browser. Nothing is uploaded.',
   pagesLabel: 'PDF page previews',
   pageNumber: 'Page {n}',
@@ -67,7 +70,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Private local processing with practical limits',
-        body: 'Previewing and saving happen in this browser, so Betterbit does not receive your PDF. To keep all previews responsive, one file can contain up to 100 pages and be up to 100 MB. Password-protected PDFs must be unlocked first because the browser cannot inspect or copy their pages without the password.',
+        body: 'Previewing and saving happen in this browser, so Betterbit does not receive your PDF. Thumbnails are created one at a time at a bounded resolution, and saving runs away from the page interface so long documents stay responsive. You can cancel either step. One file can contain up to 500 pages and be up to 250 MB. Password-protected PDFs must be unlocked first.',
       },
     ],
     faq: [
@@ -85,7 +88,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Are PDFs uploaded when I delete pages here?',
-        a: 'No. This tool previews and creates the new PDF in your browser, without uploading the file to Betterbit. It accepts one local PDF up to 100 MB and 100 pages.',
+        a: 'No. This tool previews and creates the new PDF in your browser, without uploading the file to Betterbit. It accepts one local PDF up to 250 MB and 500 pages.',
       },
       {
         q: 'Can I remove every page in a PDF?',
@@ -126,7 +129,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '업로드 없이 브라우저 안에서 처리',
-        body: '미리보기 생성과 새 PDF 저장은 현재 브라우저에서만 이루어지므로 Betterbit 서버로 PDF가 전송되지 않습니다. 모든 썸네일을 안정적으로 표시하기 위해 파일 1개당 100MB, 100페이지까지 처리합니다. 비밀번호가 설정된 PDF는 브라우저에서 페이지를 읽고 복사할 수 있도록 먼저 잠금을 해제해야 합니다.',
+        body: '미리보기 생성과 새 PDF 저장은 현재 브라우저에서만 이루어지므로 Betterbit 서버로 PDF가 전송되지 않습니다. 썸네일은 제한된 해상도로 한 장씩 만들고, 저장 작업은 화면 조작을 막지 않도록 별도로 처리합니다. 두 작업 모두 취소할 수 있습니다. 파일 1개당 250MB, 500페이지까지 처리하며 비밀번호가 설정된 PDF는 먼저 잠금을 해제해야 합니다.',
       },
     ],
     faq: [
@@ -144,7 +147,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'PDF 파일이 서버에 업로드되나요?',
-        a: '아니요. 이 도구는 브라우저 안에서 미리보기와 새 PDF 생성을 처리하며 Betterbit 서버로 파일을 업로드하지 않습니다. 파일당 최대 100MB, 100페이지의 PDF를 처리할 수 있습니다.',
+        a: '아니요. 이 도구는 브라우저 안에서 미리보기와 새 PDF 생성을 처리하며 Betterbit 서버로 파일을 업로드하지 않습니다. 파일당 최대 250MB, 500페이지의 PDF를 처리할 수 있습니다.',
       },
       {
         q: 'PDF의 모든 페이지를 삭제할 수 있나요?',
@@ -153,15 +156,18 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       dropTitle: 'PDF를 끌어 놓거나 클릭하여 선택',
-      dropHint: '100페이지·100MB까지 — 파일은 이 기기에만 남습니다',
+      dropHint: '500페이지·250MB까지 — 파일은 이 기기에만 남습니다',
       remove: '제거',
-      reading: '페이지를 읽고 기기 안에서 미리보기를 만드는 중…',
+      cancel: '취소',
+      reading: 'PDF를 읽는 중…',
+      previewProgress: '{total}페이지 중 {n}페이지 미리보기 만드는 중…',
+      pageCountOne: '1페이지',
       pageCount: '{n}페이지',
       invalidPdf: '이 파일을 PDF로 읽을 수 없습니다.',
       encryptedPdf: '비밀번호로 보호된 PDF입니다. 페이지를 삭제하려면 먼저 비밀번호를 제거해야 합니다.',
-      fileSizeLimit: '이 PDF는 브라우저 안전 한도인 100MB를 초과합니다.',
-      pageCountLimit: '이 PDF는 페이지별 미리보기의 브라우저 안전 한도인 100페이지를 초과합니다.',
-      deleteFailed: '이 브라우저에서 새 PDF를 저장할 수 없습니다. 더 작은 PDF로 시도해 보세요.',
+      fileSizeLimit: '이 PDF는 브라우저 안전 한도인 250MB를 초과합니다.',
+      pageCountLimit: '이 PDF는 페이지 미리보기의 브라우저 안전 한도인 500페이지를 초과합니다.',
+      deleteFailed: '이 브라우저에서 새 PDF를 저장할 수 없습니다. 원본 파일은 변경되지 않았습니다.',
       privacyNote: 'PDF 읽기와 저장은 이 브라우저에서만 처리됩니다. 파일은 업로드되지 않습니다.',
       pagesLabel: 'PDF 페이지 미리보기',
       pageNumber: '{n}페이지',

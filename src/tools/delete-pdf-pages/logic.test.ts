@@ -10,6 +10,7 @@ import {
   PageRangeOutOfBoundsError,
   PageRangeSyntaxError,
   parsePageSelection,
+  PdfOperationCancelledError,
   previewScale,
   remainingPageCount,
   toggleDeletedPage,
@@ -43,8 +44,14 @@ describe('delete-pdf-pages', () => {
     expect(fileExceedsLimit(Number.POSITIVE_INFINITY)).toBe(true);
     expect(pageCountExceedsLimit(1)).toBe(false);
     expect(pageCountExceedsLimit(MAX_PAGE_COUNT + 1)).toBe(true);
-    expect(previewScale(612, 792)).toBe(0.25);
-    expect(previewScale(100_000, 100_000)).toBeLessThan(0.25);
+    expect(MAX_FILE_BYTES).toBe(250 * 1024 * 1024);
+    expect(MAX_PAGE_COUNT).toBe(500);
+    expect(previewScale(612, 792)).toBe(0.2);
+    expect(previewScale(100_000, 100_000)).toBeLessThan(0.2);
+  });
+
+  it('uses a distinct cancellation error so cancelling is never presented as a broken PDF', () => {
+    expect(new PdfOperationCancelledError()).toMatchObject({ name: 'PdfOperationCancelledError' });
   });
 
   it('preserves Unicode file names and copies only the pages that remain', async () => {
