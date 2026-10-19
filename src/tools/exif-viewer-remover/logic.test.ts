@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cleanedName, detectImageFormat, inspectMetadata, isValidImage, privateName, stripMetadata } from './logic';
 
 const jpeg = (...parts: number[][]) =>
-  new Uint8Array([0xff, 0xd8, ...parts.flat(), 0xff, 0xda, 0, 8, 1, 2, 3, 0xff, 0xd9]);
+  new Uint8Array([0xff, 0xd8, ...parts.flat(), 0xff, 0xda, 0, 2, 1, 2, 3, 0xff, 0xd9]);
 const segment = (marker: number, data: number[]) => [0xff, marker, 0, data.length + 2, ...data];
 const pngChunk = (type: string, body: number[]) => [
   0,
@@ -42,7 +42,7 @@ describe('metadata inspection', () => {
       0xff,
       0xda,
       0,
-      8,
+      2,
       1,
       2,
       3,
@@ -50,6 +50,13 @@ describe('metadata inspection', () => {
       0xd9,
     ]);
     expect(inspectMetadata(cleaned).hasMetadata).toBe(false);
+  });
+
+  it('drops bytes appended after the JPEG end marker instead of copying a hidden payload', () => {
+    const encoded = new Uint8Array([0xff, 0xd8, 0xff, 0xda, 0, 2, 1, 2, 0xff, 0xd9]);
+    const image = new Uint8Array([...encoded, ...new TextEncoder().encode('private trailing data')]);
+    expect(isValidImage(image)).toBe(true);
+    expect(stripMetadata(image)).toEqual(encoded);
   });
 
   it('removes textual PNG chunks and leaves binary image chunks untouched', () => {
@@ -70,6 +77,35 @@ describe('metadata inspection', () => {
     const cleaned = stripMetadata(image);
     expect(inspectMetadata(cleaned).hasMetadata).toBe(false);
     expect(Array.from(cleaned)).toContain(73);
+  });
+
+  it('removes WebP metadata chunks and clears their VP8X presence flags', () => {
+    const webpChunk = (type: string, body: number[]) => [
+      ...new TextEncoder().encode(type),
+      body.length,
+      0,
+      0,
+      0,
+      ...body,
+      ...(body.length % 2 ? [0] : []),
+    ];
+    const body = [
+      ...webpChunk('VP8X', [0x0c, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+      ...webpChunk('EXIF', [1, 2, 3, 4]),
+      ...webpChunk('XMP ', [5, 6, 7, 8]),
+    ];
+    const image = new Uint8Array([
+      ...new TextEncoder().encode('RIFF'),
+      ...[body.length + 4, 0, 0, 0],
+      ...new TextEncoder().encode('WEBP'),
+      ...body,
+    ]);
+
+    expect(inspectMetadata(image).hasMetadata).toBe(true);
+    const cleaned = stripMetadata(image);
+    expect(inspectMetadata(cleaned).hasMetadata).toBe(false);
+    expect(cleaned[20] & 0x0c).toBe(0);
+    expect(cleaned.length).toBeLessThan(image.length);
   });
 });
 
@@ -125,5 +161,11 @@ describe('cleanedName', () => {
   it('can use a neutral, numbered name when the source filename is sensitive', () => {
     expect(privateName('home-address.東京 📷.JPEG', 3)).toBe('private-image-03.jpeg');
     expect(privateName('', 12)).toBe('private-image-12.jpg');
+  });
+
+  it('uses the detected format when a misleading extension would create the wrong file type', () => {
+    expect(cleanedName('renamed.png', 'jpeg')).toBe('renamed-clean.jpg');
+    expect(privateName('renamed.jpg', 1, 'png')).toBe('private-image-01.png');
+    expect(privateName('renamed.jpg', 2, 'webp')).toBe('private-image-02.webp');
   });
 });

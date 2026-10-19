@@ -62,16 +62,22 @@ export function stripMetadata(bytes: Uint8Array): Uint8Array {
   }
 }
 
-export function cleanedName(name: string): string {
+export function cleanedName(name: string, format?: ImageFormat): string {
   const base = name.replace(/\.[^.]+$/, '') || 'image';
-  const extension = name.match(/\.([^.]+)$/)?.[1]?.toLowerCase() || 'jpg';
+  const extension = formatExtension(format) ?? name.match(/\.([^.]+)$/)?.[1]?.toLowerCase() ?? 'jpg';
   return `${base}-clean.${extension}`;
 }
 
 /** A source-independent download name avoids exposing a revealing filename. */
-export function privateName(name: string, index: number): string {
-  const extension = name.match(/\.([^.]+)$/)?.[1]?.toLowerCase() || 'jpg';
+export function privateName(name: string, index: number, format?: ImageFormat): string {
+  const extension = formatExtension(format) ?? name.match(/\.([^.]+)$/)?.[1]?.toLowerCase() ?? 'jpg';
   return `private-image-${String(index).padStart(2, '0')}.${extension}`;
+}
+
+function formatExtension(format?: ImageFormat): string | undefined {
+  if (format === 'jpeg') return 'jpg';
+  if (format === 'png' || format === 'webp') return format;
+  return undefined;
 }
 
 function inspectJpeg(bytes: Uint8Array): ExifSummary {
@@ -139,8 +145,16 @@ function stripJpeg(bytes: Uint8Array): Uint8Array {
   let offset = 2;
   while (offset + 4 <= bytes.length && bytes[offset] === 0xff) {
     const marker = bytes[offset + 1];
-    if (marker === 0xda || marker === 0xd9) {
-      kept.push(bytes.subarray(offset));
+    if (marker === 0xda) {
+      const length = readU16(bytes, offset + 2, false);
+      if (length < 2 || offset + 2 + length > bytes.length) return bytes.slice();
+      const end = findJpegEnd(bytes, offset + 2 + length);
+      if (end === -1) return bytes.slice();
+      kept.push(bytes.subarray(offset, end));
+      return concat(kept);
+    }
+    if (marker === 0xd9) {
+      kept.push(bytes.subarray(offset, offset + 2));
       return concat(kept);
     }
     const length = readU16(bytes, offset + 2, false);
@@ -174,8 +188,17 @@ function stripWebp(bytes: Uint8Array): Uint8Array {
   while (offset + 8 <= bytes.length) {
     const length = readU32(bytes, offset + 4, true);
     if (offset + 8 + length > bytes.length) return bytes.slice();
-    if (!['EXIF', 'XMP '].includes(ascii(bytes, offset, 4)))
-      chunks.push(bytes.subarray(offset, offset + 8 + length + (length % 2)));
+    const type = ascii(bytes, offset, 4);
+    if (!['EXIF', 'XMP '].includes(type)) {
+      const chunk = bytes.subarray(offset, offset + 8 + length + (length % 2));
+      if (type === 'VP8X' && length >= 1) {
+        const cleaned = chunk.slice();
+        cleaned[8] &= ~0x0c; // Clear the EXIF and XMP presence flags with their chunks.
+        chunks.push(cleaned);
+      } else {
+        chunks.push(chunk);
+      }
+    }
     offset += 8 + length + (length % 2);
   }
   const bodyLength = chunks.reduce((total, chunk) => total + chunk.length, 0);
@@ -328,9 +351,7 @@ function isValidJpeg(bytes: Uint8Array): boolean {
     if (marker === 0xda) {
       const length = readU16(bytes, offset + 2, false);
       if (length < 2 || offset + 2 + length > bytes.length) return false;
-      for (let scan = offset + 2 + length; scan + 1 < bytes.length; scan++)
-        if (bytes[scan] === 0xff && bytes[scan + 1] === 0xd9) return true;
-      return false;
+      return findJpegEnd(bytes, offset + 2 + length) !== -1;
     }
     if (marker === 0xd9) return false;
     const length = readU16(bytes, offset + 2, false);
@@ -338,6 +359,14 @@ function isValidJpeg(bytes: Uint8Array): boolean {
     offset += 2 + length;
   }
   return false;
+}
+
+/** Returns the exclusive end of the encoded JPEG, omitting any bytes after EOI. */
+function findJpegEnd(bytes: Uint8Array, scanStart: number): number {
+  for (let scan = scanStart; scan + 1 < bytes.length; scan++) {
+    if (bytes[scan] === 0xff && bytes[scan + 1] === 0xd9) return scan + 2;
+  }
+  return -1;
 }
 
 function isValidPng(bytes: Uint8Array): boolean {

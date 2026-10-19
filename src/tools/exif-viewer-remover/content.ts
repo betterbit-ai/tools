@@ -7,9 +7,16 @@ const uiEn = {
   privacyNote: 'Files are read and cleaned only in this browser. Nothing is uploaded.',
   unsupported: 'Use a valid JPG, PNG, or WebP image.',
   cleanError: 'Could not create a clean copy. Keep the original and try another image.',
+  zipError: 'Could not create the ZIP. Your cleaned files are still available one by one.',
+  batchLimit: 'Up to {n} photos can be kept in one batch. Extra files were not added.',
   remove: 'Remove',
   clear: 'Clear all',
+  cancel: 'Cancel',
+  cancelled: 'Cleaning cancelled.',
+  zipCancelled: 'ZIP preparation cancelled.',
   processing: 'Reading…',
+  cleanProgress: 'Cleaning {current} of {total}…',
+  zipProgress: 'Preparing ZIP {current} of {total}…',
   ready: 'Ready to clean',
   clean: 'Remove metadata',
   cleanAll: 'Clean {n} photos',
@@ -25,7 +32,7 @@ const uiEn = {
   afterLabel: 'After',
   tagLabel: 'Detected data',
   cleanNote: 'A new copy is created; your original stays unchanged.',
-  resultNote: 'The clean copy was checked again for removable metadata.',
+  resultNote: 'Each clean copy contains no removable metadata detected by this tool.',
   privateNames: 'Use private download names',
   privateNamesHint:
     'Uses private-image-01.jpg instead of the original filename. Turn this off to keep a cleaned version of the source name.',
@@ -56,7 +63,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'What this tool removes',
-        body: 'For JPEG files, the cleaner removes APP1 (EXIF/XMP), APP13 (IPTC), and comment segments. For PNG it removes eXIf, text, and time chunks; for WebP it removes EXIF and XMP chunks. The encoded image data is copied instead of being redrawn, so supported JPG, PNG, and WebP pixels are not recompressed. The downloaded copy gets a neutral name by default because filenames can reveal personal details too.',
+        body: 'For JPEG files, the cleaner removes APP1 (EXIF/XMP), APP13 (IPTC), comment segments, and bytes after the end-of-image marker. For PNG it removes eXIf, text, and time chunks; for WebP it removes EXIF and XMP chunks and their container flags. The encoded image data is copied instead of being redrawn, so supported JPG, PNG, and WebP pixels are not recompressed. A batch holds up to 50 photos and processes them one at a time to bound memory use. The downloaded copy gets a neutral name by default because filenames can reveal personal details too.',
       },
       {
         heading: 'What EXIF data can reveal',
@@ -82,7 +89,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Which photo formats can this EXIF remover clean?',
-        a: 'This tool cleans JPG/JPEG, PNG, and WebP metadata containers. It leaves other formats unchanged instead of converting them, so there is no unexpected format or quality change.',
+        a: 'This tool cleans JPG/JPEG, PNG, and WebP metadata containers. It rejects other formats instead of converting them, so there is no unexpected format or quality change.',
       },
     ],
     ui: uiEn,
@@ -104,7 +111,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '어떤 정보를 지우나요?',
-        body: 'JPEG에서는 APP1(EXIF/XMP), APP13(IPTC), 주석 세그먼트를 제거합니다. PNG에서는 eXIf·텍스트·시간 청크를, WebP에서는 EXIF·XMP 청크를 제거합니다. JPG·PNG·WebP의 압축된 이미지 데이터는 다시 인코딩하지 않고 그대로 복사합니다.',
+        body: 'JPEG에서는 APP1(EXIF/XMP), APP13(IPTC), 주석 세그먼트와 이미지 종료 표시 뒤의 데이터를 제거합니다. PNG에서는 eXIf·텍스트·시간 청크를, WebP에서는 EXIF·XMP 청크와 해당 컨테이너 표시를 제거합니다. JPG·PNG·WebP의 압축된 이미지 데이터는 다시 인코딩하지 않고 그대로 복사합니다. 메모리 사용량을 제한하기 위해 한 번에 최대 50장을 보관하고 한 장씩 처리합니다.',
       },
       {
         heading: '사진 위치정보이란 무엇인가요?',
@@ -130,7 +137,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '어떤 형식의 사진에서 EXIF를 지울 수 있나요?',
-        a: 'JPG/JPEG, PNG, WebP의 메타데이터 컨테이너를 정리합니다. 다른 형식은 예기치 않은 변환이나 화질 변화를 막기 위해 변경하지 않습니다.',
+        a: 'JPG/JPEG, PNG, WebP의 메타데이터 컨테이너를 정리합니다. 다른 형식은 예기치 않은 변환이나 화질 변화를 막기 위해 변환하지 않고 거부합니다.',
       },
     ],
     ui: {
@@ -139,9 +146,16 @@ export const content: Record<Locale, ToolContent<UI>> = {
       privacyNote: '파일은 이 브라우저 안에서만 읽고 정리합니다. 업로드하지 않습니다.',
       unsupported: '올바른 JPG, PNG, WebP 이미지를 사용하세요.',
       cleanError: '정리된 파일을 만들 수 없습니다. 원본은 보관하고 다른 이미지로 다시 시도하세요.',
+      zipError: 'ZIP 파일을 만들 수 없습니다. 정리된 파일은 한 장씩 계속 다운로드할 수 있습니다.',
+      batchLimit: '한 번에 사진을 최대 {n}장까지 보관할 수 있습니다. 초과 파일은 추가하지 않았습니다.',
       remove: '삭제',
       clear: '모두 비우기',
+      cancel: '취소',
+      cancelled: '사진 정리를 취소했습니다.',
+      zipCancelled: 'ZIP 준비를 취소했습니다.',
       processing: '읽는 중…',
+      cleanProgress: '{total}장 중 {current}번째 정리 중…',
+      zipProgress: '{total}장 중 {current}번째 ZIP 준비 중…',
       ready: '정리 준비 완료',
       clean: '메타데이터 삭제',
       cleanAll: '사진 {n}장 정리',
@@ -157,7 +171,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       afterLabel: '정리 후',
       tagLabel: '감지된 정보',
       cleanNote: '원본은 바꾸지 않고 새 파일을 만듭니다.',
-      resultNote: '정리된 파일에서 삭제 대상 메타데이터를 다시 확인했습니다.',
+      resultNote: '각 새 파일에는 이 도구가 감지하는 삭제 대상 메타데이터가 없습니다.',
       privateNames: '개인정보 보호용 파일명 사용',
       privateNamesHint: '원본 파일명 대신 private-image-01.jpg처럼 저장합니다. 원본 파일명에 -clean을 붙이려면 끄세요.',
     },
