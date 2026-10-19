@@ -15,6 +15,7 @@ import {
   PageRangeSyntaxError,
   parsePageSelection,
   PdfLimitError,
+  PdfOperationCancelledError,
   remainingPageCount,
   toggleDeletedPage,
 } from './logic';
@@ -23,7 +24,6 @@ type FileError = 'invalid' | 'encrypted' | 'file-size' | 'page-count' | 'failed'
 
 export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
-  const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [deletedPages, setDeletedPages] = useState<number[]>([]);
   const [rangeInput, setRangeInput] = useState('');
@@ -31,14 +31,17 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
   const [fileError, setFileError] = useState<FileError | null>(null);
   const [reading, setReading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const runId = useRef(0);
+  const controllerRef = useRef<AbortController | null>(null);
 
   const revokePreviews = useCallback((urls: string[]) => urls.forEach((url) => URL.revokeObjectURL(url)), []);
 
   const clear = useCallback(() => {
+    controllerRef.current?.abort();
+    controllerRef.current = null;
     runId.current++;
     setFile(null);
-    setBytes(null);
     setPreviewUrls((urls) => {
       revokePreviews(urls);
       return [];
@@ -49,15 +52,18 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
     setFileError(null);
     setReading(false);
     setSaving(false);
+    setProgress(null);
   }, [revokePreviews]);
 
   useEffect(() => clear, [clear]);
 
   const loadFile = useCallback(
     (picked: File) => {
+      controllerRef.current?.abort();
+      const controller = new AbortController();
+      controllerRef.current = controller;
       const id = ++runId.current;
       setFile(picked);
-      setBytes(null);
       setPreviewUrls((urls) => {
         revokePreviews(urls);
         return [];
@@ -67,12 +73,15 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
       setRangeError(null);
       setFileError(null);
       setSaving(false);
+      setProgress(null);
       if (!isPdfFile(picked.name, picked.type)) {
+        controllerRef.current = null;
         setReading(false);
         setFileError('invalid');
         return;
       }
       if (fileExceedsLimit(picked.size)) {
+        controllerRef.current = null;
         setReading(false);
         setFileError('file-size');
         return;
@@ -82,19 +91,26 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
       void (async () => {
         try {
           const source = new Uint8Array(await picked.arrayBuffer());
+          if (runId.current !== id || controller.signal.aborted) return;
           const { openPdfPreviews } = await import('./delete');
-          // PDF.js may transfer its byte buffer to a worker, so retain a copy for saving.
-          const previews = await openPdfPreviews(source.slice(), picked.name);
+          const previews = await openPdfPreviews(source, picked.name, {
+            signal: controller.signal,
+            onProgress: (done, total) => {
+              if (runId.current === id) setProgress({ done, total });
+            },
+          });
           if (runId.current !== id) {
             revokePreviews(previews.map((preview) => preview.url));
             return;
           }
-          setBytes(source);
           setPreviewUrls(previews.map((preview) => preview.url));
           setReading(false);
+          setProgress(null);
         } catch (caught) {
           if (runId.current !== id) return;
           setReading(false);
+          setProgress(null);
+          if (caught instanceof PdfOperationCancelledError || controller.signal.aborted) return;
           setFileError(
             caught instanceof EncryptedPdfError
               ? 'encrypted'
@@ -104,6 +120,8 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
                   ? 'invalid'
                   : 'failed',
           );
+        } finally {
+          if (controllerRef.current === controller) controllerRef.current = null;
         }
       })();
     },
@@ -140,17 +158,26 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
   };
 
   const download = async () => {
-    if (!bytes || !file || deletedPages.length === 0 || saving) return;
+    if (!file || deletedPages.length === 0 || saving) return;
+    const id = ++runId.current;
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
     setSaving(true);
     setFileError(null);
     try {
-      const { writeDeletedPdf } = await import('./delete');
-      const output = await writeDeletedPdf(bytes.slice(), file.name, deletedPages);
+      const source = new Uint8Array(await file.arrayBuffer());
+      if (runId.current !== id || controller.signal.aborted) return;
+      const { writeDeletedPdfOffMainThread } = await import('./delete');
+      const output = await writeDeletedPdfOffMainThread(source, file.name, deletedPages, controller.signal);
+      if (runId.current !== id || controller.signal.aborted) return;
       downloadBlob(new Blob([output as BlobPart], { type: 'application/pdf' }), deletedPdfFileName(file.name));
     } catch (caught) {
+      if (runId.current !== id || caught instanceof PdfOperationCancelledError || controller.signal.aborted) return;
       setFileError(caught instanceof EncryptedPdfError ? 'encrypted' : 'failed');
     } finally {
-      setSaving(false);
+      if (runId.current === id) setSaving(false);
+      if (controllerRef.current === controller) controllerRef.current = null;
     }
   };
 
@@ -184,18 +211,28 @@ export default function DeletePdfPages({ ui, locale }: ToolProps<UI>) {
                 <p class="truncate font-medium text-fg">{file.name}</p>
                 <p class="tabular text-muted" aria-live="polite">
                   {formatBytes(file.size, locale)}
-                  {previewUrls.length ? ` · ${ui.pageCount.replace('{n}', String(previewUrls.length))}` : ''}
+                  {previewUrls.length
+                    ? ` · ${
+                        previewUrls.length === 1
+                          ? ui.pageCountOne
+                          : ui.pageCount.replace('{n}', String(previewUrls.length))
+                      }`
+                    : ''}
                 </p>
               </div>
-              <Button size="sm" variant="ghost" onClick={clear} aria-label={ui.remove}>
-                {ui.remove}
+              <Button size="sm" variant="ghost" onClick={clear} aria-label={reading || saving ? ui.cancel : ui.remove}>
+                {reading || saving ? ui.cancel : ui.remove}
               </Button>
             </div>
           )}
 
           {reading && (
             <div class="mt-4">
-              <Notice>{ui.reading}</Notice>
+              <Notice>
+                {progress
+                  ? ui.previewProgress.replace('{n}', String(progress.done)).replace('{total}', String(progress.total))
+                  : ui.reading}
+              </Notice>
             </div>
           )}
           {fileError && (
