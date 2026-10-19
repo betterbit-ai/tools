@@ -5,6 +5,8 @@ import {
   outputName,
   outputType,
   searchQuality,
+  shouldKeepOriginal,
+  smallerResult,
   supportsQuality,
   toBytes,
   type EncodeResult,
@@ -44,6 +46,24 @@ describe('supportsQuality', () => {
     expect(supportsQuality('image/jpeg')).toBe(true);
     expect(supportsQuality('image/webp')).toBe(true);
     expect(supportsQuality('image/png')).toBe(false);
+  });
+});
+
+describe('honest result selection', () => {
+  it('keeps a same-format original when re-encoding would make it larger', () => {
+    expect(shouldKeepOriginal(100, 120, 'image/jpeg', 'image/jpeg')).toBe(true);
+    expect(shouldKeepOriginal(100, 100, 'image/png', 'image/png')).toBe(true);
+  });
+
+  it('allows a smaller result or an explicitly requested format conversion', () => {
+    expect(shouldKeepOriginal(120, 100, 'image/jpeg', 'image/jpeg')).toBe(false);
+    expect(shouldKeepOriginal(100, 120, 'image/png', 'image/jpeg')).toBe(false);
+  });
+
+  it('selects the smallest failed target attempt instead of the last attempt', () => {
+    expect(smallerResult(undefined, { size: 300 })).toEqual({ size: 300 });
+    expect(smallerResult({ size: 300 }, { size: 450 })).toEqual({ size: 300 });
+    expect(smallerResult({ size: 300 }, { size: 200 })).toEqual({ size: 200 });
   });
 });
 

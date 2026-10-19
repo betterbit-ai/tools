@@ -5,7 +5,7 @@ import { downloadBlob } from '../../lib/browser';
 import { formatBytes, formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { compressAtQuality, compressToTarget, readDimensions } from './compress';
+import { compressAtQuality, compressToTarget, readDimensions, type CompressResult } from './compress';
 import {
   isAnimatedGif,
   outputName,
@@ -24,9 +24,26 @@ interface Item {
   height: number;
   preview: string;
   animatedGif?: boolean;
-  result?: { blob: Blob; url: string; width: number; height: number; name: string; achieved: boolean; key: string };
+  result?: {
+    blob: Blob;
+    url: string;
+    width: number;
+    height: number;
+    name: string;
+    achieved: boolean;
+    keptOriginal?: boolean;
+    key: string;
+  };
   error?: { kind: 'unreadable' | 'processing'; key?: string };
   busy?: boolean;
+}
+
+interface WorkProgress {
+  file: string;
+  current: number;
+  total: number;
+  attempt: number;
+  maximum: number;
 }
 
 let nextId = 1;
@@ -41,12 +58,16 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
   const [format, setFormat] = useState<FormatChoice>('original');
   const [notice, setNotice] = useState<string | null>(null);
   const [zipping, setZipping] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [progress, setProgress] = useState<WorkProgress | null>(null);
   const runId = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
   const addFiles = useCallback(
     async (files: File[]) => {
+      setPaused(false);
       const accepted = files.slice(0, Math.max(0, MAX_BATCH_SIZE - itemsRef.current.length));
       if (accepted.length < files.length) setNotice(ui.batchLimit.replace('{n}', String(MAX_BATCH_SIZE)));
       if (!accepted.length) return;
@@ -75,25 +96,45 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
   const targetIsValid = targetValue !== '' && Number.isFinite(targetValue) && targetValue > 0;
   useEffect(() => {
     const id = ++runId.current;
-    if (mode === 'size' && !targetIsValid) return;
+    const controller = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = controller;
+    setProgress(null);
+    if (paused || (mode === 'size' && !targetIsValid)) {
+      setItems((prev) => prev.map((item) => (item.busy ? { ...item, busy: false } : item)));
+      return () => controller.abort();
+    }
     const timeout = setTimeout(async () => {
-      for (const item of itemsRef.current) {
-        if (runId.current !== id) return;
-        if (item.error?.kind === 'unreadable' || item.result?.key === settingsKey || item.error?.key === settingsKey) {
-          continue;
-        }
+      const pending = itemsRef.current.filter(
+        (item) =>
+          item.error?.kind !== 'unreadable' && item.result?.key !== settingsKey && item.error?.key !== settingsKey,
+      );
+      for (let index = 0; index < pending.length; index++) {
+        const item = pending[index];
+        if (runId.current !== id || controller.signal.aborted) return;
         setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, busy: true, error: undefined } : p)));
         try {
           const mime = outputType(format, item.file.type);
-          let out: { blob: Blob; width: number; height: number; size: number };
+          let out: CompressResult;
           let achieved = true;
+          const onProgress = ({ attempt, maximum }: { attempt: number; maximum: number }) => {
+            if (runId.current === id) {
+              setProgress({ file: item.file.name, current: index + 1, total: pending.length, attempt, maximum });
+            }
+          };
           if (mode === 'size') {
             const target = toBytes(targetValue === '' ? 500 : targetValue, targetUnit);
-            const outcome = await compressToTarget(item.file, mime, target);
+            const outcome = await compressToTarget(item.file, mime, target, {
+              signal: controller.signal,
+              onProgress,
+            });
             out = outcome.result;
             achieved = outcome.achieved;
           } else {
-            out = await compressAtQuality(item.file, mime, quality / 100);
+            out = await compressAtQuality(item.file, mime, quality / 100, {
+              signal: controller.signal,
+              onProgress,
+            });
           }
           if (runId.current !== id) return;
           const result = {
@@ -103,6 +144,7 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             height: out.height,
             name: outputName(item.file.name, mime),
             achieved,
+            keptOriginal: out.keptOriginal,
             key: settingsKey,
           };
           setItems((prev) =>
@@ -112,8 +154,12 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
               return { ...p, result, busy: false };
             }),
           );
-        } catch {
+        } catch (error) {
           if (runId.current !== id) return;
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, busy: false } : p)));
+            return;
+          }
           setItems((prev) =>
             prev.map((p) =>
               p.id === item.id ? { ...p, error: { kind: 'processing', key: settingsKey }, busy: false } : p,
@@ -121,9 +167,16 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
           );
         }
       }
+      if (runId.current === id) {
+        setProgress(null);
+        abortRef.current = null;
+      }
     }, 250);
-    return () => clearTimeout(timeout);
-  }, [fileKey, mode, format, quality, settingsKey, targetIsValid, targetUnit, targetValue]);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [fileKey, mode, format, paused, quality, settingsKey, targetIsValid, targetUnit, targetValue]);
 
   useEffect(
     () => () => {
@@ -149,13 +202,26 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
 
   const clear = () => {
     runId.current++;
+    abortRef.current?.abort();
     for (const p of items) {
       URL.revokeObjectURL(p.preview);
       if (p.result) URL.revokeObjectURL(p.result.url);
     }
     setItems([]);
     setNotice(null);
+    setPaused(false);
+    setProgress(null);
   };
+
+  const cancel = () => {
+    runId.current++;
+    abortRef.current?.abort();
+    setItems((prev) => prev.map((item) => (item.busy ? { ...item, busy: false } : item)));
+    setProgress(null);
+    setPaused(true);
+  };
+
+  const resume = () => setPaused(false);
 
   const ready = items.filter((i) => i.result?.key === settingsKey && !i.busy && !i.error);
   const downloadAll = async () => {
@@ -234,6 +300,11 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
                               </>
                             )}
                           </p>
+                          {item.busy && <p class="text-xs text-muted">{ui.processing}</p>}
+                          {item.result?.keptOriginal && <p class="text-xs text-muted">{ui.originalKept}</p>}
+                          {item.result && item.result.blob.size > item.file.size && (
+                            <p class="text-xs text-warning">{ui.outputLarger}</p>
+                          )}
                           {item.result && !item.result.achieved && (
                             <p class="text-xs text-danger">{ui.targetNotReached}</p>
                           )}
@@ -280,6 +351,29 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             </div>
           )}
 
+          {progress && (
+            <div class="mt-4 flex flex-wrap items-center gap-3" aria-live="polite">
+              <Notice>
+                {ui.progress
+                  .replace('{current}', String(progress.current))
+                  .replace('{total}', String(progress.total))
+                  .replace('{attempt}', String(progress.attempt))
+                  .replace('{maximum}', String(progress.maximum))
+                  .replace('{file}', progress.file)}
+              </Notice>
+              <Button variant="danger" onClick={cancel}>
+                {ui.cancel}
+              </Button>
+            </div>
+          )}
+
+          {paused && (
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <Notice>{ui.cancelled}</Notice>
+              <Button onClick={resume}>{ui.retry}</Button>
+            </div>
+          )}
+
           {items.length === 0 && (
             <div class="mt-4">
               <Notice>{ui.privacyNote}</Notice>
@@ -292,7 +386,10 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
           <Segmented
             label={ui.modeLabel}
             value={mode}
-            onValue={setMode}
+            onValue={(value) => {
+              setPaused(false);
+              setMode(value);
+            }}
             options={[
               { value: 'size', label: ui.modeSize },
               { value: 'quality', label: ui.modeQuality },
@@ -303,10 +400,21 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             <>
               <Field label={ui.targetSize} hint={ui.targetSizeHint}>
                 <div class="grid grid-cols-[1fr_90px] gap-2">
-                  <NumberInput value={targetValue} min={1} max={50000} onValue={setTargetValue} />
+                  <NumberInput
+                    value={targetValue}
+                    min={1}
+                    max={50000}
+                    onValue={(value) => {
+                      setPaused(false);
+                      setTargetValue(value);
+                    }}
+                  />
                   <Select<SizeUnit>
                     value={targetUnit}
-                    onValue={setTargetUnit}
+                    onValue={(value) => {
+                      setPaused(false);
+                      setTargetUnit(value);
+                    }}
                     options={[
                       { value: 'KB', label: 'KB' },
                       { value: 'MB', label: 'MB' },
@@ -323,7 +431,10 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
                 min={10}
                 max={100}
                 value={quality}
-                onInput={(e) => setQuality(Number((e.currentTarget as HTMLInputElement).value))}
+                onInput={(e) => {
+                  setPaused(false);
+                  setQuality(Number((e.currentTarget as HTMLInputElement).value));
+                }}
                 class="w-full accent-[var(--accent)]"
               />
             </Field>
@@ -335,7 +446,10 @@ export default function ImageCompressor({ locale, ui }: ToolProps<UI>) {
             <Field label={ui.format} hint={ui.formatHint}>
               <Select<FormatChoice>
                 value={format}
-                onValue={setFormat}
+                onValue={(value) => {
+                  setPaused(false);
+                  setFormat(value);
+                }}
                 options={[
                   { value: 'original', label: ui.formatOriginal },
                   { value: 'image/jpeg', label: 'JPG' },
