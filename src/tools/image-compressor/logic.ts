@@ -39,6 +39,21 @@ export interface EncodeResult {
   size: number;
 }
 
+/** A same-format re-encode is not compression when it is no smaller than the source. */
+export function shouldKeepOriginal(
+  sourceSize: number,
+  encodedSize: number,
+  sourceType: string,
+  encodedType: string,
+): boolean {
+  return sourceType === encodedType && sourceSize <= encodedSize;
+}
+
+/** Keep the smallest failed target attempt instead of assuming the last scale is best. */
+export function smallerResult<T extends EncodeResult>(current: T | undefined, candidate: T): T {
+  return !current || candidate.size < current.size ? candidate : current;
+}
+
 export interface QualitySearchOptions {
   /** Lowest quality worth trying (below this, results look too degraded). */
   minQuality?: number;

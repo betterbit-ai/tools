@@ -10,6 +10,10 @@ const uiEn = {
   batchLimit: 'A batch can contain up to {n} images. Add more after downloading or clearing these files.',
   zipFailed: 'The ZIP could not be created. Try downloading fewer images at once.',
   processing: 'Working…',
+  progress: 'Compressing {current} of {total}: {file} · attempt {attempt} of up to {maximum}',
+  cancel: 'Cancel compression',
+  cancelled: 'Compression cancelled. Your original files are still available.',
+  retry: 'Retry compression',
   preparingDownload: 'Preparing ZIP…',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
@@ -31,6 +35,8 @@ const uiEn = {
   formatOriginal: 'Same as original',
   targetNotReached:
     'Could not reach the target even at the lowest quality and smallest size tried — this is the smallest result.',
+  originalKept: 'Already smaller than a browser re-encode — the original file was kept unchanged.',
+  outputLarger: 'This format made the file larger. Keep the original unless you need the new format.',
   animatedGifWarning: 'Animated GIF: compressing keeps only the first frame, like most browser-based tools.',
 };
 export type UI = typeof uiEn;
@@ -60,7 +66,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'How automatic target-size compression works',
-        body: 'Most compressors give you a single quality slider and leave you to drag it back and forth, re-checking the file size each time. This tool does that search for you: it tries the highest quality first, and if the result is already under your target, it stops there so you lose as little quality as possible. If the file is still too big, it narrows in on the highest quality that fits using a binary search — usually five or six attempts instead of a dozen manual ones. If even the lowest quality setting is still over the target (common with a tiny target like 50KB on a large photo), it also shrinks the image dimensions in steps and searches again at each size, so very small targets are still reachable.',
+        body: 'Most compressors give you a single quality slider and leave you to drag it back and forth, re-checking the file size each time. This tool does that search for you. If the original already matches the chosen format and target, it keeps those exact bytes instead of making a needless, sometimes larger copy. Otherwise it narrows in on the highest quality that fits using a binary search — usually five or six attempts instead of a dozen manual ones. If even the lowest quality setting is still over the target (common with a tiny target like 50KB on a large photo), it also shrinks the image dimensions in steps and searches again at each size, so very small targets are still reachable.',
       },
       {
         heading: 'JPG, WebP or PNG — which actually gets smaller?',
@@ -72,7 +78,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your images stay on your device',
-        body: 'This compressor runs entirely in your browser’s own image engine (Canvas) — files are never uploaded to a server, so there is no upload wait, and it keeps working offline once the page has loaded. A batch holds up to 50 images to keep device memory manageable. Re-encoding also strips the original EXIF metadata (camera model, GPS location), which is a useful side effect before sharing photos publicly.',
+        body: 'This compressor runs entirely in your browser’s own image engine (Canvas) — files are never uploaded to a server, so there is no upload wait, and it keeps working offline once the page has loaded. A batch holds up to 50 images and processes them one at a time to keep device memory manageable. Re-encoded results strip the original EXIF metadata (camera model, GPS location). When an original already fits and is smaller than re-encoding, the tool keeps it unchanged, including its metadata, and says so beside the file.',
       },
     ],
     faq: [
@@ -127,7 +133,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '목표 용량을 입력하면 자동으로 압축되는 원리',
-        body: '대부분의 압축 사이트는 품질 슬라이더 하나만 주고, 용량을 직접 확인하며 슬라이더를 앞뒤로 움직이게 합니다. 이 도구는 그 과정을 자동으로 처리합니다. 가장 높은 품질부터 시도해서 이미 목표보다 작으면 그대로 멈추기 때문에 화질 손실이 최소화됩니다. 아직 크다면 이분 탐색으로 목표에 맞는 가장 높은 품질을 찾아내는데, 보통 대여섯 번의 시도로 끝납니다. 아주 작은 목표(예: 50KB)처럼 최저 품질로도 안 되는 경우에는 이미지 크기까지 단계적으로 줄여가며 다시 탐색하므로, 작은 목표도 대부분 맞출 수 있습니다.',
+        body: '대부분의 압축 사이트는 품질 슬라이더 하나만 주고, 용량을 직접 확인하며 슬라이더를 앞뒤로 움직이게 합니다. 이 도구는 그 과정을 자동으로 처리합니다. 원본이 선택한 형식과 목표 용량을 이미 만족하면 다시 저장해서 더 큰 파일을 만들지 않고 원본 바이트를 그대로 유지합니다. 그렇지 않으면 이분 탐색으로 목표에 맞는 가장 높은 품질을 찾아내는데, 보통 대여섯 번의 시도로 끝납니다. 아주 작은 목표(예: 50KB)처럼 최저 품질로도 안 되는 경우에는 이미지 크기까지 단계적으로 줄여가며 다시 탐색하므로, 작은 목표도 대부분 맞출 수 있습니다.',
       },
       {
         heading: 'JPG, WebP, PNG 중 어떤 형식이 더 작아질까',
@@ -139,7 +145,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
-        body: '이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 직접 처리하기 때문에 사진이 서버에 업로드되지 않습니다. 업로드 대기가 없고 페이지를 연 뒤에는 오프라인에서도 동작합니다. 기기 메모리를 무리하게 쓰지 않도록 한 번에 최대 50장까지 처리합니다. 다시 인코딩하는 과정에서 원본의 EXIF 메타데이터(카메라 모델, GPS 위치)도 함께 제거되므로, 사진을 공개적으로 올리기 전에도 유용합니다.',
+        body: '이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 직접 처리하기 때문에 사진이 서버에 업로드되지 않습니다. 업로드 대기가 없고 페이지를 연 뒤에는 오프라인에서도 동작합니다. 한 번에 최대 50장을 받고 한 장씩 처리해 기기 메모리 사용을 제한합니다. 다시 인코딩한 결과에서는 원본의 EXIF 메타데이터(카메라 모델, GPS 위치)가 제거됩니다. 원본이 이미 목표보다 작아서 그대로 유지한 경우에는 메타데이터도 남으며, 파일 옆에 그 사실을 표시합니다.',
       },
     ],
     faq: [
@@ -177,6 +183,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       batchLimit: '한 번에 최대 {n}장까지 처리할 수 있습니다. 다운로드하거나 파일을 지운 뒤 더 추가하세요.',
       zipFailed: 'ZIP 파일을 만들지 못했습니다. 한 번에 다운로드하는 이미지 수를 줄여 다시 시도하세요.',
       processing: '처리 중…',
+      progress: '{total}장 중 {current}번째 압축: {file} · 최대 {maximum}회 중 {attempt}회 시도',
+      cancel: '압축 취소',
+      cancelled: '압축을 취소했습니다. 원본 파일은 그대로 남아 있습니다.',
+      retry: '압축 다시 시도',
       preparingDownload: 'ZIP 준비 중…',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
@@ -198,6 +208,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       formatOriginal: '원본과 같게',
       targetNotReached:
         '가장 낮은 품질과 가장 작은 크기까지 시도했지만 목표에 도달하지 못했습니다. 이것이 시도한 결과 중 가장 작은 용량입니다.',
+      originalKept: '브라우저에서 다시 저장하는 것보다 이미 작아서 원본 파일을 그대로 유지했습니다.',
+      outputLarger: '이 형식으로 바꾸니 파일이 더 커졌습니다. 새 형식이 꼭 필요하지 않으면 원본을 사용하세요.',
       animatedGifWarning: '움짤(애니메이션 GIF)입니다. 브라우저 기반 도구 특성상 압축하면 첫 프레임만 저장됩니다.',
     },
   },
