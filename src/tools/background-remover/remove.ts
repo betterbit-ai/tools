@@ -1,12 +1,21 @@
 /** Browser-only U²-NetP inference. Never import this module from server code. */
+import { yieldToBrowser } from '../../lib/browser';
 import { MODEL_INPUT_SIZE, normaliseMask } from './logic';
 
 const MODEL_URL = '/models/u2netp.onnx';
 
 export interface RemovalProgress {
-  phase: 'model' | 'processing';
+  phase: 'reading' | 'model' | 'runtime' | 'processing' | 'rendering' | 'encoding';
   completed: number;
   total: number;
+  engine?: RemovalEngine;
+}
+
+export type RemovalEngine = 'webgpu' | 'wasm';
+
+export interface RemovalResult {
+  blob: Blob;
+  engine: RemovalEngine;
 }
 
 export interface RemovalOptions {
@@ -88,11 +97,15 @@ function toPng(canvas: HTMLCanvasElement): Promise<Blob> {
  * 320×320 copy for efficient segmentation; its mask is then smoothly scaled
  * over the untouched source pixels, so the PNG keeps the original dimensions.
  */
-export async function removeBackground(file: File, options: RemovalOptions = {}): Promise<Blob> {
+export async function removeBackground(file: File, options: RemovalOptions = {}): Promise<RemovalResult> {
   const { signal, onProgress } = options;
+  cancelled(signal);
+  onProgress?.({ phase: 'reading', completed: 0, total: 1 });
+  await yieldToBrowser();
   cancelled(signal);
   const bitmap = await createImageBitmap(file);
   try {
+    cancelled(signal);
     const input = makeCanvas(MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
     const inputContext = input.getContext('2d', { willReadFrequently: true })!;
     inputContext.drawImage(bitmap, 0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
@@ -100,46 +113,65 @@ export async function removeBackground(file: File, options: RemovalOptions = {})
 
     const model = await fetchModel(signal, onProgress);
     cancelled(signal);
-    onProgress?.({ phase: 'processing', completed: 0, total: 1 });
+    onProgress?.({ phase: 'runtime', completed: 0, total: 1 });
+    await yieldToBrowser();
+    cancelled(signal);
 
-    // Code split: ONNX Runtime itself is fetched only after a user starts a job.
-    const ort = await import('onnxruntime-web/webgpu');
+    // Code split: ONNX Runtime itself is fetched only after a user starts a job. The default
+    // JSEP build matches the self-hosted runtime files and supports both explicit providers.
+    const ort = await import('onnxruntime-web');
     ort.env.wasm.wasmPaths = {
       mjs: '/ort/ort-wasm-simd-threaded.jsep.mjs',
       wasm: '/ort/ort-wasm-simd-threaded.jsep.wasm',
     };
-    const session = await (async () => {
-      try {
-        return await ort.InferenceSession.create(model, { executionProviders: ['webgpu', 'wasm'] });
-      } catch {
-        return ort.InferenceSession.create(model, { executionProviders: ['wasm'] });
-      }
-    })();
 
+    const tensor = new ort.Tensor('float32', tensorData, [1, 3, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE]);
+    const run = async (engine: RemovalEngine) => {
+      const session = await ort.InferenceSession.create(model, { executionProviders: [engine] });
+      try {
+        cancelled(signal);
+        onProgress?.({ phase: 'processing', completed: 0, total: 1, engine });
+        const output = await session.run({ [session.inputNames[0]]: tensor });
+        cancelled(signal);
+        return { data: output[session.outputNames[0]].data as Float32Array, engine };
+      } finally {
+        await session.release();
+      }
+    };
+
+    let inference: { data: Float32Array; engine: RemovalEngine };
     try {
+      if (!('gpu' in navigator)) throw new Error('WebGPU unavailable');
+      inference = await run('webgpu');
+    } catch (cause) {
+      if (signal?.aborted) throw cause;
+      onProgress?.({ phase: 'runtime', completed: 0, total: 1, engine: 'wasm' });
+      await yieldToBrowser();
       cancelled(signal);
-      const inputName = session.inputNames[0];
-      const outputName = session.outputNames[0];
-      const output = await session.run({
-        [inputName]: new ort.Tensor('float32', tensorData, [1, 3, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE]),
-      });
-      cancelled(signal);
-      const maskData = output[outputName].data as Float32Array;
-      if (maskData.length !== MODEL_INPUT_SIZE * MODEL_INPUT_SIZE) throw new Error('Unexpected AI mask shape.');
-      const mask = maskCanvas(normaliseMask(maskData));
-      const result = makeCanvas(bitmap.width, bitmap.height);
-      const context = result.getContext('2d')!;
-      context.drawImage(bitmap, 0, 0);
-      context.globalCompositeOperation = 'destination-in';
-      context.imageSmoothingEnabled = true;
-      context.imageSmoothingQuality = 'high';
-      context.drawImage(mask, 0, 0, bitmap.width, bitmap.height);
-      context.globalCompositeOperation = 'source-over';
-      onProgress?.({ phase: 'processing', completed: 1, total: 1 });
-      return await toPng(result);
-    } finally {
-      await session.release();
+      inference = await run('wasm');
     }
+
+    if (inference.data.length !== MODEL_INPUT_SIZE * MODEL_INPUT_SIZE) {
+      throw new Error('Unexpected AI mask shape.');
+    }
+    const mask = maskCanvas(normaliseMask(inference.data));
+    onProgress?.({ phase: 'rendering', completed: 0, total: 1, engine: inference.engine });
+    await yieldToBrowser();
+    cancelled(signal);
+    const result = makeCanvas(bitmap.width, bitmap.height);
+    const context = result.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    context.globalCompositeOperation = 'destination-in';
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(mask, 0, 0, bitmap.width, bitmap.height);
+    context.globalCompositeOperation = 'source-over';
+    onProgress?.({ phase: 'encoding', completed: 0, total: 1, engine: inference.engine });
+    await yieldToBrowser();
+    cancelled(signal);
+    const blob = await toPng(result);
+    cancelled(signal);
+    return { blob, engine: inference.engine };
   } finally {
     bitmap.close();
   }

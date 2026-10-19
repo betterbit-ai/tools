@@ -24,6 +24,10 @@ describe('background-remover planning', () => {
     expect(validateInput(1, 1, MAX_FILE_BYTES + 1)).toEqual({ ok: false, reason: 'file' });
   });
 
+  it('accepts a large encoded phone image when its decoded pixels remain bounded', () => {
+    expect(validateInput(6000, 4000, 80 * 1024 * 1024)).toEqual({ ok: true });
+  });
+
   it('normalises finite model scores to alpha and handles a flat or invalid mask safely', () => {
     expect([...normaliseMask([-2, 0, 2])]).toEqual([0, 128, 255]);
     expect([...normaliseMask([0.5, 0.5])]).toEqual([0, 0]);

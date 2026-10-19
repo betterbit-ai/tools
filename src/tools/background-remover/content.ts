@@ -10,18 +10,27 @@ const uiEn = {
   after: 'Background removed',
   originalSize: 'Original',
   outputSize: 'PNG output',
-  limitNote: 'Keeps the original dimensions. Maximum input: 24,000,000 pixels, 8,000 px per side and 30 MB.',
+  limitNote: 'Keeps the original dimensions. Maximum input: 24,000,000 pixels, 8,000 px per side and 100 MB.',
   start: 'Remove background',
   cancel: 'Cancel processing',
   download: 'Download transparent PNG',
+  reading: 'Reading the image on this device…',
   modelLoading: 'Loading the local AI model…',
   modelProgress: 'Loading AI model: {done} of {total}',
-  processing: 'Finding the foreground on this device…',
+  runtimeLoading: 'Starting WebGPU acceleration…',
+  runtimeWasm: 'WebGPU could not complete this job; starting the slower WASM compatibility engine…',
+  processingWebgpu: 'Finding the foreground with WebGPU…',
+  processingWasm: 'Finding the foreground with the WASM compatibility engine…',
+  rendering: 'Applying the transparent mask at full size…',
+  encoding: 'Creating the full-size transparent PNG…',
+  resultWebgpu: 'Completed with WebGPU acceleration.',
+  resultWasm: 'Completed with the slower WASM compatibility engine because WebGPU could not complete this job.',
   errorRead: 'This image cannot be read by your browser.',
   errorPixels: 'This image has more than {max} pixels. Choose a smaller image first.',
   errorDimension: 'One side is over {max} px. Choose a smaller image first.',
   errorFile: 'This file is over {max}. Choose a smaller file first.',
-  errorProcess: 'The local AI model could not process this image. Try a smaller JPG, PNG or WebP.',
+  errorProcess:
+    'The local AI model could not finish. Your browser or device may not support the required engine or may be low on memory. Close other tabs, try another current browser, or use a smaller image.',
 };
 export type UI = typeof uiEn;
 
@@ -54,7 +63,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Full-size result, compact AI mask',
-        body: 'U²-NetP analyses a 320×320 copy to identify the most visually prominent foreground object. The resulting alpha mask is scaled smoothly over the original pixels, so the downloaded PNG keeps the source width and height instead of being limited to the model’s 320-pixel input. To avoid exhausting browser memory, this tool accepts up to 24,000,000 pixels, 8,000 pixels on either side and 30 MB per image.',
+        body: 'U²-NetP analyses a 320×320 copy to identify the most visually prominent foreground object. The resulting alpha mask is scaled smoothly over the original pixels, so the downloaded PNG keeps the source width and height instead of being limited to the model’s 320-pixel input. To avoid exhausting browser memory, this tool accepts up to 24,000,000 pixels, 8,000 pixels on either side and 100 MB per image.',
       },
       {
         heading: 'When automatic removal needs a second look',
@@ -68,7 +77,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Will the transparent PNG keep my image resolution?',
-        a: 'Yes. The AI creates a 320×320 foreground mask for speed, then applies that mask to the original pixels. The downloadable PNG keeps the original width and height, within the 24,000,000-pixel, 8,000-pixels-per-side and 30 MB input limits.',
+        a: 'Yes. The AI creates a 320×320 foreground mask for speed, then applies that mask to the original pixels. The downloadable PNG keeps the original width and height, within the 24,000,000-pixel, 8,000-pixels-per-side and 100 MB input limits.',
       },
       {
         q: 'What image files can I use for background removal?',
@@ -76,7 +85,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Why is the first background removal slower?',
-        a: 'The first run downloads the 4,574,861-byte U²-NetP model and starts the browser AI runtime. Later removals can reuse browser-cached assets, although processing time still depends on the image size and device.',
+        a: 'The first run downloads the 4,574,861-byte U²-NetP model and starts the browser AI runtime. Later removals can reuse browser-cached assets, although processing time still depends on the image size and device. The result panel reports whether WebGPU acceleration or the slower WASM compatibility engine completed the job.',
       },
       {
         q: 'Can AI remove every image background perfectly?',
@@ -106,7 +115,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '작은 AI 마스크로 원본 크기 누끼 만들기',
-        body: 'U²-NetP는 빠른 분석을 위해 사진의 320×320px 복사본에서 눈에 띄는 피사체를 찾습니다. 그런 다음 알파 마스크를 원본 픽셀 위에 부드럽게 적용하므로, 저장되는 PNG는 모델 입력 크기인 320px로 줄어들지 않고 원본 가로·세로 크기를 유지합니다. 브라우저 메모리를 보호하기 위해 입력은 최대 24,000,000픽셀, 한 변 8,000px, 30MB로 제한합니다.',
+        body: 'U²-NetP는 빠른 분석을 위해 사진의 320×320px 복사본에서 눈에 띄는 피사체를 찾습니다. 그런 다음 알파 마스크를 원본 픽셀 위에 부드럽게 적용하므로, 저장되는 PNG는 모델 입력 크기인 320px로 줄어들지 않고 원본 가로·세로 크기를 유지합니다. 브라우저 메모리를 보호하기 위해 입력은 최대 24,000,000픽셀, 한 변 8,000px, 100MB로 제한합니다.',
       },
       {
         heading: '자동 누끼 결과를 확인해야 하는 경우',
@@ -120,7 +129,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '누끼를 따면 원본 해상도가 유지되나요?',
-        a: '네. AI는 속도를 위해 320×320px 마스크를 만들지만, 그 마스크를 원본 픽셀에 적용합니다. 입력 한도인 24,000,000픽셀, 한 변 8,000px, 30MB 안에서는 내려받는 PNG의 가로·세로 크기가 원본과 같습니다.',
+        a: '네. AI는 속도를 위해 320×320px 마스크를 만들지만, 그 마스크를 원본 픽셀에 적용합니다. 입력 한도인 24,000,000픽셀, 한 변 8,000px, 100MB 안에서는 내려받는 PNG의 가로·세로 크기가 원본과 같습니다.',
       },
       {
         q: '배경 지우기는 어떤 이미지 형식을 지원하나요?',
@@ -128,7 +137,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '처음 실행할 때 시간이 더 걸리는 이유는 무엇인가요?',
-        a: '첫 실행에서는 4,574,861바이트 U²-NetP 모델을 내려받고 브라우저 AI 런타임을 시작합니다. 이후에는 브라우저 캐시에 남은 파일을 재사용할 수 있지만, 처리 시간은 사진 크기와 기기 성능에 따라 달라집니다.',
+        a: '첫 실행에서는 4,574,861바이트 U²-NetP 모델을 내려받고 브라우저 AI 런타임을 시작합니다. 이후에는 브라우저 캐시에 남은 파일을 재사용할 수 있지만, 처리 시간은 사진 크기와 기기 성능에 따라 달라집니다. 결과 화면에서 WebGPU 가속을 써서 끝냈는지, 느린 WASM 호환 엔진을 써서 끝냈는지 확인할 수 있습니다.',
       },
       {
         q: 'AI가 모든 사진의 배경을 완벽하게 지우나요?',
@@ -144,18 +153,27 @@ export const content: Record<Locale, ToolContent<UI>> = {
       after: '배경 제거 결과',
       originalSize: '원본',
       outputSize: 'PNG 결과',
-      limitNote: '원본 크기로 저장합니다. 입력 한도: 최대 24,000,000픽셀, 한 변 8,000px, 30MB.',
+      limitNote: '원본 크기로 저장합니다. 입력 한도: 최대 24,000,000픽셀, 한 변 8,000px, 100MB.',
       start: '배경 지우기',
       cancel: '처리 취소',
       download: '투명 PNG 다운로드',
+      reading: '기기에서 이미지를 읽는 중…',
       modelLoading: '기기 안의 AI 모델을 불러오는 중…',
       modelProgress: 'AI 모델 불러오는 중: {done} / {total}',
-      processing: '기기 안에서 피사체를 찾는 중…',
+      runtimeLoading: 'WebGPU 가속을 시작하는 중…',
+      runtimeWasm: 'WebGPU로 작업을 끝낼 수 없어 느린 WASM 호환 엔진을 시작하는 중…',
+      processingWebgpu: 'WebGPU로 피사체를 찾는 중…',
+      processingWasm: 'WASM 호환 엔진으로 피사체를 찾는 중…',
+      rendering: '원본 크기로 투명 마스크를 적용하는 중…',
+      encoding: '원본 크기 투명 PNG를 만드는 중…',
+      resultWebgpu: 'WebGPU 가속으로 완료했습니다.',
+      resultWasm: 'WebGPU로 작업을 끝낼 수 없어 느린 WASM 호환 엔진으로 완료했습니다.',
       errorRead: '브라우저에서 읽을 수 없는 이미지입니다.',
       errorPixels: '이미지 픽셀이 {max}개를 초과합니다. 더 작은 이미지를 선택하세요.',
       errorDimension: '한 변이 {max}px를 넘습니다. 더 작은 이미지를 선택하세요.',
       errorFile: '파일이 {max}를 초과합니다. 더 작은 파일을 선택하세요.',
-      errorProcess: '기기 안의 AI 모델이 이 이미지를 처리하지 못했습니다. 더 작은 JPG, PNG, WebP로 다시 시도하세요.',
+      errorProcess:
+        '기기 안의 AI 모델이 처리를 끝내지 못했습니다. 브라우저·기기가 필요한 엔진을 지원하지 않거나 메모리가 부족할 수 있습니다. 다른 탭을 닫고 최신 브라우저 또는 더 작은 이미지로 다시 시도하세요.',
     },
   },
 };
