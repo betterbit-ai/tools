@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { Button, Dropzone, Field, Kbd, Notice, NumberInput, Panel, Segmented, Select, cx } from '../../components/ui';
 import { downloadBlob } from '../../lib/browser';
 import type { ToolProps } from '../types';
-import { cropImage, readDimensions } from './crop';
+import { cropImage, readDimensions, type CropProgress } from './crop';
 import type { UI } from './content';
 import {
   ASPECTS,
@@ -57,6 +57,8 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
   const [quality, setQuality] = useState(90);
   const [error, setError] = useState<'unsupported' | 'tooLarge' | 'exportFailed' | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState('');
+  const [status, setStatus] = useState('');
   const [display, setDisplay] = useState({ w: 0, h: 0 });
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -66,6 +68,7 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
   const naturalRef = useRef(natural);
   naturalRef.current = natural;
   const exportIdRef = useRef(0);
+  const exportControllerRef = useRef<AbortController | null>(null);
   const scaleRef = useRef(0);
   const aspectRatioRef = useRef<number | null>(null);
   aspectRatioRef.current = shape === 'circle' ? 1 : aspectRatio(aspect);
@@ -99,6 +102,8 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
       setAspect('free');
       setShape('rect');
       setIsExporting(false);
+      setExportProgress('');
+      setStatus('');
       setError(null);
     } catch {
       if (loadId === exportIdRef.current) setError('unsupported');
@@ -119,10 +124,14 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
   };
 
   const clear = () => {
+    exportControllerRef.current?.abort();
+    exportControllerRef.current = null;
     exportIdRef.current += 1;
     setFile(null);
     setPreviewUrl('');
     setIsExporting(false);
+    setExportProgress('');
+    setStatus('');
     setError(null);
   };
 
@@ -135,17 +144,40 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
     }
 
     const exportId = ++exportIdRef.current;
+    const controller = new AbortController();
+    exportControllerRef.current?.abort();
+    exportControllerRef.current = controller;
     setError(null);
+    setStatus('');
+    setExportProgress(ui.preparing);
     setIsExporting(true);
     try {
       const mime = outputType(shape, format, file.type);
-      const blob = await cropImage(file, cropped, shape, mime, quality / 100);
-      if (exportId === exportIdRef.current) downloadBlob(blob, outputName(file.name, mime, cropped.w, cropped.h));
-    } catch {
-      if (exportId === exportIdRef.current) setError('exportFailed');
+      const blob = await cropImage(file, cropped, shape, mime, quality / 100, {
+        signal: controller.signal,
+        onProgress: (progress) => setExportProgress(progressText(progress, ui)),
+      });
+      if (!controller.signal.aborted && exportId === exportIdRef.current) {
+        downloadBlob(blob, outputName(file.name, mime, cropped.w, cropped.h));
+      }
+    } catch (exportError) {
+      if (!isAbortError(exportError) && exportId === exportIdRef.current) setError('exportFailed');
     } finally {
-      if (exportId === exportIdRef.current) setIsExporting(false);
+      if (exportControllerRef.current === controller) {
+        exportControllerRef.current = null;
+        setIsExporting(false);
+        setExportProgress('');
+      }
     }
+  };
+
+  const cancelExport = () => {
+    exportControllerRef.current?.abort();
+    exportControllerRef.current = null;
+    exportIdRef.current += 1;
+    setIsExporting(false);
+    setExportProgress('');
+    setStatus(ui.cancelled);
   };
 
   const scale = display.w > 0 && natural.w > 0 ? display.w / natural.w : 0;
@@ -182,6 +214,7 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
 
   // Defensive cleanup if the component unmounts mid-drag (e.g. navigating away).
   useEffect(() => endDrag, [endDrag]);
+  useEffect(() => () => exportControllerRef.current?.abort(), []);
 
   const setAspectAndRefit = (id: AspectId) => {
     setAspect(id);
@@ -287,6 +320,11 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
               <Button variant="primary" size="lg" onClick={() => void download()} disabled={isExporting}>
                 {isExporting ? ui.exporting : ui.download}
               </Button>
+              {isExporting && (
+                <Button size="lg" onClick={cancelExport}>
+                  {ui.cancel}
+                </Button>
+              )}
               <Button variant="ghost" onClick={clear}>
                 {ui.replace}
               </Button>
@@ -298,8 +336,13 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
             </div>
             {isExporting && (
               <p class="mt-3 text-sm text-muted" aria-live="polite">
-                {ui.exporting}
+                {exportProgress || ui.exporting}
               </p>
+            )}
+            {status && (
+              <div class="mt-3">
+                <Notice>{status}</Notice>
+              </div>
             )}
             {error === 'tooLarge' && (
               <div class="mt-3">
@@ -384,4 +427,14 @@ export default function ImageCropper({ ui }: ToolProps<UI>) {
       )}
     </Panel>
   );
+}
+
+function progressText(progress: CropProgress, ui: UI): string {
+  if (progress === 'decoding') return ui.decoding;
+  if (progress === 'drawing') return ui.drawing;
+  return ui.encoding;
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
