@@ -49,9 +49,14 @@ export default function FaviconGenerator({ ui }: ToolProps<UI>) {
   const [image, setImage] = useState<File | null>(null);
   const [rendered, setRendered] = useState<RenderedFavicon | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [status, setStatus] = useState<'idle' | 'working' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'working' | 'cancelled' | 'error'>('idle');
+  const [progress, setProgress] = useState<{ current: number; total: number } | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const [error, setError] = useState('');
   const previewRef = useRef('');
+  const renderAbortRef = useRef<AbortController | null>(null);
+  const downloadAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     try {
@@ -66,51 +71,98 @@ export default function FaviconGenerator({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     if (settings.source === 'image' && !image) {
+      renderAbortRef.current?.abort();
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
       previewRef.current = '';
       setPreviewUrl('');
       setRendered(null);
       setStatus('idle');
+      setProgress(null);
       return;
     }
+    const controller = new AbortController();
+    renderAbortRef.current?.abort();
+    renderAbortRef.current = controller;
     let cancelled = false;
     setStatus('working');
+    setProgress(null);
     setError('');
+    setDownloadError('');
+    setRendered(null);
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = '';
+    setPreviewUrl('');
     const timeout = window.setTimeout(async () => {
       try {
-        const next = await renderFavicons(image, settings);
-        if (cancelled) return;
-        if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+        const next = await renderFavicons(image, settings, {
+          signal: controller.signal,
+          onProgress: (current, total) => {
+            if (!cancelled && !controller.signal.aborted) setProgress({ current, total });
+          },
+        });
+        if (cancelled || controller.signal.aborted) return;
         const nextPreview = URL.createObjectURL(next.pngs['android-chrome-192x192.png']);
         previewRef.current = nextPreview;
         setPreviewUrl(nextPreview);
         setRendered(next);
         setStatus('idle');
-      } catch {
-        if (!cancelled) {
+      } catch (renderError) {
+        if (!cancelled && !isAbortError(renderError)) {
           setRendered(null);
           setStatus('error');
           setError(ui.unsupported);
+        }
+      } finally {
+        if (renderAbortRef.current === controller) {
+          renderAbortRef.current = null;
+          setProgress(null);
         }
       }
     }, 250);
     return () => {
       cancelled = true;
+      controller.abort();
+      if (renderAbortRef.current === controller) renderAbortRef.current = null;
       window.clearTimeout(timeout);
     };
-  }, [image, settings, ui.unsupported]);
+  }, [
+    image,
+    settings.source,
+    settings.text,
+    settings.background,
+    settings.foreground,
+    settings.transparent,
+    settings.fit,
+    settings.padding,
+    ui.unsupported,
+  ]);
 
   useEffect(
     () => () => {
+      renderAbortRef.current?.abort();
+      downloadAbortRef.current?.abort();
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
     },
     [],
   );
 
-  const update = (patch: Partial<FaviconSettings>) => setSettings((current) => ({ ...current, ...patch }));
+  const invalidateRendered = () => {
+    renderAbortRef.current?.abort();
+    downloadAbortRef.current?.abort();
+    setRendered(null);
+    setDownloading(false);
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = '';
+    setPreviewUrl('');
+  };
+  const update = (patch: Partial<FaviconSettings>) => {
+    if (Object.keys(patch).some((key) => key !== 'siteName')) invalidateRendered();
+    setSettings((current) => ({ ...current, ...patch }));
+  };
   const useImage = (files: File[]) => {
     const file = files[0];
     if (!file) return;
+    invalidateRendered();
     setImage(file);
     update({ source: 'image' });
   };
@@ -118,10 +170,36 @@ export default function FaviconGenerator({ ui }: ToolProps<UI>) {
     setImage(null);
     update({ source: 'text' });
   };
-  const downloadPackage = async () => {
-    if (!rendered) return;
-    downloadBlob(await packageZip(rendered, settings.siteName), 'favicon-package.zip');
+  const cancelRendering = () => {
+    renderAbortRef.current?.abort();
+    setRendered(null);
+    setProgress(null);
+    setStatus('cancelled');
+    setError('');
   };
+  const downloadPackage = async () => {
+    if (!rendered || downloading) return;
+    const controller = new AbortController();
+    downloadAbortRef.current?.abort();
+    downloadAbortRef.current = controller;
+    setDownloading(true);
+    setDownloadError('');
+    try {
+      const archive = await packageZip(rendered, settings.siteName, { signal: controller.signal });
+      if (!controller.signal.aborted) downloadBlob(archive, 'favicon-package.zip');
+    } catch (packageError) {
+      if (!isAbortError(packageError)) setDownloadError(ui.packageError);
+    } finally {
+      if (downloadAbortRef.current === controller) {
+        downloadAbortRef.current = null;
+        setDownloading(false);
+      }
+    }
+  };
+
+  const progressText = progress
+    ? ui.processingProgress.replace('{current}', String(progress.current)).replace('{total}', String(progress.total))
+    : ui.processing;
 
   return (
     <Panel>
@@ -229,14 +307,21 @@ export default function FaviconGenerator({ ui }: ToolProps<UI>) {
           </Field>
 
           <Notice>{ui.privacyNote}</Notice>
+          {status === 'cancelled' && <Notice>{ui.cancelled}</Notice>}
           {status === 'error' && <Notice tone="danger">{error}</Notice>}
+          {downloadError && <Notice tone="danger">{downloadError}</Notice>}
         </div>
 
         <div class="space-y-5">
           <div class="rounded-lg border border-line bg-surface-2 p-4 text-center" aria-live="polite">
             <p class="text-sm font-medium text-fg">{ui.previewLabel}</p>
             {status === 'working' ? (
-              <p class="mt-8 text-sm text-muted">{ui.processing}</p>
+              <div class="mt-8">
+                <p class="text-sm text-muted">{progressText}</p>
+                <Button class="mt-3" variant="secondary" size="sm" onClick={cancelRendering}>
+                  {ui.cancel}
+                </Button>
+              </div>
             ) : previewUrl ? (
               <img
                 src={previewUrl}
@@ -268,8 +353,8 @@ export default function FaviconGenerator({ ui }: ToolProps<UI>) {
                   ))}
                 </ul>
               </div>
-              <Button variant="primary" size="lg" class="w-full" onClick={downloadPackage}>
-                {ui.download}
+              <Button variant="primary" size="lg" class="w-full" disabled={downloading} onClick={downloadPackage}>
+                {downloading ? ui.preparingPackage : ui.download}
               </Button>
               <div>
                 <div class="flex items-center justify-between gap-3">
@@ -286,4 +371,8 @@ export default function FaviconGenerator({ ui }: ToolProps<UI>) {
       </div>
     </Panel>
   );
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
 }
