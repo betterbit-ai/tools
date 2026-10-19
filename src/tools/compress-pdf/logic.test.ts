@@ -7,12 +7,11 @@ import {
   isPdfFile,
   MAX_FILE_BYTES,
   MAX_PAGE_COUNT,
+  MAX_RASTER_DIMENSION,
   MAX_RASTER_PIXELS,
-  MAX_TOTAL_RASTER_PIXELS,
   pageCountExceedsLimit,
-  pageExceedsRasterLimit,
+  rasterScaleForPage,
   sizeChange,
-  totalRasterExceedsLimit,
 } from './logic';
 
 describe('compression presets', () => {
@@ -88,18 +87,25 @@ describe('browser safety limits', () => {
     expect(pageCountExceedsLimit(1.5)).toBe(true);
   });
 
-  it('rejects raster canvases beyond the pixel allocation limit and invalid dimensions', () => {
-    expect(pageExceedsRasterLimit(5_000, 4_000)).toBe(false);
-    expect(pageExceedsRasterLimit(5_001, 4_000)).toBe(true);
-    expect(pageExceedsRasterLimit(Math.sqrt(MAX_RASTER_PIXELS), Math.sqrt(MAX_RASTER_PIXELS))).toBe(true);
-    expect(pageExceedsRasterLimit(0, 100)).toBe(true);
-    expect(pageExceedsRasterLimit(Number.POSITIVE_INFINITY, 100)).toBe(true);
+  it('keeps the requested DPI for an ordinary page', () => {
+    expect(rasterScaleForPage(595, 842, 150)).toBe(150 / 72);
   });
 
-  it('enforces a document-wide raster budget as well as a per-page budget', () => {
-    expect(totalRasterExceedsLimit(MAX_TOTAL_RASTER_PIXELS)).toBe(false);
-    expect(totalRasterExceedsLimit(MAX_TOTAL_RASTER_PIXELS + 1)).toBe(true);
-    expect(totalRasterExceedsLimit(0)).toBe(true);
+  it('reduces an oversized page to bounded canvas dimensions instead of rejecting it', () => {
+    const scale = rasterScaleForPage(20_000, 10_000, 150);
+    const width = Math.ceil(20_000 * scale);
+    const height = Math.ceil(10_000 * scale);
+
+    expect(width).toBeLessThanOrEqual(MAX_RASTER_DIMENSION);
+    expect(height).toBeLessThanOrEqual(MAX_RASTER_DIMENSION);
+    expect(width * height).toBeLessThanOrEqual(MAX_RASTER_PIXELS);
+    expect(scale).toBeGreaterThan(0);
+  });
+
+  it('rejects invalid page dimensions before canvas allocation', () => {
+    expect(rasterScaleForPage(0, 100, 150)).toBe(0);
+    expect(rasterScaleForPage(Number.POSITIVE_INFINITY, 100, 150)).toBe(0);
+    expect(rasterScaleForPage(100, 100, Number.NaN)).toBe(0);
   });
 });
 
