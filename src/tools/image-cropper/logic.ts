@@ -20,9 +20,9 @@ export const MIN_CROP = 8;
 
 /**
  * Keep export canvases within a size that browsers can encode reliably without
- * exhausting memory. A crop can always be made smaller before downloading.
+ * exhausting memory. This includes ordinary 24 MP phone photos with headroom.
  */
-export const MAX_OUTPUT_PIXELS = 16_000_000;
+export const MAX_OUTPUT_PIXELS = 32_000_000;
 
 export const ASPECTS = [
   { id: 'free', ratio: null },

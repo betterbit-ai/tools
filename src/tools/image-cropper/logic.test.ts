@@ -265,8 +265,9 @@ describe('extensionFor / outputName / supportsQuality', () => {
 });
 
 describe('exceedsOutputLimit', () => {
-  it('allows a 16-megapixel export and rejects a larger crop before allocating a canvas', () => {
-    expect(exceedsOutputLimit({ x: 0, y: 0, w: 4_000, h: 4_000 })).toBe(false);
-    expect(exceedsOutputLimit({ x: 0, y: 0, w: 4_001, h: 4_000 })).toBe(true);
+  it('allows a full 24-megapixel phone photo and rejects crops above the safe 32 MP canvas bound', () => {
+    expect(exceedsOutputLimit({ x: 0, y: 0, w: 6_000, h: 4_000 })).toBe(false);
+    expect(exceedsOutputLimit({ x: 0, y: 0, w: 8_000, h: 4_000 })).toBe(false);
+    expect(exceedsOutputLimit({ x: 0, y: 0, w: 8_001, h: 4_000 })).toBe(true);
   });
 });
