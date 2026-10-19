@@ -6,7 +6,7 @@
 export const MODEL_INPUT_SIZE = 320;
 export const MAX_INPUT_PIXELS = 24_000_000;
 export const MAX_INPUT_DIMENSION = 8_000;
-export const MAX_FILE_BYTES = 30 * 1024 * 1024;
+export const MAX_FILE_BYTES = 100 * 1024 * 1024;
 
 export interface DimensionCheck {
   ok: boolean;

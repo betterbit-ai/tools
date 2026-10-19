@@ -12,7 +12,7 @@ import {
   outputName,
   validateInput,
 } from './logic';
-import { removeBackground, type RemovalProgress } from './remove';
+import { removeBackground, type RemovalEngine, type RemovalProgress } from './remove';
 
 interface ImageItem {
   file: File;
@@ -24,6 +24,7 @@ interface ImageItem {
 interface Result {
   blob: Blob;
   url: string;
+  engine: RemovalEngine;
 }
 
 export default function BackgroundRemover({ locale, ui }: ToolProps<UI>) {
@@ -94,13 +95,16 @@ export default function BackgroundRemover({ locale, ui }: ToolProps<UI>) {
     const controller = new AbortController();
     abortRef.current = controller;
     setError('');
+    setProgress({ phase: 'reading', completed: 0, total: 1 });
     setResult((previous) => {
       if (previous) URL.revokeObjectURL(previous.url);
       return null;
     });
     try {
-      const blob = await removeBackground(item.file, { signal: controller.signal, onProgress: setProgress });
-      if (!controller.signal.aborted) setResult({ blob, url: URL.createObjectURL(blob) });
+      const completed = await removeBackground(item.file, { signal: controller.signal, onProgress: setProgress });
+      if (!controller.signal.aborted) {
+        setResult({ ...completed, url: URL.createObjectURL(completed.blob) });
+      }
     } catch (cause) {
       if (!(cause instanceof DOMException && cause.name === 'AbortError')) setError(ui.errorProcess);
     } finally {
@@ -112,13 +116,25 @@ export default function BackgroundRemover({ locale, ui }: ToolProps<UI>) {
   };
 
   const status = progress
-    ? progress.phase === 'model'
-      ? progress.total
-        ? ui.modelProgress
-            .replace('{done}', formatBytes(progress.completed, locale))
-            .replace('{total}', formatBytes(progress.total, locale))
-        : ui.modelLoading
-      : ui.processing
+    ? progress.phase === 'reading'
+      ? ui.reading
+      : progress.phase === 'model'
+        ? progress.total
+          ? ui.modelProgress
+              .replace('{done}', formatBytes(progress.completed, locale))
+              .replace('{total}', formatBytes(progress.total, locale))
+          : ui.modelLoading
+        : progress.phase === 'runtime'
+          ? progress.engine === 'wasm'
+            ? ui.runtimeWasm
+            : ui.runtimeLoading
+          : progress.phase === 'processing'
+            ? progress.engine === 'wasm'
+              ? ui.processingWasm
+              : ui.processingWebgpu
+            : progress.phase === 'rendering'
+              ? ui.rendering
+              : ui.encoding
     : '';
   const output = item ? outputDimensions(item.width, item.height) : null;
 
@@ -174,6 +190,9 @@ export default function BackgroundRemover({ locale, ui }: ToolProps<UI>) {
           )}
           <Notice>{ui.limitNote}</Notice>
           {progress && <Notice>{status}</Notice>}
+          {result && !progress && (
+            <Notice tone="success">{result.engine === 'webgpu' ? ui.resultWebgpu : ui.resultWasm}</Notice>
+          )}
           {progress ? (
             <Button variant="danger" size="lg" onClick={() => abortRef.current?.abort()}>
               {ui.cancel}
