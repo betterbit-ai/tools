@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'shield',
   added: '2026-10-11',
-  updated: '2026-10-15',
+  updated: '2026-10-19',
   edges: ['privacy', 'no-signup', 'usability', 'accuracy'],
   competitors: [
     {
@@ -30,7 +30,7 @@ export const meta: ToolMeta = {
       name: 'MetadataRemover.ai',
       url: 'https://metadataremover.ai/',
       weakness:
-        'Its page limits each image to 25 MB and a batch to 2–20 files, while this browser-only tool does not impose a fixed per-file or batch cap. (Strength: it offers selectable cleanup policies, C2PA/JUMBF handling, and downloadable reports.)',
+        'Its page limits each image to 25 MB and a batch to 2–20 files, while this browser-only tool has no fixed per-file cap and keeps up to 50 photos in one batch. (Strength: it offers selectable cleanup policies, C2PA/JUMBF handling, and downloadable reports.)',
     },
   ],
   related: ['image-resizer', 'image-compressor', 'image-rotate-flip', 'image-watermark'],
