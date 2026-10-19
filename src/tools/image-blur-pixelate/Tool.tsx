@@ -13,7 +13,7 @@ import {
   type OutputFormat,
   type Region,
 } from './logic';
-import { loadImage, renderImage, type LoadedImage } from './render';
+import { loadImage, renderImage, type LoadedImage, type RenderProgress } from './render';
 
 interface Drag {
   startX: number;
@@ -23,6 +23,7 @@ interface Drag {
 }
 
 let nextRegionId = 1;
+const PREVIEW_MAX_LONG_SIDE = 1200;
 
 export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
   const [image, setImage] = useState<LoadedImage | null>(null);
@@ -33,17 +34,22 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
   const [strength, setStrength] = useState(() => clampStrength(storedNumber('strength', 18)));
   const [format, setFormat] = useState<OutputFormat>(() => storedFormat());
   const [quality, setQuality] = useState(() => storedPercent('quality', 92));
-  const [result, setResult] = useState<{ blob: Blob; url: string; key: string } | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ url: string; key: string } | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState('');
+  const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [drag, setDrag] = useState<Drag | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const runId = useRef(0);
+  const previewController = useRef<AbortController | null>(null);
+  const exportController = useRef<AbortController | null>(null);
+  const imageRef = useRef(image);
+  imageRef.current = image;
   const resultRef = useRef(result);
   resultRef.current = result;
-  const renderKey = image
-    ? JSON.stringify([fileName, image.width, image.height, regions, effect, strength, format, quality])
-    : '';
+  const renderKey = image ? JSON.stringify([fileName, image.width, image.height, regions, effect, strength]) : '';
   const ready = !!result && result.key === renderKey;
 
   useEffect(() => {
@@ -62,39 +68,52 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
   useEffect(() => {
     if (!image) return;
     const id = ++runId.current;
-    const timeout = window.setTimeout(async () => {
-      setBusy(true);
-      try {
-        const blob = await renderImage(image, regions, effect, strength, format, quality / 100);
-        if (id !== runId.current) return;
-        const next = { blob, url: URL.createObjectURL(blob), key: renderKey };
-        setResult((previous) => {
-          if (previous) URL.revokeObjectURL(previous.url);
-          return next;
-        });
-        setError('');
-      } catch {
-        if (id === runId.current) setError(ui.renderError);
-      } finally {
-        if (id === runId.current) setBusy(false);
-      }
+    const controller = new AbortController();
+    previewController.current = controller;
+    const timeout = window.setTimeout(() => {
+      setPreviewing(true);
+      void (async () => {
+        try {
+          const blob = await renderImage(image, regions, effect, strength, 'image/png', 1, {
+            maxLongSide: PREVIEW_MAX_LONG_SIDE,
+            signal: controller.signal,
+          });
+          if (id !== runId.current || controller.signal.aborted) return;
+          const next = { url: URL.createObjectURL(blob), key: renderKey };
+          setResult((previous) => {
+            if (previous) URL.revokeObjectURL(previous.url);
+            return next;
+          });
+          setError('');
+        } catch (renderError) {
+          if (id === runId.current && !isAbortError(renderError)) setError(ui.renderError);
+        } finally {
+          if (id === runId.current) setPreviewing(false);
+          if (previewController.current === controller) previewController.current = null;
+        }
+      })();
     }, 250);
     return () => {
       window.clearTimeout(timeout);
-      runId.current += 1;
+      controller.abort();
+      if (previewController.current === controller) previewController.current = null;
     };
-  }, [effect, format, image, quality, regions, renderKey, strength, ui.renderError]);
+  }, [effect, image, regions, renderKey, strength, ui.renderError]);
 
   useEffect(
     () => () => {
-      if (image) image.bitmap.close();
+      previewController.current?.abort();
+      exportController.current?.abort();
+      imageRef.current?.bitmap.close();
       if (resultRef.current) URL.revokeObjectURL(resultRef.current.url);
     },
-    [image],
+    [],
   );
 
   const clearImage = useCallback(() => {
     runId.current += 1;
+    previewController.current?.abort();
+    exportController.current?.abort();
     if (image) image.bitmap.close();
     if (result) URL.revokeObjectURL(result.url);
     setImage(null);
@@ -103,6 +122,10 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
     setRegions([]);
     setActiveId(null);
     setDrag(null);
+    setPreviewing(false);
+    setExporting(false);
+    setExportProgress('');
+    setStatus('');
     setError('');
   }, [image, result]);
 
@@ -111,12 +134,17 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
       const file = files[0];
       if (!file) return;
       clearImage();
+      const loadId = runId.current;
       try {
         const loaded = await loadImage(file);
+        if (loadId !== runId.current) {
+          loaded.bitmap.close();
+          return;
+        }
         setImage(loaded);
         setFileName(file.name);
       } catch {
-        setError(ui.unsupported);
+        if (loadId === runId.current) setError(ui.unsupported);
       }
     },
     [clearImage, ui.unsupported],
@@ -152,6 +180,40 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
       current.map((region) => (region.id === id ? normalizeRegion({ ...region, ...patch }) : region)),
     );
 
+  const exportImage = async () => {
+    if (!image || regions.length === 0 || exporting) return;
+    const controller = new AbortController();
+    exportController.current?.abort();
+    exportController.current = controller;
+    setExporting(true);
+    setExportProgress(ui.preparingFull);
+    setStatus('');
+    setError('');
+    try {
+      const blob = await renderImage(image, regions, effect, strength, format, quality / 100, {
+        signal: controller.signal,
+        onProgress: (progress) => setExportProgress(progressText(progress, ui)),
+      });
+      if (controller.signal.aborted) return;
+      downloadBlob(blob, outputName(fileName, format));
+    } catch (renderError) {
+      if (!isAbortError(renderError)) setError(ui.renderError);
+    } finally {
+      if (exportController.current === controller) {
+        exportController.current = null;
+        setExporting(false);
+        setExportProgress('');
+      }
+    }
+  };
+
+  const cancelExport = () => {
+    exportController.current?.abort();
+    setExporting(false);
+    setExportProgress('');
+    setStatus(ui.exportCancelled);
+  };
+
   const active = regions.find((region) => region.id === activeId) ?? null;
   const previewRegion = drag && regionFromPoints(-1, drag.startX, drag.startY, drag.endX, drag.endY);
   const renderingEdit = regions.length > 0 && !ready;
@@ -174,20 +236,24 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                 role="region"
                 tabIndex={0}
                 aria-label={ui.editorLabel}
+                aria-busy={previewing}
                 onPointerDown={(event) => {
+                  if (exporting) return;
                   if ((event.target as HTMLElement).closest('[data-region]')) return;
                   const point = relativePoint(event.clientX, event.clientY);
                   event.currentTarget.setPointerCapture(event.pointerId);
                   setDrag({ startX: point.x, startY: point.y, endX: point.x, endY: point.y });
                 }}
                 onPointerMove={(event) => {
+                  if (exporting) return;
                   if (!drag) return;
                   const point = relativePoint(event.clientX, event.clientY);
                   setDrag((current) => (current ? { ...current, endX: point.x, endY: point.y } : null));
                 }}
-                onPointerUp={(event) => endDrag(event.clientX, event.clientY)}
+                onPointerUp={(event) => !exporting && endDrag(event.clientX, event.clientY)}
                 onPointerCancel={() => setDrag(null)}
                 onKeyDown={(event) => {
+                  if (exporting) return;
                   if ((event.key === 'Delete' || event.key === 'Backspace') && activeId !== null) {
                     event.preventDefault();
                     setRegions((current) => current.filter((region) => region.id !== activeId));
@@ -195,15 +261,17 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                   }
                 }}
                 class="relative w-full overflow-hidden rounded-lg border border-line bg-surface-2 touch-none"
+                style={!result ? { aspectRatio: `${image.width} / ${image.height}` } : undefined}
               >
                 {result && (
                   <img src={result.url} alt={ui.previewAlt} class="block w-full h-auto select-none" draggable={false} />
                 )}
-                {busy && !result && <div class="aspect-video" aria-hidden="true" />}
+                {previewing && !result && <div class="size-full" aria-hidden="true" />}
                 {[...regions, ...(previewRegion ? [previewRegion] : [])].map((region) => (
                   <button
                     type="button"
                     data-region
+                    disabled={exporting}
                     aria-label={ui.regionLabel.replace('{n}', String(region.id))}
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={() => setActiveId(region.id)}
@@ -221,12 +289,12 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                 ))}
               </div>
               <div class="mt-3 flex flex-wrap items-center gap-3">
-                <Button variant="secondary" onClick={addRegion}>
+                <Button variant="secondary" disabled={exporting} onClick={addRegion}>
                   {ui.addRegion}
                 </Button>
                 <Button
                   variant="ghost"
-                  disabled={regions.length === 0}
+                  disabled={regions.length === 0 || exporting}
                   onClick={() => {
                     setRegions((current) => current.slice(0, -1));
                     setActiveId(null);
@@ -236,7 +304,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                 </Button>
                 <Button
                   variant="ghost"
-                  disabled={regions.length === 0}
+                  disabled={regions.length === 0 || exporting}
                   onClick={() => {
                     setRegions([]);
                     setActiveId(null);
@@ -244,7 +312,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                 >
                   {ui.clearRegions}
                 </Button>
-                <Button variant="ghost" onClick={clearImage}>
+                <Button variant="ghost" disabled={exporting} onClick={clearImage}>
                   {ui.changeImage}
                 </Button>
               </div>
@@ -264,6 +332,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
               label={ui.effectLabel}
               value={effect}
               onValue={setEffect}
+              disabled={exporting}
               options={[
                 { value: 'blur', label: ui.effectBlur },
                 { value: 'pixelate', label: ui.effectPixelate },
@@ -276,6 +345,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
               min={1}
               max={50}
               value={strength}
+              disabled={exporting}
               onInput={(event) => setStrength(clampStrength(Number((event.currentTarget as HTMLInputElement).value)))}
               class="w-full accent-[var(--accent)]"
             />
@@ -291,6 +361,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                     min={0}
                     max={100}
                     step={0.1}
+                    disabled={exporting}
                     onValue={(v) => typeof v === 'number' && updateRegion(active.id, { x: v / 100 })}
                   />
                 </Field>
@@ -300,6 +371,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                     min={0}
                     max={100}
                     step={0.1}
+                    disabled={exporting}
                     onValue={(v) => typeof v === 'number' && updateRegion(active.id, { y: v / 100 })}
                   />
                 </Field>
@@ -309,6 +381,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                     min={1}
                     max={100}
                     step={0.1}
+                    disabled={exporting}
                     onValue={(v) => typeof v === 'number' && updateRegion(active.id, { width: v / 100 })}
                   />
                 </Field>
@@ -318,6 +391,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                     min={1}
                     max={100}
                     step={0.1}
+                    disabled={exporting}
                     onValue={(v) => typeof v === 'number' && updateRegion(active.id, { height: v / 100 })}
                   />
                 </Field>
@@ -325,6 +399,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
               <Button
                 class="mt-3"
                 variant="ghost"
+                disabled={exporting}
                 onClick={() => {
                   setRegions((current) => current.filter((region) => region.id !== active.id));
                   setActiveId(null);
@@ -340,6 +415,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
               <Select<OutputFormat>
                 value={format}
                 onValue={setFormat}
+                disabled={exporting}
                 options={[
                   { value: 'image/png', label: ui.formatPng },
                   { value: 'image/jpeg', label: ui.formatJpeg },
@@ -354,6 +430,7 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                   min={10}
                   max={100}
                   value={quality}
+                  disabled={exporting}
                   onInput={(event) => setQuality(Number((event.currentTarget as HTMLInputElement).value))}
                   class="w-full accent-[var(--accent)]"
                 />
@@ -367,25 +444,38 @@ export default function ImageBlurPixelate({ ui }: ToolProps<UI>) {
                 <Stat label={ui.widthLabel} value={image.width} />
                 <Stat label={ui.heightLabel} value={image.height} />
               </div>
-              <Button
-                class="mt-4 w-full"
-                variant="primary"
-                size="lg"
-                disabled={!ready || busy || regions.length === 0}
-                onClick={() => result && downloadBlob(result.blob, outputName(fileName, format))}
-              >
-                {busy || renderingEdit ? ui.processing : ui.download}
-              </Button>
+              <div class="mt-4 flex gap-2" aria-live="polite" aria-busy={exporting}>
+                <Button
+                  class="min-w-0 flex-1"
+                  variant="primary"
+                  size="lg"
+                  disabled={!ready || exporting || regions.length === 0}
+                  onClick={exportImage}
+                >
+                  {exporting ? ui.exporting : previewing || renderingEdit ? ui.processing : ui.download}
+                </Button>
+                {exporting && (
+                  <Button size="lg" onClick={cancelExport}>
+                    {ui.cancel}
+                  </Button>
+                )}
+              </div>
               {regions.length === 0 ? (
                 <div class="mt-3">
                   <Notice>{ui.selectRegionNotice}</Notice>
                 </div>
               ) : (
-                (busy || renderingEdit) && (
+                (previewing || renderingEdit) && (
                   <p class="mt-2 text-xs text-subtle" aria-live="polite">
                     {ui.processing}
                   </p>
                 )
+              )}
+              {exportProgress && <p class="mt-2 text-sm text-muted">{exportProgress}</p>}
+              {status && (
+                <div class="mt-3">
+                  <Notice>{status}</Notice>
+                </div>
               )}
             </div>
           )}
@@ -416,4 +506,16 @@ function storedPercent(name: string, fallback: number): number {
 
 function percentValue(value: number): number {
   return Number((value * 100).toFixed(1));
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
+function progressText(progress: RenderProgress, ui: UI): string {
+  if (progress.stage === 'encoding') return ui.encodingFull;
+  if (progress.stage === 'effects') {
+    return ui.applyingEffect.replace('{current}', String(progress.current)).replace('{total}', String(progress.total));
+  }
+  return ui.preparingFull;
 }

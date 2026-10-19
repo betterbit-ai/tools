@@ -34,6 +34,12 @@ const uiEn = {
   widthLabel: 'Width',
   heightLabel: 'Height',
   processing: 'Updating preview…',
+  preparingFull: 'Preparing full-size image…',
+  applyingEffect: 'Applying effect {current} of {total}…',
+  encodingFull: 'Encoding full-size image…',
+  exporting: 'Exporting…',
+  cancel: 'Cancel',
+  exportCancelled: 'Export cancelled.',
   selectRegionNotice: 'Draw or add a region before downloading.',
   download: 'Download edited image',
 };
@@ -66,7 +72,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'A new file is rendered on your device',
-        body: 'The tool uses the browser canvas to create a new PNG, JPG, or WebP file. The original file is not sent to Betterbit or a processing server. PNG is lossless; JPG and WebP use a quality setting to trade file size for image detail. Keep the original separately in case you need an unedited copy later.',
+        body: 'The editor uses a reduced preview to stay responsive, then renders the download at the source pixel dimensions. The browser creates a new PNG, JPG, or WebP file without sending the original to Betterbit or a processing server. PNG is lossless; JPG and WebP use a quality setting to trade file size for image detail. Keep the original separately because a newly rendered file does not retain its original metadata.',
       },
     ],
     faq: [
@@ -122,7 +128,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '기기 안에서 새 파일을 만듭니다',
-        body: '이 도구는 브라우저 Canvas로 PNG, JPG 또는 WebP 파일을 새로 만듭니다. 원본 사진은 Betterbit이나 별도 처리 서버로 전송되지 않습니다. PNG는 무손실 형식이고, JPG와 WebP는 품질 값을 낮출수록 파일 크기는 줄지만 세부 표현도 줄어듭니다. 원본이 필요할 수 있으므로 별도로 보관합니다.',
+        body: '편집 화면에서는 반응 속도를 위해 축소 미리보기를 쓰고, 다운로드할 때 원본 픽셀 크기로 PNG, JPG 또는 WebP 파일을 새로 만듭니다. 원본 사진은 Betterbit이나 별도 처리 서버로 전송되지 않습니다. PNG는 무손실 형식이고, JPG와 WebP는 품질 값을 낮출수록 파일 크기는 줄지만 세부 표현도 줄어듭니다. 새 파일에는 원본 메타데이터가 남지 않으므로 원본이 필요하면 별도로 보관합니다.',
       },
     ],
     faq: [
@@ -176,6 +182,12 @@ export const content: Record<Locale, ToolContent<UI>> = {
       widthLabel: '가로',
       heightLabel: '세로',
       processing: '미리보기 업데이트 중…',
+      preparingFull: '원본 크기 이미지 준비 중…',
+      applyingEffect: '효과 적용 중 {current}/{total}…',
+      encodingFull: '원본 크기 이미지 인코딩 중…',
+      exporting: '내보내는 중…',
+      cancel: '취소',
+      exportCancelled: '내보내기를 취소했습니다.',
       selectRegionNotice: '영역을 추가하거나 드래그한 뒤 다운로드할 수 있습니다.',
       download: '편집한 이미지 다운로드',
     },
