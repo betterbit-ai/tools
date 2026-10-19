@@ -51,6 +51,19 @@ export function clampStrength(value: number): number {
   return Math.round(clamp(value, MIN_STRENGTH, MAX_STRENGTH));
 }
 
+/** Scale a preview down by its long side without enlarging small images or changing aspect ratio. */
+export function boundedDimensions(
+  width: number,
+  height: number,
+  maxLongSide: number,
+): { width: number; height: number } {
+  const scale = Math.min(1, maxLongSide / Math.max(width, height));
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
 export function outputExtension(format: OutputFormat): string {
   return format === 'image/jpeg' ? 'jpg' : format === 'image/webp' ? 'webp' : 'png';
 }

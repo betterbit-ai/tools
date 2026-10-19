@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_STRENGTH,
   MIN_REGION_SIZE,
+  boundedDimensions,
   clampStrength,
   isMeaningfulRegion,
   normalizeRegion,
@@ -46,6 +47,12 @@ describe('edit settings', () => {
     expect(clampStrength(12.6)).toBe(13);
     expect(clampStrength(Infinity)).toBe(1);
     expect(clampStrength(100)).toBe(MAX_STRENGTH);
+  });
+
+  it('bounds preview memory while preserving tiny and extreme aspect-ratio images', () => {
+    expect(boundedDimensions(6000, 4000, 1200)).toEqual({ width: 1200, height: 800 });
+    expect(boundedDimensions(6000, 800, 1200)).toEqual({ width: 1200, height: 160 });
+    expect(boundedDimensions(64, 64, 1200)).toEqual({ width: 64, height: 64 });
   });
 });
 
