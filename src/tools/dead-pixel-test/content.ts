@@ -4,7 +4,7 @@ import type { ToolContent } from '../types';
 const uiEn = {
   testArea: 'Colour preview',
   previewHint:
-    'Choose a colour or start the full-screen test. Check for a dot or small area that differs from the field.',
+    'Choose a colour or start the full-screen test. Tap or click the field to advance, and look for a dot or small area that differs from it.',
   colors: 'Test colours',
   white: 'White',
   black: 'Black',
@@ -50,7 +50,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       'Wipe the display and turn off Night Light, True Tone or other colour filters.',
       'Choose Start full-screen test; if the browser blocks it, the test still fills the browser window.',
-      'Inspect every field slowly from edge to edge. Use Right Arrow or Space for the next colour and Left Arrow for the previous one.',
+      'Inspect every field slowly from edge to edge. Tap or click for the next colour, or use Right Arrow or Space; use Left Arrow for the previous one.',
       'Use A to turn automatic cycling on or off, then press Esc or Exit test when you are finished.',
     ],
     sections: [
@@ -109,7 +109,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       '화면을 닦고 야간 모드·색상 필터·True Tone 같은 색상 보정 기능을 잠시 끕니다.',
       '전체화면 테스트 시작을 누릅니다. 브라우저가 전체화면을 지원하지 않아도 브라우저 창 안에서 검사를 계속할 수 있습니다.',
-      '각 색을 화면 가장자리까지 천천히 살핍니다. 오른쪽 방향키 또는 스페이스바로 다음 색, 왼쪽 방향키로 이전 색으로 이동합니다.',
+      '각 색을 화면 가장자리까지 천천히 살핍니다. 화면을 누르거나 오른쪽 방향키·스페이스바를 사용하면 다음 색, 왼쪽 방향키를 사용하면 이전 색으로 이동합니다.',
       'A 키로 자동 순환을 켜거나 끈 뒤, 끝나면 Esc 또는 검사 종료를 누릅니다.',
     ],
     sections: [
@@ -150,7 +150,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       testArea: '색상 미리보기',
-      previewHint: '색상을 고르거나 전체화면 테스트를 시작합니다. 바탕과 다른 작은 점이나 영역을 찾으세요.',
+      previewHint:
+        '색상을 고르거나 전체화면 테스트를 시작합니다. 화면을 누르면 다음 색으로 넘어가며, 바탕과 다른 작은 점이나 영역을 찾으세요.',
       colors: '검사 색상',
       white: '흰색',
       black: '검정',

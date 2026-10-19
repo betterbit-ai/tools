@@ -116,23 +116,33 @@ export default function DeadPixelTest({ ui }: ToolProps<UI>) {
               <ScreenTestSurface color={color} class="rounded-lg border border-line" />
             </div>
             {testing && (
-              <ScreenTestSurface
-                color={color}
-                class="fixed inset-0 z-50 flex min-h-0 items-start justify-between gap-3 p-3 sm:p-5"
-              >
-                <div class="rounded-md bg-surface px-3 py-2 text-sm font-medium text-fg shadow-pop" aria-live="polite">
-                  {colorLabel} · {positionLabel}
-                </div>
-                <Button
-                  size="sm"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    void exitTest();
-                  }}
+              <div onClick={nextColor}>
+                <ScreenTestSurface
+                  color={color}
+                  class="fixed inset-0 z-50 flex min-h-0 items-start justify-between gap-3 p-3 sm:p-5"
                 >
-                  {ui.exitTest}
-                </Button>
-              </ScreenTestSurface>
+                  <div
+                    class="max-w-xl rounded-md bg-surface px-3 py-2 text-sm font-medium text-fg shadow-pop"
+                    aria-live="polite"
+                  >
+                    <div>
+                      {colorLabel} · {positionLabel}
+                    </div>
+                    {fullscreenError && (
+                      <div class="mt-1 text-xs font-normal text-muted">{ui.fullScreenUnavailable}</div>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void exitTest();
+                    }}
+                  >
+                    {ui.exitTest}
+                  </Button>
+                </ScreenTestSurface>
+              </div>
             )}
           </div>
           {fullscreenError && <Notice tone="info">{ui.fullScreenUnavailable}</Notice>}
