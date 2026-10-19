@@ -71,7 +71,7 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'convert',
   added: '2026-10-08',
-  updated: '2026-10-13',
+  updated: '2026-10-20',
   edges: ['privacy', 'no-signup', 'performance', 'usability'],
   competitors: [
     {

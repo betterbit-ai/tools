@@ -5,6 +5,7 @@ import {
   isCurrentResult,
   isWithinPixelLimit,
   isAnimatedGif,
+  matchesOutputMime,
   needsBackground,
   outputName,
   sourceMayHaveAlpha,
@@ -99,11 +100,21 @@ describe('extensionFor / outputName', () => {
 });
 
 describe('isWithinPixelLimit', () => {
-  it('accepts images at the canvas ceiling and rejects larger or invalid dimensions', () => {
-    expect(isWithinPixelLimit(4096, 4096)).toBe(true);
-    expect(isWithinPixelLimit(4097, 4096)).toBe(false);
+  it('accepts everyday 12 MP and 24 MP photos up to the guarded canvas ceiling', () => {
+    expect(isWithinPixelLimit(4032, 3024)).toBe(true);
+    expect(isWithinPixelLimit(6000, 4000)).toBe(true);
+    expect(isWithinPixelLimit(8000, 5000)).toBe(true);
+    expect(isWithinPixelLimit(8001, 5000)).toBe(false);
     expect(isWithinPixelLimit(0, 100)).toBe(false);
     expect(isWithinPixelLimit(100.5, 100)).toBe(false);
+  });
+});
+
+describe('matchesOutputMime', () => {
+  it('rejects a browser encoder fallback instead of mislabelling it as success', () => {
+    expect(matchesOutputMime('image/webp', 'image/webp')).toBe(true);
+    expect(matchesOutputMime('image/webp', 'image/png')).toBe(false);
+    expect(matchesOutputMime('image/jpeg', '')).toBe(false);
   });
 });
 

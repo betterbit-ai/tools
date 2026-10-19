@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { zip } from 'fflate';
 import { Button, Dropzone, Field, Notice, Panel, Select } from '../../components/ui';
-import { downloadBlob } from '../../lib/browser';
+import { downloadBlob, yieldToBrowser } from '../../lib/browser';
 import { formatBytes, formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { convertImage, readDimensions } from './convert';
+import { convertImage, inspectImage } from './convert';
 import {
   formatLabel,
   isCurrentResult,
@@ -38,6 +38,12 @@ interface Preset {
   accept?: string;
 }
 
+interface WorkProgress {
+  current: number;
+  total: number;
+  file: string;
+}
+
 let nextId = 1;
 const MAX_BATCH_SIZE = 50;
 const MAX_GIF_SCAN_BYTES = 2 * 1024 * 1024;
@@ -50,8 +56,13 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
   const [background, setBackground] = useState('#ffffff');
   const [notice, setNotice] = useState<string | null>(null);
   const [zipping, setZipping] = useState(false);
+  const [inspecting, setInspecting] = useState<WorkProgress | null>(null);
+  const [progress, setProgress] = useState<WorkProgress | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const accept = p?.accept ?? 'image/*';
   const runId = useRef(0);
+  const importId = useRef(0);
   const itemsRef = useRef(items);
   const settingsKeyRef = useRef('');
   itemsRef.current = items;
@@ -62,17 +73,22 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
       if (accepted.length < files.length) setNotice(ui.batchLimit.replace('{n}', String(MAX_BATCH_SIZE)));
       if (!accepted.length) return;
 
+      const loadId = ++importId.current;
       const added: Item[] = [];
-      for (const file of accepted) {
+      for (const [index, file] of accepted.entries()) {
+        if (importId.current !== loadId) break;
+        setInspecting({ current: index + 1, total: accepted.length, file: file.name });
+        await yieldToBrowser();
         const mime = sourceMime(file);
         try {
-          const dims = await readDimensions(file);
-          if (!isWithinPixelLimit(dims.width, dims.height)) {
+          const info = await inspectImage(file);
+          if (!isWithinPixelLimit(info.width, info.height)) {
             added.push({
               id: nextId++,
               file,
               sourceMime: mime,
-              ...dims,
+              width: info.width,
+              height: info.height,
               preview: '',
               error: { kind: 'tooLarge' },
             });
@@ -87,9 +103,10 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
             id: nextId++,
             file,
             sourceMime: mime,
-            ...dims,
+            width: info.width,
+            height: info.height,
             animatedGif,
-            preview: URL.createObjectURL(file),
+            preview: URL.createObjectURL(info.thumbnail),
           });
         } catch {
           added.push({
@@ -103,7 +120,9 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
           });
         }
       }
-      setItems((prev) => [...prev, ...added]);
+      if (importId.current === loadId) setItems((prev) => [...prev, ...added]);
+      else for (const item of added) if (item.preview) URL.revokeObjectURL(item.preview);
+      setInspecting((current) => (importId.current === loadId ? null : current));
     },
     [ui.batchLimit],
   );
@@ -114,46 +133,52 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
   settingsKeyRef.current = settingsKey;
   useEffect(() => {
     const id = ++runId.current;
+    setCancelled(false);
     const timeout = setTimeout(async () => {
-      for (const item of itemsRef.current) {
-        if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
-        if (
-          item.error?.kind === 'unreadable' ||
-          item.error?.kind === 'tooLarge' ||
-          isCurrentResult(item.result?.key, settingsKey) ||
-          item.error?.key === settingsKey
-        ) {
-          continue;
-        }
-        setItems((prev) => prev.map((p2) => (p2.id === item.id ? { ...p2, busy: true, error: undefined } : p2)));
-        try {
-          const blob = await convertImage(item.file, target, quality / 100, background);
+      const pending = itemsRef.current.filter(
+        (item) =>
+          item.error?.kind !== 'unreadable' &&
+          item.error?.kind !== 'tooLarge' &&
+          !isCurrentResult(item.result?.key, settingsKey) &&
+          item.error?.key !== settingsKey,
+      );
+      try {
+        for (const [index, item] of pending.entries()) {
           if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
-          const result = {
-            blob,
-            url: URL.createObjectURL(blob),
-            name: outputName(item.file.name, target),
-            key: settingsKey,
-          };
-          setItems((prev) =>
-            prev.map((p2) => {
-              if (p2.id !== item.id) return p2;
-              if (p2.result) URL.revokeObjectURL(p2.result.url);
-              return { ...p2, result, busy: false };
-            }),
-          );
-        } catch {
-          if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
-          setItems((prev) =>
-            prev.map((p2) =>
-              p2.id === item.id ? { ...p2, error: { kind: 'processing', key: settingsKey }, busy: false } : p2,
-            ),
-          );
+          setProgress({ current: index + 1, total: pending.length, file: item.file.name });
+          setItems((prev) => prev.map((p2) => (p2.id === item.id ? { ...p2, busy: true, error: undefined } : p2)));
+          try {
+            const blob = await convertImage(item.file, target, quality / 100, background);
+            if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+            const result = {
+              blob,
+              url: URL.createObjectURL(blob),
+              name: outputName(item.file.name, target),
+              key: settingsKey,
+            };
+            setItems((prev) =>
+              prev.map((p2) => {
+                if (p2.id !== item.id) return p2;
+                if (p2.result) URL.revokeObjectURL(p2.result.url);
+                return { ...p2, result, busy: false };
+              }),
+            );
+          } catch {
+            if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+            setItems((prev) =>
+              prev.map((p2) =>
+                p2.id === item.id ? { ...p2, error: { kind: 'processing', key: settingsKey }, busy: false } : p2,
+              ),
+            );
+          }
+          await yieldToBrowser();
         }
+      } finally {
+        if (runId.current === id && settingsKeyRef.current === settingsKey) setProgress(null);
       }
     }, 250);
     return () => clearTimeout(timeout);
-  }, [fileKey, target, quality, background, settingsKey]);
+  }, [fileKey, target, quality, background, settingsKey, retryToken]);
 
   useEffect(
     () => () => {
@@ -169,6 +194,8 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
   const remove = (id: number) =>
     setItems((prev) => {
       runId.current++;
+      setProgress(null);
+      setCancelled(false);
       const gone = prev.find((p2) => p2.id === id);
       if (gone) {
         URL.revokeObjectURL(gone.preview);
@@ -179,12 +206,28 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
 
   const clear = () => {
     runId.current++;
+    importId.current++;
     for (const p2 of items) {
       URL.revokeObjectURL(p2.preview);
       if (p2.result) URL.revokeObjectURL(p2.result.url);
     }
     setItems([]);
     setNotice(null);
+    setInspecting(null);
+    setProgress(null);
+    setCancelled(false);
+  };
+
+  const cancel = () => {
+    runId.current++;
+    setProgress(null);
+    setCancelled(true);
+    setItems((prev) => prev.map((item) => (item.busy ? { ...item, busy: false } : item)));
+  };
+
+  const retry = () => {
+    setCancelled(false);
+    setRetryToken((value) => value + 1);
   };
 
   const ready = items.filter((i) => isCurrentResult(i.result?.key, settingsKey) && !i.busy && !i.error);
@@ -233,10 +276,45 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
             </div>
           )}
 
+          {inspecting && (
+            <div class="mt-4">
+              <Notice>
+                {ui.reading
+                  .replace('{current}', String(inspecting.current))
+                  .replace('{total}', String(inspecting.total))
+                  .replace('{file}', inspecting.file)}
+              </Notice>
+            </div>
+          )}
+
+          {progress && (
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <Notice>
+                {ui.progress
+                  .replace('{current}', String(progress.current))
+                  .replace('{total}', String(progress.total))
+                  .replace('{file}', progress.file)}
+              </Notice>
+              <Button size="sm" variant="ghost" onClick={cancel}>
+                {ui.cancel}
+              </Button>
+            </div>
+          )}
+
+          {cancelled && (
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <Notice>{ui.cancelled}</Notice>
+              <Button size="sm" variant="secondary" onClick={retry}>
+                {ui.retry}
+              </Button>
+            </div>
+          )}
+
           {items.length > 0 && (
             <ul class="mt-4 divide-y divide-line rounded-lg border border-line">
               {items.map((item) => {
                 const stale = !isCurrentResult(item.result?.key, settingsKey);
+                const currentResult = stale ? undefined : item.result;
                 return (
                   <li key={item.id} class="flex items-center gap-3 p-3">
                     <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
@@ -256,11 +334,11 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
                         <>
                           <p class="tabular text-muted" aria-live="polite">
                             {formatLabel(item.sourceMime)} · {formatBytes(item.file.size, locale)}
-                            {item.result && (
+                            {currentResult && (
                               <>
                                 {' → '}
                                 <span class="text-fg">
-                                  {formatLabel(target)} · {formatBytes(item.result.blob.size, locale)}
+                                  {formatLabel(target)} · {formatBytes(currentResult.blob.size, locale)}
                                 </span>
                               </>
                             )}
@@ -272,14 +350,14 @@ export default function ImageConverter({ locale, ui, preset }: ToolProps<UI>) {
                         </>
                       )}
                     </div>
-                    {item.result && !item.error && (
+                    {currentResult && !item.error && (
                       <Button
                         size="sm"
                         variant="secondary"
-                        disabled={item.busy || stale}
-                        onClick={() => downloadBlob(item.result!.blob, item.result!.name)}
+                        disabled={item.busy}
+                        onClick={() => downloadBlob(currentResult.blob, currentResult.name)}
                       >
-                        {item.busy || stale ? ui.processing : ui.download}
+                        {item.busy ? ui.processing : ui.download}
                       </Button>
                     )}
                     <Button size="sm" variant="ghost" aria-label={ui.remove} onClick={() => remove(item.id)}>

@@ -9,6 +9,11 @@ const uiEn = {
   tooLarge: 'This image is too large to convert here (maximum {max} pixels). Resize it first.',
   processFailed: 'This image could not be converted with these settings. Try another format or a smaller image.',
   batchLimit: 'Only the first {n} images were added to keep conversion reliable.',
+  reading: 'Reading {current} of {total}: {file}',
+  progress: 'Converting {current} of {total}: {file}',
+  cancel: 'Cancel conversion',
+  cancelled: 'Conversion cancelled. Your original files are still available.',
+  retry: 'Retry conversion',
   zipFailed: 'The ZIP could not be created. Try downloading the images one at a time.',
   processing: 'Working…',
   preparingDownload: 'Preparing ZIP…',
@@ -21,7 +26,7 @@ const uiEn = {
   qualityHint: 'Applies to JPG and WebP. 90–95 keeps almost no visible loss.',
   background: 'Background colour',
   backgroundHint: 'JPG has no transparency — this fills in behind transparent pixels.',
-  sameFormat: 'Already this format — re-encodes as-is.',
+  sameFormat: 'Already this format — re-encodes the pixels and removes embedded metadata.',
   animatedGifWarning: 'Animated — only the first frame will be kept.',
   animatedGifNotice:
     'Converting an animated GIF keeps only its first frame, since none of these output formats can store animation.',
@@ -49,7 +54,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Drop images onto the box, click to choose files, or paste a screenshot with Ctrl/⌘ + V.',
       'Pick the format to convert to: JPG, PNG or WebP.',
       'For JPG output, set quality and — if any source has transparency — the background colour.',
-      'Results update automatically. Download each image, or all ready images as a ZIP.',
+      'Follow the visible batch progress. Results update automatically; you can cancel long work, then download each image or all ready images as a ZIP.',
     ],
     sections: [
       {
@@ -62,7 +67,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your images stay on your device',
-        body: 'Most online converters upload your file to a server, convert it there and send it back — which means a copy of your photo sits on someone else’s machine, even briefly. This tool decodes and re-encodes the image using your browser’s own image engine (Canvas), so the file never leaves your computer or phone. That removes the upload/download wait and the tool keeps working offline once the page has loaded. To keep browser memory reliable, each batch is limited to 50 images and each image to 16,777,216 pixels.',
+        body: 'Most online converters upload your file to a server, convert it there and send it back — which means a copy of your photo sits on someone else’s machine, even briefly. This tool decodes and re-encodes one image at a time using your browser’s own image engine (Canvas), so the file never leaves your computer or phone. It shows progress, can be cancelled, and keeps working in a background tab after the page has loaded. To bound memory use, each batch is limited to 50 images and each image to 40,000,000 pixels (for example, 8,000 × 5,000). EXIF, GPS and other embedded metadata are not copied to the new file.',
       },
     ],
     faq: [
@@ -90,6 +95,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         q: 'Can I convert an animated GIF to JPG, PNG or WebP?',
         a: 'The file will convert, but only its first frame is kept — JPG, the PNG this tool produces, and a single Canvas-encoded WebP frame can’t store animation. The tool shows a warning when it detects more than one frame.',
       },
+      {
+        q: 'Does image conversion keep EXIF or GPS metadata?',
+        a: 'No. The browser decodes the visible pixels and creates a new JPG, PNG or WebP file, so EXIF camera details, GPS coordinates and other embedded metadata are not copied.',
+      },
     ],
     ui: uiEn,
   },
@@ -105,7 +114,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '이미지를 끌어다 놓거나, 클릭해서 고르거나, Ctrl/⌘ + V로 붙여넣습니다.',
       '변환할 형식을 고릅니다: JPG, PNG, WebP 중 하나.',
       'JPG로 바꿀 때는 품질을 정하고, 원본에 투명 배경이 있으면 배경색도 고릅니다.',
-      '결과가 자동으로 만들어집니다. 한 장씩 받거나, 준비된 파일 전체를 ZIP으로 한번에 다운로드합니다.',
+      '진행 상태를 확인합니다. 오래 걸리면 취소할 수 있으며, 완성된 이미지는 한 장씩 받거나 ZIP으로 한꺼번에 다운로드합니다.',
     ],
     sections: [
       {
@@ -118,7 +127,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
-        body: '대부분의 온라인 변환 사이트는 파일을 서버에 올려서 처리한 뒤 다시 내려받게 합니다. 그 사이 내 사진이 다른 사람의 서버에 잠시라도 저장되는 셈입니다. 이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 디코딩·재인코딩하기 때문에 파일이 컴퓨터나 휴대폰 밖으로 전송되지 않습니다. 업로드·다운로드 대기가 없어 더 빠르고, 페이지를 연 뒤에는 오프라인에서도 동작합니다. 브라우저 메모리를 안정적으로 쓰기 위해 한 번에 50장까지, 이미지 한 장은 16,777,216픽셀까지 변환합니다.',
+        body: '대부분의 온라인 변환 사이트는 파일을 서버에 올려서 처리한 뒤 다시 내려받게 합니다. 그 사이 내 사진이 다른 사람의 서버에 잠시라도 저장되는 셈입니다. 이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 한 장씩 디코딩·재인코딩하기 때문에 파일이 컴퓨터나 휴대폰 밖으로 전송되지 않습니다. 진행 상태를 표시하고 취소할 수 있으며, 페이지를 연 뒤 다른 탭으로 이동해도 계속 처리합니다. 메모리 사용량을 제한하기 위해 한 번에 50장까지, 이미지 한 장은 40,000,000픽셀(예: 8,000 × 5,000)까지 변환합니다. 새 파일에는 EXIF, GPS 등 원본의 메타데이터가 복사되지 않습니다.',
       },
     ],
     faq: [
@@ -146,6 +155,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         q: '움직이는 GIF도 JPG나 PNG, WebP로 변환할 수 있나요?',
         a: '변환은 되지만 첫 프레임만 남습니다. JPG와 이 도구가 만드는 PNG, Canvas로 한 장만 인코딩한 WebP 모두 애니메이션을 저장할 수 없기 때문입니다. 프레임이 여러 개인 GIF를 올리면 안내 문구가 표시됩니다.',
       },
+      {
+        q: '이미지를 변환하면 EXIF나 GPS 정보가 유지되나요?',
+        a: '유지되지 않습니다. 브라우저가 화면에 보이는 픽셀을 읽어 새 JPG, PNG 또는 WebP 파일을 만들기 때문에 카메라 정보, GPS 위치 등 원본의 메타데이터는 복사되지 않습니다.',
+      },
     ],
     ui: {
       dropTitle: '이미지를 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
@@ -155,6 +168,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       tooLarge: '이미지가 너무 큽니다(최대 {max}픽셀). 먼저 이미지 크기를 줄이세요.',
       processFailed: '현재 설정으로 이 이미지를 변환할 수 없습니다. 다른 형식이나 더 작은 이미지를 사용하세요.',
       batchLimit: '안정적인 변환을 위해 처음 {n}개 파일만 추가했습니다.',
+      reading: '{total}장 중 {current}번째 파일 읽는 중: {file}',
+      progress: '{total}장 중 {current}번째 변환 중: {file}',
+      cancel: '변환 취소',
+      cancelled: '변환을 취소했습니다. 원본 파일은 그대로 사용할 수 있습니다.',
+      retry: '변환 다시 시도',
       zipFailed: 'ZIP 파일을 만들지 못했습니다. 이미지를 한 장씩 다운로드해 보세요.',
       processing: '처리 중…',
       preparingDownload: 'ZIP 준비 중…',
@@ -167,7 +185,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       qualityHint: 'JPG와 WebP에 적용됩니다. 90~95면 눈에 보이는 손실이 거의 없습니다.',
       background: '배경색',
       backgroundHint: 'JPG는 투명도를 지원하지 않아 투명한 부분을 이 색으로 채웁니다.',
-      sameFormat: '이미 같은 형식입니다 — 같은 형식으로 다시 저장됩니다.',
+      sameFormat: '이미 같은 형식입니다 — 픽셀을 다시 인코딩하며 메타데이터는 제거됩니다.',
       animatedGifWarning: '움직이는 GIF — 첫 프레임만 유지됩니다.',
       animatedGifNotice:
         '움직이는 GIF는 첫 프레임만 남습니다. 선택한 출력 형식들은 애니메이션을 저장할 수 없기 때문입니다.',

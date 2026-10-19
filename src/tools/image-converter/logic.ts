@@ -6,8 +6,12 @@
 /** Canvas can only *encode* to these three; anything else is a source-only format. */
 export type FormatChoice = 'image/jpeg' | 'image/png' | 'image/webp';
 
-/** Safari limits a canvas to roughly 16.7 million pixels. */
-export const MAX_PIXELS = 16_777_216;
+/**
+ * Covers common 24 MP phone cameras while bounding one RGBA canvas at about
+ * 160 MB. Decode and conversion stay sequential, so a batch never holds more
+ * than one full-resolution bitmap/canvas pair at a time.
+ */
+export const MAX_PIXELS = 40_000_000;
 
 const EXT_TO_MIME: Record<string, string> = {
   jpg: 'image/jpeg',
@@ -58,6 +62,11 @@ export function outputName(name: string, mime: FormatChoice): string {
 /** Only JPEG and WebP have a quality knob; PNG is always lossless in Canvas. */
 export function supportsQuality(mime: FormatChoice): boolean {
   return mime === 'image/jpeg' || mime === 'image/webp';
+}
+
+/** Canvas may silently fall back to PNG when an encoder is unavailable. */
+export function matchesOutputMime(requested: FormatChoice, actual: string): boolean {
+  return actual.toLowerCase() === requested;
 }
 
 /** JPEG has no alpha channel, so a fill colour is needed behind transparent pixels. */
