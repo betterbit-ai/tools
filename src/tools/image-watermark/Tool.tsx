@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { Button, Dropzone, Field, Notice, NumberInput, Panel, Segmented, Select, TextInput } from '../../components/ui';
-import { downloadBlob, safeStorage } from '../../lib/browser';
+import { downloadBlob, safeStorage, yieldToBrowser } from '../../lib/browser';
 import { formatBytes, formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -17,7 +17,14 @@ import {
   type InputCheck,
   type WatermarkOptions,
 } from './logic';
-import { isAnimatedImage, readDimensions, watermarkImage } from './watermark';
+import {
+  ImageDecodeError,
+  OutputFormatError,
+  isAnimatedImage,
+  readDimensions,
+  watermarkImage,
+  type WatermarkProgress,
+} from './watermark';
 
 interface Item {
   id: number;
@@ -27,8 +34,15 @@ interface Item {
   preview: string;
   result?: { blob: Blob; url: string; name: string; key: string };
   error?: 'unreadable' | 'dimension' | 'pixels' | 'file' | 'animated';
-  renderError?: boolean;
+  processError?: { kind: 'format' | 'processing'; key: string };
   busy?: boolean;
+}
+
+interface WorkProgress {
+  current: number;
+  total: number;
+  file: string;
+  stage: WatermarkProgress;
 }
 
 const STORAGE_KEY = 'tools:image-watermark:settings';
@@ -40,9 +54,13 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
   const [logo, setLogo] = useState<File>();
   const [logoId, setLogoId] = useState(0);
   const [message, setMessage] = useState('');
+  const [progress, setProgress] = useState<WorkProgress | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const [zipping, setZipping] = useState(false);
   const itemsRef = useRef(items);
   const runId = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
   const settingsKeyRef = useRef('');
   itemsRef.current = items;
 
@@ -54,6 +72,7 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
       if (accepted.length < files.length) setMessage(ui.batchLimit.replace('{n}', String(MAX_IMAGE_COUNT)));
       else setMessage('');
       if (!accepted.length) return;
+      setCancelled(false);
 
       const added: Item[] = [];
       for (const file of accepted) {
@@ -122,45 +141,84 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
   settingsKeyRef.current = settingsKey;
   useEffect(() => {
     const id = ++runId.current;
+    if (cancelled) return;
+    if (options.mode === 'logo' && !logo) {
+      setProgress(null);
+      setItems((previous) => previous.map((item) => (item.busy ? { ...item, busy: false } : item)));
+      return;
+    }
+    const controller = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = controller;
+    setItems((previous) => previous.map((item) => (item.busy ? { ...item, busy: false } : item)));
     const key = settingsKey;
-    if (options.mode === 'logo' && !logo) return;
     const timeout = window.setTimeout(async () => {
-      for (const item of itemsRef.current) {
-        if (id !== runId.current || settingsKeyRef.current !== key) return;
-        if (item.error || item.result?.key === key) continue;
-        setItems((previous) =>
-          previous.map((entry) => (entry.id === item.id ? { ...entry, busy: true, renderError: false } : entry)),
-        );
-        try {
-          const blob = await watermarkImage(item.file, options, logo);
-          if (id !== runId.current || settingsKeyRef.current !== key) return;
-          const result = {
-            blob,
-            url: URL.createObjectURL(blob),
-            name: outputName(item.file.name, outputMime(options.format, item.file.type)),
-            key,
-          };
+      const pending = itemsRef.current.filter(
+        (item) => !item.error && item.processError?.key !== key && item.result?.key !== key,
+      );
+      try {
+        for (const [index, item] of pending.entries()) {
+          if (controller.signal.aborted || id !== runId.current || settingsKeyRef.current !== key) return;
           setItems((previous) =>
-            previous.map((entry) => {
-              if (entry.id !== item.id) return entry;
-              if (entry.result) URL.revokeObjectURL(entry.result.url);
-              return { ...entry, result, busy: false, renderError: false };
-            }),
+            previous.map((entry) => (entry.id === item.id ? { ...entry, busy: true, processError: undefined } : entry)),
           );
-        } catch {
-          if (id !== runId.current || settingsKeyRef.current !== key) return;
-          setItems((previous) =>
-            previous.map((entry) => (entry.id === item.id ? { ...entry, busy: false, renderError: true } : entry)),
-          );
+          try {
+            const blob = await watermarkImage(item.file, options, logo, {
+              signal: controller.signal,
+              onProgress: (stage) => {
+                if (id === runId.current && settingsKeyRef.current === key) {
+                  setProgress({ current: index + 1, total: pending.length, file: item.file.name, stage });
+                }
+              },
+            });
+            if (controller.signal.aborted || id !== runId.current || settingsKeyRef.current !== key) return;
+            const result = {
+              blob,
+              url: URL.createObjectURL(blob),
+              name: outputName(item.file.name, outputMime(options.format, item.file.type)),
+              key,
+            };
+            setItems((previous) =>
+              previous.map((entry) => {
+                if (entry.id !== item.id) return entry;
+                if (entry.result) URL.revokeObjectURL(entry.result.url);
+                return { ...entry, result, busy: false, processError: undefined };
+              }),
+            );
+          } catch (cause) {
+            if (controller.signal.aborted || id !== runId.current || settingsKeyRef.current !== key) return;
+            if (cause instanceof ImageDecodeError) {
+              setItems((previous) =>
+                previous.map((entry) =>
+                  entry.id === item.id ? { ...entry, error: 'unreadable', busy: false } : entry,
+                ),
+              );
+            } else {
+              const kind = cause instanceof OutputFormatError ? 'format' : 'processing';
+              setItems((previous) =>
+                previous.map((entry) =>
+                  entry.id === item.id ? { ...entry, processError: { kind, key }, busy: false } : entry,
+                ),
+              );
+            }
+          }
+          await yieldToBrowser();
         }
+      } finally {
+        if (id === runId.current && settingsKeyRef.current === key) setProgress(null);
       }
     }, 280);
-    return () => window.clearTimeout(timeout);
-  }, [filesKey, logo, options, settingsKey, ui.processingError]);
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+      if (abortRef.current === controller) abortRef.current = null;
+    };
+  }, [filesKey, logo, options, settingsKey, retryToken, cancelled]);
 
   useEffect(
     () => () => {
       runId.current++;
+      abortRef.current?.abort();
       for (const item of itemsRef.current) {
         URL.revokeObjectURL(item.preview);
         if (item.result) URL.revokeObjectURL(item.result.url);
@@ -169,12 +227,17 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
     [],
   );
 
-  const update = <K extends keyof WatermarkOptions>(key: K, value: WatermarkOptions[K]) =>
+  const update = <K extends keyof WatermarkOptions>(key: K, value: WatermarkOptions[K]) => {
+    setCancelled(false);
     setOptions((previous) => normalizeOptions({ ...previous, [key]: value }));
+  };
 
-  const remove = (id: number) =>
+  const remove = (id: number) => {
+    runId.current++;
+    abortRef.current?.abort();
+    setProgress(null);
+    setCancelled(false);
     setItems((previous) => {
-      runId.current++;
       const item = previous.find((entry) => entry.id === id);
       if (item) {
         URL.revokeObjectURL(item.preview);
@@ -182,18 +245,37 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
       }
       return previous.filter((entry) => entry.id !== id);
     });
+  };
 
   const clear = () => {
     runId.current++;
+    abortRef.current?.abort();
     items.forEach((item) => {
       URL.revokeObjectURL(item.preview);
       if (item.result) URL.revokeObjectURL(item.result.url);
     });
     setItems([]);
     setMessage('');
+    setProgress(null);
+    setCancelled(false);
   };
 
-  const ready = items.filter((item) => item.result?.key === settingsKey && !item.busy);
+  const cancel = () => {
+    runId.current++;
+    abortRef.current?.abort();
+    setProgress(null);
+    setCancelled(true);
+    setItems((previous) => previous.map((item) => (item.busy ? { ...item, busy: false } : item)));
+  };
+
+  const resume = () => {
+    setCancelled(false);
+    setRetryToken((value) => value + 1);
+  };
+
+  const ready = items.filter(
+    (item) => item.result?.key === settingsKey && !item.busy && !item.error && !item.processError,
+  );
   const downloadAll = async () => {
     if (ready.length === 1) return downloadBlob(ready[0].result!.blob, ready[0].result!.name);
     setZipping(true);
@@ -203,6 +285,7 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
         let name = item.result!.name;
         for (let index = 2; archive[name]; index++) name = item.result!.name.replace(/(\.[^.]+)$/, `-${index}$1`);
         archive[name] = new Uint8Array(await item.result!.blob.arrayBuffer());
+        await yieldToBrowser();
       }
       const zip = await makeZip(archive);
       downloadBlob(new Blob([zip as BlobPart], { type: 'application/zip' }), 'watermarked-images.zip');
@@ -212,6 +295,14 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
       setZipping(false);
     }
   };
+
+  const progressLabel = progress
+    ? ui.progress
+        .replace('{current}', String(progress.current))
+        .replace('{total}', String(progress.total))
+        .replace('{file}', progress.file)
+        .replace('{stage}', progressStage(progress.stage, ui))
+    : '';
 
   return (
     <Panel>
@@ -228,6 +319,26 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
           {message && (
             <div class="mt-4">
               <Notice tone="danger">{message}</Notice>
+            </div>
+          )}
+          {progress && (
+            <div class="mt-4 flex flex-wrap items-center gap-3" aria-live="polite">
+              <div class="min-w-0 flex-1">
+                <Notice>{progressLabel}</Notice>
+              </div>
+              <Button variant="danger" onClick={cancel}>
+                {ui.cancel}
+              </Button>
+            </div>
+          )}
+          {cancelled && (
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <div class="min-w-0 flex-1">
+                <Notice>{ui.cancelled}</Notice>
+              </div>
+              <Button variant="secondary" onClick={resume}>
+                {ui.resume}
+              </Button>
             </div>
           )}
           {items.length === 0 ? (
@@ -250,17 +361,25 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
                   <div class="min-w-0 flex-1 text-sm">
                     <p class="truncate font-medium text-fg">{item.file.name}</p>
                     {item.error ? (
-                      <p class="text-danger">{inputErrorMessage(item.error, ui, locale)}</p>
-                    ) : item.renderError ? (
-                      <p class="text-danger">{ui.processingError}</p>
+                      <p class="text-danger" role="alert">
+                        {inputErrorMessage(item.error, ui, locale)}
+                      </p>
+                    ) : item.processError ? (
+                      <p class="text-danger" role="alert">
+                        {item.processError.kind === 'format' ? ui.formatError : ui.processingError}
+                      </p>
                     ) : (
-                      <p class="tabular text-muted">
+                      <p class="tabular text-muted" aria-live="polite">
                         {item.width}×{item.height} · {formatBytes(item.file.size, locale)}
                         {item.result?.key === settingsKey && ` → ${formatBytes(item.result.blob.size, locale)}`}
+                        {(item.busy ||
+                          (!cancelled && !(options.mode === 'logo' && !logo) && item.result?.key !== settingsKey)) && (
+                          <> · {ui.processing}</>
+                        )}
                       </p>
                     )}
                   </div>
-                  {item.result?.key === settingsKey && !item.error && (
+                  {item.result?.key === settingsKey && !item.error && !item.processError && (
                     <Button
                       size="sm"
                       variant="secondary"
@@ -279,7 +398,12 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
           )}
           {items.length > 0 && (
             <div class="mt-4 flex flex-wrap items-center gap-3" aria-live="polite">
-              <Button variant="primary" size="lg" disabled={ready.length === 0 || zipping} onClick={downloadAll}>
+              <Button
+                variant="primary"
+                size="lg"
+                disabled={ready.length === 0 || zipping || Boolean(progress)}
+                onClick={downloadAll}
+              >
                 {zipping
                   ? ui.preparingDownload
                   : ready.length > 1
@@ -289,7 +413,6 @@ export default function ImageWatermark({ locale, ui }: ToolProps<UI>) {
               <Button variant="ghost" onClick={clear}>
                 {ui.clear}
               </Button>
-              {items.some((item) => item.busy) && <span class="text-sm text-muted">{ui.processing}</span>}
             </div>
           )}
         </div>
@@ -414,6 +537,12 @@ function inputErrorMessage(error: Item['error'] | InputCheck['reason'], ui: UI, 
     default:
       return ui.unsupported;
   }
+}
+
+function progressStage(progress: WatermarkProgress, ui: UI): string {
+  if (progress === 'decoding') return ui.stageDecoding;
+  if (progress === 'drawing') return ui.stageDrawing;
+  return ui.stageEncoding;
 }
 
 async function makeZip(files: Record<string, Uint8Array>): Promise<Uint8Array> {
