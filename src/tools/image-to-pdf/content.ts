@@ -6,12 +6,23 @@ const uiEn = {
   dropHint: 'JPG, PNG, WebP, GIF, BMP · up to 20 images',
   privacyNote: 'Images are turned into a PDF on your device. Nothing is uploaded.',
   unsupported: 'This file can’t be read by your browser.',
+  waiting: 'Waiting…',
   processing: 'Processing…',
+  progress: 'Processing {current} of {total}: {file} · {stage}',
+  stageDecoding: 'Decoding',
+  stageDrawing: 'Preparing pixels',
+  stageEncoding: 'Encoding',
+  assembling: 'Assembling the PDF…',
   building: 'Creating PDF…',
+  cancel: 'Cancel',
+  resume: 'Resume conversion',
+  cancelled: 'Conversion cancelled. Your original images are still available.',
   batchLimit: 'For a reliable on-device conversion, add up to {n} images at a time.',
-  tooLarge: 'This image is too large to convert safely in your browser.',
-  processFailed: 'This image could not be converted. Try a smaller or different file.',
-  pdfFailed: 'The PDF could not be created. Remove a large image and try again.',
+  reduced: 'reduced to {width}×{height} for reliable conversion',
+  encodeFailed: 'Your browser could not encode this image as JPEG.',
+  processFailed: 'This image could not be converted. Try a different file.',
+  failedImages: 'The PDF was not created because one or more images failed. Remove the failed images and try again.',
+  pdfFailed: 'The PDF could not be created. Your original images have not been changed.',
   download: 'Download PDF',
   pages: '{n} page(s)',
   remove: 'Remove',
@@ -31,7 +42,7 @@ const uiEn = {
   marginNone: 'None',
   marginSmall: 'Small',
   qualityLabel: 'Quality',
-  qualityHint: 'Lower quality makes a smaller PDF. 85 is visually lossless for most photos.',
+  qualityHint: 'Lower quality usually makes a smaller PDF. 85 balances detail and file size for most photos.',
 };
 export type UI = typeof uiEn;
 
@@ -64,7 +75,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'How big will the PDF be?',
-        body: 'Each photo is re-encoded as JPEG at the quality you set (40–100) before being embedded, so the Quality slider is the main lever on file size: dropping from 100 to 85 typically cuts size by half or more with almost no visible difference for regular photos, while 100 keeps maximum detail for things like scanned text. PNG and WebP sources are flattened onto a white background during this step, since PDF’s image format here has no transparency channel.',
+        body: 'Each photo is re-encoded as JPEG at the quality you set (40–100) before being embedded, so the Quality slider is the main lever on file size. Lower settings usually make a smaller file, though the exact result depends on the source image. The default 85 balances detail and size for regular photos, while 100 keeps more detail for things like scanned text. PNG and WebP sources are flattened onto a white background during this step, since PDF’s image format here has no transparency channel. Photos above the browser-safe 16.8-megapixel canvas budget are reduced proportionally rather than rejected; the file row shows the embedded dimensions.',
       },
       {
         heading: 'Nothing leaves your device',
@@ -78,7 +89,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How many images can I combine into one PDF?',
-        a: 'You can add up to 20 images at once. Each image must be no larger than 8,192 pixels on either side or about 16.7 megapixels, which keeps the conversion reliable on phones and computers.',
+        a: 'You can add up to 20 images at once. Large phone photos are accepted and reduced proportionally only when needed so the embedded JPEG stays within 8,192 pixels per side and about 16.8 megapixels. This bounds memory use while preserving the complete image and its aspect ratio.',
       },
       {
         q: 'Can I change the order of the pages?',
@@ -90,7 +101,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Does converting to PDF lose image quality?',
-        a: 'Each photo is re-encoded as JPEG at the Quality you choose. At the default of 85 the loss is not visible to the eye for ordinary photos; set it to 100 for scanned documents or text where sharpness matters most.',
+        a: 'Each photo is re-encoded as JPEG at the Quality you choose, so some detail can be lost. The default 85 is a practical balance for ordinary photos; use 100 when scanned documents or small text need more detail. Images above about 16.8 megapixels are also reduced proportionally to keep conversion reliable.',
       },
       {
         q: 'Can I convert PNG or WebP images, not just JPG?',
@@ -120,7 +131,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'PDF 용량은 얼마나 될까',
-        body: '각 사진은 PDF에 담기기 전에 설정한 품질(40~100)로 JPEG로 다시 인코딩되므로, 품질 슬라이더가 용량을 가장 크게 좌우합니다. 100에서 85로 낮추면 보통 용량이 절반 이상 줄면서도 일반 사진에서는 차이가 거의 보이지 않습니다. 스캔한 문서처럼 선명도가 중요하면 100을 유지하세요. PNG나 WebP처럼 투명 배경이 있는 사진은 이 과정에서 흰 배경으로 채워집니다. PDF에 넣는 이미지 형식에는 투명 채널이 없기 때문입니다.',
+        body: '각 사진은 PDF에 담기기 전에 설정한 품질(40~100)로 JPEG로 다시 인코딩되므로, 품질 슬라이더가 용량을 가장 크게 좌우합니다. 품질을 낮추면 대체로 파일이 작아지지만 정확한 결과는 원본 이미지에 따라 달라집니다. 기본값 85는 일반 사진의 디테일과 용량을 고르게 맞추고, 스캔한 글씨처럼 디테일이 중요하면 100을 선택할 수 있습니다. PNG나 WebP의 투명 부분은 흰색으로 채워집니다. 브라우저에서 안정적으로 처리할 수 있는 1,677만 화소를 넘는 사진은 거부하지 않고 비율을 유지해 축소하며, 실제로 담기는 크기는 파일 목록에서 확인할 수 있습니다.',
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
@@ -134,7 +145,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '한 PDF에 사진을 몇 장까지 합칠 수 있나요?',
-        a: '한 번에 최대 20장까지 추가할 수 있습니다. 휴대폰과 컴퓨터에서 안정적으로 변환되도록 각 이미지는 한 변이 8,192픽셀 이하이고 약 1,677만 화소 이하여야 합니다.',
+        a: '한 번에 최대 20장까지 추가할 수 있습니다. 고화소 휴대폰 사진도 받을 수 있으며, PDF에 담는 JPEG가 한 변 8,192픽셀, 약 1,677만 화소를 넘을 때만 원본 비율대로 축소합니다. 사진 전체와 가로세로 비율은 유지하면서 메모리 사용량을 제한합니다.',
       },
       {
         q: '페이지 순서를 바꿀 수 있나요?',
@@ -146,7 +157,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'PDF로 바꾸면 화질이 떨어지나요?',
-        a: '각 사진은 선택한 품질로 JPEG로 다시 인코딩됩니다. 기본값 85에서는 일반 사진에서 눈에 보이는 차이가 거의 없고, 스캔한 문서나 글씨처럼 선명도가 중요하면 100으로 설정하세요.',
+        a: '각 사진은 선택한 품질로 JPEG로 다시 인코딩되므로 일부 디테일이 줄 수 있습니다. 기본값 85는 일반 사진에 알맞은 균형이고, 스캔 문서나 작은 글씨의 디테일이 중요하면 100을 선택하세요. 약 1,677만 화소를 넘는 이미지는 안정적인 변환을 위해 원본 비율대로 축소됩니다.',
       },
       {
         q: 'JPG 말고 PNG나 WebP도 변환되나요?',
@@ -158,12 +169,23 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropHint: 'JPG, PNG, WebP, GIF, BMP · 최대 20장',
       privacyNote: '사진은 내 기기에서 PDF로 변환됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
+      waiting: '대기 중…',
       processing: '처리 중…',
+      progress: '{total}장 중 {current}장 처리: {file} · {stage}',
+      stageDecoding: '이미지 읽는 중',
+      stageDrawing: '픽셀 준비 중',
+      stageEncoding: 'JPEG 변환 중',
+      assembling: 'PDF 파일을 조립하는 중…',
       building: 'PDF 만드는 중…',
+      cancel: '취소',
+      resume: '변환 다시 시작',
+      cancelled: '변환을 취소했습니다. 원본 이미지는 그대로 남아 있습니다.',
       batchLimit: '기기에서 안정적으로 변환할 수 있도록 한 번에 최대 {n}장까지 추가할 수 있습니다.',
-      tooLarge: '이 이미지는 브라우저에서 안전하게 변환하기에 너무 큽니다.',
-      processFailed: '이 이미지를 변환하지 못했습니다. 더 작은 파일이나 다른 파일로 다시 시도하세요.',
-      pdfFailed: 'PDF를 만들지 못했습니다. 큰 이미지를 제거한 뒤 다시 시도하세요.',
+      reduced: '안정적인 변환을 위해 {width}×{height}로 축소',
+      encodeFailed: '브라우저에서 이 이미지를 JPEG로 변환하지 못했습니다.',
+      processFailed: '이 이미지를 변환하지 못했습니다. 다른 파일로 다시 시도하세요.',
+      failedImages: '변환에 실패한 이미지가 있어 PDF를 만들지 않았습니다. 해당 이미지를 삭제한 뒤 다시 시도하세요.',
+      pdfFailed: 'PDF를 만들지 못했습니다. 원본 이미지는 변경되지 않았습니다.',
       download: 'PDF 다운로드',
       pages: '{n}페이지',
       remove: '삭제',
@@ -183,7 +205,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       marginNone: '없음',
       marginSmall: '좁게',
       qualityLabel: '품질',
-      qualityHint: '품질을 낮추면 PDF 용량이 줄어듭니다. 대부분의 사진은 85에서 차이가 거의 보이지 않습니다.',
+      qualityHint: '품질을 낮추면 대체로 PDF 용량이 줄어듭니다. 85는 일반 사진의 디테일과 용량을 고르게 맞춥니다.',
     },
   },
 };
