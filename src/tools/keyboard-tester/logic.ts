@@ -250,20 +250,22 @@ export interface KeyTransition {
  * Held-repeat keydowns do not count as chatter.
  */
 export function detectChatter(events: KeyTransition[], windowMs = 60): string[] {
-  const lastDown = new Map<string, number>();
+  const lastRelease = new Map<string, number>();
   const down = new Set<string>();
   const chattering = new Set<string>();
   for (const event of events) {
     if (event.type === 'up') {
+      if (!down.has(event.code)) continue;
       down.delete(event.code);
+      lastRelease.set(event.code, event.t);
       continue;
     }
 
-    const previous = lastDown.get(event.code);
-    if (!down.has(event.code) && previous !== undefined && event.t - previous < windowMs) {
+    if (down.has(event.code)) continue;
+    const previousRelease = lastRelease.get(event.code);
+    if (previousRelease !== undefined && event.t - previousRelease < windowMs) {
       chattering.add(event.code);
     }
-    lastDown.set(event.code, event.t);
     down.add(event.code);
   }
   return [...chattering];

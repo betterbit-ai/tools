@@ -6,6 +6,10 @@ const uiEn = {
   layoutEn: 'English',
   layoutKo: 'Korean (2-set)',
   reset: 'Reset',
+  testAreaLabel: 'Keyboard test area',
+  focusHint: 'Click this keyboard or focus it with Tab, then press the keys you want to test.',
+  unsupportedWarning:
+    'This browser does not expose physical key codes, so the keyboard test cannot run. Try a current desktop version of Chrome, Safari, or Firefox.',
   visualHidden:
     'A live keyboard diagram highlights each key you press. The stats and warnings below report the same information in text.',
   currentlyHeld: 'Currently held',
@@ -43,7 +47,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'online keyboard checker',
     ],
     howTo: [
-      'Click away from the layout controls, then press a key — it lights up on the 104-key diagram below.',
+      'Click the keyboard diagram or focus it with Tab, then press a key — it lights up on the 104-key diagram below.',
       'Hold several keys together to see how many register at once (NKRO/rollover).',
       'Switch Layout to Korean to check the 2-set jamo printed on a Korean keyboard.',
       'Watch for a red warning if a key double-fires (chatters) or stays stuck.',
@@ -107,7 +111,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '키보드 채터링 테스트',
     ],
     howTo: [
-      '레이아웃 조작 영역 밖을 클릭한 뒤 키보드의 키를 눌러보세요. 아래 104키 다이어그램에 불이 켜집니다.',
+      '키보드 다이어그램을 클릭하거나 Tab 키로 초점을 옮긴 뒤 키를 눌러보세요. 아래 104키 다이어그램에 불이 켜집니다.',
       '여러 키를 동시에 눌러 몇 개까지 한 번에 인식되는지(동시 입력, NKRO) 확인합니다.',
       '레이아웃을 한글로 바꾸면 두벌식 자판에 새겨진 자음·모음으로 표시됩니다.',
       '키가 이중으로 눌리거나(채터링) 손을 떼도 계속 눌린 채로 남으면 빨간 경고가 표시됩니다.',
@@ -158,6 +162,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       layoutEn: '영문',
       layoutKo: '한글(두벌식)',
       reset: '초기화',
+      testAreaLabel: '키보드 테스트 영역',
+      focusHint: '이 키보드를 클릭하거나 Tab 키로 초점을 옮긴 뒤 테스트할 키를 누르세요.',
+      unsupportedWarning:
+        '이 브라우저는 물리 키 코드를 제공하지 않아 키보드 테스트를 실행할 수 없습니다. 최신 데스크톱 Chrome, Safari 또는 Firefox를 사용하세요.',
       visualHidden:
         '누른 키가 실시간으로 켜지는 키보드 다이어그램입니다. 아래 통계와 경고에도 같은 정보가 글로 표시됩니다.',
       currentlyHeld: '현재 누른 키',

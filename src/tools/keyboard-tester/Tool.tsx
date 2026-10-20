@@ -25,6 +25,7 @@ const STUCK_THRESHOLD_MS = 5000;
 export default function KeyboardTester({ ui }: ToolProps<UI>) {
   const [layout, setLayout] = useState<LayoutId>('en');
   const [isMac, setIsMac] = useState(false);
+  const [supportsPhysicalCodes, setSupportsPhysicalCodes] = useState(true);
   const [held, setHeld] = useState<Record<string, number>>({});
   const [tested, setTested] = useState<Set<string>>(new Set());
   const [maxSimultaneous, setMaxSimultaneous] = useState(0);
@@ -35,6 +36,7 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     setIsMac(/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent));
+    setSupportsPhysicalCodes('KeyboardEvent' in window && 'code' in KeyboardEvent.prototype);
   }, []);
 
   useEffect(() => {
@@ -50,15 +52,17 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
   useEffect(() => {
     const isInteractive = (target: EventTarget | null) =>
       target instanceof HTMLElement && !!target.closest(INTERACTIVE_SELECTOR);
+    const isTestArea = (target: EventTarget | null) =>
+      target instanceof HTMLElement && !!target.closest('[data-keyboard-test-area]');
 
     const clearHeld = () => {
       eventsRef.current = [];
       setHeld({});
-      setChattering([]);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (isInteractive(event.target)) return;
+      if (!supportsPhysicalCodes) return;
+      if (isInteractive(event.target) && !isTestArea(event.target)) return;
       if (!isBoardCode(event.code)) return;
       if (event.code !== 'Tab' && !event.metaKey && !event.ctrlKey && !event.altKey) event.preventDefault();
       if (event.repeat) return;
@@ -67,7 +71,10 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
       setLastKey({ code: event.code, key: event.key });
       markTested(event.code);
       eventsRef.current = [...eventsRef.current.slice(-199), { code: event.code, type: 'down', t: time }];
-      setChattering(detectChatter(eventsRef.current));
+      const detected = detectChatter(eventsRef.current);
+      if (detected.length > 0) {
+        setChattering((current) => [...new Set([...current, ...detected])]);
+      }
       setHeld((current) => {
         if (event.code in current) return current;
         const next = { ...current, [event.code]: time };
@@ -77,7 +84,7 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
-      if (isInteractive(event.target)) return;
+      if (!supportsPhysicalCodes) return;
       if (!isBoardCode(event.code)) return;
       eventsRef.current = [...eventsRef.current.slice(-199), { code: event.code, type: 'up', t: Date.now() }];
       setHeld((current) => {
@@ -96,7 +103,7 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('blur', clearHeld);
     };
-  }, [markTested]);
+  }, [markTested, supportsPhysicalCodes]);
 
   const reset = useCallback(() => {
     eventsRef.current = [];
@@ -159,7 +166,24 @@ export default function KeyboardTester({ ui }: ToolProps<UI>) {
         <Button onClick={reset}>{ui.reset}</Button>
       </div>
 
-      <div class="mt-5 overflow-x-auto rounded-lg border border-line bg-surface p-3 sm:p-4">
+      {!supportsPhysicalCodes && (
+        <div class="mt-4">
+          <Notice tone="danger">{ui.unsupportedWarning}</Notice>
+        </div>
+      )}
+
+      <p id="keyboard-test-focus-hint" class="mt-4 text-sm text-muted">
+        {ui.focusHint}
+      </p>
+      <div
+        role="group"
+        aria-label={ui.testAreaLabel}
+        aria-describedby="keyboard-test-focus-hint"
+        aria-disabled={!supportsPhysicalCodes}
+        tabIndex={supportsPhysicalCodes ? 0 : -1}
+        data-keyboard-test-area
+        class="mt-2 overflow-x-auto rounded-lg border border-line bg-surface p-3 focus-visible:border-accent sm:p-4"
+      >
         <div class="grid min-w-[980px] grid-cols-[minmax(0,1fr)_15rem] gap-3">
           <div class="flex flex-col gap-1.5">
             {MAIN_ROWS.map((r, i) => (

@@ -112,7 +112,7 @@ describe('classifyRollover', () => {
 });
 
 describe('detectChatter', () => {
-  it('flags a second keydown on the same code arriving well inside the window', () => {
+  it('flags a repress on the same code arriving well inside the release window', () => {
     const codes = detectChatter([
       { code: 'KeyA', type: 'down', t: 0 },
       { code: 'KeyA', type: 'up', t: 20 },
@@ -138,7 +138,7 @@ describe('detectChatter', () => {
         [
           { code: 'KeyA', type: 'down', t: 0 },
           { code: 'KeyA', type: 'up', t: 20 },
-          { code: 'KeyA', type: 'down', t: windowMs },
+          { code: 'KeyA', type: 'down', t: 20 + windowMs },
         ],
         windowMs,
       ),
@@ -148,7 +148,7 @@ describe('detectChatter', () => {
         [
           { code: 'KeyA', type: 'down', t: 0 },
           { code: 'KeyA', type: 'up', t: 20 },
-          { code: 'KeyA', type: 'down', t: windowMs - 1 },
+          { code: 'KeyA', type: 'down', t: 20 + windowMs - 1 },
         ],
         windowMs,
       ),
@@ -170,6 +170,25 @@ describe('detectChatter', () => {
       detectChatter([
         { code: 'KeyA', type: 'down', t: 0 },
         { code: 'KeyA', type: 'down', t: 30 },
+      ]),
+    ).toEqual([]);
+  });
+
+  it('detects a quick repress after a long first press', () => {
+    expect(
+      detectChatter([
+        { code: 'KeyA', type: 'down', t: 0 },
+        { code: 'KeyA', type: 'up', t: 500 },
+        { code: 'KeyA', type: 'down', t: 520 },
+      ]),
+    ).toEqual(['KeyA']);
+  });
+
+  it('ignores a keyup that has no matching keydown in the retained log', () => {
+    expect(
+      detectChatter([
+        { code: 'KeyA', type: 'up', t: 0 },
+        { code: 'KeyA', type: 'down', t: 20 },
       ]),
     ).toEqual([]);
   });
