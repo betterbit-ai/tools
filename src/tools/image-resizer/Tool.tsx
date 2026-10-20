@@ -12,7 +12,7 @@ import {
   Toggle,
   cx,
 } from '../../components/ui';
-import { downloadBlob } from '../../lib/browser';
+import { downloadBlob, yieldToBrowser } from '../../lib/browser';
 import { formatBytes, formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -20,24 +20,29 @@ import {
   PRESETS,
   outputName,
   outputType,
-  planResize,
   supportsQuality,
   type FitMode,
   type FormatChoice,
   type ResizeOptions,
 } from './logic';
-import { readDimensions, resizeImage } from './resize';
+import { ImageDecodeError, OutputFormatError, resizeImage, type ResizeProgress } from './resize';
 
 interface Item {
   id: number;
   file: File;
-  width: number;
-  height: number;
-  preview: string;
+  width?: number;
+  height?: number;
   /** `key` = settings the result was made with; unchanged items are skipped. */
   result?: { blob: Blob; url: string; width: number; height: number; name: string; key: string };
-  error?: { kind: 'unreadable' | 'processing'; key?: string };
+  error?: { kind: 'unreadable' | 'format' | 'processing'; key?: string };
   busy?: boolean;
+}
+
+interface WorkProgress {
+  current: number;
+  total: number;
+  file: string;
+  resize: ResizeProgress;
 }
 
 let nextId = 1;
@@ -57,7 +62,11 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
   const [quality, setQuality] = useState(85);
   const [notice, setNotice] = useState<string | null>(null);
   const [zipping, setZipping] = useState(false);
+  const [progress, setProgress] = useState<WorkProgress | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const runId = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
   const itemsRef = useRef(items);
   const settingsKey = JSON.stringify([opts, format, quality]);
   const settingsKeyRef = useRef(settingsKey);
@@ -65,20 +74,12 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
   settingsKeyRef.current = settingsKey;
 
   const addFiles = useCallback(
-    async (files: File[]) => {
+    (files: File[]) => {
       const accepted = files.slice(0, Math.max(0, MAX_BATCH_SIZE - itemsRef.current.length));
       if (accepted.length < files.length) setNotice(ui.batchLimit.replace('{n}', String(MAX_BATCH_SIZE)));
       if (!accepted.length) return;
-
-      const added: Item[] = [];
-      for (const file of accepted) {
-        try {
-          const dims = await readDimensions(file);
-          added.push({ id: nextId++, file, ...dims, preview: URL.createObjectURL(file) });
-        } catch {
-          added.push({ id: nextId++, file, width: 0, height: 0, preview: '', error: { kind: 'unreadable' } });
-        }
-      }
+      const added = accepted.map((file) => ({ id: nextId++, file }));
+      setCancelled(false);
       setItems((prev) => [...prev, ...added]);
     },
     [ui.batchLimit],
@@ -88,76 +89,125 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
   const fileKey = items.map((i) => i.id).join(',');
   useEffect(() => {
     const id = ++runId.current;
+    if (cancelled) return;
+    const controller = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = controller;
+    setItems((prev) => prev.map((item) => (item.busy ? { ...item, busy: false } : item)));
     const timeout = setTimeout(async () => {
-      for (const item of itemsRef.current) {
-        if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
-        if (item.error?.kind === 'unreadable' || item.result?.key === settingsKey || item.error?.key === settingsKey) {
-          continue;
+      const pending = itemsRef.current.filter(
+        (item) =>
+          item.error?.kind !== 'unreadable' && item.result?.key !== settingsKey && item.error?.key !== settingsKey,
+      );
+      try {
+        for (const [index, item] of pending.entries()) {
+          if (controller.signal.aborted || runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+          setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, busy: true, error: undefined } : p)));
+          try {
+            const mime = outputType(format, item.file.type, item.file.name);
+            const resized = await resizeImage(item.file, opts, mime, quality / 100, {
+              signal: controller.signal,
+              onProgress: (resize) => {
+                if (runId.current === id && settingsKeyRef.current === settingsKey) {
+                  setProgress({ current: index + 1, total: pending.length, file: item.file.name, resize });
+                }
+              },
+            });
+            if (controller.signal.aborted || runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+            const { blob, plan, sourceWidth, sourceHeight } = resized;
+            const result = {
+              blob,
+              url: URL.createObjectURL(blob),
+              width: plan.width,
+              height: plan.height,
+              name: outputName(item.file.name, mime, plan.width, plan.height),
+              key: settingsKey,
+            };
+            setItems((prev) =>
+              prev.map((p) => {
+                if (p.id !== item.id) return p;
+                if (p.result) URL.revokeObjectURL(p.result.url);
+                return { ...p, width: sourceWidth, height: sourceHeight, result, busy: false };
+              }),
+            );
+          } catch (cause) {
+            if (controller.signal.aborted || runId.current !== id || settingsKeyRef.current !== settingsKey) return;
+            const kind =
+              cause instanceof ImageDecodeError
+                ? 'unreadable'
+                : cause instanceof OutputFormatError
+                  ? 'format'
+                  : 'processing';
+            setItems((prev) =>
+              prev.map((p) => {
+                if (p.id !== item.id) return p;
+                return {
+                  ...p,
+                  error: { kind, key: kind === 'unreadable' ? undefined : settingsKey },
+                  busy: false,
+                };
+              }),
+            );
+          }
+          await yieldToBrowser();
         }
-        setItems((prev) => prev.map((p) => (p.id === item.id ? { ...p, busy: true, error: undefined } : p)));
-        try {
-          const plan = planResize(item.width, item.height, opts);
-          const mime = outputType(format, item.file.type, item.file.name);
-          const blob = await resizeImage(item.file, plan, mime, quality / 100);
-          if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
-          const result = {
-            blob,
-            url: URL.createObjectURL(blob),
-            width: plan.width,
-            height: plan.height,
-            name: outputName(item.file.name, mime, plan.width, plan.height),
-            key: settingsKey,
-          };
-          setItems((prev) =>
-            prev.map((p) => {
-              if (p.id !== item.id) return p;
-              if (p.result) URL.revokeObjectURL(p.result.url);
-              return { ...p, result, busy: false };
-            }),
-          );
-        } catch {
-          if (runId.current !== id || settingsKeyRef.current !== settingsKey) return;
-          setItems((prev) =>
-            prev.map((p) =>
-              p.id === item.id ? { ...p, error: { kind: 'processing', key: settingsKey }, busy: false } : p,
-            ),
-          );
-        }
+      } finally {
+        if (runId.current === id && settingsKeyRef.current === settingsKey) setProgress(null);
       }
     }, 250);
-    return () => clearTimeout(timeout);
-  }, [fileKey, opts, format, quality, settingsKey]);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+      if (abortRef.current === controller) abortRef.current = null;
+    };
+  }, [fileKey, opts, format, quality, settingsKey, retryToken, cancelled]);
 
   useEffect(
     () => () => {
       runId.current++;
+      abortRef.current?.abort();
       for (const item of itemsRef.current) {
-        URL.revokeObjectURL(item.preview);
         if (item.result) URL.revokeObjectURL(item.result.url);
       }
     },
     [],
   );
 
-  const remove = (id: number) =>
-    setItems((prev) => {
-      runId.current++;
-      const gone = prev.find((p) => p.id === id);
-      if (gone) {
-        URL.revokeObjectURL(gone.preview);
-        if (gone.result) URL.revokeObjectURL(gone.result.url);
-      }
-      return prev.filter((p) => p.id !== id);
-    });
+  const remove = (id: number) => {
+    runId.current++;
+    abortRef.current?.abort();
+    setProgress(null);
+    setCancelled(false);
+    const gone = itemsRef.current.find((item) => item.id === id);
+    if (gone) {
+      if (gone.result) URL.revokeObjectURL(gone.result.url);
+    }
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   const clear = () => {
     runId.current++;
+    abortRef.current?.abort();
     for (const p of items) {
-      URL.revokeObjectURL(p.preview);
       if (p.result) URL.revokeObjectURL(p.result.url);
     }
     setItems([]);
     setNotice(null);
+    setProgress(null);
+    setCancelled(false);
+  };
+
+  const cancel = () => {
+    runId.current++;
+    abortRef.current?.abort();
+    setProgress(null);
+    setCancelled(true);
+    setItems((prev) => prev.map((item) => (item.busy ? { ...item, busy: false } : item)));
+  };
+
+  const resume = () => {
+    setCancelled(false);
+    setRetryToken((value) => value + 1);
   };
 
   const ready = items.filter((i) => i.result?.key === settingsKey && !i.busy && !i.error);
@@ -182,8 +232,10 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
     }
   };
 
-  const set = <K extends keyof ResizeOptions>(key: K, value: ResizeOptions[K]) =>
+  const set = <K extends keyof ResizeOptions>(key: K, value: ResizeOptions[K]) => {
+    setCancelled(false);
     setOpts((o) => ({ ...o, [key]: value }));
+  };
   const totalBefore = ready.reduce((s, i) => s + i.file.size, 0);
   const totalAfter = ready.reduce((s, i) => s + i.result!.blob.size, 0);
   const showQuality =
@@ -191,6 +243,13 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
       ? items.some((item) => supportsQuality(outputType(format, item.file.type, item.file.name)))
       : supportsQuality(format);
   const presetValue = PRESETS.find((p) => p.width === opts.width && p.height === opts.height)?.id ?? '';
+  const progressLabel = progress
+    ? ui.progress
+        .replace('{current}', String(progress.current))
+        .replace('{total}', String(progress.total))
+        .replace('{file}', progress.file)
+        .replace('{stage}', resizeStage(progress.resize, ui))
+    : '';
 
   return (
     <Panel>
@@ -212,6 +271,28 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
             </div>
           )}
 
+          {progress && (
+            <div class="mt-4 flex flex-wrap items-center gap-3" aria-live="polite">
+              <div class="min-w-0 flex-1">
+                <Notice>{progressLabel}</Notice>
+              </div>
+              <Button variant="danger" onClick={cancel}>
+                {ui.cancel}
+              </Button>
+            </div>
+          )}
+
+          {cancelled && (
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <div class="min-w-0 flex-1">
+                <Notice>{ui.cancelled}</Notice>
+              </div>
+              <Button variant="secondary" onClick={resume}>
+                {ui.resume}
+              </Button>
+            </div>
+          )}
+
           {items.length > 0 && (
             <ul class="mt-4 divide-y divide-line rounded-lg border border-line">
               {items.map((item) => {
@@ -219,17 +300,22 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
                 return (
                   <li key={item.id} class="flex items-center gap-3 p-3">
                     <div class="size-14 shrink-0 overflow-hidden rounded-md bg-surface-2">
-                      {item.preview && <img src={item.preview} alt="" class="size-full object-cover" />}
+                      {item.result && <img src={item.result.url} alt="" class="size-full object-cover" />}
                     </div>
                     <div class="min-w-0 flex-1 text-sm">
                       <p class="truncate font-medium text-fg">{item.file.name}</p>
                       {item.error ? (
                         <p class="text-danger">
-                          {item.error.kind === 'unreadable' ? ui.unsupported : ui.processFailed}
+                          {item.error.kind === 'unreadable'
+                            ? ui.unsupported
+                            : item.error.kind === 'format'
+                              ? ui.formatFailed
+                              : ui.processFailed}
                         </p>
                       ) : (
                         <p class="tabular text-muted">
-                          {item.width}×{item.height} · {formatBytes(item.file.size, locale)}
+                          {item.width && item.height ? `${item.width}×${item.height} · ` : ''}
+                          {formatBytes(item.file.size, locale)}
                           {item.result && (
                             <>
                               {' → '}
@@ -263,7 +349,12 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
 
           {items.length > 0 && (
             <div class="mt-4 flex flex-wrap items-center gap-3">
-              <Button variant="primary" size="lg" disabled={ready.length === 0 || zipping} onClick={downloadAll}>
+              <Button
+                variant="primary"
+                size="lg"
+                disabled={ready.length === 0 || zipping || Boolean(progress)}
+                onClick={downloadAll}
+              >
                 {zipping
                   ? ui.preparingDownload
                   : ready.length > 1
@@ -307,7 +398,10 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
                   value={presetValue}
                   onValue={(id) => {
                     const p = PRESETS.find((x) => x.id === id);
-                    if (p) setOpts((o) => ({ ...o, width: p.width, height: p.height, fit: 'cover' }));
+                    if (p) {
+                      setCancelled(false);
+                      setOpts((o) => ({ ...o, width: p.width, height: p.height, fit: 'cover' }));
+                    }
                   }}
                   options={[
                     { value: '', label: ui.presetCustom },
@@ -373,7 +467,10 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
             <Field label={ui.format} hint={ui.formatHint}>
               <Select<FormatChoice>
                 value={format}
-                onValue={setFormat}
+                onValue={(value) => {
+                  setCancelled(false);
+                  setFormat(value);
+                }}
                 options={[
                   { value: 'original', label: ui.formatOriginal },
                   { value: 'image/jpeg', label: 'JPG' },
@@ -389,7 +486,10 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
                   min={10}
                   max={100}
                   value={quality}
-                  onInput={(e) => setQuality(Number((e.currentTarget as HTMLInputElement).value))}
+                  onInput={(e) => {
+                    setCancelled(false);
+                    setQuality(Number((e.currentTarget as HTMLInputElement).value));
+                  }}
                   class="w-full accent-[var(--accent)]"
                 />
               </Field>
@@ -399,6 +499,12 @@ export default function ImageResizer({ locale, ui, preset }: ToolProps<UI>) {
       </div>
     </Panel>
   );
+}
+
+function resizeStage(progress: ResizeProgress, ui: UI): string {
+  if (progress.stage === 'decoding') return ui.stageDecoding;
+  if (progress.stage === 'encoding') return ui.stageEncoding;
+  return ui.stageResizing.replace('{current}', String(progress.current)).replace('{total}', String(progress.total));
 }
 
 function makeZip(files: Record<string, Uint8Array>): Promise<Uint8Array> {

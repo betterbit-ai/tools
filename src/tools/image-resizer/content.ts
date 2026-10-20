@@ -6,10 +6,18 @@ const uiEn = {
   dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · up to 50 images per batch',
   privacyNote: 'Images are resized on your device. Nothing is uploaded.',
   unsupported: 'This file can’t be read by your browser.',
-  processFailed: 'This image could not be resized. Try a smaller file or another format.',
+  processFailed: 'This image could not be resized. Close other tabs and retry, or use a smaller batch.',
+  formatFailed: 'Your browser could not encode the selected output format. Choose another format and retry.',
   batchLimit: 'A batch can contain up to {n} images. Add more after downloading or clearing these files.',
   zipFailed: 'The ZIP could not be created. Try downloading fewer images at once.',
   processing: 'Working…',
+  progress: 'Resizing {current} of {total}: {file} — {stage}',
+  stageDecoding: 'Decoding image…',
+  stageResizing: 'Resizing pixels ({current}/{total})…',
+  stageEncoding: 'Encoding output…',
+  cancel: 'Cancel resizing',
+  cancelled: 'Resizing cancelled. Your original files are still available.',
+  resume: 'Resume resizing',
   preparingDownload: 'Preparing ZIP…',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
@@ -58,7 +66,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       'Drop images onto the box, click to choose files, or paste a screenshot with Ctrl/⌘ + V.',
       'Choose a preset or enter a width and/or height (or switch to Percentage).',
-      'Pick an output format and quality. Results and file sizes update instantly.',
+      'Pick an output format and quality. Follow the visible batch progress; you can cancel and resume long work.',
       'Download each image, or all of them as a ZIP.',
     ],
     sections: [
@@ -72,7 +80,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your images stay on your device',
-        body: 'Most online resizers upload your photos to a server, process them there and send them back. This one uses your browser’s own image engine (Canvas), so the files never leave your computer or phone. That also makes it faster — there is no upload or download wait — and it keeps working offline once the page has loaded.',
+        body: 'Most online resizers upload your photos to a server, process them there and send them back. This one uses your browser’s own image engine (Canvas), so the files never leave your computer or phone. It decodes and resizes one image at a time, releases temporary pixel buffers between steps, and keeps running if you switch tabs. You can cancel and resume a long batch, and it keeps working offline once the page has loaded.',
       },
     ],
     faq: [
@@ -82,7 +90,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How many images can I resize at once?',
-        a: 'A batch can contain up to 50 images. Large, high-resolution photos use more device memory, so split a large collection into smaller batches if your browser becomes slow.',
+        a: 'A batch can contain up to 50 images, including ordinary 12 MP and 24 MP phone photos. Images are decoded and resized one at a time to bound working memory. Progress stays visible, and you can cancel and resume a long batch or switch tabs while it continues.',
       },
       {
         q: 'Does resizing reduce image quality?',
@@ -118,7 +126,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       '이미지를 끌어다 놓거나, 클릭해서 고르거나, Ctrl/⌘ + V로 캡처 이미지를 붙여넣습니다.',
       '프리셋을 고르거나 가로·세로 크기를 입력합니다 (퍼센트로도 가능).',
-      '저장 형식과 품질을 고르면 결과와 용량이 바로 바뀝니다.',
+      '저장 형식과 품질을 고릅니다. 여러 장을 처리할 때 진행 상황을 확인하고, 오래 걸리면 취소한 뒤 이어서 처리할 수 있습니다.',
       '한 장씩 받거나, 전체를 ZIP으로 한번에 다운로드합니다.',
     ],
     sections: [
@@ -132,7 +140,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사진이 기기 밖으로 나가지 않습니다',
-        body: '대부분의 온라인 이미지 변환 사이트는 사진을 서버에 올려서 처리한 뒤 다시 내려받게 합니다. 이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 처리하기 때문에 파일이 컴퓨터나 휴대폰 밖으로 전송되지 않습니다. 업로드·다운로드 대기가 없어 더 빠르고, 페이지를 연 뒤에는 오프라인에서도 동작합니다.',
+        body: '대부분의 온라인 이미지 변환 사이트는 사진을 서버에 올려서 처리한 뒤 다시 내려받게 합니다. 이 도구는 브라우저에 내장된 이미지 엔진(Canvas)으로 처리하기 때문에 파일이 컴퓨터나 휴대폰 밖으로 전송되지 않습니다. 이미지를 한 장씩 읽고 크기를 바꾼 뒤 임시 픽셀 메모리를 해제하며, 다른 탭으로 이동해도 계속 처리합니다. 긴 작업은 취소했다가 이어서 할 수 있고, 페이지를 연 뒤에는 오프라인에서도 동작합니다.',
       },
     ],
     faq: [
@@ -142,7 +150,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '한 번에 몇 장까지 줄일 수 있나요?',
-        a: '한 번에 최대 50장까지 처리할 수 있습니다. 고해상도 사진은 기기 메모리를 더 많이 쓰므로 브라우저가 느려지면 여러 번으로 나누어 처리하세요.',
+        a: '일반적인 1,200만·2,400만 화소 휴대폰 사진을 포함해 한 번에 최대 50장까지 처리할 수 있습니다. 작업 메모리를 제한하기 위해 한 장씩 읽고 크기를 조절합니다. 진행 상황을 확인하면서 긴 작업은 취소·재개할 수 있고, 다른 탭으로 이동해도 계속 처리됩니다.',
       },
       {
         q: '크기를 줄이면 화질이 떨어지나요?',
@@ -170,10 +178,19 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropHint: 'JPG, PNG, WebP, GIF, BMP, AVIF · 한 번에 최대 50장',
       privacyNote: '이미지는 내 기기에서 처리됩니다. 어디에도 업로드되지 않습니다.',
       unsupported: '브라우저에서 읽을 수 없는 파일입니다.',
-      processFailed: '이미지 크기를 조절하지 못했습니다. 더 작은 파일이나 다른 형식으로 다시 시도하세요.',
+      processFailed:
+        '이미지 크기를 조절하지 못했습니다. 다른 탭을 닫고 다시 시도하거나, 한 번에 처리하는 장수를 줄여 보세요.',
+      formatFailed: '브라우저에서 선택한 저장 형식으로 만들지 못했습니다. 다른 형식을 선택해 다시 시도하세요.',
       batchLimit: '한 번에 최대 {n}장까지 처리할 수 있습니다. 다운로드하거나 파일을 지운 뒤 더 추가하세요.',
       zipFailed: 'ZIP 파일을 만들지 못했습니다. 한 번에 다운로드하는 이미지 수를 줄여 다시 시도하세요.',
       processing: '처리 중…',
+      progress: '{total}장 중 {current}번째 크기 조절: {file} — {stage}',
+      stageDecoding: '이미지 읽는 중…',
+      stageResizing: '픽셀 크기 조절 중 ({current}/{total})…',
+      stageEncoding: '결과 파일 저장 중…',
+      cancel: '크기 조절 취소',
+      cancelled: '크기 조절을 취소했습니다. 원본 파일은 그대로 남아 있습니다.',
+      resume: '크기 조절 계속',
       preparingDownload: 'ZIP 준비 중…',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
