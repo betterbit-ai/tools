@@ -25,6 +25,8 @@ describe('image-watermark logic', () => {
   });
 
   it('keeps full-resolution canvas work within documented file, side, and pixel limits', () => {
+    expect(validateInput(4032, 3024, 6 * 1024 * 1024)).toEqual({ ok: true });
+    expect(validateInput(6000, 4000, 30 * 1024 * 1024)).toEqual({ ok: true });
     expect(validateInput(MAX_INPUT_DIMENSION, 3000, MAX_FILE_BYTES)).toEqual({ ok: true });
     expect(validateInput(MAX_INPUT_DIMENSION + 1, 1, 1)).toEqual({ ok: false, reason: 'dimension' });
     expect(validateInput(6000, 4001, 1)).toEqual({ ok: false, reason: 'pixels' });

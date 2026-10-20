@@ -13,6 +13,14 @@ const uiEn = {
   animatedImage: 'Animated GIF and WebP files are not supported because the result would lose their animation.',
   batchLimit: 'Add up to {n} images at a time so your browser stays responsive.',
   processing: 'Applying watermark…',
+  progress: 'Watermarking {current} of {total}: {file} — {stage}',
+  stageDecoding: 'Reading image',
+  stageDrawing: 'Drawing watermark',
+  stageEncoding: 'Encoding file',
+  cancel: 'Cancel watermarking',
+  cancelled: 'Watermarking cancelled. Your original files are still available.',
+  resume: 'Resume watermarking',
+  formatError: 'Your browser could not encode the selected output format. Choose PNG or another format.',
   processingError: 'This image could not be watermarked. Try a different image or output format.',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
@@ -80,7 +88,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       'Drop up to 20 photos onto the box, click to choose files, or paste an image with Ctrl/⌘ + V.',
       'Type a text watermark, or choose a logo image with a transparent background.',
       'Choose one position or a repeat pattern, then set the size, opacity and angle.',
-      'Check the live image preview and download one result or the complete ZIP.',
+      'Follow the visible batch progress, then download one result or the complete ZIP. You can cancel and resume long work.',
     ],
     sections: [
       {
@@ -89,7 +97,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Choose the right output format',
-        body: 'PNG is lossless and preserves transparent pixels, which is useful for graphics and screenshots. JPG has no transparency and is usually the smaller choice for photographs. WebP also supports transparency and is commonly smaller than PNG for web images. This tool encodes JPG and WebP at 92% quality; selecting “Same as original” keeps JPG, PNG, or WebP when the browser can encode that format. To keep browser memory predictable, each source can be up to 30 MB, 8,000 pixels on either side, and 24 million pixels overall.',
+        body: 'PNG is lossless and preserves transparent pixels, which is useful for graphics and screenshots. JPG has no transparency and is usually the smaller choice for photographs. WebP also supports transparency and is commonly smaller than PNG for web images. This tool encodes JPG and WebP at 92% quality; selecting “Same as original” keeps JPG, PNG, or WebP when the browser can encode that format. Ordinary 12 MP and 24 MP phone photos are processed at their native pixel size, one at a time, with visible progress and cancel/resume controls. Each source can be up to 30 MB, 8,000 pixels on either side, and 24 million pixels overall.',
       },
       {
         heading: 'The watermark is visible, not DRM',
@@ -103,7 +111,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Can I add the same watermark to multiple images?',
-        a: 'Yes. Drop up to 20 photos, set one text or logo watermark, and the same relative size, opacity, angle, and layout are applied to every readable image. Download the finished batch as one ZIP file.',
+        a: 'Yes. Drop up to 20 photos, set one text or logo watermark, and the same relative size, opacity, angle, and layout are applied to every readable image. Files are processed one at a time with visible progress; you can cancel and resume, then download the finished batch as one ZIP file.',
       },
       {
         q: 'What is a good opacity for a watermark?',
@@ -115,7 +123,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'What limits apply to images?',
-        a: 'Each source image can be up to 30 MB, 8,000 pixels on either side, and 24 million pixels overall; a batch can contain up to 20 images. These browser-safety limits prevent a large batch from exhausting the tab’s memory. Animated GIF and WebP files are not accepted because a Canvas export would turn them into a still image.',
+        a: 'Each source image can be up to 30 MB, 8,000 pixels on either side, and 24 million pixels overall, including ordinary 12 MP and 24 MP phone photos; a batch can contain up to 20 images. Images are processed one at a time to bound full-resolution canvas memory. Animated GIF and WebP files are not accepted because a Canvas export would turn them into a still image.',
       },
       {
         q: 'Does watermarking keep the original photo metadata?',
@@ -143,7 +151,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       '사진 최대 20장을 끌어다 놓거나, 클릭해서 고르거나, Ctrl/⌘ + V로 붙여넣습니다.',
       '워터마크 문구를 입력하거나 투명 배경 로고 이미지를 선택합니다.',
       '한 곳에 놓을지 반복할지 고르고, 크기·투명도·기울기를 조절합니다.',
-      '바뀐 미리보기를 확인한 뒤 한 장씩 받거나 전체 ZIP 파일을 다운로드합니다.',
+      '진행 상황을 확인한 뒤 한 장씩 받거나 전체 ZIP 파일을 다운로드합니다. 오래 걸리면 취소하고 이어서 처리할 수 있습니다.',
     ],
     sections: [
       {
@@ -152,7 +160,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '다운로드 형식을 고르는 방법',
-        body: 'PNG는 손실 없이 저장되고 투명 영역을 보존해 로고·스크린샷에 적합합니다. JPG는 투명도를 지원하지 않지만 보통 사진 용량이 작습니다. WebP는 투명도를 지원하면서 웹용 이미지의 용량을 줄이는 데 유용합니다. 이 도구는 JPG와 WebP를 품질 92%로 저장하며, “원본과 같음”을 고르면 브라우저가 지원하는 JPG·PNG·WebP 형식을 유지합니다. 브라우저 메모리를 안정적으로 쓰기 위해 사진 한 장은 30MB, 한 변 8,000px, 전체 2,400만 화소까지 받습니다.',
+        body: 'PNG는 손실 없이 저장되고 투명 영역을 보존해 로고·스크린샷에 적합합니다. JPG는 투명도를 지원하지 않지만 보통 사진 용량이 작습니다. WebP는 투명도를 지원하면서 웹용 이미지의 용량을 줄이는 데 유용합니다. 이 도구는 JPG와 WebP를 품질 92%로 저장하며, “원본과 같음”을 고르면 브라우저가 지원하는 JPG·PNG·WebP 형식을 유지합니다. 일반적인 1,200만·2,400만 화소 휴대폰 사진도 원래 픽셀 크기로 한 장씩 처리하며, 진행 상황과 취소·계속하기 버튼을 표시합니다. 사진 한 장은 30MB, 한 변 8,000px, 전체 2,400만 화소까지 받습니다.',
       },
       {
         heading: '워터마크는 DRM이 아닙니다',
@@ -166,7 +174,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '사진 여러 장에 같은 워터마크를 넣을 수 있나요?',
-        a: '네. 사진 최대 20장을 넣고 하나의 텍스트 또는 로고 워터마크를 설정하면, 상대 크기·투명도·각도·배치가 읽을 수 있는 모든 사진에 똑같이 적용됩니다. 완성된 파일은 ZIP 하나로 받을 수 있습니다.',
+        a: '네. 사진 최대 20장을 넣고 하나의 텍스트 또는 로고 워터마크를 설정하면, 상대 크기·투명도·각도·배치가 읽을 수 있는 모든 사진에 똑같이 적용됩니다. 한 장씩 처리하면서 진행 상황을 표시하고, 취소한 뒤 이어서 처리할 수 있습니다. 완성된 파일은 ZIP 하나로 받을 수 있습니다.',
       },
       {
         q: '워터마크 투명도는 몇 퍼센트가 적당한가요?',
@@ -178,7 +186,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '사진 크기와 개수에 제한이 있나요?',
-        a: '사진 한 장은 30MB, 한 변 8,000px, 전체 2,400만 화소까지 가능하고 한 번에 최대 20장을 처리합니다. 큰 사진 묶음으로 브라우저 탭의 메모리가 부족해지는 일을 막기 위한 제한입니다. Canvas로 저장하면 움직임이 사라지므로 애니메이션 GIF와 WebP는 받지 않습니다.',
+        a: '사진 한 장은 30MB, 한 변 8,000px, 전체 2,400만 화소까지 가능해 일반적인 1,200만·2,400만 화소 휴대폰 사진을 처리할 수 있고, 한 번에 최대 20장을 넣을 수 있습니다. 전체 해상도 Canvas 메모리를 제한하도록 한 장씩 처리합니다. Canvas로 저장하면 움직임이 사라지므로 애니메이션 GIF와 WebP는 받지 않습니다.',
       },
       {
         q: '워터마크를 넣으면 사진의 위치 정보도 남나요?',
@@ -197,6 +205,14 @@ export const content: Record<Locale, ToolContent<UI>> = {
       animatedImage: '움직임이 사라지는 것을 막기 위해 애니메이션 GIF와 WebP는 지원하지 않습니다.',
       batchLimit: '브라우저가 멈추지 않도록 한 번에 최대 {n}장까지 넣을 수 있습니다.',
       processing: '워터마크 적용 중…',
+      progress: '{total}장 중 {current}번째 워터마크 적용: {file} — {stage}',
+      stageDecoding: '사진 읽는 중',
+      stageDrawing: '워터마크 그리는 중',
+      stageEncoding: '파일 저장 중',
+      cancel: '워터마크 취소',
+      cancelled: '워터마크 적용을 취소했습니다. 원본 파일은 그대로 남아 있습니다.',
+      resume: '워터마크 계속하기',
+      formatError: '브라우저가 선택한 출력 형식으로 저장하지 못했습니다. PNG나 다른 형식을 선택해 보세요.',
       processingError: '이 이미지에 워터마크를 넣지 못했습니다. 다른 이미지나 다운로드 형식을 선택해 보세요.',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',

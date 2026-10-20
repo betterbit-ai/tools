@@ -1,4 +1,5 @@
 /** Browser-only canvas rendering for image-watermark. */
+import { yieldToBrowser } from '../../lib/browser';
 import {
   anchorPoint,
   isAnimatedGif,
@@ -9,8 +10,18 @@ import {
   type WatermarkOptions,
 } from './logic';
 
+export type WatermarkProgress = 'decoding' | 'drawing' | 'encoding';
+
+export interface WatermarkControl {
+  signal?: AbortSignal;
+  onProgress?: (progress: WatermarkProgress) => void;
+}
+
+export class ImageDecodeError extends Error {}
+export class OutputFormatError extends Error {}
+
 export async function readDimensions(file: File): Promise<{ width: number; height: number }> {
-  const bitmap = await createImageBitmap(file);
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   try {
     return { width: bitmap.width, height: bitmap.height };
   } finally {
@@ -26,15 +37,41 @@ export async function isAnimatedImage(file: File): Promise<boolean> {
   return type === 'image/gif' ? isAnimatedGif(bytes) : isAnimatedWebp(bytes);
 }
 
-export async function watermarkImage(file: File, options: WatermarkOptions, logo?: File): Promise<Blob> {
-  const source = await createImageBitmap(file);
-  let logoBitmap: ImageBitmap | undefined;
+/**
+ * Decode, draw, and encode one full-resolution image. Stage yields use MessageChannel so
+ * progress and cancellation continue when the page is behind another tab.
+ */
+export async function watermarkImage(
+  file: File,
+  options: WatermarkOptions,
+  logo?: File,
+  control: WatermarkControl = {},
+): Promise<Blob> {
+  throwIfAborted(control.signal);
+  control.onProgress?.('decoding');
+  await yieldToBrowser();
+
+  let source: ImageBitmap;
   try {
+    source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    throw new ImageDecodeError('The browser could not decode this image.');
+  }
+
+  let logoBitmap: ImageBitmap | undefined;
+  let canvas: HTMLCanvasElement | undefined;
+  try {
+    throwIfAborted(control.signal);
     if (options.mode === 'logo') {
       if (!logo) throw new Error('Logo is required');
-      logoBitmap = await createImageBitmap(logo);
+      logoBitmap = await createImageBitmap(logo, { imageOrientation: 'from-image' });
     }
-    const canvas = makeCanvas(source.width, source.height);
+
+    control.onProgress?.('drawing');
+    await yieldToBrowser();
+    throwIfAborted(control.signal);
+
+    canvas = makeCanvas(source.width, source.height);
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas is unavailable');
     const mime = outputMime(options.format, file.type);
@@ -43,21 +80,35 @@ export async function watermarkImage(file: File, options: WatermarkOptions, logo
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
     context.drawImage(source, 0, 0);
-    drawWatermark(context, canvas.width, canvas.height, options, logoBitmap);
-    return await toBlob(canvas, mime, mime === 'image/png' ? undefined : 0.92);
+    await drawWatermark(context, canvas.width, canvas.height, options, logoBitmap, control.signal);
+
+    control.onProgress?.('encoding');
+    await yieldToBrowser();
+    throwIfAborted(control.signal);
+    const blob = await toBlob(canvas, mime, mime === 'image/png' ? undefined : 0.92, control.signal);
+    throwIfAborted(control.signal);
+    if (blob.type.toLowerCase() !== mime.toLowerCase()) {
+      throw new OutputFormatError(`The browser returned ${blob.type || 'an unknown format'} instead of ${mime}.`);
+    }
+    return blob;
   } finally {
     source.close();
     logoBitmap?.close();
+    if (canvas) {
+      canvas.width = 1;
+      canvas.height = 1;
+    }
   }
 }
 
-function drawWatermark(
+async function drawWatermark(
   context: CanvasRenderingContext2D,
   width: number,
   height: number,
   rawOptions: WatermarkOptions,
   logo?: ImageBitmap,
-): void {
+  signal?: AbortSignal,
+): Promise<void> {
   const options = normalizeOptions(rawOptions);
   const targetWidth = width * (options.size / 100);
   const mark = createMark(options, targetWidth, logo);
@@ -68,22 +119,27 @@ function drawWatermark(
       ? tileOrigins(width, height, mark.width, mark.height, gap)
       : [anchorPoint(width, height, mark.width, mark.height, options.position, padding)];
   context.save();
-  context.globalAlpha = options.opacity / 100;
-  for (const point of points) {
-    context.save();
-    context.translate(point.x + mark.width / 2, point.y + mark.height / 2);
-    context.rotate((options.rotation * Math.PI) / 180);
-    context.drawImage(mark, -mark.width / 2, -mark.height / 2);
+  try {
+    context.globalAlpha = options.opacity / 100;
+    for (const [index, point] of points.entries()) {
+      if (index > 0 && index % 100 === 0) {
+        await yieldToBrowser();
+        throwIfAborted(signal);
+      }
+      context.save();
+      context.translate(point.x + mark.width / 2, point.y + mark.height / 2);
+      context.rotate((options.rotation * Math.PI) / 180);
+      context.drawImage(mark, -mark.width / 2, -mark.height / 2);
+      context.restore();
+    }
+  } finally {
     context.restore();
+    mark.width = 1;
+    mark.height = 1;
   }
-  context.restore();
 }
 
-function createMark(
-  options: WatermarkOptions,
-  targetWidth: number,
-  logo?: ImageBitmap,
-): HTMLCanvasElement | ImageBitmap {
+function createMark(options: WatermarkOptions, targetWidth: number, logo?: ImageBitmap): HTMLCanvasElement {
   if (options.mode === 'logo' && logo) {
     const width = Math.max(1, Math.round(targetWidth));
     const height = Math.max(1, Math.round((logo.height / logo.width) * width));
@@ -123,8 +179,26 @@ function makeCanvas(width: number, height: number): HTMLCanvasElement {
   return canvas;
 }
 
-function toBlob(canvas: HTMLCanvasElement, mime: string, quality?: number): Promise<Blob> {
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Unable to encode image'))), mime, quality),
-  );
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) throw new DOMException('Watermarking was cancelled.', 'AbortError');
+}
+
+function toBlob(canvas: HTMLCanvasElement, mime: string, quality?: number, signal?: AbortSignal): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      signal?.removeEventListener('abort', onAbort);
+      callback();
+    };
+    const onAbort = () => finish(() => reject(new DOMException('Watermarking was cancelled.', 'AbortError')));
+    signal?.addEventListener('abort', onAbort, { once: true });
+    canvas.toBlob(
+      (blob) => finish(() => (blob ? resolve(blob) : reject(new Error('Unable to encode image')))),
+      mime,
+      quality,
+    );
+    if (signal?.aborted) onAbort();
+  });
 }
