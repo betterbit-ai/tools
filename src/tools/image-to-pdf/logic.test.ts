@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPdf,
   computePageLayout,
-  isSafeImageDimensions,
+  fitImageWithinLimits,
   normalizePdfOptions,
   pdfOutputName,
   shouldBuildPdf,
@@ -119,12 +119,26 @@ describe('normalizePdfOptions', () => {
   });
 });
 
-describe('isSafeImageDimensions', () => {
-  it('rejects oversized, unsafe canvases before encoding', () => {
-    expect(isSafeImageDimensions(4096, 4096)).toBe(true);
-    expect(isSafeImageDimensions(8193, 100)).toBe(false);
-    expect(isSafeImageDimensions(5000, 5000)).toBe(false);
-    expect(isSafeImageDimensions(0, 100)).toBe(false);
+describe('fitImageWithinLimits', () => {
+  it('keeps everyday images that already fit the canvas budget', () => {
+    expect(fitImageWithinLimits(4032, 3024)).toEqual({ width: 4032, height: 3024, reduced: false });
+    expect(fitImageWithinLimits(6000, 800)).toEqual({ width: 6000, height: 800, reduced: false });
+  });
+
+  it('reduces a 24 MP phone photo proportionally instead of rejecting it', () => {
+    const fitted = fitImageWithinLimits(6000, 4000);
+    expect(fitted).toEqual({ width: 5016, height: 3344, reduced: true });
+    expect(fitted.width * fitted.height).toBeLessThanOrEqual(16_777_216);
+    expect(fitted.width / fitted.height).toBeCloseTo(1.5, 3);
+  });
+
+  it('bounds very long images by the maximum canvas side', () => {
+    expect(fitImageWithinLimits(20_000, 100)).toEqual({ width: 8192, height: 40, reduced: true });
+  });
+
+  it('rejects invalid decoded dimensions', () => {
+    expect(() => fitImageWithinLimits(0, 100)).toThrow();
+    expect(() => fitImageWithinLimits(Number.NaN, 100)).toThrow();
   });
 });
 
@@ -139,9 +153,10 @@ describe('pdfOutputName', () => {
 });
 
 describe('shouldBuildPdf', () => {
-  it('waits for every selected image instead of exposing a partial PDF', () => {
+  it('waits for every selected image and blocks failed pages instead of exposing a partial PDF', () => {
     expect(shouldBuildPdf(1, true)).toBe(false);
     expect(shouldBuildPdf(2, false)).toBe(true);
+    expect(shouldBuildPdf(1, false, true)).toBe(false);
     expect(shouldBuildPdf(0, false)).toBe(false);
   });
 });

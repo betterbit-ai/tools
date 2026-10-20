@@ -21,16 +21,29 @@ export const MAX_IMAGE_PIXELS = 16_777_216;
 /** A bounded batch keeps previews, encoded images, and the resulting PDF within device memory. */
 export const MAX_IMAGE_COUNT = 20;
 
-export function isSafeImageDimensions(width: number, height: number): boolean {
-  return (
-    Number.isFinite(width) &&
-    Number.isFinite(height) &&
-    width > 0 &&
-    height > 0 &&
-    width <= MAX_IMAGE_SIDE &&
-    height <= MAX_IMAGE_SIDE &&
-    width * height <= MAX_IMAGE_PIXELS
+export interface EncodedImageSize {
+  width: number;
+  height: number;
+  reduced: boolean;
+}
+
+/**
+ * Ordinary high-resolution photos should be reduced safely, not rejected. The returned
+ * dimensions preserve aspect ratio and never exceed either canvas bound.
+ */
+export function fitImageWithinLimits(width: number, height: number): EncodedImageSize {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    throw new Error('Image dimensions must be positive finite numbers.');
+  }
+  const scale = Math.min(
+    1,
+    MAX_IMAGE_SIDE / width,
+    MAX_IMAGE_SIDE / height,
+    Math.sqrt(MAX_IMAGE_PIXELS / (width * height)),
   );
+  const fittedWidth = Math.max(1, Math.floor(width * scale));
+  const fittedHeight = Math.max(1, Math.floor(height * scale));
+  return { width: fittedWidth, height: fittedHeight, reduced: scale < 1 };
 }
 
 /**
@@ -56,8 +69,8 @@ export function pdfOutputName(fileName: string): string {
 }
 
 /** A multi-image download must wait until every accepted image has settled. */
-export function shouldBuildPdf(readyImages: number, hasPendingImages: boolean): boolean {
-  return readyImages > 0 && !hasPendingImages;
+export function shouldBuildPdf(readyImages: number, hasPendingImages: boolean, hasFailedImages = false): boolean {
+  return readyImages > 0 && !hasPendingImages && !hasFailedImages;
 }
 
 export interface PageLayout {
