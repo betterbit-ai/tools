@@ -1,6 +1,13 @@
 import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
-import { EncryptedPdfError, InvalidPdfError, mergePdfs, readPdfPageCount, totalPageCount } from './logic';
+import {
+  EncryptedPdfError,
+  hasPdfEncryptionDictionary,
+  InvalidPdfError,
+  mergePdfs,
+  readPdfPageCount,
+  totalPageCount,
+} from './logic';
 
 /** Builds a throwaway PDF with `pageCount` blank pages, optionally with a title (unicode-safe). */
 async function makePdf(pageCount: number, title?: string): Promise<Uint8Array> {
@@ -36,6 +43,24 @@ describe('readPdfPageCount', () => {
     const garbage = new Uint8Array([1, 2, 3]);
     await expect(readPdfPageCount(garbage, '보고서.pdf')).rejects.toThrow(/보고서\.pdf/);
   });
+
+  it('rejects an encrypted xref stream before asking pdf-lib to parse it', async () => {
+    const bytes = new TextEncoder().encode(
+      '%PDF-1.7\n9 0 obj\n<< /Type /XRef /Size 10 /Encrypt 8 0 R >>\nstream\n...\nendstream\n%%EOF',
+    );
+    await expect(readPdfPageCount(bytes, 'private.pdf')).rejects.toThrow(EncryptedPdfError);
+  });
+});
+
+describe('hasPdfEncryptionDictionary', () => {
+  it('detects classic trailers and xref streams without matching page content', () => {
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('trailer\n<< /Size 8 /Encrypt 7 0 R >>'))).toBe(true);
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('<< /Type /XRef /Encrypt 8 0 R >>'))).toBe(true);
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('stream\nBT (/Encrypt) Tj\nendstream'))).toBe(false);
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('<< /Type /XRef /EncryptMetadata false >>'))).toBe(
+      false,
+    );
+  });
 });
 
 describe('mergePdfs', () => {
@@ -61,6 +86,23 @@ describe('mergePdfs', () => {
     ]);
     const doc = await PDFDocument.load(result);
     expect(doc.getPageCount()).toBe(6);
+  });
+
+  it('reports each completed source file while merging', async () => {
+    const a = await makePdf(1);
+    const b = await makePdf(2);
+    const progress: Array<{ done: number; total: number; fileName: string }> = [];
+    await mergePdfs(
+      [
+        { bytes: a, fileName: 'first.pdf' },
+        { bytes: b, fileName: 'second.pdf' },
+      ],
+      (update) => progress.push(update),
+    );
+    expect(progress).toEqual([
+      { done: 1, total: 2, fileName: 'first.pdf' },
+      { done: 2, total: 2, fileName: 'second.pdf' },
+    ]);
   });
 
   it('reordering the input list reorders the output pages', async () => {
@@ -136,7 +178,11 @@ describe('totalPageCount', () => {
 
 describe('error classes', () => {
   it('EncryptedPdfError and InvalidPdfError carry distinct names', () => {
-    expect(new EncryptedPdfError('a.pdf').name).toBe('EncryptedPdfError');
-    expect(new InvalidPdfError('a.pdf').name).toBe('InvalidPdfError');
+    const encrypted = new EncryptedPdfError('a.pdf');
+    const invalid = new InvalidPdfError('b.pdf');
+    expect(encrypted.name).toBe('EncryptedPdfError');
+    expect(encrypted.fileName).toBe('a.pdf');
+    expect(invalid.name).toBe('InvalidPdfError');
+    expect(invalid.fileName).toBe('b.pdf');
   });
 });

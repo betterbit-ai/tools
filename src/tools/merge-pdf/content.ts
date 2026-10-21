@@ -7,6 +7,8 @@ const uiEn = {
   pageCount: '{n} page(s)',
   processing: 'Reading…',
   preparing: 'Preparing your merged PDF…',
+  mergeProgress: 'Merging file {done} of {total}: {file}',
+  mergeCancelled: 'Merge canceled. Your files are still here.',
   invalidPdf: "Can't be read — this file isn't a valid PDF.",
   encryptedPdf: "Password-protected — can't be merged until it's unlocked.",
   mergeFailed:
@@ -14,6 +16,8 @@ const uiEn = {
   moveUp: 'Move up',
   moveDown: 'Move down',
   remove: 'Remove',
+  cancel: 'Cancel',
+  retry: 'Merge again',
   download: 'Download merged PDF',
   clear: 'Clear all',
   privacyNote: 'Your PDFs are combined on your device. Nothing is uploaded, and there is no file limit.',
@@ -24,7 +28,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Merge PDF — Combine Files Online, No Upload',
     description:
-      'Combine multiple PDF files into one in your browser. Drag to reorder with no fixed file-count or size limit, no upload, ads, or sign-up.',
+      'Combine multiple PDF files in your browser. Reorder them, follow progress, or cancel safely with no upload, fixed file-count limit, or sign-up.',
     h1: 'Merge PDF',
     tagline: 'Combine PDF files into one — drag to set the order — without uploading anything.',
     name: 'Merge PDF',
@@ -45,7 +49,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'How merging works here',
-        body: "Each PDF keeps every page exactly as it was — text, images, fonts and layout are copied as-is, not re-rendered or re-compressed, so there is no quality loss. The files are combined in the order shown in the list, top to bottom; drag any row to a new position (or use the keyboard ↑/↓ buttons) and the download is refreshed automatically. There is no fixed limit on how many files you combine or how large they are; the practical limit is your device's available memory.",
+        body: 'Page content, including text, images, embedded fonts and layout, is copied without rasterizing or recompressing it. Files are combined from top to bottom; drag a row or use the ↑/↓ buttons and the result rebuilds automatically. Document-level features such as bookmarks, attachments, digital signatures and interactive form behavior are not combined. There is no fixed file-count or size limit, but available browser memory is the practical limit.',
       },
       {
         heading: 'Nothing leaves your device',
@@ -75,7 +79,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Does merging reduce the quality of my PDFs?',
-        a: 'No. Every page is copied into the merged file exactly as it exists in the source PDF — text stays selectable, images keep their original resolution, and nothing is re-compressed.',
+        a: 'Page content is copied without rasterizing or recompressing it, so selectable text and image resolution are preserved. Document-level bookmarks, attachments, digital signatures and interactive form behavior are not combined.',
       },
       {
         q: 'Can I merge a password-protected PDF?',
@@ -105,7 +109,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '어떻게 합쳐지나요',
-        body: '각 PDF의 모든 페이지는 텍스트, 이미지, 폰트, 레이아웃을 그대로 유지한 채 복사됩니다. 다시 그리거나 압축하지 않으므로 화질 손실이 없습니다. 파일은 목록에 보이는 순서(위에서 아래)대로 합쳐지며, 행을 드래그하거나 키보드 ↑/↓ 버튼으로 순서를 바꾸면 내려받을 파일이 자동으로 갱신됩니다. 합칠 수 있는 파일 개수나 용량에는 고정된 제한이 없고, 실제 한계는 기기와 브라우저가 사용할 수 있는 메모리입니다.',
+        body: '페이지의 텍스트, 이미지, 내장 폰트와 레이아웃은 다시 그리거나 재압축하지 않고 복사합니다. 파일은 목록의 위에서 아래 순서로 합쳐지며, 행을 드래그하거나 ↑/↓ 버튼으로 순서를 바꾸면 결과를 자동으로 다시 만듭니다. 문서 전체에 속한 책갈피, 첨부 파일, 디지털 서명, 대화형 양식 동작은 합쳐지지 않습니다. 파일 개수나 용량에 고정된 제한은 없지만, 실제 한계는 브라우저가 사용할 수 있는 메모리입니다.',
       },
       {
         heading: 'PDF가 기기 밖으로 나가지 않습니다',
@@ -135,7 +139,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'PDF를 합치면 화질이 떨어지나요?',
-        a: '아니요. 모든 페이지는 원본 PDF에 있던 그대로 결과 파일에 복사됩니다. 텍스트는 그대로 선택 가능하고, 이미지도 원래 해상도를 유지하며, 다시 압축되지 않습니다.',
+        a: '페이지 내용을 다시 그리거나 재압축하지 않으므로 선택 가능한 텍스트와 이미지 해상도는 유지됩니다. 문서 전체에 속한 책갈피, 첨부 파일, 디지털 서명, 대화형 양식 동작은 합쳐지지 않습니다.',
       },
       {
         q: '암호가 걸린 PDF도 합칠 수 있나요?',
@@ -152,6 +156,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       pageCount: '{n}페이지',
       processing: '읽는 중…',
       preparing: '합친 PDF를 준비하는 중…',
+      mergeProgress: '파일 {total}개 중 {done}개 병합: {file}',
+      mergeCancelled: '병합을 취소했습니다. 추가한 파일은 그대로 있습니다.',
       invalidPdf: '읽을 수 없음 — 올바른 PDF 파일이 아닙니다.',
       encryptedPdf: '암호 보호됨 — 잠금을 해제해야 합칠 수 있습니다.',
       mergeFailed:
@@ -159,6 +165,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       moveUp: '위로 이동',
       moveDown: '아래로 이동',
       remove: '삭제',
+      cancel: '취소',
+      retry: '다시 병합',
       download: '합친 PDF 다운로드',
       clear: '모두 지우기',
       privacyNote: 'PDF는 내 기기에서 합쳐집니다. 어디에도 업로드되지 않고, 파일 개수 제한도 없습니다.',
