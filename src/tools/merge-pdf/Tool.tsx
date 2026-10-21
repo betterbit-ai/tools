@@ -4,13 +4,12 @@ import { downloadBlob } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { EncryptedPdfError, readPdfPageCount, totalPageCount } from './logic';
-import { mergePdfsOffMainThread } from './merge';
+import { EncryptedPdfError, totalPageCount, type MergeProgress } from './logic';
+import { inspectPdfFile, mergePdfFiles, PdfMergeCancelledError } from './merge';
 
 interface Item {
   id: number;
   file: File;
-  bytes?: Uint8Array;
   pageCount?: number;
   error?: 'invalid' | 'encrypted';
 }
@@ -21,77 +20,160 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
   const [items, setItems] = useState<Item[]>([]);
   const [merged, setMerged] = useState<{ blob: Blob } | null>(null);
   const [mergeFailed, setMergeFailed] = useState(false);
+  const [mergeCancelled, setMergeCancelled] = useState(false);
   const [isMerging, setIsMerging] = useState(false);
+  const [progress, setProgress] = useState<MergeProgress | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
   const runId = useRef(0);
   const readQueue = useRef<Promise<void>>(Promise.resolve());
+  const itemIds = useRef(new Set<number>());
+  const readControllers = useRef(new Map<number, AbortController>());
+  const mergeController = useRef<AbortController | null>(null);
 
   // Add rows immediately so the list isn't blank while pdf-lib's chunk downloads and
   // each file is parsed — then fill in page count / error per file as it resolves.
   const addFiles = (files: File[]) => {
     const placeholders: Item[] = files.map((file) => ({ id: nextId++, file }));
+    placeholders.forEach((item) => itemIds.current.add(item.id));
+    setMergeCancelled(false);
     setItems((prev) => [...prev, ...placeholders]);
     for (const placeholder of placeholders) {
-      // Parse one file at a time. Starting every large PDF at once makes the
-      // browser retain several full copies and can freeze a low-memory device.
+      // Inspect one file at a time. Starting every large PDF at once makes a
+      // low-memory browser retain several full copies at the same time.
       readQueue.current = readQueue.current.then(async () => {
+        if (!itemIds.current.has(placeholder.id)) return;
+        const controller = new AbortController();
+        readControllers.current.set(placeholder.id, controller);
         try {
-          const bytes = new Uint8Array(await placeholder.file.arrayBuffer());
-          const pageCount = await readPdfPageCount(bytes, placeholder.file.name);
-          setItems((prev) => prev.map((p) => (p.id === placeholder.id ? { ...p, bytes, pageCount } : p)));
+          const pageCount = await inspectPdfFile(placeholder.file, controller.signal);
+          if (!itemIds.current.has(placeholder.id)) return;
+          setItems((prev) => prev.map((p) => (p.id === placeholder.id ? { ...p, pageCount } : p)));
         } catch (err) {
+          if (err instanceof PdfMergeCancelledError || controller.signal.aborted) return;
           const error = err instanceof EncryptedPdfError ? 'encrypted' : 'invalid';
           setItems((prev) => prev.map((p) => (p.id === placeholder.id ? { ...p, error } : p)));
+        } finally {
+          readControllers.current.delete(placeholder.id);
         }
       });
     }
   };
 
-  const ready = items.filter((i): i is Item & { bytes: Uint8Array; pageCount: number } => i.pageCount !== undefined);
+  const ready = items.filter((i): i is Item & { pageCount: number } => i.pageCount !== undefined);
   const readyKey = ready.map((i) => i.id).join(',');
   const hasPendingItems = items.some((i) => i.pageCount === undefined && !i.error);
 
   useEffect(() => {
     if (ready.length === 0) {
+      mergeController.current?.abort();
+      mergeController.current = null;
       setIsMerging(false);
       setMergeFailed(false);
       setMerged(null);
+      setProgress(null);
       return;
     }
     if (hasPendingItems) {
+      mergeController.current?.abort();
+      mergeController.current = null;
       setIsMerging(true);
       setMergeFailed(false);
+      setMerged(null);
+      setProgress(null);
+      return;
+    }
+    if (mergeCancelled) {
+      setIsMerging(false);
+      setProgress(null);
       return;
     }
 
     const id = ++runId.current;
-    let cancelled = false;
+    const controller = new AbortController();
+    mergeController.current?.abort();
+    mergeController.current = controller;
     setIsMerging(true);
     setMergeFailed(false);
+    setMerged(null);
+    setProgress({ done: 0, total: ready.length, fileName: ready[0].file.name });
     const timeout = window.setTimeout(() => {
-      void mergePdfsOffMainThread(ready.map((i) => ({ bytes: i.bytes, fileName: i.file.name })))
+      void mergePdfFiles(
+        ready.map((item) => item.file),
+        {
+          signal: controller.signal,
+          onProgress: (next) => {
+            if (runId.current === id) setProgress(next);
+          },
+        },
+      )
         .then((bytes) => {
-          if (cancelled || runId.current !== id) return;
+          if (controller.signal.aborted || runId.current !== id) return;
           setMerged({ blob: new Blob([bytes as BlobPart], { type: 'application/pdf' }) });
           setIsMerging(false);
+          setProgress(null);
         })
-        .catch(() => {
-          if (cancelled || runId.current !== id) return;
+        .catch((caught) => {
+          if (caught instanceof PdfMergeCancelledError || controller.signal.aborted || runId.current !== id) return;
           setMerged(null);
           setMergeFailed(true);
           setIsMerging(false);
+          setProgress(null);
+        })
+        .finally(() => {
+          if (mergeController.current === controller) mergeController.current = null;
         });
     }, 200);
     return () => {
-      cancelled = true;
       window.clearTimeout(timeout);
+      controller.abort();
+      if (mergeController.current === controller) mergeController.current = null;
     };
-  }, [hasPendingItems, readyKey]);
+  }, [hasPendingItems, mergeCancelled, readyKey]);
 
-  const remove = (id: number) => setItems((prev) => prev.filter((p) => p.id !== id));
-  const clear = () => setItems([]);
+  useEffect(
+    () => () => {
+      itemIds.current.clear();
+      readControllers.current.forEach((controller) => controller.abort());
+      mergeController.current?.abort();
+    },
+    [],
+  );
 
-  const move = (id: number, dir: -1 | 1) =>
+  const remove = (id: number) => {
+    itemIds.current.delete(id);
+    readControllers.current.get(id)?.abort();
+    setMergeCancelled(false);
+    setItems((prev) => prev.filter((p) => p.id !== id));
+  };
+  const clear = () => {
+    itemIds.current.clear();
+    readControllers.current.forEach((controller) => controller.abort());
+    // A canceled inspection may still be waiting for a browser/worker promise to settle.
+    // Start the next selection on a fresh queue so clearing never stalls later uploads.
+    readQueue.current = Promise.resolve();
+    mergeController.current?.abort();
+    runId.current++;
+    setItems([]);
+    setMerged(null);
+    setMergeFailed(false);
+    setMergeCancelled(false);
+    setIsMerging(false);
+    setProgress(null);
+  };
+
+  const cancelMerge = () => {
+    mergeController.current?.abort();
+    mergeController.current = null;
+    runId.current++;
+    setMerged(null);
+    setMergeFailed(false);
+    setMergeCancelled(true);
+    setIsMerging(false);
+    setProgress(null);
+  };
+
+  const move = (id: number, dir: -1 | 1) => {
+    setMergeCancelled(false);
     setItems((prev) => {
       const i = prev.findIndex((p) => p.id === id);
       const j = i + dir;
@@ -100,9 +182,11 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
       [next[i], next[j]] = [next[j], next[i]];
       return next;
     });
+  };
 
   const reorder = (draggedId: number, overId: number) => {
     if (draggedId === overId) return;
+    setMergeCancelled(false);
     setItems((prev) => {
       const from = prev.findIndex((p) => p.id === draggedId);
       const to = prev.findIndex((p) => p.id === overId);
@@ -216,6 +300,15 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
         </div>
       )}
 
+      {mergeCancelled && (
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <Notice>{ui.mergeCancelled}</Notice>
+          <Button variant="secondary" onClick={() => setMergeCancelled(false)}>
+            {ui.retry}
+          </Button>
+        </div>
+      )}
+
       {items.length > 0 && (
         <div class="mt-4 flex flex-wrap items-center gap-3">
           <Button
@@ -226,12 +319,22 @@ export default function MergePdf({ ui, locale }: ToolProps<UI>) {
           >
             {ui.download}
           </Button>
+          {isMerging && !hasPendingItems && (
+            <Button variant="ghost" onClick={cancelMerge}>
+              {ui.cancel}
+            </Button>
+          )}
           <Button variant="ghost" onClick={clear}>
             {ui.clear}
           </Button>
           {isMerging ? (
             <span class="text-sm text-muted" role="status" aria-live="polite" aria-busy="true">
-              {ui.preparing}
+              {progress && progress.done > 0
+                ? ui.mergeProgress
+                    .replace('{done}', String(progress.done))
+                    .replace('{total}', String(progress.total))
+                    .replace('{file}', progress.fileName)
+                : ui.preparing}
             </span>
           ) : merged ? (
             <span class="text-sm text-muted tabular" aria-live="polite">
