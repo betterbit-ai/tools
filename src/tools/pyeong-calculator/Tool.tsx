@@ -58,12 +58,16 @@ function restoreState(): State {
   }
 }
 
-export default function PyeongCalculator({ locale, ui }: ToolProps<UI>) {
+export default function PyeongCalculator({ locale, ui, preset }: ToolProps<UI>) {
+  // Landing pages (/pyeong-calculator/84-square-meters, /30-pyeong) open on their area.
+  const presetArea =
+    isFiniteValue(preset?.value) && isUnit(preset?.unit) ? { value: preset.value, unit: preset.unit } : null;
   const [ready, setReady] = useState(false);
-  const [state, setState] = useState<State>(DEFAULT_STATE);
+  const [state, setState] = useState<State>(() => (presetArea ? { ...DEFAULT_STATE, ...presetArea } : DEFAULT_STATE));
 
   useEffect(() => {
-    setState(restoreState());
+    const restored = restoreState();
+    setState(presetArea ? { ...restored, ...presetArea } : restored);
     setReady(true);
   }, []);
 
