@@ -51,12 +51,18 @@ function restoreState(): State {
   }
 }
 
-export default function SalaryCalculatorKr({ locale, ui }: ToolProps<UI>) {
+export default function SalaryCalculatorKr({ locale, ui, preset }: ToolProps<UI>) {
+  // Salary landing pages (/salary-calculator-kr/3000-manwon) open on their salary; other saved
+  // conditions (non-taxable pay, dependents…) still come back.
+  const presetSalary = typeof preset?.annualSalary === 'number' ? preset.annualSalary : null;
   const [ready, setReady] = useState(false);
-  const [state, setState] = useState<State>(fallbackState);
+  const [state, setState] = useState<State>(() =>
+    presetSalary === null ? fallbackState : { ...fallbackState, annualSalary: presetSalary },
+  );
 
   useEffect(() => {
-    setState(restoreState());
+    const restored = restoreState();
+    setState(presetSalary === null ? restored : { ...restored, annualSalary: presetSalary });
     setReady(true);
   }, []);
 
