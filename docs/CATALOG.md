@@ -9,34 +9,40 @@
 - **상태**: `live` · `wip` (이슈 번호) · `todo` · `skip` (이유 기록)
 - 검색량은 일반적인 추정이다. 착수 전에 키워드 도구나 검색 결과로 확인한다.
 - **새 카테고리**(`device`, `color`, `media`)는 첫 도구를 만들 때 `src/tools/categories.ts`에 추가한다.
+- **고르는 기준 (2026-10-21 추가, 가장 중요)**: 검색 노출은 늘었는데 클릭이 거의 없었다. 노출된 검색어 대부분("mph to kmh", "1 minute timer")은 구글이 검색 결과 맨 위에 자체 계산기·타이머를 띄워 사용자가 클릭하지 않는 검색어였다. 그래서 새 도구는 아래 중 하나 이상에 해당해야 한다.
+  1. **구글 위젯이 없다**: 착수 전에 대표 검색어를 구글에 직접 쳐 보고, 검색 결과 위에 구글 자체 도구(단위 변환, 타이머, 계산기, 색상 선택, 메트로놈, 동전 던지기 등)가 뜨면 만들지 않거나 P2로 내린다.
+  2. **파일·기기가 필요하다**: 파일을 넣거나(이미지·PDF·오디오·동영상) 마이크·카메라를 써야 해서 검색 결과 안에서 끝날 수 없는 작업.
+  3. **한국 특화**: 한국 제도·관습 계산(주휴수당, 연차, 4대보험, 음력, 평 등). 구글은 약하고 네이버 상위는 오래된 광고 많은 사이트가 많다.
+  4. **롱테일**: 큰 검색어 대신 구체적인 상황 검색어("오븐 가스 마크 표", "사진 날짜 유지 HEIC 변환").
 - Edge 아이디어는 출발점일 뿐이다. 실제 edge는 착수할 때 경쟁 조사로 확정한다([플레이북 §2](TOOL_PLAYBOOK.md#2-경쟁-조사와-edge-정하기-생략-금지)).
 
 ---
 
 ## image: 이미지
 
-| slug                  | 도구             | 핵심 키워드 (en / ko)                             | Edge 아이디어                                   | P   | 상태 |
-| --------------------- | ---------------- | ------------------------------------------------- | ----------------------------------------------- | --- | ---- |
-| image-resizer         | 이미지 크기 조절 | resize image / 이미지 크기 줄이기                 | 업로드 없음, 배치, 채우기+자르기, ZIP           | P0  | live |
-| image-compressor      | 이미지 압축      | compress image / 사진 용량 줄이기                 | 목표 용량(KB) 지정 자동 압축, 배치, 업로드 없음 | P0  | live |
-| image-converter       | 이미지 형식 변환 | jpg to png, png to jpg, webp to jpg / 이미지 변환 | 모든 조합 하나의 도구 + 조합별 variants         | P0  | live |
-| heic-to-jpg           | HEIC → JPG       | heic to jpg / heic jpg 변환                       | 클라이언트 디코딩(libheif wasm 지연 로드), 배치 | P0  | live |
-| image-cropper         | 이미지 자르기    | crop image / 사진 자르기                          | 비율 프리셋, 원형 자르기(프로필)                | P0  | live |
-| background-remover    | 배경 제거        | remove background / 배경 지우기                   | 온디바이스 ML 모델(지연 로드), 원본 크기 PNG    | P1  | live |
-| image-rotate-flip     | 회전·뒤집기      | rotate image / 사진 회전                          | 배치, EXIF 방향 자동 보정                       | P1  | live |
-| image-to-pdf          | 이미지 → PDF     | jpg to pdf / 사진 pdf 변환                        | 순서 드래그, 페이지 크기 맞춤, 업로드 없음      | P0  | live |
-| exif-viewer-remover   | EXIF 보기·제거   | remove exif / 사진 위치정보 삭제                  | 검사 후 배치 제거, ZIP 다운로드                 | P1  | live |
-| image-watermark       | 워터마크 넣기    | add watermark / 사진 워터마크                     | 배치, 타일 패턴, 로고 이미지                    | P1  | live |
-| meme-generator        | 밈 만들기        | meme generator / 짤 만들기                        | 워터마크 없음, 한글 폰트                        | P1  | live |
-| collage-maker         | 사진 콜라주      | photo collage / 사진 합치기                       | 레이아웃 템플릿, 고해상도 무료                  | P1  | live |
-| image-upscaler        | 이미지 업스케일  | upscale image / 사진 화질 개선                    | 온디바이스 AI 모델(지연 로드), 2×·4× 비교       | P0  | live |
-| favicon-generator     | 파비콘 생성      | favicon generator                                 | 모든 사이즈 + manifest + 코드 스니펫            | P1  | live |
-| image-to-base64       | 이미지 → Base64  | image to base64                                   | data URI + CSS/HTML 스니펫                      | P2  | todo |
-| svg-to-png            | SVG → PNG        | svg to png                                        | 배율 지정, 투명 배경                            | P2  | todo |
-| image-blur-pixelate   | 모자이크·블러    | blur image / 모자이크 처리                        | 영역 선택 모자이크(개인정보 가리기)             | P1  | live |
-| passport-photo        | 증명사진 규격    | passport photo / 여권사진 사이즈                  | 국가별 규격 프리셋, 인화용 배치                 | P1  | live |
-| gif-maker             | GIF 만들기       | gif maker / 움짤 만들기                           | 이미지 → GIF, 프레임 속도                       | P2  | todo |
-| screenshot-beautifier | 스크린샷 꾸미기  | screenshot mockup                                 | 그라데이션 배경, 그림자, 브라우저 프레임        | P2  | todo |
+| slug                  | 도구                   | 핵심 키워드 (en / ko)                                          | Edge 아이디어                                                                             | P   | 상태 |
+| --------------------- | ---------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --- | ---- |
+| image-resizer         | 이미지 크기 조절       | resize image / 이미지 크기 줄이기                              | 업로드 없음, 배치, 채우기+자르기, ZIP                                                     | P0  | live |
+| image-compressor      | 이미지 압축            | compress image / 사진 용량 줄이기                              | 목표 용량(KB) 지정 자동 압축, 배치, 업로드 없음                                           | P0  | live |
+| image-converter       | 이미지 형식 변환       | jpg to png, png to jpg, webp to jpg / 이미지 변환              | 모든 조합 하나의 도구 + 조합별 variants                                                   | P0  | live |
+| heic-to-jpg           | HEIC → JPG             | heic to jpg / heic jpg 변환                                    | 클라이언트 디코딩(libheif wasm 지연 로드), 배치                                           | P0  | live |
+| image-cropper         | 이미지 자르기          | crop image / 사진 자르기                                       | 비율 프리셋, 원형 자르기(프로필)                                                          | P0  | live |
+| background-remover    | 배경 제거              | remove background / 배경 지우기                                | 온디바이스 ML 모델(지연 로드), 원본 크기 PNG                                              | P1  | live |
+| image-rotate-flip     | 회전·뒤집기            | rotate image / 사진 회전                                       | 배치, EXIF 방향 자동 보정                                                                 | P1  | live |
+| image-to-pdf          | 이미지 → PDF           | jpg to pdf / 사진 pdf 변환                                     | 순서 드래그, 페이지 크기 맞춤, 업로드 없음                                                | P0  | live |
+| exif-viewer-remover   | EXIF 보기·제거         | remove exif / 사진 위치정보 삭제                               | 검사 후 배치 제거, ZIP 다운로드                                                           | P1  | live |
+| image-watermark       | 워터마크 넣기          | add watermark / 사진 워터마크                                  | 배치, 타일 패턴, 로고 이미지                                                              | P1  | live |
+| meme-generator        | 밈 만들기              | meme generator / 짤 만들기                                     | 워터마크 없음, 한글 폰트                                                                  | P1  | live |
+| collage-maker         | 사진 콜라주            | photo collage / 사진 합치기                                    | 레이아웃 템플릿, 고해상도 무료                                                            | P1  | live |
+| image-upscaler        | 이미지 업스케일        | upscale image / 사진 화질 개선                                 | 온디바이스 AI 모델(지연 로드), 2×·4× 비교                                                 | P0  | live |
+| favicon-generator     | 파비콘 생성            | favicon generator                                              | 모든 사이즈 + manifest + 코드 스니펫                                                      | P1  | live |
+| image-to-base64       | 이미지 → Base64        | image to base64                                                | data URI + CSS/HTML 스니펫                                                                | P2  | todo |
+| svg-to-png            | SVG → PNG              | svg to png                                                     | 배율 지정, 투명 배경                                                                      | P2  | todo |
+| image-blur-pixelate   | 모자이크·블러          | blur image / 모자이크 처리                                     | 영역 선택 모자이크(개인정보 가리기)                                                       | P1  | live |
+| passport-photo        | 증명사진 규격          | passport photo / 여권사진 사이즈                               | 국가별 규격 프리셋, 인화용 배치                                                           | P1  | live |
+| gif-maker             | GIF 만들기             | gif maker / 움짤 만들기                                        | 이미지 → GIF, 프레임 속도                                                                 | P2  | todo |
+| screenshot-beautifier | 스크린샷 꾸미기        | screenshot mockup                                              | 그라데이션 배경, 그림자, 브라우저 프레임                                                  | P2  | todo |
+| image-to-text         | 이미지 글자 추출 (OCR) | image to text, ocr online / 사진 글자 추출, 이미지 텍스트 변환 | 업로드 없는 온디바이스 OCR(wasm·언어 데이터 지연 로드, 자체 호스팅), 한글+영어, 복사·.txt | P1  | todo |
 
 ## pdf: PDF (pdf-lib, pdf.js를 도구 안에서 지연 로드)
 
@@ -50,11 +56,11 @@
 | delete-pdf-pages | PDF 페이지 삭제  | delete pages from pdf          | 썸네일 클릭 삭제                                 | P1  | live |
 | reorder-pdf      | PDF 페이지 순서  | rearrange pdf pages            | 드래그 정렬                                      | P1  | live |
 | sign-pdf         | PDF 서명         | sign pdf / pdf 서명            | 손글씨 서명, 업로드 없음                         | P0  | live |
-| pdf-page-numbers | 페이지 번호 넣기 | add page numbers to pdf        | 위치, 서식 선택                                  | P2  | todo |
+| pdf-page-numbers | 페이지 번호 넣기 | add page numbers to pdf        | 위치, 서식 선택                                  | P1  | todo |
 | unlock-pdf       | PDF 암호 제거    | unlock pdf                     | 비밀번호를 아는 파일의 보호 해제                 | P1  | live |
 | protect-pdf      | PDF 암호 설정    | password protect pdf           | 업로드 없음                                      | P1  | live |
-| pdf-to-text      | PDF 텍스트 추출  | pdf to text                    | 페이지별 복사                                    | P2  | todo |
-| watermark-pdf    | PDF 워터마크     | watermark pdf                  | 텍스트, 이미지, 투명도                           | P2  | todo |
+| pdf-to-text      | PDF 텍스트 추출  | pdf to text                    | 페이지별 복사                                    | P1  | todo |
+| watermark-pdf    | PDF 워터마크     | watermark pdf                  | 텍스트, 이미지, 투명도                           | P1  | todo |
 
 ## text: 텍스트
 
@@ -81,71 +87,77 @@
 
 ## time: 시간·날짜
 
-| slug                | 도구              | 핵심 키워드                       | Edge 아이디어                                       | P   | 상태 |
-| ------------------- | ----------------- | --------------------------------- | --------------------------------------------------- | --- | ---- |
-| timer               | 타이머            | timer, 5 minute timer / 타이머    | 백그라운드 정확, 새로고침 유지, 단축키, variants    | P0  | live |
-| stopwatch           | 스톱워치          | stopwatch / 스톱워치              | 랩 기록 CSV, 밀리초, 새로고침 유지                  | P0  | live |
-| pomodoro-timer      | 뽀모도로          | pomodoro timer / 뽀모도로         | 세션 기록, 작업 목록, 알림                          | P0  | live |
-| countdown           | 디데이 카운트다운 | countdown to date / 디데이 계산기 | 공유 링크(URL 파라미터), 이벤트 프리셋              | P0  | live |
-| alarm-clock         | 온라인 알람       | online alarm clock / 알람         | 탭 유지 알람, 여러 알람                             | P1  | live |
-| world-clock         | 세계 시계         | world clock / 세계 시간           | 회의 시간 플래너(시간대 겹침)                       | P1  | live |
-| time-zone-converter | 시간대 변환       | time zone converter / 시차 계산   | 도시 검색, DST 정확                                 | P0  | live |
-| date-calculator     | 날짜 계산기       | date calculator / 날짜 계산       | 영업일 계산, 국가별 공휴일                          | P0  | live |
-| age-calculator      | 나이 계산기       | age calculator / 만 나이 계산기   | 한국 만 나이, 띠, 별자리                            | P0  | live |
-| unix-timestamp      | 타임스탬프 변환   | unix timestamp converter          | 밀리초/초 자동 인식, 시간대                         | P1  | live |
-| hours-calculator    | 근무 시간 계산    | hours calculator / 근무시간 계산  | 휴게 시간 차감, 주간 합계                           | P1  | live |
-| online-clock        | 온라인 시계       | online clock / 현재 시간          | 전체화면 대형 시계, 서버 시간 동기화 없이 오차 표시 | P1  | live |
-| interval-timer      | 인터벌 타이머     | tabata timer / 인터벌 타이머      | 운동 프리셋, 음성 안내                              | P1  | live |
-| metronome           | 메트로놈          | metronome / 메트로놈              | Web Audio 정확한 박자, 탭 템포                      | P1  | live |
-| week-number         | 주차 계산         | what week is it / 몇 주차         | ISO 주차, 연간 달력                                 | P2  | todo |
+| slug                | 도구              | 핵심 키워드                                                            | Edge 아이디어                                                                | P   | 상태                                |
+| ------------------- | ----------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --- | ----------------------------------- |
+| timer               | 타이머            | timer, 5 minute timer / 타이머                                         | 백그라운드 정확, 새로고침 유지, 단축키, variants                             | P0  | live                                |
+| stopwatch           | 스톱워치          | stopwatch / 스톱워치                                                   | 랩 기록 CSV, 밀리초, 새로고침 유지                                           | P0  | live                                |
+| pomodoro-timer      | 뽀모도로          | pomodoro timer / 뽀모도로                                              | 세션 기록, 작업 목록, 알림                                                   | P0  | live                                |
+| countdown           | 디데이 카운트다운 | countdown to date / 디데이 계산기                                      | 공유 링크(URL 파라미터), 이벤트 프리셋                                       | P0  | live                                |
+| alarm-clock         | 온라인 알람       | online alarm clock / 알람                                              | 탭 유지 알람, 여러 알람                                                      | P1  | live                                |
+| world-clock         | 세계 시계         | world clock / 세계 시간                                                | 회의 시간 플래너(시간대 겹침)                                                | P1  | live                                |
+| time-zone-converter | 시간대 변환       | time zone converter / 시차 계산                                        | 도시 검색, DST 정확                                                          | P0  | live                                |
+| date-calculator     | 날짜 계산기       | date calculator / 날짜 계산                                            | 영업일 계산, 국가별 공휴일                                                   | P0  | live                                |
+| age-calculator      | 나이 계산기       | age calculator / 만 나이 계산기                                        | 한국 만 나이, 띠, 별자리                                                     | P0  | live                                |
+| unix-timestamp      | 타임스탬프 변환   | unix timestamp converter                                               | 밀리초/초 자동 인식, 시간대                                                  | P1  | live                                |
+| hours-calculator    | 근무 시간 계산    | hours calculator / 근무시간 계산                                       | 휴게 시간 차감, 주간 합계                                                    | P1  | live                                |
+| online-clock        | 온라인 시계       | online clock / 현재 시간                                               | 전체화면 대형 시계, 서버 시간 동기화 없이 오차 표시                          | P1  | live                                |
+| interval-timer      | 인터벌 타이머     | tabata timer / 인터벌 타이머                                           | 운동 프리셋, 음성 안내                                                       | P1  | live                                |
+| metronome           | 메트로놈          | metronome / 메트로놈                                                   | Web Audio 정확한 박자, 탭 템포                                               | P1  | live                                |
+| week-number         | 주차 계산         | what week is it / 몇 주차                                              | ISO 주차, 연간 달력                                                          | P2  | skip (구글 검색창 위젯이 바로 답함) |
+| lunar-converter     | 음력 양력 변환    | korean lunar calendar converter / 음력 변환, 양력 음력 변환, 음력 생일 | 한국천문연구원 기준 데이터(윤달 포함), 올해·내년 음력 생일의 양력 날짜, 간지 | P0  | todo                                |
 
 ## calculator: 계산기
 
-| slug                    | 도구             | 핵심 키워드                                | Edge 아이디어                               | P   | 상태 |
-| ----------------------- | ---------------- | ------------------------------------------ | ------------------------------------------- | --- | ---- |
-| percentage-calculator   | 퍼센트 계산기    | percentage calculator / 퍼센트 계산        | 4가지 유형 동시 표시, 계산식 노출           | P0  | live |
-| scientific-calculator   | 공학용 계산기    | scientific calculator / 공학용 계산기      | 키보드 입력, 히스토리                       | P0  | live |
-| bmi-calculator          | BMI 계산기       | bmi calculator / bmi 계산                  | 아시아 기준(대한비만학회) 병기              | P0  | live |
-| loan-calculator         | 대출 이자 계산기 | loan calculator / 대출 이자 계산기         | 원리금균등, 원금균등, 만기일시, 상환표      | P0  | live |
-| salary-calculator-kr    | 연봉 실수령액    | 연봉 실수령액 계산기                       | 2026년 4대보험 요율, 비과세 반영            | P0  | live |
-| compound-interest       | 복리 계산기      | compound interest calculator / 복리 계산기 | 적립식, 그래프                              | P0  | live |
-| tip-calculator          | 팁 계산기        | tip calculator                             | 인원 분할, 국가별 팁 관행                   | P1  | live |
-| discount-calculator     | 할인율 계산기    | discount calculator / 할인율 계산          | 중복 할인, 원가 역산                        | P1  | live |
-| gpa-calculator          | 학점 계산기      | gpa calculator / 학점 계산기               | 4.5/4.3/4.0 환산                            | P1  | live |
-| fraction-calculator     | 분수 계산기      | fraction calculator                        | 풀이 과정 표시                              | P1  | live |
-| random-number           | 랜덤 숫자        | random number generator                    | 중복 없음, 범위, 대량                       | P0  | live |
-| calorie-calculator      | 칼로리 계산기    | calorie calculator / 기초대사량            | Mifflin-St Jeor 공식 명시                   | P1  | live |
-| pregnancy-calculator    | 출산 예정일      | due date calculator / 출산예정일           | 주차별 정보                                 | P1  | live |
-| vat-calculator          | 부가세 계산기    | vat calculator / 부가세 계산기             | 국가별 세율, 역산                           | P1  | live |
-| severance-pay-kr        | 퇴직금 계산기    | 퇴직금 계산기                              | 평균임금 자동 계산                          | P1  | live |
-| unemployment-benefit-kr | 실업급여 계산기  | 실업급여 계산기                            | 2026년 상하한액                             | P1  | live |
-| pyeong-calculator       | 평수 계산기      | 평수 계산 / 평 제곱미터                    | 공급·전용 면적 설명                         | P1  | live |
-| ratio-calculator        | 비율 계산기      | ratio calculator / 비례식 계산             | 화면비, 레시피 비율                         | P2  | todo |
-| average-calculator      | 평균 계산기      | average calculator                         | 평균, 중앙값, 최빈값, 표준편차 한번에       | P2  | todo |
-| electricity-bill-kr     | 전기요금 계산기  | 전기요금 계산기                            | 누진 구간 시각화                            | P2  | todo |
-| exchange-rate           | 환율 계산기      | currency converter / 환율 계산기           | 실제 제시 환율·수수료·실질 환율을 함께 계산 | P1  | live |
+| slug                    | 도구                 | 핵심 키워드                                                      | Edge 아이디어                                                                                                 | P   | 상태 |
+| ----------------------- | -------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --- | ---- |
+| percentage-calculator   | 퍼센트 계산기        | percentage calculator / 퍼센트 계산                              | 4가지 유형 동시 표시, 계산식 노출                                                                             | P0  | live |
+| scientific-calculator   | 공학용 계산기        | scientific calculator / 공학용 계산기                            | 키보드 입력, 히스토리                                                                                         | P0  | live |
+| bmi-calculator          | BMI 계산기           | bmi calculator / bmi 계산                                        | 아시아 기준(대한비만학회) 병기                                                                                | P0  | live |
+| loan-calculator         | 대출 이자 계산기     | loan calculator / 대출 이자 계산기                               | 원리금균등, 원금균등, 만기일시, 상환표                                                                        | P0  | live |
+| salary-calculator-kr    | 연봉 실수령액        | 연봉 실수령액 계산기                                             | 2026년 4대보험 요율, 비과세 반영                                                                              | P0  | live |
+| compound-interest       | 복리 계산기          | compound interest calculator / 복리 계산기                       | 적립식, 그래프                                                                                                | P0  | live |
+| tip-calculator          | 팁 계산기            | tip calculator                                                   | 인원 분할, 국가별 팁 관행                                                                                     | P1  | live |
+| discount-calculator     | 할인율 계산기        | discount calculator / 할인율 계산                                | 중복 할인, 원가 역산                                                                                          | P1  | live |
+| gpa-calculator          | 학점 계산기          | gpa calculator / 학점 계산기                                     | 4.5/4.3/4.0 환산                                                                                              | P1  | live |
+| fraction-calculator     | 분수 계산기          | fraction calculator                                              | 풀이 과정 표시                                                                                                | P1  | live |
+| random-number           | 랜덤 숫자            | random number generator                                          | 중복 없음, 범위, 대량                                                                                         | P0  | live |
+| calorie-calculator      | 칼로리 계산기        | calorie calculator / 기초대사량                                  | Mifflin-St Jeor 공식 명시                                                                                     | P1  | live |
+| pregnancy-calculator    | 출산 예정일          | due date calculator / 출산예정일                                 | 주차별 정보                                                                                                   | P1  | live |
+| vat-calculator          | 부가세 계산기        | vat calculator / 부가세 계산기                                   | 국가별 세율, 역산                                                                                             | P1  | live |
+| severance-pay-kr        | 퇴직금 계산기        | 퇴직금 계산기                                                    | 평균임금 자동 계산                                                                                            | P1  | live |
+| unemployment-benefit-kr | 실업급여 계산기      | 실업급여 계산기                                                  | 2026년 상하한액                                                                                               | P1  | live |
+| pyeong-calculator       | 평수 계산기          | 평수 계산 / 평 제곱미터                                          | 공급·전용 면적 설명                                                                                           | P1  | live |
+| ratio-calculator        | 비율 계산기          | ratio calculator / 비례식 계산                                   | 화면비, 레시피 비율                                                                                           | P2  | todo |
+| average-calculator      | 평균 계산기          | average calculator                                               | 평균, 중앙값, 최빈값, 표준편차 한번에                                                                         | P2  | todo |
+| electricity-bill-kr     | 전기요금 계산기      | 전기요금 계산기                                                  | 누진 구간 시각화                                                                                              | P2  | todo |
+| exchange-rate           | 환율 계산기          | currency converter / 환율 계산기                                 | 실제 제시 환율·수수료·실질 환율을 함께 계산                                                                   | P1  | live |
+| weekly-holiday-pay-kr   | 주휴수당 계산기      | weekly holiday pay korea / 주휴수당 계산기, 주휴수당 조건        | 요일별 근무시간 입력 → 주휴 발생 여부(주 15시간·개근)와 금액, 월급 환산, 2026 최저임금 비교, 미발생 이유 표시 | P0  | todo |
+| annual-leave-kr         | 연차 계산기          | annual leave calculator korea / 연차 계산기, 연차 일수, 연차수당 | 입사일 기준·회계연도 기준 둘 다, 1년 미만 월 단위 연차, 퇴사 시 미사용 연차수당                               | P0  | todo |
+| hourly-wage-kr          | 시급 계산기          | hourly to monthly wage korea / 시급 계산기, 알바 월급 계산기     | 시급 → 일급·주급·월급(주휴수당 포함/제외), 2026 최저시급 비교, 3.3% 공제                                      | P0  | todo |
+| social-insurance-kr     | 4대보험 계산기       | korea social insurance calculator / 4대보험 계산기, 4대보험 요율 | 2026 요율로 근로자·사업주 부담 분리, 월급·연봉 입력, 항목별 상한·하한 반영                                    | P0  | todo |
+| rent-conversion-kr      | 전월세 전환율 계산기 | jeonse to monthly rent korea / 전월세 전환율, 전세 월세 전환     | 법정 전환율 상한 자동 적용, 보증금 ↔ 월세 양방향, 계산 근거 표시                                              | P1  | todo |
 
 ## converter: 단위 변환
 
 단위 변환은 **도구 1개 + 단위 쌍 variants**로 롱테일을 공략한다(예: `/length-converter/cm-to-inches`).
 
-| slug                    | 도구           | 핵심 키워드                                 | Edge 아이디어                 | P   | 상태 |
-| ----------------------- | -------------- | ------------------------------------------- | ----------------------------- | --- | ---- |
-| length-converter        | 길이 변환      | cm to inches, feet to meters / cm 인치 변환 | 키(ft'in") 입력, 빠른 표      | P0  | live |
-| weight-converter        | 무게 변환      | kg to lbs / kg 파운드                       | 근, 돈 등 한국 단위           | P0  | live |
-| temperature-converter   | 온도 변환      | celsius to fahrenheit / 섭씨 화씨           | 요리 온도 표                  | P0  | live |
-| area-converter          | 넓이 변환      | sq ft to m2 / 평 계산                       | 평 ↔ ㎡ 강조                  | P1  | live |
-| volume-converter        | 부피 변환      | cups to ml / 컵 ml                          | 요리 계량 (US/메트릭 컵 구분) | P1  | live |
-| speed-converter         | 속도 변환      | mph to kmh                                  | 페이스(분/km) 변환            | P1  | live |
-| data-size-converter     | 데이터 크기    | mb to gb / 용량 변환                        | 1000 vs 1024 둘 다 표시       | P1  | live |
-| shoe-size-converter     | 신발 사이즈    | shoe size conversion / 신발 사이즈 표       | 브랜드별 차이 안내            | P1  | live |
-| clothing-size-converter | 옷 사이즈      | clothing size chart / 옷 사이즈 변환        | 국가별 표                     | P2  | todo |
-| number-base-converter   | 진법 변환      | binary to decimal / 진법 변환               | 실시간 다중 진법              | P1  | live |
-| roman-numerals          | 로마 숫자      | roman numeral converter                     | 양방향 + 규칙 설명            | P2  | todo |
-| korean-number           | 숫자 한글 변환 | 숫자 한글 변환 / 금액 한글                  | 수표·계약서용 "일금 ○○원정"   | P1  | live |
-| cooking-converter       | 요리 계량      | tablespoon to grams                         | 재료별 밀도                   | P2  | todo |
-| pressure-converter      | 압력 변환      | psi to bar                                  | 타이어 압력 표                | P2  | todo |
-| energy-converter        | 에너지 변환    | kcal to kj                                  | —                             | P2  | todo |
+| slug                    | 도구           | 핵심 키워드                                 | Edge 아이디어                 | P   | 상태                                |
+| ----------------------- | -------------- | ------------------------------------------- | ----------------------------- | --- | ----------------------------------- |
+| length-converter        | 길이 변환      | cm to inches, feet to meters / cm 인치 변환 | 키(ft'in") 입력, 빠른 표      | P0  | live                                |
+| weight-converter        | 무게 변환      | kg to lbs / kg 파운드                       | 근, 돈 등 한국 단위           | P0  | live                                |
+| temperature-converter   | 온도 변환      | celsius to fahrenheit / 섭씨 화씨           | 요리 온도 표                  | P0  | live                                |
+| area-converter          | 넓이 변환      | sq ft to m2 / 평 계산                       | 평 ↔ ㎡ 강조                  | P1  | live                                |
+| volume-converter        | 부피 변환      | cups to ml / 컵 ml                          | 요리 계량 (US/메트릭 컵 구분) | P1  | live                                |
+| speed-converter         | 속도 변환      | mph to kmh                                  | 페이스(분/km) 변환            | P1  | live                                |
+| data-size-converter     | 데이터 크기    | mb to gb / 용량 변환                        | 1000 vs 1024 둘 다 표시       | P1  | live                                |
+| shoe-size-converter     | 신발 사이즈    | shoe size conversion / 신발 사이즈 표       | 브랜드별 차이 안내            | P1  | live                                |
+| clothing-size-converter | 옷 사이즈      | clothing size chart / 옷 사이즈 변환        | 국가별 표                     | P2  | todo                                |
+| number-base-converter   | 진법 변환      | binary to decimal / 진법 변환               | 실시간 다중 진법              | P1  | live                                |
+| roman-numerals          | 로마 숫자      | roman numeral converter                     | 양방향 + 규칙 설명            | P2  | skip (구글 검색창 위젯이 바로 답함) |
+| korean-number           | 숫자 한글 변환 | 숫자 한글 변환 / 금액 한글                  | 수표·계약서용 "일금 ○○원정"   | P1  | live                                |
+| cooking-converter       | 요리 계량      | tablespoon to grams                         | 재료별 밀도                   | P2  | skip (구글 검색창 위젯이 바로 답함) |
+| pressure-converter      | 압력 변환      | psi to bar                                  | 타이어 압력 표                | P2  | skip (구글 검색창 위젯이 바로 답함) |
+| energy-converter        | 에너지 변환    | kcal to kj                                  | —                             | P2  | skip (구글 검색창 위젯이 바로 답함) |
 
 ## developer: 개발자 도구
 
@@ -201,8 +213,8 @@
 | speaker-test       | 스피커 테스트   | speaker test / 좌우 스피커 테스트    | 좌우, 주파수 스윕               | P1  | todo |
 | typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM             | P0  | live |
 | refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                               | P2  | todo |
-| click-speed-test   | 클릭 속도       | cps test                             | —                               | P1  | todo |
-| reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                    | P1  | todo |
+| click-speed-test   | 클릭 속도       | cps test                             | —                               | P2  | todo |
+| reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                    | P2  | todo |
 
 ## color: 색상·디자인 (신규 카테고리)
 
@@ -215,11 +227,12 @@
 
 ## media: 오디오·비디오 (신규 카테고리, ffmpeg.wasm 지연 로드, JS 예산 예외 검토)
 
-| slug             | 도구          | 핵심 키워드                         | Edge 아이디어            | P   | 상태 |
-| ---------------- | ------------- | ----------------------------------- | ------------------------ | --- | ---- |
-| video-to-gif     | 동영상 → GIF  | video to gif                        | 업로드 없음              | P1  | todo |
-| video-compressor | 동영상 압축   | compress video / 동영상 용량 줄이기 | 업로드 없음(대용량 강점) | P1  | todo |
-| audio-converter  | 오디오 변환   | mp3 converter                       | —                        | P2  | todo |
-| audio-cutter     | 오디오 자르기 | mp3 cutter / 벨소리 만들기          | 파형 편집                | P1  | todo |
-| voice-recorder   | 음성 녹음     | online voice recorder / 녹음기      | 업로드 없음, mp3 저장    | P1  | todo |
-| screen-recorder  | 화면 녹화     | screen recorder online / 화면 녹화  | 설치 없음, 워터마크 없음 | P1  | todo |
+| slug             | 도구          | 핵심 키워드                                                            | Edge 아이디어                                                               | P   | 상태 |
+| ---------------- | ------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | --- | ---- |
+| video-to-gif     | 동영상 → GIF  | video to gif                                                           | 업로드 없음                                                                 | P1  | todo |
+| video-compressor | 동영상 압축   | compress video / 동영상 용량 줄이기                                    | 업로드 없음(대용량 강점)                                                    | P1  | todo |
+| audio-converter  | 오디오 변환   | mp3 converter                                                          | —                                                                           | P2  | todo |
+| audio-cutter     | 오디오 자르기 | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                   | P1  | todo |
+| voice-recorder   | 음성 녹음     | online voice recorder / 녹음기                                         | 업로드 없음, mp3 저장                                                       | P1  | todo |
+| screen-recorder  | 화면 녹화     | screen recorder online / 화면 녹화                                     | 설치 없음, 워터마크 없음                                                    | P1  | todo |
+| video-to-mp3     | 동영상 → MP3  | mp4 to mp3, extract audio from video / 동영상 mp3 변환, 영상 소리 추출 | 업로드 없음, 브라우저 디코딩 + MP3 인코딩(작은 인코더 지연 로드), 구간 선택 | P1  | todo |
