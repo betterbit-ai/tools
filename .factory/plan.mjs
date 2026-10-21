@@ -75,6 +75,7 @@ function catalogIssueBody(todoLeft) {
 Research and add **at least 60 new tool ideas** to \`docs/CATALOG.md\`, following its existing table format and rules.
 
 - Use WebSearch to find high-demand, client-side-feasible tools that are **not already in the catalog or live** (check \`src/tools/\`).
+- Follow the selection rules at the top of the catalog: **skip anything Google answers with its own widget** at the top of the results (unit conversion, timers, calculators, color picker…) — search each main query and check. Prefer tools that need a file or device, Korea-specific calculations (Naver users), and specific long-tail tasks.
 - Look at what calculator.net, omnicalculator, 123apps, tinywow, smallpdf, it-tools, Korean sites (e.g. 사람인 취업TOOL), and Japanese tool sites offer; also "X online" style long-tail queries.
 - Prefer intents with strong search volume in English **and** at least one other locale (ko, ja, es…).
 - Each row: slug (permanent, English kebab-case), Korean tool name, en/ko keywords, a concrete edge idea, priority (P0/P1/P2), status \`todo\`.
