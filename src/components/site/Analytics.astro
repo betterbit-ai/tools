@@ -7,7 +7,7 @@
  * cookieless pings there) until a consent banner exists; ad storage is off everywhere because
  * the site shows no ads yet. Update the privacy policy (src/static-pages/content.ts) with any change here.
  */
-import { GA_MEASUREMENT_ID } from '../../config/site';
+import { GA_MEASUREMENT_ID, SITE_URL } from '../../config/site';
 
 const CONSENT_REQUIRED_REGIONS = [
   // EU
@@ -47,6 +47,9 @@ const CONSENT_REQUIRED_REGIONS = [
 ];
 const denied = { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' };
 const init = [
+  // Only the production site reports: previews (*.workers.dev), local builds and the e2e
+  // harness (127.0.0.1) would otherwise add fake visits.
+  `if (location.hostname === ${JSON.stringify(new URL(SITE_URL).hostname)}) {`,
   'window.dataLayer = window.dataLayer || [];',
   'function gtag(){dataLayer.push(arguments);}',
   'window.gtag = gtag;',
@@ -54,12 +57,16 @@ const init = [
   `gtag('consent', 'default', ${JSON.stringify({ ...denied, analytics_storage: 'granted' })});`,
   "gtag('js', new Date());",
   `gtag('config', ${JSON.stringify(GA_MEASUREMENT_ID)});`,
+  "var gaScript = document.createElement('script');",
+  'gaScript.async = true;',
+  `gaScript.src = ${JSON.stringify(`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`)};`,
+  'document.head.appendChild(gaScript);',
+  '}',
 ].join('\n');
 ---
 
 {GA_MEASUREMENT_ID && (
   <>
     <script is:inline set:html={init} />
-    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} />
   </>
 )}
