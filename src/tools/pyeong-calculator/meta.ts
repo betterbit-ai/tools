@@ -1,11 +1,67 @@
-import type { ToolMeta } from '../types';
+import type { ToolMeta, ToolVariant } from '../types';
+import { PYEONG_PER_SQUARE_METER, SQUARE_METERS_PER_PYEONG } from './logic';
+
+/**
+ * Landing pages for the areas Koreans search ("84㎡ 몇 평", "30평 몇 제곱미터"). Snippets carry
+ * the exact conversion. The marketed pyeong type assumes supply area ≈ 1.33 × exclusive area,
+ * which is typical but varies by complex — the copy says so.
+ */
+const APARTMENT_SQM = [59, 74, 84, 101, 114];
+const SEARCHED_PYEONG = [10, 15, 20, 24, 25, 30, 32, 33, 34, 40];
+const SUPPLY_RATIO = 1.33;
+const r2 = (n: number) => (Math.round(n * 100) / 100).toFixed(2).replace(/\.?0+$/, '');
+
+const sqmVariants: ToolVariant[] = APARTMENT_SQM.map((sqm) => {
+  const pyeong = r2(sqm * PYEONG_PER_SQUARE_METER);
+  const type = Math.round(sqm * SUPPLY_RATIO * PYEONG_PER_SQUARE_METER);
+  return {
+    slug: `${sqm}-square-meters`,
+    preset: { value: sqm, unit: 'squareMeters' },
+    content: {
+      en: {
+        title: `${sqm}㎡ in Pyeong — ${pyeong} Pyeong (Korean Apartment Size)`,
+        description: `${sqm} square metres is ${pyeong} pyeong. A Korean apartment with ${sqm}㎡ of exclusive area is usually marketed as about a ${type}-pyeong type, based on supply area.`,
+        h1: `${sqm}㎡ to Pyeong`,
+        intro: `${sqm}㎡ × 121 ÷ 400 = ${pyeong} pyeong. Korean listings often quote a larger “pyeong type” that counts shared supply area too: for a typical complex where supply area is about 1.33× the exclusive area, ${sqm}㎡ exclusive is roughly a ${type}-pyeong type. Check the complex's own supply area to be sure.`,
+      },
+      ko: {
+        title: `${sqm}㎡ 몇 평? — 전용 ${pyeong}평, 보통 ${type}평형`,
+        description: `${sqm}제곱미터는 ${pyeong}평입니다. 전용면적 ${sqm}㎡ 아파트는 공급면적 기준으로 보통 약 ${type}평형이라고 부릅니다. 단지별 공급면적으로 정확히 비교해 보세요.`,
+        h1: `${sqm}㎡ 몇 평`,
+        intro: `${sqm}㎡ × 121 ÷ 400 = ${pyeong}평입니다. 아파트 분양 평형은 공용 공간까지 더한 공급면적으로 부르기 때문에 더 큽니다. 공급면적이 전용의 약 1.33배인 일반적인 단지라면 전용 ${sqm}㎡는 약 ${type}평형이고, 정확한 값은 단지의 공급면적을 넣어 확인하세요.`,
+      },
+    },
+  };
+});
+
+const pyeongVariants: ToolVariant[] = SEARCHED_PYEONG.map((py) => {
+  const sqm = r2(py * SQUARE_METERS_PER_PYEONG);
+  return {
+    slug: `${py}-pyeong`,
+    preset: { value: py, unit: 'pyeong' },
+    content: {
+      en: {
+        title: `${py} Pyeong in Square Metres — ${sqm}㎡`,
+        description: `${py} pyeong is ${sqm} square metres (1 pyeong = 400/121 ≈ 3.3058㎡). Convert any Korean floor area between pyeong and ㎡, exclusive or supply.`,
+        h1: `${py} Pyeong to ㎡`,
+        intro: `${py} pyeong × 400 ÷ 121 = ${sqm}㎡. Make sure both figures use the same basis: a listing's pyeong type is usually supply area, while ㎡ on the register is often exclusive area.`,
+      },
+      ko: {
+        title: `${py}평 몇 제곱미터? — ${sqm}㎡`,
+        description: `${py}평은 ${sqm}㎡입니다(1평 = 400/121 ≈ 3.3058㎡). 전용·공급면적을 구분해 평과 ㎡를 바로 바꿔 보세요.`,
+        h1: `${py}평 몇 ㎡`,
+        intro: `${py}평 × 400 ÷ 121 = ${sqm}㎡입니다. 분양 평형은 보통 공급면적, 등기부·건축물대장의 ㎡는 전용면적인 경우가 많으니 같은 기준끼리 비교하세요.`,
+      },
+    },
+  };
+});
 
 export const meta: ToolMeta = {
   slug: 'pyeong-calculator',
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-14',
-  updated: '2026-10-14',
+  updated: '2026-10-21',
   edges: ['usability'],
   competitors: [
     {
@@ -46,4 +102,5 @@ export const meta: ToolMeta = {
     },
   ],
   related: ['length-converter', 'scientific-calculator', 'loan-calculator', 'area-converter'],
+  variants: [...sqmVariants, ...pyeongVariants],
 };
