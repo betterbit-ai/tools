@@ -852,3 +852,7 @@ for (const repo of CONFIG.repos) {
 
 // Stopped by the usage limit with work left: resume right after the reset.
 if (cooldownEnd() && !existsSync(CONTINUE_FILE)) writeFileSync(CONTINUE_FILE, String(cooldownEnd()));
+
+// Exit explicitly: on 10/21 a finished run stayed alive for 7 h on a leftover handle, and
+// launchd starts no new run while this one is alive.
+process.exit(0);
