@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'convert',
   added: '2026-10-08',
-  updated: '2026-10-13',
+  updated: '2026-10-22',
   edges: ['privacy', 'no-signup', 'features'],
   competitors: [
     {

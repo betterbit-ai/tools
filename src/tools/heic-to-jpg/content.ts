@@ -3,19 +3,31 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   dropTitle: 'Drop HEIC photos here, click to choose, or paste',
-  dropHint: '.heic, .heif, .hif · as many as you like, nothing is uploaded',
+  dropHint: '.heic, .heif, .hif · up to 50 at a time, nothing is uploaded',
   privacyNote: 'Photos are decoded and re-encoded on your device. Nothing is uploaded.',
   notHeic: 'Not a HEIC file — use the Image Converter for JPG, PNG and WebP.',
-  unsupported: 'This file could not be decoded. It may be damaged or not a HEIC image.',
+  unsupported: 'This file could not be decoded. It may be damaged or use a HEIC feature this browser cannot read.',
   processing: 'Converting…',
-  decoderLoading:
-    'Preparing the HEIC decoder (about 2 MB, downloaded once). Browsers with built-in HEIC support skip it.',
+  encodeFailed: 'Your browser decoded the photo but could not create a JPEG. Try another modern browser.',
+  processFailed: 'Conversion stopped because of an unexpected browser error. Change a setting to retry.',
+  batchLimit: 'For stable memory use, convert up to {n} photos at a time. The first {n} were added.',
+  zipFailed: 'The converted photos are ready, but the ZIP could not be created. Download them one by one.',
+  progress: 'Converting {current} of {total}: {file} · {stage}',
+  stageReading: 'Reading file',
+  stageLoadingDecoder: 'Preparing the HEIC decoder (about 2 MB)',
+  stageDecoding: 'Decoding pixels',
+  stageEncoding: 'Encoding JPEG',
+  stageMetadata: 'Copying photo info',
+  cancel: 'Cancel conversion',
+  cancelled: 'Conversion cancelled. Your original files are still available.',
+  resume: 'Resume conversion',
   download: 'Download',
   downloadAll: 'Download all ({n}) as ZIP',
+  preparingDownload: 'Preparing ZIP…',
   remove: 'Remove',
   clear: 'Clear all',
   quality: 'JPG quality',
-  qualityHint: '90 is visually identical to the original for most photos. Lower it for smaller files.',
+  qualityHint: '90 gives high quality for most photos. Lower it for smaller files.',
   metadata: 'Photo info (EXIF)',
   metadataNoGps: 'No location',
   metadataKeep: 'Keep all',
@@ -27,16 +39,18 @@ const uiEn = {
   gpsRemoved: 'location removed',
   noMetadata: 'No EXIF in the original.',
   metadataDropped: 'EXIF removed.',
+  metadataNotKept: 'The photo converted, but its EXIF was not compatible and could not be copied.',
+  metadataKept: 'Compatible EXIF kept.',
 };
 export type UI = typeof uiEn;
 
 export const content: Record<Locale, ToolContent<UI>> = {
   en: {
-    title: 'HEIC to JPG — Free, No Upload, Keeps Photo Dates',
+    title: 'HEIC to JPG — Free, No Upload, EXIF Controls',
     description:
-      'Convert HEIC to JPG in your browser — one photo or hundreds. No upload, no sign-up. Keeps each photo’s capture date and camera, and can leave GPS out.',
+      'Convert up to 50 HEIC photos to JPG per batch in your browser. No upload or sign-up. Keeps compatible capture dates and camera details, with GPS left out by default.',
     h1: 'HEIC to JPG Converter',
-    tagline: 'Turn iPhone HEIC photos into JPG without uploading them — and without losing the date they were taken.',
+    tagline: 'Turn iPhone HEIC photos into JPG without uploading them, with compatible capture dates preserved.',
     name: 'HEIC to JPG',
     keywords: [
       'heic to jpg',
@@ -60,7 +74,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Your capture date survives the conversion',
-        body: 'A HEIC file keeps the capture date, camera model and GPS position in an “Exif” item inside the container, separate from the pixels. Browser converters that hand the image straight to a Canvas get pixels and nothing else, so the JPG comes out with no metadata — this is why converted photos so often land in your library sorted under today’s date instead of the day you took them. This tool reads the Exif item out of the HEIC itself and writes it back into the JPG as an APP1 segment, so the date, camera and exposure settings travel with the file. Two things are deliberately left behind: the embedded thumbnail, and proprietary maker notes, whose internal offsets would be wrong after the move. The Orientation tag is reset to 1 because the decoder has already rotated the pixels upright — copying the original value would make viewers rotate the photo a second time.',
+        body: 'A HEIC file keeps the capture date, camera model and GPS position in an “Exif” item inside the container, separate from the pixels. Browser converters that hand the image straight to a Canvas get pixels and nothing else, so the JPG comes out with no metadata — this is why converted photos so often land in your library sorted under today’s date instead of the day you took them. This tool reads compatible Exif fields from the HEIC and writes them into the JPG as an APP1 segment. The result row tells you whether EXIF was kept; an uncommon or damaged EXIF layout may not be safe to copy even when the pixels convert. Two things are deliberately left behind: the embedded thumbnail, and proprietary maker notes, whose internal offsets would be wrong after the move. The Orientation tag is reset to 1 because the decoder has already rotated the pixels upright — copying the original value would make viewers rotate the photo a second time.',
       },
       {
         heading: 'Location data is left out by default',
@@ -78,7 +92,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Does the converted JPG keep the date the photo was taken?',
-        a: 'Yes. The EXIF block is read out of the HEIC container and written into the JPG as an APP1 segment, so the capture date, camera model and exposure settings are preserved. GPS coordinates are left out unless you choose "Keep all".',
+        a: 'Compatible EXIF is read from the HEIC container and written into the JPG as an APP1 segment, preserving the capture date, camera model and exposure settings. GPS coordinates are left out unless you choose "Keep all". The result row warns you if an uncommon EXIF layout could not be copied.',
       },
       {
         q: 'Why is the JPG larger than the HEIC?',
@@ -90,7 +104,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Can I convert a whole batch at once?',
-        a: 'Yes. Add multiple HEIC files and download them individually or together as one ZIP. Large photos and batches use your device’s memory, so add them in smaller groups on a phone or a low-memory computer.',
+        a: 'Yes. Add up to 50 HEIC files per batch and download them individually or together as one ZIP. Photos convert one at a time to bound decoded-image memory. On a phone or low-memory computer, smaller groups will still be more comfortable.',
       },
       {
         q: 'Why is the first conversion sometimes slower?',
@@ -108,11 +122,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: uiEn,
   },
   ko: {
-    title: 'HEIC JPG 변환 — 업로드 없이, 촬영 날짜 유지',
+    title: 'HEIC JPG 변환 — 업로드 없이, EXIF 설정',
     description:
-      '아이폰 HEIC 사진을 브라우저에서 바로 JPG로 변환합니다. 한 장도 수백 장도 가능하고, 업로드·가입이 없습니다. 촬영 날짜와 카메라 정보는 유지하고 위치정보는 빼 줍니다.',
+      '아이폰 HEIC 사진을 브라우저에서 한 번에 최대 50장까지 JPG로 변환합니다. 업로드·가입이 없고, 호환되는 촬영 날짜와 카메라 정보는 유지하며 위치정보는 기본으로 뺍니다.',
     h1: 'HEIC JPG 변환',
-    tagline: '아이폰 HEIC 사진을 업로드 없이 JPG로 바꿉니다. 촬영 날짜도 그대로 남습니다.',
+    tagline: '아이폰 HEIC 사진을 업로드 없이 JPG로 바꾸고, 호환되는 촬영 날짜도 유지합니다.',
     name: 'HEIC JPG 변환',
     keywords: [
       'heic jpg 변환',
@@ -136,7 +150,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '촬영 날짜가 그대로 남습니다',
-        body: 'HEIC 파일은 촬영 날짜, 카메라 기종, GPS 위치를 사진 데이터와 별도로 컨테이너 안의 "Exif" 항목에 저장합니다. 브라우저에서 Canvas로만 변환하는 도구는 픽셀만 받아 가기 때문에 결과 JPG에는 메타데이터가 하나도 남지 않습니다. 변환한 사진이 앨범에서 촬영일이 아니라 오늘 날짜로 정렬되는 이유가 바로 이것입니다. 이 도구는 HEIC 컨테이너에서 Exif 항목을 직접 읽어 JPG의 APP1 세그먼트로 다시 써 넣습니다. 그래서 촬영 날짜, 기종, 노출 설정이 파일과 함께 따라옵니다. 두 가지는 일부러 버립니다. 내장 썸네일과 제조사 전용 메이커노트인데, 위치를 옮기면 내부 오프셋이 어긋나 깨지기 때문입니다. 방향(Orientation) 태그는 1로 맞춥니다. 디코딩 단계에서 이미 사진을 똑바로 세워 놓았기 때문에, 원래 값을 그대로 복사하면 보는 쪽에서 한 번 더 회전시켜 버립니다.',
+        body: 'HEIC 파일은 촬영 날짜, 카메라 기종, GPS 위치를 사진 데이터와 별도로 컨테이너 안의 "Exif" 항목에 저장합니다. 브라우저에서 Canvas로만 변환하는 도구는 픽셀만 받아 가기 때문에 결과 JPG에는 메타데이터가 하나도 남지 않습니다. 변환한 사진이 앨범에서 촬영일이 아니라 오늘 날짜로 정렬되는 이유가 바로 이것입니다. 이 도구는 호환되는 Exif 필드를 HEIC에서 읽어 JPG의 APP1 세그먼트로 다시 씁니다. 결과 목록에서 EXIF가 실제로 유지됐는지 알려 주며, 드물거나 손상된 EXIF 구조는 픽셀 변환에 성공해도 안전하게 복사하지 못할 수 있습니다. 내장 썸네일과 제조사 전용 메이커노트는 내부 오프셋이 어긋날 수 있어 옮기지 않습니다. 방향(Orientation) 태그는 1로 맞춥니다. 디코딩 단계에서 이미 사진을 똑바로 세워 놓았기 때문에, 원래 값을 그대로 복사하면 보는 쪽에서 한 번 더 회전시켜 버립니다.',
       },
       {
         heading: '위치정보는 기본적으로 빼 둡니다',
@@ -154,7 +168,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '변환한 JPG에 촬영 날짜가 남나요?',
-        a: '네. HEIC 컨테이너의 EXIF 블록을 읽어 JPG의 APP1 세그먼트에 다시 써 넣기 때문에 촬영 날짜, 카메라 기종, 노출 설정이 유지됩니다. GPS 위치는 "모두 유지"를 고르지 않는 한 빠집니다.',
+        a: '호환되는 EXIF는 HEIC 컨테이너에서 읽어 JPG의 APP1 세그먼트에 다시 쓰므로 촬영 날짜, 카메라 기종, 노출 설정이 유지됩니다. GPS 위치는 "모두 유지"를 고르지 않는 한 빠집니다. 드문 EXIF 구조를 복사하지 못하면 결과 목록에서 바로 알려 줍니다.',
       },
       {
         q: 'JPG가 원본 HEIC보다 커지는데 정상인가요?',
@@ -166,7 +180,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '여러 장을 한 번에 변환할 수 있나요?',
-        a: '네. 여러 HEIC 파일을 추가해서 한 장씩 받거나 ZIP 파일 하나로 내려받을 수 있습니다. 고화질 사진과 대량 파일은 기기 메모리를 쓰므로 휴대폰이나 메모리가 적은 컴퓨터에서는 나누어 변환하는 편이 좋습니다.',
+        a: '네. 한 번에 최대 50장의 HEIC 파일을 추가해 한 장씩 받거나 ZIP 파일 하나로 내려받을 수 있습니다. 디코딩된 사진 메모리가 한꺼번에 쌓이지 않도록 한 장씩 변환합니다. 휴대폰이나 메모리가 적은 컴퓨터에서는 더 작은 묶음이 편합니다.',
       },
       {
         q: '첫 변환이 가끔 느린 이유는?',
@@ -183,19 +197,31 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     ui: {
       dropTitle: 'HEIC 사진을 끌어다 놓거나, 클릭하거나, 붙여넣으세요',
-      dropHint: '.heic, .heif, .hif · 여러 장 가능, 업로드되지 않습니다',
+      dropHint: '.heic, .heif, .hif · 한 번에 최대 50장, 업로드되지 않습니다',
       privacyNote: '사진은 내 기기에서 디코딩·변환됩니다. 어디에도 업로드되지 않습니다.',
       notHeic: 'HEIC 파일이 아닙니다 — JPG·PNG·WebP는 이미지 형식 변환을 이용하세요.',
-      unsupported: '디코딩할 수 없는 파일입니다. 손상되었거나 HEIC 이미지가 아닐 수 있습니다.',
+      unsupported: '디코딩할 수 없는 파일입니다. 손상됐거나 브라우저가 읽지 못하는 HEIC 기능을 썼을 수 있습니다.',
       processing: '변환 중…',
-      decoderLoading:
-        'HEIC 디코더를 준비하는 중입니다(약 2MB, 한 번만 내려받습니다). HEIC를 자체 지원하는 브라우저는 이 과정을 건너뜁니다.',
+      encodeFailed: '사진은 열었지만 브라우저가 JPEG를 만들지 못했습니다. 다른 최신 브라우저에서 다시 시도하세요.',
+      processFailed: '예상하지 못한 브라우저 오류로 변환이 멈췄습니다. 설정을 바꾸면 다시 시도합니다.',
+      batchLimit: '메모리를 안정적으로 쓰기 위해 한 번에 {n}장까지 변환합니다. 앞의 {n}장만 추가했습니다.',
+      zipFailed: '변환은 끝났지만 ZIP을 만들지 못했습니다. 사진을 한 장씩 다운로드하세요.',
+      progress: '{total}장 중 {current}번째 변환: {file} · {stage}',
+      stageReading: '파일 읽는 중',
+      stageLoadingDecoder: 'HEIC 디코더 준비 중(약 2MB)',
+      stageDecoding: '픽셀 디코딩 중',
+      stageEncoding: 'JPEG 인코딩 중',
+      stageMetadata: '사진 정보 복사 중',
+      cancel: '변환 취소',
+      cancelled: '변환을 취소했습니다. 원본 파일은 목록에 그대로 있습니다.',
+      resume: '변환 계속',
       download: '다운로드',
       downloadAll: '전체 ({n}장) ZIP 다운로드',
+      preparingDownload: 'ZIP 준비 중…',
       remove: '삭제',
       clear: '모두 지우기',
       quality: 'JPG 품질',
-      qualityHint: '90이면 대부분의 사진에서 원본과 차이가 거의 없습니다. 용량을 줄이려면 낮추세요.',
+      qualityHint: '90이면 대부분의 사진에 충분히 높은 품질입니다. 용량을 줄이려면 낮추세요.',
       metadata: '사진 정보(EXIF)',
       metadataNoGps: '위치 제외',
       metadataKeep: '모두 유지',
@@ -207,6 +233,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       gpsRemoved: '위치정보 제거',
       noMetadata: '원본에 EXIF가 없습니다.',
       metadataDropped: 'EXIF를 제거했습니다.',
+      metadataNotKept: '사진은 변환했지만 EXIF 구조가 호환되지 않아 복사하지 못했습니다.',
+      metadataKept: '호환되는 EXIF를 유지했습니다.',
     },
   },
 };
