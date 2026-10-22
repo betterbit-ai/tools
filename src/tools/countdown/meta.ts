@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Its target-date flow requires choosing date, hours, minutes and a time zone from long option lists. Betterbit needs only a date (and an optional native time input) for a local event, then updates its share link as you edit. (Strength: it offers duration and past-date timers, explicit time zones, and country holiday calendars.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'date-calculator', 'time-zone-converter'],
+  related: ['timer', 'stopwatch', 'date-calculator', 'time-zone-converter', 'lunar-converter'],
 };

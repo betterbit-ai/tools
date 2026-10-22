@@ -104,7 +104,7 @@
 | interval-timer      | 인터벌 타이머     | tabata timer / 인터벌 타이머                                           | 운동 프리셋, 음성 안내                                                       | P1  | live                                |
 | metronome           | 메트로놈          | metronome / 메트로놈                                                   | Web Audio 정확한 박자, 탭 템포                                               | P1  | live                                |
 | week-number         | 주차 계산         | what week is it / 몇 주차                                              | ISO 주차, 연간 달력                                                          | P2  | skip (구글 검색창 위젯이 바로 답함) |
-| lunar-converter     | 음력 양력 변환    | korean lunar calendar converter / 음력 변환, 양력 음력 변환, 음력 생일 | 한국천문연구원 기준 데이터(윤달 포함), 올해·내년 음력 생일의 양력 날짜, 간지 | P0  | todo                                |
+| lunar-converter     | 음력 양력 변환    | korean lunar calendar converter / 음력 변환, 양력 음력 변환, 음력 생일 | 한국천문연구원 기준 데이터(윤달 포함), 올해·내년 음력 생일의 양력 날짜, 간지 | P0  | live                                |
 
 ## calculator: 계산기
 
