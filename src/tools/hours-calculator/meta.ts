@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'time',
   icon: 'clock',
   added: '2026-10-13',
-  updated: '2026-10-13',
+  updated: '2026-10-22',
   edges: ['features', 'usability'],
   competitors: [
     {
@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'time-zone-converter',
     'severance-pay-kr',
     'unemployment-benefit-kr',
+    'weekly-holiday-pay-kr',
   ],
 };
