@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-13',
-  updated: '2026-10-13',
+  updated: '2026-10-22',
   edges: ['features', 'usability'],
   competitors: [
     {
@@ -45,5 +45,11 @@ export const meta: ToolMeta = {
         'Its opened landing page presents a three-field start—hire date, retirement date, and monthly pay—without exposing a daily ordinary-wage comparison or weekly-hours eligibility check there. Betterbit keeps those two statutory checks available in its initial live calculation. (장점: 직전 3개월 구간과 역일수를 자동 분할한다고 명확히 안내한다.)',
     },
   ],
-  related: ['salary-calculator-kr', 'date-calculator', 'hours-calculator', 'unemployment-benefit-kr'],
+  related: [
+    'salary-calculator-kr',
+    'date-calculator',
+    'hours-calculator',
+    'unemployment-benefit-kr',
+    'weekly-holiday-pay-kr',
+  ],
 };
