@@ -132,7 +132,7 @@
 | electricity-bill-kr     | 전기요금 계산기      | 전기요금 계산기                                                  | 누진 구간 시각화                                                                                              | P2  | todo |
 | exchange-rate           | 환율 계산기          | currency converter / 환율 계산기                                 | 실제 제시 환율·수수료·실질 환율을 함께 계산                                                                   | P1  | live |
 | weekly-holiday-pay-kr   | 주휴수당 계산기      | weekly holiday pay korea / 주휴수당 계산기, 주휴수당 조건        | 요일별 근무시간 입력 → 주휴 발생 여부(주 15시간·개근)와 금액, 월급 환산, 2026 최저임금 비교, 미발생 이유 표시 | P0  | live |
-| annual-leave-kr         | 연차 계산기          | annual leave calculator korea / 연차 계산기, 연차 일수, 연차수당 | 입사일 기준·회계연도 기준 둘 다, 1년 미만 월 단위 연차, 퇴사 시 미사용 연차수당                               | P0  | todo |
+| annual-leave-kr         | 연차 계산기          | annual leave calculator korea / 연차 계산기, 연차 일수, 연차수당 | 입사일 기준·회계연도 기준 둘 다, 1년 미만 월 단위 연차, 퇴사 시 미사용 연차수당                               | P0  | live |
 | hourly-wage-kr          | 시급 계산기          | hourly to monthly wage korea / 시급 계산기, 알바 월급 계산기     | 시급 → 일급·주급·월급(주휴수당 포함/제외), 2026 최저시급 비교, 3.3% 공제                                      | P0  | todo |
 | social-insurance-kr     | 4대보험 계산기       | korea social insurance calculator / 4대보험 계산기, 4대보험 요율 | 2026 요율로 근로자·사업주 부담 분리, 월급·연봉 입력, 항목별 상한·하한 반영                                    | P0  | todo |
 | rent-conversion-kr      | 전월세 전환율 계산기 | jeonse to monthly rent korea / 전월세 전환율, 전세 월세 전환     | 법정 전환율 상한 자동 적용, 보증금 ↔ 월세 양방향, 계산 근거 표시                                              | P1  | todo |

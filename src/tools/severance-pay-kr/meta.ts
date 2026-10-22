@@ -51,5 +51,6 @@ export const meta: ToolMeta = {
     'hours-calculator',
     'unemployment-benefit-kr',
     'weekly-holiday-pay-kr',
+    'annual-leave-kr',
   ],
 };

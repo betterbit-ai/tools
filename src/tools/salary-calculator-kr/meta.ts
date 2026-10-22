@@ -79,6 +79,6 @@ export const meta: ToolMeta = {
         'Its live calculator supports annual or monthly pay, withholding-rate selection, and an itemized result, but does not identify the 2026 workplace health-insurance minimum that affects very low monthly pay. Betterbit applies the KRW 10,080 employee minimum and keeps the current-rate assumptions in the result flow. (Strength: it supports monthly-pay input and a severance-included option.)',
     },
   ],
-  related: ['severance-pay-kr', 'unemployment-benefit-kr', 'weekly-holiday-pay-kr'],
+  related: ['severance-pay-kr', 'unemployment-benefit-kr', 'weekly-holiday-pay-kr', 'annual-leave-kr'],
   variants,
 };
