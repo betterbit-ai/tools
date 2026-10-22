@@ -44,5 +44,11 @@ export const meta: ToolMeta = {
         'The opened form multiplies one hours-per-day value by selected days and has no fields for variable four-week history or whether employment lasted through the week. Betterbit supports irregular schedules and displays every eligibility reason. (Strength: its English guide clearly covers foreign workers and workplaces with fewer than five workers.)',
     },
   ],
-  related: ['salary-calculator-kr', 'severance-pay-kr', 'unemployment-benefit-kr', 'hours-calculator'],
+  related: [
+    'salary-calculator-kr',
+    'severance-pay-kr',
+    'unemployment-benefit-kr',
+    'hours-calculator',
+    'annual-leave-kr',
+  ],
 };
