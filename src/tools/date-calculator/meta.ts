@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Its holiday-calendar mode covers South Korea only, so US federal holidays are not an option. Betterbit lets a user switch between Korean and US holiday calendars without leaving the calculation. (Strength: it has a separate D-Day mode and explains its holiday sources and coverage in more detail.)',
     },
   ],
-  related: ['age-calculator', 'countdown', 'hours-calculator', 'unix-timestamp', 'annual-leave-kr'],
+  related: ['age-calculator', 'countdown', 'hours-calculator', 'unix-timestamp', 'annual-leave-kr', 'lunar-converter'],
 };

@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Requires a calculation action and presents a dense, ad-supported result page without Korean counting age, year age, Chinese zodiac or star sign. Betterbit updates immediately and keeps those Korean age conventions in a single panel. (Strength: it reports elapsed weeks, hours, minutes and seconds in addition to calendar years, months and days.)',
     },
   ],
-  related: ['date-calculator', 'countdown', 'bmi-calculator', 'pregnancy-calculator'],
+  related: ['date-calculator', 'countdown', 'bmi-calculator', 'pregnancy-calculator', 'lunar-converter'],
 };
