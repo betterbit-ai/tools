@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyze, topKeywords } from './logic';
+import { analyze, countXWeightedLength, fitRepeatedText, topKeywords } from './logic';
 
 describe('analyze', () => {
   it('handles empty text', () => {
@@ -46,6 +46,31 @@ describe('analyze', () => {
   it('estimates reading time from 238 wpm', () => {
     const text = Array.from({ length: 238 }, () => 'word').join(' ');
     expect(analyze(text).readingSeconds).toBe(60);
+  });
+});
+
+describe('countXWeightedLength', () => {
+  it('uses the official v3 weights for Latin and Hangul', () => {
+    expect(countXWeightedLength('a'.repeat(280))).toBe(280);
+    expect(countXWeightedLength('가'.repeat(140))).toBe(280);
+    expect(countXWeightedLength('Hello 한글')).toBe(10);
+  });
+
+  it('counts a URL as 23 and an emoji cluster as 2', () => {
+    expect(countXWeightedLength('see https://example.com/a/very/long/path')).toBe(27);
+    expect(countXWeightedLength('👨‍👩‍👧‍👦')).toBe(2);
+  });
+
+  it('normalizes combining sequences before applying weights', () => {
+    expect(countXWeightedLength('e\u0301')).toBe(1);
+  });
+});
+
+describe('fitRepeatedText', () => {
+  it('computes snippet capacities with the live metrics', () => {
+    expect(fitRepeatedText(80, '가', 'bytesLegacy')).toEqual({ characters: 40, used: 80, remaining: 0 });
+    expect(fitRepeatedText(280, '가', 'xWeightedLength')).toEqual({ characters: 140, used: 280, remaining: 0 });
+    expect(fitRepeatedText(5000, '가', 'bytesUtf8')).toEqual({ characters: 1666, used: 4998, remaining: 2 });
   });
 });
 
