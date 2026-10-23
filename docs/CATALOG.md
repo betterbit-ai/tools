@@ -221,7 +221,7 @@
 | slug               | 도구        | 핵심 키워드             | Edge 아이디어           | P   | 상태 |
 | ------------------ | ----------- | ----------------------- | ----------------------- | --- | ---- |
 | color-picker       | 색상 추출   | color picker from image | 이미지에서 추출, 팔레트 | P1  | live |
-| contrast-checker   | 명도 대비   | contrast checker        | WCAG 2 + APCA           | P1  | todo |
+| contrast-checker   | 명도 대비   | contrast checker        | WCAG 2 + APCA           | P1  | live |
 | gradient-generator | 그라데이션  | css gradient generator  | OKLCH 보간              | P2  | todo |
 | palette-generator  | 팔레트 생성 | color palette generator | 접근성 검증 포함        | P2  | todo |
 
