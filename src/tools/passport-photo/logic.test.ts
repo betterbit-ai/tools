@@ -3,6 +3,7 @@ import {
   DPI,
   PHOTO_SPECS,
   cropForPhoto,
+  cropNeedsUpscaling,
   getPhotoSpec,
   mmToPixels,
   outputDimensions,
@@ -52,6 +53,17 @@ describe('cropForPhoto', () => {
     const crop = cropForPhoto(100_000_000, 80_000_000, getPhotoSpec('us-passport'), 999, -50, 200);
     expect(crop.x).toBe(0);
     expect(crop.y + crop.height).toBeLessThanOrEqual(80_000_000);
+  });
+});
+
+describe('cropNeedsUpscaling', () => {
+  it('warns when a tiny or heavily zoomed crop must be enlarged', () => {
+    expect(cropNeedsUpscaling(cropForPhoto(64, 64, getPhotoSpec('us-passport')), 602, 602)).toBe(true);
+    expect(cropNeedsUpscaling(cropForPhoto(6000, 800, getPhotoSpec('us-passport'), 400), 602, 602)).toBe(true);
+  });
+
+  it('does not warn when the selected crop contains enough source pixels', () => {
+    expect(cropNeedsUpscaling(cropForPhoto(4032, 3024, getPhotoSpec('us-passport')), 602, 602)).toBe(false);
   });
 });
 

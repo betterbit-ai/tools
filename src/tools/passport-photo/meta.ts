@@ -5,14 +5,14 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'camera',
   added: '2026-10-12',
-  updated: '2026-10-12',
+  updated: '2026-10-24',
   edges: ['privacy'],
   competitors: [
     {
       name: 'PassportPhotoMake',
       url: 'https://passportphotomake.com/',
       weakness:
-        'The opened page has the useful country presets, crop controls and print sheets that this focused tool does not try to exceed, but explicitly says the free service is funded by ads. Betterbit provides Korean, US and Japan presets with no advertising. (Strength: it offers background removal and a much larger country list.)',
+        'The opened page has useful country presets, crop controls and print sheets, but explicitly says the free service is funded by ads. Betterbit keeps Korean, US and Japan cropping and print-sheet rendering on the device with visible progress and cancellation. (Strength: it offers background removal and a much larger country list.)',
     },
     {
       name: 'PicToPassport',
@@ -36,7 +36,7 @@ export const meta: ToolMeta = {
       name: 'IDPhotoBy 한국 여권사진',
       url: 'https://idphotoby.ai/ko/korea-passport-photo',
       weakness:
-        'Its Korean page includes third-party Google Tag Manager and opens on a country/document selection step before the photo editor. Betterbit has no tracking script and remembers the most recently selected standard. (Strength: its country-specific page gives a more extensive written Korea-passport guide.)',
+        'Its Korean page includes third-party Google Tag Manager and opens on a country/document selection step before the photo editor. Betterbit processes the selected photo locally and remembers the most recently selected standard. (Strength: its country-specific page gives a more extensive written Korea-passport guide.)',
     },
     {
       name: '증명사진 만들기 (WooaImage)',

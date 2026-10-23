@@ -30,6 +30,11 @@ export interface PrintLayout {
   gap: number;
 }
 
+/** True when the selected source crop must be enlarged to reach the requested output pixels. */
+export function cropNeedsUpscaling(crop: Crop, outputWidth: number, outputHeight: number): boolean {
+  return crop.width < outputWidth || crop.height < outputHeight;
+}
+
 export function getPhotoSpec(id: PhotoSpecId): PhotoSpec {
   return PHOTO_SPECS.find((spec) => spec.id === id) ?? PHOTO_SPECS[0];
 }
