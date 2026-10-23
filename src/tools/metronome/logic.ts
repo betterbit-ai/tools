@@ -40,6 +40,18 @@ export function secondsPerBeat(bpm: number): number {
   return 60 / clampBpm(bpm);
 }
 
+/** Duration of one bounded audio loop containing a complete bar. */
+export function barDurationSeconds(bpm: number, beatsPerBar: number): number {
+  return secondsPerBeat(bpm) * clampBeatsPerBar(beatsPerBar);
+}
+
+/** Derive the visual beat from the audio clock, including after a throttled background tab returns. */
+export function beatAtElapsedTime(elapsedSeconds: number, bpm: number, beatsPerBar: number): number {
+  const safeBeatsPerBar = clampBeatsPerBar(beatsPerBar);
+  const elapsedBeats = Math.floor(Math.max(0, elapsedSeconds) / secondsPerBeat(bpm));
+  return (elapsedBeats % safeBeatsPerBar) + 1;
+}
+
 /**
  * Calculate BPM from recent tap timestamps. The interval average, not just the
  * last tap, makes a single slightly early/late tap less disruptive.

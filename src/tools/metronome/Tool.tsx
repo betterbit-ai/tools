@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { Button, Field, Kbd, Notice, NumberInput, Panel, Segmented, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
+import { MetronomeAudioEngine, supportsMetronomeAudio } from './audio';
 import type { UI } from './content';
 import {
   DEFAULT_SETTINGS,
@@ -9,7 +10,6 @@ import {
   MIN_BPM,
   clampBpm,
   clampVolume,
-  secondsPerBeat,
   settingsFromUnknown,
   tapTempo,
   type MetronomeSettings,
@@ -17,23 +17,18 @@ import {
 
 const SETTINGS_KEY = 'tools:metronome:settings';
 const TAP_GAP_MS = 2_000;
-const LOOK_AHEAD_SECONDS = 0.1;
-const SCHEDULER_INTERVAL_MS = 25;
-
-interface Scheduler {
-  beatIndex: number;
-  intervalId: number | null;
-  nextNoteTime: number;
-}
+type AudioError = 'unsupported' | 'blocked';
 
 export default function Metronome({ ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<MetronomeSettings>(DEFAULT_SETTINGS);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [running, setRunning] = useState(false);
   const [currentBeat, setCurrentBeat] = useState(0);
   const [tapCount, setTapCount] = useState(0);
-  const [audioError, setAudioError] = useState(false);
-  const audio = useRef<AudioContext | null>(null);
-  const scheduler = useRef<Scheduler | null>(null);
+  const [audioError, setAudioError] = useState<AudioError | null>(null);
+  const audio = useRef<MetronomeAudioEngine | null>(null);
+  const visualFrame = useRef<number | null>(null);
+  const runningRef = useRef(false);
   const settingsRef = useRef(settings);
   const taps = useRef<number[]>([]);
   const startGeneration = useRef(0);
@@ -46,93 +41,64 @@ export default function Metronome({ ui }: ToolProps<UI>) {
       setSettings(settingsFromUnknown(JSON.parse(safeStorage.get(SETTINGS_KEY) ?? 'null')));
     } catch {
       // Keep the useful default if storage is unavailable or corrupt.
+    } finally {
+      setSettingsLoaded(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!settingsLoaded) return;
     safeStorage.set(SETTINGS_KEY, JSON.stringify(settings));
-  }, [settings]);
+  }, [settings, settingsLoaded]);
 
   const stop = useCallback(() => {
     startGeneration.current += 1;
     startPending.current = false;
-    const active = scheduler.current;
-    if (active) {
-      if (active.intervalId !== null) clearInterval(active.intervalId);
-      scheduler.current = null;
-    }
+    if (visualFrame.current !== null) cancelAnimationFrame(visualFrame.current);
+    visualFrame.current = null;
+    audio.current?.stop();
+    runningRef.current = false;
     setRunning(false);
     setCurrentBeat(0);
   }, []);
 
-  const scheduleClick = useCallback((ctx: AudioContext, when: number, accent: boolean, volume: number) => {
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const peak = Math.max(0.0001, (volume / 100) * (accent ? 0.28 : 0.2));
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(accent ? 1_320 : 880, when);
-    gain.gain.setValueAtTime(0.0001, when);
-    gain.gain.exponentialRampToValueAtTime(peak, when + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.045);
-    oscillator.connect(gain).connect(ctx.destination);
-    oscillator.start(when);
-    oscillator.stop(when + 0.05);
-  }, []);
-
   const start = useCallback(async () => {
-    if (scheduler.current || startPending.current) return;
+    if (runningRef.current || startPending.current) return;
     const startToken = ++startGeneration.current;
     startPending.current = true;
-    setAudioError(false);
-    const AudioContextConstructor = window.AudioContext;
-    if (!AudioContextConstructor) {
+    setAudioError(null);
+    if (!supportsMetronomeAudio()) {
       startPending.current = false;
-      setAudioError(true);
+      setAudioError('unsupported');
       return;
     }
 
     try {
-      const ctx = (audio.current ??= new AudioContextConstructor());
-      await ctx.resume();
-      if (startToken !== startGeneration.current) return;
-      const active: Scheduler = {
-        beatIndex: 0,
-        intervalId: null,
-        nextNoteTime: ctx.currentTime + 0.05,
-      };
-      scheduler.current = active;
+      const engine = (audio.current ??= new MetronomeAudioEngine());
+      await engine.start(settingsRef.current);
+      if (startToken !== startGeneration.current) {
+        engine.stop();
+        return;
+      }
       startPending.current = false;
+      runningRef.current = true;
       setRunning(true);
-
-      const tick = () => {
-        const now = ctx.currentTime;
-        while (active.nextNoteTime < now + LOOK_AHEAD_SECONDS) {
-          const current = settingsRef.current;
-          const beat = (active.beatIndex % current.beatsPerBar) + 1;
-          scheduleClick(ctx, active.nextNoteTime, beat === 1, current.volume);
-          window.setTimeout(
-            () => {
-              if (scheduler.current === active) setCurrentBeat(beat);
-            },
-            Math.max(0, (active.nextNoteTime - now) * 1_000),
-          );
-          active.nextNoteTime += secondsPerBeat(current.bpm);
-          active.beatIndex += 1;
-        }
+      const paintBeat = () => {
+        setCurrentBeat(engine.currentBeat());
+        visualFrame.current = requestAnimationFrame(paintBeat);
       };
-      tick();
-      active.intervalId = window.setInterval(tick, SCHEDULER_INTERVAL_MS);
+      paintBeat();
     } catch {
       startPending.current = false;
       stop();
-      setAudioError(true);
+      setAudioError('blocked');
     }
-  }, [scheduleClick, stop]);
+  }, [stop]);
 
   const toggle = useCallback(() => {
-    if (running) stop();
+    if (runningRef.current) stop();
     else void start();
-  }, [running, start, stop]);
+  }, [start, stop]);
 
   const updateSettings = (next: Partial<MetronomeSettings>) => {
     setSettings((previous) => ({
@@ -141,6 +107,16 @@ export default function Metronome({ ui }: ToolProps<UI>) {
       volume: clampVolume(next.volume ?? previous.volume),
     }));
   };
+
+  useEffect(() => {
+    if (!running) return;
+    try {
+      audio.current?.update(settings);
+    } catch {
+      stop();
+      setAudioError('blocked');
+    }
+  }, [running, settings, stop]);
 
   const tap = useCallback(() => {
     const now = Date.now();
@@ -163,7 +139,7 @@ export default function Metronome({ ui }: ToolProps<UI>) {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
       if (
-        target.closest('input, textarea, select, [contenteditable]') ||
+        target.closest('input, textarea, select, button, [role="button"], [role="radio"], [contenteditable]') ||
         event.metaKey ||
         event.ctrlKey ||
         event.altKey
@@ -181,7 +157,15 @@ export default function Metronome({ ui }: ToolProps<UI>) {
     return () => window.removeEventListener('keydown', onKey);
   }, [tap, toggle]);
 
-  useEffect(() => stop, [stop]);
+  useEffect(
+    () => () => {
+      stop();
+      const engine = audio.current;
+      audio.current = null;
+      void engine?.destroy();
+    },
+    [stop],
+  );
 
   const beatOptions = [
     { value: '2', label: ui.twoFour },
@@ -244,7 +228,7 @@ export default function Metronome({ ui }: ToolProps<UI>) {
 
       {audioError && (
         <div class="mt-4">
-          <Notice tone="danger">{ui.audioUnavailable}</Notice>
+          <Notice tone="danger">{audioError === 'unsupported' ? ui.audioUnsupported : ui.audioBlocked}</Notice>
         </div>
       )}
 
