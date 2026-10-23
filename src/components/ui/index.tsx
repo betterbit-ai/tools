@@ -358,6 +358,28 @@ export function BarChart(props: { items: { label: string; value: number }[]; ari
   );
 }
 
+/** A dynamically painted colour sample. Canvas avoids one-off inline colour styles. */
+export function ColorSwatch(props: { color: string; label: string; class?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+    canvas.width = 32;
+    canvas.height = 32;
+    context.fillStyle = props.color;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+  }, [props.color]);
+  return (
+    <canvas
+      ref={canvasRef}
+      role="img"
+      aria-label={props.label}
+      class={cx('shrink-0 rounded-sm border border-line', props.class)}
+    />
+  );
+}
+
 /** Inline status message. */
 export function Notice(props: { tone?: 'info' | 'success' | 'danger'; children: ComponentChildren }) {
   const tone = props.tone ?? 'info';

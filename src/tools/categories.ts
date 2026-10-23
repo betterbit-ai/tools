@@ -77,6 +77,14 @@ export const CATEGORIES = {
       ko: '화상 회의, 수업, 녹음 전에 마이크·카메라·키보드 등 기기 입력을 브라우저에서 바로 점검합니다. 설치와 회원가입이 필요 없습니다.',
     },
   },
+  color: {
+    icon: 'palette',
+    name: { en: 'Color & design', ko: '색상·디자인' },
+    description: {
+      en: 'Pick colors from images, check contrast, and build practical palettes for web and design work — all locally in your browser.',
+      ko: '이미지에서 색을 추출하고, 대비율을 확인하고, 웹·디자인 작업용 팔레트를 만듭니다. 모든 처리는 브라우저에서 이루어집니다.',
+    },
+  },
 } as const satisfies Record<
   string,
   { icon: string; name: Record<Locale, string>; description: Record<Locale, string> }
