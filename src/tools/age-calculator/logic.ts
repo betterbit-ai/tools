@@ -7,6 +7,9 @@
 
 const DATE_PATTERN = /^(\d{4,})-(\d{2})-(\d{2})$/;
 
+/** Change this one value when refreshing every birth-year landing page for a new calendar year. */
+export const BIRTH_YEAR_REFERENCE_YEAR = 2026;
+
 function isLeapYear(year: number): boolean {
   return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
@@ -124,6 +127,42 @@ export function koreanCountingAge(birthYear: number, referenceYear: number): num
 /** 연 나이: used by 병역법/청소년보호법 — current year minus birth year, changes every January 1st. */
 export function koreanYearAge(birthYear: number, referenceYear: number): number {
   return referenceYear - birthYear;
+}
+
+export interface BirthYearAgeRange {
+  beforeBirthday: number;
+  fromBirthday: number;
+  yearAge: number;
+}
+
+/** The possible 만 나이 values and fixed 연 나이 for a birth year during one calendar year. */
+export function birthYearAgeRange(birthYear: number, referenceYear: number): BirthYearAgeRange {
+  const fromBirthday = referenceYear - birthYear;
+  return {
+    beforeBirthday: fromBirthday - 1,
+    fromBirthday,
+    yearAge: koreanYearAge(birthYear, referenceYear),
+  };
+}
+
+export type KoreanSchoolLevel = 'elementary' | 'middle' | 'high';
+
+export interface KoreanSchoolGrade {
+  level: KoreanSchoolLevel;
+  grade: number;
+}
+
+/**
+ * Normal Korean grade progression for a school year, excluding early/delayed entry and retention.
+ * Under 초·중등교육법 제13조, a child ordinarily enters elementary school on March 1 after the
+ * calendar year in which they turn six; 제39·42·46조 set the 6/3/3-year school durations.
+ */
+export function koreanSchoolGrade(birthYear: number, schoolYear: number): KoreanSchoolGrade | null {
+  const yearInSchool = schoolYear - birthYear - 6;
+  if (yearInSchool >= 1 && yearInSchool <= 6) return { level: 'elementary', grade: yearInSchool };
+  if (yearInSchool >= 7 && yearInSchool <= 9) return { level: 'middle', grade: yearInSchool - 6 };
+  if (yearInSchool >= 10 && yearInSchool <= 12) return { level: 'high', grade: yearInSchool - 9 };
+  return null;
 }
 
 /**

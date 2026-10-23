@@ -6,6 +6,7 @@ import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   ageBreakdown,
+  BIRTH_YEAR_REFERENCE_YEAR,
   daysLived,
   isValidDate,
   isZodiacBoundaryBirth,
@@ -22,16 +23,20 @@ import {
 
 const STORAGE_KEY = 'tools:age-calculator:birthDate';
 const DEFAULT_BIRTH_DATE = '2000-01-01';
+const DEFAULT_REFERENCE_DATE = `${BIRTH_YEAR_REFERENCE_YEAR}-12-31`;
 
-export default function AgeCalculator({ locale, ui }: ToolProps<UI>) {
+export default function AgeCalculator({ locale, ui, preset }: ToolProps<UI>) {
+  // Birth-year landing pages always open on their promised year instead of a saved birth date.
+  const presetBirthDate =
+    typeof preset?.birthDate === 'string' && isValidDate(preset.birthDate) ? preset.birthDate : null;
   const [ready, setReady] = useState(false);
-  const [birthDate, setBirthDate] = useState(DEFAULT_BIRTH_DATE);
-  const [referenceDate, setReferenceDate] = useState(DEFAULT_BIRTH_DATE);
+  const [birthDate, setBirthDate] = useState(presetBirthDate ?? DEFAULT_BIRTH_DATE);
+  const [referenceDate, setReferenceDate] = useState(DEFAULT_REFERENCE_DATE);
 
   useEffect(() => {
     const today = todayIso(Date.now());
     const saved = safeStorage.get(STORAGE_KEY);
-    setBirthDate(saved && isValidDate(saved) ? saved : DEFAULT_BIRTH_DATE);
+    setBirthDate(presetBirthDate ?? (saved && isValidDate(saved) ? saved : DEFAULT_BIRTH_DATE));
     setReferenceDate(today);
     setReady(true);
   }, []);
