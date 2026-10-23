@@ -45,5 +45,11 @@ export const meta: ToolMeta = {
         'The opened form exposes only one monthly gross-salary field; workplace size and industry accident rate are described in text but are not visible calculator inputs, so employer totals cannot reflect them there. Betterbit makes both inputs calculable and shows the employer-only lines separately. (Strength: its short English explanation clearly states the 2026 employee rates and local browser processing.)',
     },
   ],
-  related: ['salary-calculator-kr', 'unemployment-benefit-kr', 'severance-pay-kr', 'weekly-holiday-pay-kr'],
+  related: [
+    'hourly-wage-kr',
+    'salary-calculator-kr',
+    'unemployment-benefit-kr',
+    'severance-pay-kr',
+    'weekly-holiday-pay-kr',
+  ],
 };
