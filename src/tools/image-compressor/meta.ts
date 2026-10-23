@@ -27,5 +27,12 @@ export const meta: ToolMeta = {
         'It matches local, automatic target-size compression but limits a batch to 10 images and offers optional analytics. (Strength: it can resize or centre-crop before compression and accepts HEIC.)',
     },
   ],
-  related: ['image-resizer', 'image-converter', 'image-upscaler', 'exif-viewer-remover', 'image-watermark'],
+  related: [
+    'image-resizer',
+    'image-converter',
+    'image-upscaler',
+    'exif-viewer-remover',
+    'image-watermark',
+    'color-picker',
+  ],
 };
