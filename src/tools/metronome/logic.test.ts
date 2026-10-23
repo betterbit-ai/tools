@@ -3,6 +3,8 @@ import {
   DEFAULT_SETTINGS,
   MAX_BPM,
   MIN_BPM,
+  barDurationSeconds,
+  beatAtElapsedTime,
   bpmFromText,
   clampBpm,
   secondsPerBeat,
@@ -23,6 +25,16 @@ describe('metronome tempo logic', () => {
     expect(secondsPerBeat(60)).toBe(1);
     expect(secondsPerBeat(120)).toBe(0.5);
     expect(secondsPerBeat(20)).toBe(3);
+  });
+
+  it('builds one bounded bar and derives the visible beat from elapsed audio time', () => {
+    expect(barDurationSeconds(120, 4)).toBe(2);
+    expect(barDurationSeconds(MIN_BPM, 6)).toBe(18);
+    expect(beatAtElapsedTime(0, 120, 4)).toBe(1);
+    expect(beatAtElapsedTime(0.51, 120, 4)).toBe(2);
+    expect(beatAtElapsedTime(2.01, 120, 4)).toBe(1);
+    expect(beatAtElapsedTime(60.51, 120, 4)).toBe(2);
+    expect(beatAtElapsedTime(-1, 120, 4)).toBe(1);
   });
 
   it('averages recent tap intervals and ignores invalid or reversed timestamps', () => {

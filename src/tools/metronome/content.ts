@@ -11,7 +11,8 @@ const uiEn = {
   reset: 'Reset settings',
   tapHint: 'Tap count: {n}. Tap twice or more at a steady pace to set BPM.',
   beatOf: 'Beat {current} of {total}',
-  audioUnavailable: 'This browser could not start Web Audio. Check sound permissions, then try again.',
+  audioUnsupported: 'This browser does not support the Web Audio features this metronome needs.',
+  audioBlocked: 'The browser could not start audio. Check the device output, then press Start again.',
   tempo: 'Tempo (BPM)',
   tempoHint: 'Set a whole number from 20 to 300 beats per minute.',
   decreaseTempo: 'Decrease tempo by 1 BPM',
@@ -45,7 +46,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'How this Web Audio metronome keeps a steadier click',
-        body: 'The metronome schedules short click sounds on the browser’s Web Audio timeline instead of asking a JavaScript timer to make a sound at the exact instant of every beat. Every 25 milliseconds, it places upcoming clicks roughly 100 milliseconds ahead on that audio timeline. That look-ahead gives the audio engine a planned playback time even when a screen update arrives late. It does not remove latency added by Bluetooth headphones or a device’s speakers: for close timing practice, use wired headphones or speakers. The screen beat indicator is visual feedback only; the scheduled audio click is the timing reference.',
+        body: 'The metronome generates one complete bar as a small audio buffer and asks the browser’s Web Audio engine to loop it. The repeat therefore stays on the audio timeline instead of depending on a JavaScript timer for every beat, so a throttled background tab cannot queue missed clicks or play a catch-up burst. The buffer is bounded to one bar: from 0.4 seconds at 300 BPM in 2/4 to 18 seconds at 20 BPM in 6/8. It does not remove latency added by Bluetooth headphones or a device’s speakers; use wired headphones or speakers for close timing practice. The screen beat indicator is visual feedback only and may pause when a tab is hidden, while the audio loop remains the timing reference.',
       },
       {
         heading: 'Tap tempo uses the average interval between your taps',
@@ -59,7 +60,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'How accurate is this online metronome?',
-        a: 'Clicks are scheduled ahead on the Web Audio timeline rather than played directly from a repeating JavaScript timer. That keeps audio timing steadier during ordinary browser work, but Bluetooth and speaker processing can still add audible output delay.',
+        a: 'A complete bar loops on the Web Audio timeline instead of being played beat by beat from a repeating JavaScript timer. That keeps intervals steady when screen updates are delayed, but Bluetooth and speaker processing can still add audible output delay.',
       },
       {
         q: 'How many taps do I need for tap tempo?',
@@ -96,8 +97,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     sections: [
       {
-        heading: 'Web Audio로 다음 박을 미리 예약하는 방식',
-        body: '이 메트로놈은 매 박이 올 때마다 자바스크립트 타이머로 소리를 즉시 내는 대신, 브라우저의 Web Audio 시간축에 짧은 클릭음을 예약합니다. 25밀리초마다 약 100밀리초 앞의 클릭을 예약하므로 화면 갱신이 조금 늦어져도 오디오 엔진에는 재생 시점이 미리 전달됩니다. 블루투스 이어폰이나 기기 스피커가 더하는 출력 지연까지 없애는 것은 아닙니다. 박자 연습을 정밀하게 하려면 유선 이어폰이나 스피커를 권합니다. 화면의 동그라미는 현재 박을 보여 주는 시각 피드백이고, 실제 기준은 예약된 소리입니다.',
+        heading: '한 마디를 Web Audio에서 반복하는 방식',
+        body: '이 메트로놈은 한 마디 분량의 작은 오디오 버퍼를 만든 뒤 브라우저의 Web Audio 엔진에서 반복합니다. 매 박을 자바스크립트 타이머로 실행하지 않으므로 백그라운드 탭의 타이머가 느려져도 지난 클릭을 한꺼번에 재생하지 않습니다. 버퍼는 300 BPM 2/4의 0.4초부터 20 BPM 6/8의 18초까지 한 마디로 제한되어 메모리가 계속 늘지 않습니다. 블루투스 이어폰이나 기기 스피커가 더하는 출력 지연까지 없애는 것은 아닙니다. 정밀한 연습에는 유선 출력을 권합니다. 탭이 숨겨지면 화면 박자 표시는 잠시 멈출 수 있지만 오디오 반복이 실제 박자 기준입니다.',
       },
       {
         heading: '탭 템포는 여러 번 누른 간격의 평균으로 계산합니다',
@@ -111,7 +112,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: '온라인 메트로놈의 박자는 얼마나 정확한가요?',
-        a: '클릭음은 반복 자바스크립트 타이머가 아니라 Web Audio 시간축에 미리 예약됩니다. 일반적인 브라우저 작업 중에도 박자 간격을 더 안정적으로 유지하지만, 블루투스와 스피커의 출력 지연은 따로 발생할 수 있습니다.',
+        a: '한 마디 전체가 반복 자바스크립트 타이머가 아니라 Web Audio 시간축에서 재생됩니다. 화면 갱신이 늦어져도 박자 간격은 안정적으로 유지하지만, 블루투스와 스피커의 출력 지연은 따로 발생할 수 있습니다.',
       },
       {
         q: '탭 템포는 몇 번 눌러야 하나요?',
@@ -140,7 +141,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       reset: '설정 초기화',
       tapHint: '탭 횟수: {n}. 일정한 박자에 맞춰 2번 이상 누르면 BPM을 맞춥니다.',
       beatOf: '{total}박 중 {current}박',
-      audioUnavailable: '이 브라우저에서 Web Audio를 시작할 수 없습니다. 소리 권한을 확인한 뒤 다시 시도하세요.',
+      audioUnsupported: '이 브라우저는 메트로놈에 필요한 Web Audio 기능을 지원하지 않습니다.',
+      audioBlocked: '브라우저가 소리를 시작하지 못했습니다. 기기 출력을 확인한 뒤 시작을 다시 누르세요.',
       tempo: '템포 (BPM)',
       tempoHint: '분당 20~300박의 정수를 입력합니다.',
       decreaseTempo: '템포 1 BPM 낮추기',
