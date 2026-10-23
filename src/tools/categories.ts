@@ -17,8 +17,8 @@ export const CATEGORIES = {
     icon: 'video',
     name: { en: 'Audio & video tools', ko: '오디오·비디오 도구' },
     description: {
-      en: 'Turn short video clips into animated GIFs directly in your browser. Keep the original on your device while choosing a compact size and smoothness.',
-      ko: '짧은 동영상을 브라우저에서 GIF 움짤로 만듭니다. 영상은 기기 안에 두고, 용도에 맞는 크기와 프레임 수를 고를 수 있습니다.',
+      en: 'Compress browser-playable videos and turn short clips into animated GIFs directly on your device. Choose compact sizes without uploading a file.',
+      ko: '브라우저에서 재생 가능한 동영상의 용량을 줄이고, 짧은 영상은 GIF 움짤로 만듭니다. 파일을 업로드하지 않고 용도에 맞는 크기를 고를 수 있습니다.',
     },
   },
   text: {
