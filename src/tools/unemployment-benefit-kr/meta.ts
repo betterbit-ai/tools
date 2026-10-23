@@ -45,5 +45,11 @@ export const meta: ToolMeta = {
         'The English search result identifies a 2026 daily-and-total calculator, but its page returned a cache miss when opened, leaving its inputs and calculation basis unavailable for review. Betterbit makes its 2026 constants and floor/cap application visible directly in the first result. (Strength: unavailable to assess because the opened page did not load.)',
     },
   ],
-  related: ['salary-calculator-kr', 'severance-pay-kr', 'hours-calculator', 'weekly-holiday-pay-kr'],
+  related: [
+    'salary-calculator-kr',
+    'severance-pay-kr',
+    'hours-calculator',
+    'weekly-holiday-pay-kr',
+    'social-insurance-kr',
+  ],
 };
