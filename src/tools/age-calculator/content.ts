@@ -1,5 +1,6 @@
 import type { Locale } from '../../i18n/locales';
 import type { ToolContent } from '../types';
+import { BIRTH_YEAR_REFERENCE_YEAR } from './logic';
 
 const uiEn = {
   birthDate: 'Date of birth',
@@ -96,6 +97,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         heading: 'Days lived and the next-birthday countdown',
         body: 'The "days lived" count treats your date of birth itself as day 1 — the same convention used for a Korean baby\'s 100th-day (백일) celebration, so someone born January 1 reaches their 100th day on April 10 in a common year. The next-birthday countdown finds the nearest upcoming date that matches your birth month and day; if you were born on February 29, it lands on February 28 in any year that is not a leap year, matching how most calendar apps handle it.',
       },
+      {
+        heading: `How the ${BIRTH_YEAR_REFERENCE_YEAR} birth-year and Korean school-grade answers are sourced`,
+        body: `Every birth-year page uses one shared ${BIRTH_YEAR_REFERENCE_YEAR} constant and the official formula published by Korea's Ministry of Government Legislation on its “Korean Age Unification” page (moleg.go.kr): subtract one more year before the birthday, and subtract the birth year from the current year on and after it. The Korean year-age answer is that second subtraction without checking the birthday. These rules were rechecked against the official page on October 23, 2026.\n\nSchool-grade answers use the ordinary progression in the Elementary and Secondary Education Act shown by the Korean Law Information Center (law.go.kr), in force in ${BIRTH_YEAR_REFERENCE_YEAR}. Article 13 ordinarily starts elementary school on March 1 after the calendar year in which a child turns six; Article 24 starts each school year on March 1; and Articles 39, 42 and 46 set elementary, middle and high school at 6, 3 and 3 years. The displayed grade can differ after early or delayed entry, retention, skipping a grade, study abroad or leaving school. Zodiac labels use the 12-animal cycle anchored to the Korean government's 2026 policy briefing identifying the 병오 year as the Year of the Horse (korea.kr).`,
+      },
     ],
     faq: [
       {
@@ -156,6 +161,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         heading: '태어난 지 며칠째인지, 다음 생일까지 남은 날',
         body: '"태어난 지 며칠째"는 태어난 날 자체를 1일로 세는 방식을 씁니다. 아기 백일(100일) 잔치를 계산할 때와 같은 방식으로, 평년(윤년이 아닌 해) 1월 1일에 태어난 아기는 4월 10일이 백일입니다. 다음 생일까지 남은 날은 생년월일의 월·일과 같은 가장 가까운 미래 날짜를 찾아 계산하며, 2월 29일에 태어났다면 윤년이 아닌 해에는 대부분의 캘린더 앱과 같은 방식으로 2월 28일을 생일로 봅니다.',
+      },
+      {
+        heading: `${BIRTH_YEAR_REFERENCE_YEAR}년 출생연도별 나이·학년의 공식 근거`,
+        body: `출생연도별 페이지는 ${BIRTH_YEAR_REFERENCE_YEAR}년을 한 곳의 공통 기준연도로 두고, 법제처 「만 나이 통일」(moleg.go.kr)의 공식 계산식을 적용합니다. 생일 전에는 “기준연도 − 출생연도 − 1”, 생일부터는 “기준연도 − 출생연도”이고, 연 나이는 생일과 관계없이 “기준연도 − 출생연도”입니다. 2026년 10월 23일 법제처 안내를 다시 확인했습니다.\n\n학년은 국가법령정보센터(law.go.kr)에 공개된 ${BIRTH_YEAR_REFERENCE_YEAR}년 시행 「초·중등교육법」의 통상 진학 기준으로 계산합니다. 제13조는 6세가 된 해의 다음 해 3월 1일 취학을, 제24조는 3월 1일 학년도 시작을 정하고, 제39조·제42조·제46조는 초등학교 6년·중학교 3년·고등학교 3년의 수업연한을 정합니다. 조기입학, 입학연기, 유급, 조기진급, 유학·학업중단이 있으면 실제 학년은 달라질 수 있습니다. 띠는 대한민국 정책브리핑(korea.kr)이 확인한 2026년 병오년 말띠와 12지 순환을 기준으로 계산합니다.`,
       },
     ],
     faq: [

@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   ageBreakdown,
+  birthYearAgeRange,
+  BIRTH_YEAR_REFERENCE_YEAR,
   daysBetween,
   daysLived,
   internationalAge,
   isValidDate,
   isZodiacBoundaryBirth,
   koreanCountingAge,
+  koreanSchoolGrade,
   koreanYearAge,
   nextBirthday,
   ordinalSuffix,
@@ -15,6 +18,7 @@ import {
   weekdayIndex,
   zodiacAnimal,
 } from './logic';
+import { meta } from './meta';
 
 describe('isValidDate', () => {
   it('accepts real calendar dates', () => {
@@ -74,6 +78,62 @@ describe('koreanYearAge (연 나이)', () => {
   it('changes on January 1st regardless of the birthday', () => {
     expect(koreanYearAge(2005, 2025)).toBe(20);
     expect(koreanYearAge(2005, 2026)).toBe(21);
+  });
+});
+
+describe('birth-year landing-page facts', () => {
+  it('computes the before/after-birthday range and year age from the shared reference year', () => {
+    expect(birthYearAgeRange(BIRTH_YEAR_REFERENCE_YEAR - 26, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      beforeBirthday: 25,
+      fromBirthday: 26,
+      yearAge: 26,
+    });
+  });
+
+  it('maps ordinary Korean 6-3-3 progression across school boundaries', () => {
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 7, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      level: 'elementary',
+      grade: 1,
+    });
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 12, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      level: 'elementary',
+      grade: 6,
+    });
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 13, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      level: 'middle',
+      grade: 1,
+    });
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 15, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      level: 'middle',
+      grade: 3,
+    });
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 16, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      level: 'high',
+      grade: 1,
+    });
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 18, BIRTH_YEAR_REFERENCE_YEAR)).toEqual({
+      level: 'high',
+      grade: 3,
+    });
+  });
+
+  it('does not claim a grade before ordinary entry or after high-school completion', () => {
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 6, BIRTH_YEAR_REFERENCE_YEAR)).toBeNull();
+    expect(koreanSchoolGrade(BIRTH_YEAR_REFERENCE_YEAR - 19, BIRTH_YEAR_REFERENCE_YEAR)).toBeNull();
+  });
+
+  it('generates every 1960–2015 landing page with a matching preset and computed answers', () => {
+    const expectedYears = Array.from({ length: 56 }, (_, index) => 1960 + index);
+    expect(meta.variants?.map((variant) => variant.slug)).toEqual(expectedYears.map((year) => `${year}-born`));
+
+    for (const year of expectedYears) {
+      const variant = meta.variants?.find((candidate) => candidate.slug === `${year}-born`);
+      const ages = birthYearAgeRange(year, BIRTH_YEAR_REFERENCE_YEAR);
+      expect(variant?.preset).toEqual({ birthDate: `${year}-01-01` });
+      expect(variant?.content.ko.description).toContain(`생일 전 만 ${ages.beforeBirthday}세`);
+      expect(variant?.content.ko.description).toContain(`생일부터 만 ${ages.fromBirthday}세`);
+      expect(variant?.content.ko.description).toContain(`연 나이는 ${ages.yearAge}세`);
+    }
   });
 });
 
