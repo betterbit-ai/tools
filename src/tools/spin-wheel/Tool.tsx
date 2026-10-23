@@ -5,6 +5,7 @@ import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   MAX_ENTRIES,
+  MAX_INPUT_LENGTH,
   parseEntries,
   pickEntry,
   removeEntryAt,
@@ -64,14 +65,15 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
 
   const entries = useMemo(() => parseEntries(input), [input]);
   const validationError = validateEntries(entries);
+  const currentError = error ?? validationError;
   const errorText =
-    error === 'not-enough-entries'
+    currentError === 'not-enough-entries'
       ? ui.notEnoughEntriesError
-      : error === 'too-many-entries'
+      : currentError === 'too-many-entries'
         ? ui.tooManyEntriesError
-        : error === 'entry-too-long'
+        : currentError === 'entry-too-long'
           ? ui.entryTooLongError
-          : error === 'crypto'
+          : currentError === 'crypto'
             ? ui.cryptoError
             : null;
 
@@ -173,7 +175,8 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
             <Field label={ui.entriesLabel} hint={ui.entriesHint}>
               <Textarea
                 value={input}
-                maxLength={MAX_ENTRIES * 81}
+                maxLength={MAX_INPUT_LENGTH}
+                disabled={spinning}
                 spellcheck={false}
                 onInput={(event) => {
                   setInput(event.currentTarget.value);
@@ -211,7 +214,7 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
               </div>
             </div>
             <div class="mt-5">
-              <Toggle checked={removeWinner} onChecked={setRemoveWinner} label={ui.removeWinner} />
+              <Toggle checked={removeWinner} onChecked={setRemoveWinner} label={ui.removeWinner} disabled={spinning} />
               <p class="mt-1 text-xs text-subtle">{ui.removeWinnerHint}</p>
             </div>
             <div class="mt-5 flex flex-wrap items-center gap-3">

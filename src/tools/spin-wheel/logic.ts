@@ -2,6 +2,11 @@
 
 export const MAX_ENTRIES = 100;
 export const MAX_ENTRY_LENGTH = 80;
+/**
+ * Enough UTF-16 code units for a full valid wheel made of astral Unicode
+ * characters and CRLF separators, with a small margin for paste normalization.
+ */
+export const MAX_INPUT_LENGTH = 20_000;
 const UINT32_RANGE = 0x1_0000_0000;
 
 export type RandomSource = () => number;
@@ -16,7 +21,7 @@ export interface WheelPick {
 export function parseEntries(input: string): string[] {
   return input
     .replace(/^\uFEFF/, '')
-    .split(/\r\n?|\n/)
+    .split(/\r\n?|[\n\u2028\u2029]/)
     .map((entry) => entry.trim())
     .filter(Boolean);
 }
@@ -24,7 +29,7 @@ export function parseEntries(input: string): string[] {
 export function validateEntries(entries: string[]): WheelError | null {
   if (entries.length < 2) return 'not-enough-entries';
   if (entries.length > MAX_ENTRIES) return 'too-many-entries';
-  if (entries.some((entry) => entry.length > MAX_ENTRY_LENGTH)) return 'entry-too-long';
+  if (entries.some((entry) => Array.from(entry).length > MAX_ENTRY_LENGTH)) return 'entry-too-long';
   return null;
 }
 
