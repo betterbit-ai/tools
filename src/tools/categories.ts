@@ -13,6 +13,14 @@ export const CATEGORIES = {
       ko: '이미지 크기 조절, 용량 줄이기, 자르기, 형식 변환을 브라우저에서 바로. 여러 장 한번에 처리하고, 파일은 어디에도 업로드되지 않습니다.',
     },
   },
+  media: {
+    icon: 'video',
+    name: { en: 'Audio & video tools', ko: '오디오·비디오 도구' },
+    description: {
+      en: 'Turn short video clips into animated GIFs directly in your browser. Keep the original on your device while choosing a compact size and smoothness.',
+      ko: '짧은 동영상을 브라우저에서 GIF 움짤로 만듭니다. 영상은 기기 안에 두고, 용도에 맞는 크기와 프레임 수를 고를 수 있습니다.',
+    },
+  },
   text: {
     icon: 'text',
     name: { en: 'Text tools', ko: '텍스트 도구' },

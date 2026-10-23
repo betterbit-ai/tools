@@ -33,6 +33,6 @@ export const meta: ToolMeta = {
     'image-upscaler',
     'exif-viewer-remover',
     'image-watermark',
-    'color-picker',
+    'video-to-gif',
   ],
 };

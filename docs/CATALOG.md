@@ -229,7 +229,7 @@
 
 | slug             | 도구          | 핵심 키워드                                                            | Edge 아이디어                                                               | P   | 상태 |
 | ---------------- | ------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | --- | ---- |
-| video-to-gif     | 동영상 → GIF  | video to gif                                                           | 업로드 없음                                                                 | P1  | todo |
+| video-to-gif     | 동영상 → GIF  | video to gif                                                           | 업로드 없음                                                                 | P1  | live |
 | video-compressor | 동영상 압축   | compress video / 동영상 용량 줄이기                                    | 업로드 없음(대용량 강점)                                                    | P1  | todo |
 | audio-converter  | 오디오 변환   | mp3 converter                                                          | —                                                                           | P2  | todo |
 | audio-cutter     | 오디오 자르기 | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                   | P1  | todo |

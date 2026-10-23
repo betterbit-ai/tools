@@ -33,6 +33,6 @@ export const meta: ToolMeta = {
     'image-converter',
     'image-upscaler',
     'image-watermark',
-    'signature-generator',
+    'video-to-gif',
   ],
 };
