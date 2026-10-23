@@ -36,6 +36,23 @@ function isStoredNumber(value: unknown): value is number | '' {
   return value === '' || (typeof value === 'number' && Number.isFinite(value));
 }
 
+function isAgeGroup(value: unknown): value is AgeGroup {
+  return value === 'under-50' || value === '50-or-disabled';
+}
+
+function stateFromPreset(preset: Record<string, unknown> | undefined): Partial<State> {
+  const state: Partial<State> = {};
+  if (isStoredNumber(preset?.averageDailyWage)) state.averageDailyWage = preset.averageDailyWage;
+  if (isStoredNumber(preset?.ordinaryDailyWage)) state.ordinaryDailyWage = preset.ordinaryDailyWage;
+  if (isStoredNumber(preset?.scheduledHoursPerDay)) state.scheduledHoursPerDay = preset.scheduledHoursPerDay;
+  if (isStoredNumber(preset?.insuranceMonths)) state.insuranceMonths = preset.insuranceMonths;
+  if (isAgeGroup(preset?.ageGroup)) state.ageGroup = preset.ageGroup;
+  if (isStoredNumber(preset?.insuredUnitDays)) state.insuredUnitDays = preset.insuredUnitDays;
+  if (typeof preset?.eligibleSeparation === 'boolean') state.eligibleSeparation = preset.eligibleSeparation;
+  if (typeof preset?.seekingWork === 'boolean') state.seekingWork = preset.seekingWork;
+  return state;
+}
+
 function restoreState(fallback: State): State {
   try {
     const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
@@ -67,13 +84,14 @@ function restoreState(fallback: State): State {
   }
 }
 
-export default function UnemploymentBenefitKr({ locale, ui }: ToolProps<UI>) {
-  const initialState = defaultState();
+export default function UnemploymentBenefitKr({ locale, ui, preset }: ToolProps<UI>) {
+  const presetState = stateFromPreset(preset);
+  const initialState = { ...defaultState(), ...presetState };
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(initialState);
 
   useEffect(() => {
-    setState(restoreState(initialState));
+    setState({ ...restoreState(defaultState()), ...presetState });
     setReady(true);
   }, []);
 
@@ -240,7 +258,7 @@ export default function UnemploymentBenefitKr({ locale, ui }: ToolProps<UI>) {
                 </p>
                 <p class="mt-2 text-xs text-muted">{appliedRule}</p>
               </div>
-              <Button size="sm" variant="ghost" class="self-start" onClick={() => setState(defaultState())}>
+              <Button size="sm" variant="ghost" class="self-start" onClick={() => setState(initialState)}>
                 {ui.reset}
               </Button>
             </>

@@ -30,7 +30,8 @@ describe('unemployment-benefit-kr', () => {
   it('uses the exact 2026 cap when 60% of daily wage is higher', () => {
     const result = calculateUnemploymentBenefit({ ...baseInput, averageDailyWage: 200_000 });
     expect(result).toMatchObject({
-      dailyWageBenefit: 120_000,
+      applicableDailyBase: RULES_2026.maximumDailyBase,
+      dailyWageBenefit: RULES_2026.maximumDailyBenefit,
       dailyBenefit: RULES_2026.maximumDailyBenefit,
       appliedDailyRule: 'cap',
     });

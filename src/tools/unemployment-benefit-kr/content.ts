@@ -60,7 +60,7 @@ export type UI = typeof uiEn;
 
 export const content: Record<Locale, ToolContent<UI>> = {
   en: {
-    title: 'Korea Unemployment Benefit Calculator — 2026 Rules',
+    title: 'Korea Unemployment Benefit Calculator — 2026 Rules and Eligibility',
     description:
       'Estimate 2026 Korean job-seeker’s allowance with the ₩68,100 daily cap, hourly floor, benefit days, and key eligibility checks. No ID number or upload.',
     h1: 'Korea Unemployment Benefit Calculator',
@@ -82,15 +82,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '2026 daily amount: 60%, a floor, and a cap',
-        body: 'For an ordinary employee, the Employment Insurance Act sets the job-seeker’s daily benefit at 60% of the applicable daily base. When a verified daily ordinary wage is higher than the average daily wage, the ordinary wage is used as that base. If the resulting amount is lower than the statutory minimum, the minimum applies. In 2026 the minimum wage is ₩10,320 per hour, so the floor is 80% × ₩10,320 × daily contracted hours: ₩66,048 at 8 hours and ₩33,024 at 4 hours. The 2026 daily cap is ₩68,100 for people who separate in 2026. This calculator displays the base, floor, and cap so you can see which rule controls the estimate.',
+        body: 'For an ordinary employee, the Employment Insurance Act sets the job-seeker’s daily benefit at 60% of the applicable daily base. A verified daily ordinary wage replaces a lower average daily wage, while the 2026 daily base itself is capped at ₩113,500. The resulting benefit has a ₩68,100 daily cap for people who separate on or after January 1, 2026. The 2026 minimum wage is ₩10,320 per hour, so the daily floor is 80% × ₩10,320 × contracted hours: ₩66,048 at 8 hours and ₩33,024 at 4 hours. Sources checked October 23, 2026: Ministry of Employment and Labor’s December 16, 2025 Employment Insurance Enforcement Decree release, August 5, 2025 minimum-wage notice, and July 10, 2026 MOEL 1350 guidance.',
       },
       {
         heading: 'How many days can be paid?',
-        body: 'The prescribed benefit period depends on Employment Insurance coverage and age at separation. Under 50, it is 120 days below 1 year, 150 days for 1–3 years, 180 days for 3–5 years, 210 days for 5–10 years, and 240 days for 10 years or more. For people aged 50 or over, or registered disabled people, the same bands are 120, 180, 210, 240, and 270 days. The Employment Insurance Act, Article 50 and Appendix 1, contains the table.',
+        body: 'The prescribed benefit period depends on Employment Insurance coverage and age at separation. Under 50, it is 120 days below 1 year, 150 days for 1–3 years, 180 days for 3–5 years, 210 days for 5–10 years, and 240 days for 10 years or more. For people aged 50 or over, or registered disabled people, the same bands are 120, 180, 210, 240, and 270 days. Even when prescribed days remain, payment generally must be received within 12 months after separation. Sources checked October 23, 2026: Employment Insurance Act Articles 48 and 50 and Appendix 1, and the Ministry of Government Legislation’s Easy Law guide to job-seeker’s allowance.',
       },
       {
         heading: 'What this estimate cannot decide',
-        body: 'A general estimate cannot approve eligibility. Article 40 requires at least 180 insured-unit days in the usual 18-month look-back period, unemployment despite ability and willingness to work, a non-disqualifying separation reason, and active re-employment effort. Paid-base days are not automatically the same as six calendar months. Previous periods can be combined in some circumstances, while prior benefit claims and long gaps can change the count. Confirm your record and special cases in Work24 or at an Employment Center.',
+        body: 'A general estimate cannot approve eligibility. Employment Insurance Act Article 40 requires at least 180 insured-unit days in the usual 18-month look-back period, unemployment despite ability and willingness to work, a non-disqualifying separation reason, and active re-employment effort. Paid-base days are not automatically the same as six calendar months. Earlier coverage is generally combined when the next insured job starts within three years, unless benefits were already paid for that earlier period. Sources checked October 23, 2026: Employment Insurance Act Articles 40 and 50, the Easy Law guide, and the official Work24 benefit simulator (work24.go.kr).',
       },
     ],
     faq: [
@@ -118,9 +118,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: uiEn,
   },
   ko: {
-    title: '실업급여 계산기 — 2026년 상한액·하한액·수급일수',
+    title: '실업급여 조건·계산법 — 2026 상한액·하한액·수급기간',
     description:
-      '2026년 실업급여 1일 상한액 68,100원, 소정근로시간별 하한액, 예상 수급일수와 핵심 수급 요건을 바로 계산합니다. 주민번호 입력·서버 전송이 없습니다.',
+      '2026년 실업급여 조건과 계산법을 확인하세요. 1일 상한액 68,100원, 소정근로시간별 하한액, 가입기간·연령별 수급기간을 바로 계산합니다.',
     h1: '실업급여 계산기',
     tagline: '2026년 상한액·하한액, 예상 수급일수와 기본 수급 요건을 주민번호 없이 바로 확인합니다.',
     name: '실업급여 계산기',
@@ -134,15 +134,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '2026년 실업급여 1일 금액: 60%, 하한액, 상한액',
-        body: '일반 근로자의 구직급여일액은 원칙적으로 적용 1일 기초금액의 60%입니다. 확인한 1일 통상임금이 평균임금보다 높으면 통상임금을 기초금액으로 사용합니다. 그 금액이 최저구직급여일액보다 낮으면 하한액을 적용합니다. 2026년 최저임금은 시간당 10,320원이므로 하한액은 시간당 최저임금 × 80% × 1일 소정근로시간입니다. 8시간이면 66,048원, 4시간이면 33,024원입니다. 2026년에 이직한 사람의 1일 상한액은 68,100원입니다. 이 계산기는 적용 기초금액·60% 금액·하한액·상한액을 함께 보여 적용된 기준을 확인하게 합니다.',
+        body: '일반 근로자의 구직급여일액은 적용 1일 기초금액의 60%입니다. 확인한 1일 통상임금이 평균임금보다 높으면 통상임금을 쓰되, 2026년 1월 1일 이후 이직자는 기초일액을 최대 113,500원으로 제한해 1일 상한액이 68,100원입니다. 2026년 최저임금 10,320원의 80%에 1일 소정근로시간을 곱한 하한액은 1~8시간 순서대로 8,256원, 16,512원, 24,768원, 33,024원, 41,280원, 49,536원, 57,792원, 66,048원입니다. 출처: 고용노동부 2025-12-16 「고용보험법 시행령 등 국무회의 의결」, 2025-08-05 「2026년 적용 최저임금 시간급 10,320원」, 고용노동부 1350의 2026-07-10 안내(2026-10-23 확인).',
       },
       {
         heading: '소정급여일수는 가입기간과 연령으로 정해집니다',
-        body: '50세 미만은 고용보험 가입기간이 1년 미만이면 120일, 1~3년 미만 150일, 3~5년 미만 180일, 5~10년 미만 210일, 10년 이상 240일입니다. 50세 이상 또는 장애인은 같은 구간에서 120일, 180일, 210일, 240일, 270일입니다. 이는 「고용보험법」 제50조와 별표 1의 일반 근로자 기준입니다. 이전 사업장의 기간도 일정한 경우 합산되지만, 과거 구직급여 수급 이력과 3년 이상 공백은 결과에 영향을 줄 수 있습니다.',
+        body: '50세 미만은 고용보험 가입기간이 1년 미만이면 120일, 1~3년 미만 150일, 3~5년 미만 180일, 5~10년 미만 210일, 10년 이상 240일입니다. 50세 이상 또는 장애인은 같은 구간에서 120일, 180일, 210일, 240일, 270일입니다. 이직 다음 날부터 12개월이 지나면 소정급여일수가 남아도 받을 수 없습니다. 이전 피보험자격 상실 후 3년 이내에 다시 취득하면 이전 기간을 합산하되, 그 기간으로 구직급여를 받았다면 제외합니다. 출처: 「고용보험법」 제48조·제50조·별표 1, 법제처 찾기쉬운 생활법령 「구직급여」, 고용노동부 1350의 2026-07-10 안내(2026-10-23 확인).',
       },
       {
         heading: '계산기로 확정할 수 없는 수급자격',
-        body: '「고용보험법」 제40조의 일반 요건은 기준기간의 피보험단위기간 180일 이상, 근로 의사·능력이 있으나 미취업 상태, 제한 사유에 해당하지 않는 이직 사유, 적극적인 재취업 노력입니다. 피보험단위기간은 단순히 달력상 6개월과 같지 않으며 무급휴일 등에 따라 달라질 수 있습니다. 일용근로자·예술인·노무제공자·자영업자, 정당한 자발적 퇴사, 반복 수급 또는 대기기간 특례는 이 간편 계산기 대신 고용24 모의계산과 관할 고용센터에서 확인해야 합니다.',
+        body: '「고용보험법」 제40조의 일반 요건은 통상 이직 전 18개월 기준기간의 피보험단위기간 180일 이상, 근로 의사·능력이 있으나 미취업 상태, 제한 사유에 해당하지 않는 이직 사유, 적극적인 재취업 노력입니다. 피보험단위기간은 보수 지급의 기초가 된 날을 합산하므로 달력상 6개월과 같지 않을 수 있습니다. 일용근로자·예술인·노무제공자·자영업자, 정당한 자발적 퇴사와 대기기간 특례는 별도 기준이 적용됩니다. 출처: 「고용보험법」 제40조, 고용24 공식 「실업급여 모의계산」(work24.go.kr, 2026-10-23 확인).',
       },
     ],
     faq: [
@@ -160,7 +160,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '실업급여는 며칠 동안 받을 수 있나요?',
-        a: '일반 근로자의 소정급여일수는 고용보험 가입기간과 이직 당시 연령·장애 여부에 따라 120일에서 270일입니다. 50세 미만은 최대 240일, 50세 이상 또는 장애인은 최대 270일입니다.',
+        a: '일반 근로자의 소정급여일수는 고용보험 가입기간과 이직 당시 연령·장애 여부에 따라 120~270일입니다. 다만 이직 다음 날부터 12개월 안에 받아야 하며, 그 뒤에는 남은 소정급여일수가 있어도 지급되지 않습니다.',
       },
       {
         q: '입력한 임금이나 수급 정보가 서버로 전송되나요?',
