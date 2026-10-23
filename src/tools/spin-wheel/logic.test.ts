@@ -18,7 +18,12 @@ function sourceFrom(values: number[]): RandomSource {
 
 describe('spin-wheel', () => {
   it('parses pasted Unicode lines, trims whitespace, and retains duplicate tickets', () => {
-    expect(parseEntries('\uFEFF Alex \r\n\n김민지\n😀 Prize\nAlex ')).toEqual(['Alex', '김민지', '😀 Prize', 'Alex']);
+    expect(parseEntries('\uFEFF Alex \r\n\n김민지\u2028😀 Prize\u2029Alex ')).toEqual([
+      'Alex',
+      '김민지',
+      '😀 Prize',
+      'Alex',
+    ]);
   });
 
   it('rejects empty, oversized, and overly long wheels', () => {
@@ -26,6 +31,8 @@ describe('spin-wheel', () => {
     expect(validateEntries(['only one'])).toBe('not-enough-entries');
     expect(validateEntries(Array.from({ length: MAX_ENTRIES + 1 }, () => 'ticket'))).toBe('too-many-entries');
     expect(validateEntries(['A', 'x'.repeat(MAX_ENTRY_LENGTH + 1)])).toBe('entry-too-long');
+    expect(validateEntries(['😀'.repeat(MAX_ENTRY_LENGTH), 'B'])).toBeNull();
+    expect(validateEntries(['😀'.repeat(MAX_ENTRY_LENGTH + 1), 'B'])).toBe('entry-too-long');
     expect(validateEntries(['A', 'B'])).toBeNull();
   });
 
