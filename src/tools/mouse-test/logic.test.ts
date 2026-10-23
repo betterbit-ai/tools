@@ -1,12 +1,44 @@
 import { describe, expect, it } from 'vitest';
 import {
+  addPressToSummary,
   analyseGuidedSample,
   analysePresses,
   CLICK_SCREENING_THRESHOLD_MS,
+  createPressSummary,
   GUIDED_SAMPLE_SIZE,
   mouseButtonFromCode,
   type MousePress,
 } from './logic';
+
+describe('press summary', () => {
+  it('keeps lifetime totals and findings for a long session in bounded summary state', () => {
+    const result = Array.from({ length: 10_000 }, (_, index) => ({
+      button: 'left' as const,
+      time: index * 100,
+    })).reduce((summary, press) => addPressToSummary(summary, press), createPressSummary());
+
+    expect(result.counts.left).toBe(10_000);
+    expect(result.shortestInterval).toBe(100);
+    expect(result.suspects).toBe(0);
+    expect(result.previous).toEqual({ left: 999_900 });
+  });
+
+  it('counts valid presses while ignoring malformed and backwards timestamps for interval screening', () => {
+    const malformed = [
+      { button: 'left', time: 100 },
+      { button: 'left', time: 80 },
+      { button: 'left', time: Number.NaN },
+      { button: 'unknown', time: 110 },
+      { button: 'left', time: 120 },
+    ] as MousePress[];
+    const result = malformed.reduce((summary, press) => addPressToSummary(summary, press), createPressSummary());
+
+    expect(result.counts.left).toBe(3);
+    expect(result.shortestInterval).toBe(20);
+    expect(result.suspects).toBe(1);
+    expect(result.previous).toEqual({ left: 120 });
+  });
+});
 
 describe('mouseButtonFromCode', () => {
   it('maps every standard browser mouse-button code', () => {

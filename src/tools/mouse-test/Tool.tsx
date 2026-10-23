@@ -1,27 +1,56 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Button, Notice, Panel, Segmented, Stat } from '../../components/ui';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { analyseGuidedSample, analysePresses, mouseButtonFromCode, type MouseButton, type MousePress } from './logic';
-
-const MAX_DIAGNOSTIC_PRESSES = 100;
+import {
+  addPressToSummary,
+  analyseGuidedSample,
+  createPressSummary,
+  mouseButtonFromCode,
+  type MouseButton,
+  type MousePress,
+} from './logic';
 
 export default function MouseTest({ ui }: ToolProps<UI>) {
-  const [diagnosticPresses, setDiagnosticPresses] = useState<MousePress[]>([]);
+  const [diagnostic, setDiagnostic] = useState(createPressSummary);
   const [samplePresses, setSamplePresses] = useState<MousePress[]>([]);
   const [selectedButton, setSelectedButton] = useState<MouseButton>('left');
   const [held, setHeld] = useState<Partial<Record<MouseButton, true>>>({});
   const [wheel, setWheel] = useState({ up: 0, down: 0 });
+  const [pointerEventsSupported, setPointerEventsSupported] = useState<boolean | null>(null);
 
-  const diagnostic = useMemo(() => analysePresses(diagnosticPresses), [diagnosticPresses]);
   const sample = useMemo(() => analyseGuidedSample(samplePresses, selectedButton), [samplePresses, selectedButton]);
+  const unsupported = pointerEventsSupported === false;
+
+  useEffect(() => {
+    setPointerEventsSupported(typeof window.PointerEvent === 'function');
+
+    const releaseButton = (event: PointerEvent) => {
+      const mouseButton = mouseButtonFromCode(event.button);
+      if (!mouseButton) return;
+      setHeld((current) => {
+        const next = { ...current };
+        delete next[mouseButton];
+        return next;
+      });
+    };
+    const releaseAll = () => setHeld({});
+    window.addEventListener('pointerup', releaseButton);
+    window.addEventListener('pointercancel', releaseAll);
+    window.addEventListener('blur', releaseAll);
+    return () => {
+      window.removeEventListener('pointerup', releaseButton);
+      window.removeEventListener('pointercancel', releaseAll);
+      window.removeEventListener('blur', releaseAll);
+    };
+  }, []);
 
   const buttonLabel = (button: MouseButton) => ui[`button${button[0].toUpperCase()}${button.slice(1)}` as keyof UI];
   const interval = (value: number | null) =>
     value === null ? ui.unavailable : `${Math.round(value)} ${ui.milliseconds}`;
 
   const resetDiagnostic = () => {
-    setDiagnosticPresses([]);
+    setDiagnostic(createPressSummary());
     setHeld({});
     setWheel({ up: 0, down: 0 });
   };
@@ -31,7 +60,7 @@ export default function MouseTest({ ui }: ToolProps<UI>) {
   const onDiagnosticDown = (button: number, time: number) => {
     const mouseButton = mouseButtonFromCode(button);
     if (!mouseButton) return;
-    setDiagnosticPresses((current) => [...current.slice(-(MAX_DIAGNOSTIC_PRESSES - 1)), { button: mouseButton, time }]);
+    setDiagnostic((current) => addPressToSummary(current, { button: mouseButton, time }));
     setHeld((current) => ({ ...current, [mouseButton]: true }));
   };
 
@@ -72,28 +101,38 @@ export default function MouseTest({ ui }: ToolProps<UI>) {
           <h2 class="text-sm font-medium text-fg">{ui.deviceCheck}</h2>
           <p class="mt-1 text-sm leading-6 text-muted">{ui.deviceCheckHint}</p>
         </div>
-        <Button size="sm" onClick={resetDiagnostic}>
+        <Button size="sm" onClick={resetDiagnostic} disabled={unsupported}>
           {ui.resetCheck}
         </Button>
       </div>
 
+      {unsupported && (
+        <div class="mt-4">
+          <Notice tone="danger">{ui.browserUnsupported}</Notice>
+        </div>
+      )}
+
       <div
         class="mt-4 min-h-44 select-none rounded-lg border-2 border-dashed border-line-strong bg-surface-2 p-4 transition-colors hover:border-accent"
-        tabIndex={0}
+        tabIndex={unsupported ? -1 : 0}
         role="region"
         aria-label={ui.deviceCheck}
+        aria-disabled={unsupported || undefined}
         onContextMenu={(event) => event.preventDefault()}
         onPointerDown={(event) => {
-          if (event.pointerType !== 'mouse') return;
-          event.currentTarget.setPointerCapture(event.pointerId);
+          if (unsupported || event.pointerType !== 'mouse') return;
+          if (typeof event.currentTarget.setPointerCapture === 'function') {
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
           onDiagnosticDown(event.button, event.timeStamp);
         }}
         onPointerUp={(event) => {
-          if (event.pointerType !== 'mouse') return;
+          if (unsupported || event.pointerType !== 'mouse') return;
           onDiagnosticUp(event.button);
         }}
         onPointerCancel={() => setHeld({})}
         onWheel={(event) => {
+          if (unsupported) return;
           event.preventDefault();
           setWheel((current) =>
             event.deltaY < 0
@@ -124,7 +163,7 @@ export default function MouseTest({ ui }: ToolProps<UI>) {
         <Stat label={ui.wheelUp} value={wheel.up} />
         <Stat label={ui.wheelDown} value={wheel.down} />
         <Stat label={ui.shortestGap} value={interval(diagnostic.shortestInterval)} />
-        <Stat label={ui.screenedRepeats} value={diagnostic.suspects.length} />
+        <Stat label={ui.screenedRepeats} value={diagnostic.suspects} />
       </div>
 
       <div class="mt-6 border-t border-line pt-6">
@@ -133,7 +172,7 @@ export default function MouseTest({ ui }: ToolProps<UI>) {
             <h2 class="text-sm font-medium text-fg">{ui.guidedTest}</h2>
             <p class="mt-1 text-sm leading-6 text-muted">{ui.guidedTestHint}</p>
           </div>
-          <Button size="sm" onClick={resetSample}>
+          <Button size="sm" onClick={resetSample} disabled={unsupported}>
             {ui.restartSample}
           </Button>
         </div>
@@ -143,6 +182,7 @@ export default function MouseTest({ ui }: ToolProps<UI>) {
             label={ui.testButton}
             value={selectedButton}
             onValue={selectButton}
+            disabled={unsupported}
             options={(['left', 'middle', 'right'] as MouseButton[]).map((button) => ({
               value: button,
               label: buttonLabel(button),
@@ -152,12 +192,13 @@ export default function MouseTest({ ui }: ToolProps<UI>) {
 
         <div
           class="mt-4 min-h-36 select-none rounded-lg border border-line bg-surface p-4 text-center transition-colors hover:border-accent"
-          tabIndex={0}
+          tabIndex={unsupported ? -1 : 0}
           role="region"
           aria-label={ui.guidedTest}
+          aria-disabled={unsupported || undefined}
           onContextMenu={(event) => event.preventDefault()}
           onPointerDown={(event) => {
-            if (event.pointerType !== 'mouse') return;
+            if (unsupported || event.pointerType !== 'mouse') return;
             onSampleDown(event.button, event.timeStamp);
           }}
         >

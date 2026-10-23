@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'device',
   icon: 'mouse',
   added: '2026-10-18',
-  updated: '2026-10-18',
+  updated: '2026-10-24',
   edges: ['usability'],
   competitors: [
     {
