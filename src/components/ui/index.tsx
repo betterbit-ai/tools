@@ -127,6 +127,18 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input type={type} class={cx(inputClass, className as string)} {...rest} />;
 }
 
+/** Native colour picker with the shared input treatment. Pair it with a text input for exact values. */
+export function ColorInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
+  const { class: className, ...rest } = props;
+  return (
+    <input
+      type="color"
+      class={cx('h-10 w-12 cursor-pointer rounded-md border border-line bg-surface p-1', className as string)}
+      {...rest}
+    />
+  );
+}
+
 /** Multi-line text input using the shared token-based input treatment. */
 export function Textarea(props: InputHTMLAttributes<HTMLTextAreaElement>) {
   const { class: className, ...rest } = props;
@@ -377,6 +389,57 @@ export function ColorSwatch(props: { color: string; label: string; class?: strin
       aria-label={props.label}
       class={cx('shrink-0 rounded-sm border border-line', props.class)}
     />
+  );
+}
+
+/** A canvas preview of a foreground/background pair without one-off dynamic colour styles. */
+export function ColorContrastPreview(props: {
+  foreground: string;
+  background: string;
+  title: string;
+  body: string;
+  button: string;
+  label: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
+    if (!canvas || !context) return;
+    const width = Math.max(1, canvas.clientWidth);
+    const height = Math.max(1, canvas.clientHeight);
+    const ratio = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
+    context.scale(ratio, ratio);
+    context.fillStyle = props.background;
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = props.foreground;
+    context.font = '600 20px system-ui, sans-serif';
+    context.fillText(props.title, 20, 40);
+    context.font = '15px system-ui, sans-serif';
+    const words = props.body.split(/\s+/u);
+    let line = '';
+    let y = 72;
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (context.measureText(candidate).width > width - 40 && line) {
+        context.fillText(line, 20, y);
+        line = word;
+        y += 24;
+      } else {
+        line = candidate;
+      }
+    }
+    if (line) context.fillText(line, 20, y);
+    const buttonWidth = Math.min(width - 40, Math.max(120, context.measureText(props.button).width + 36));
+    context.strokeStyle = props.foreground;
+    context.lineWidth = 1.5;
+    context.strokeRect(20, height - 54, buttonWidth, 34);
+    context.fillText(props.button, 36, height - 32);
+  }, [props.background, props.body, props.button, props.foreground, props.title]);
+  return (
+    <canvas ref={canvasRef} role="img" aria-label={props.label} class="h-52 w-full rounded-md border border-line" />
   );
 }
 

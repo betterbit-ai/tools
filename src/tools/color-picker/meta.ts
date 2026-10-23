@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened page asks the user to select a color count and press “색상 추출”; it returns palette colors but its own FAQ says an exact point should be approximated by increasing palette size. Betterbit reads the clicked original pixel exactly and still extracts a deterministic 3–8-color palette automatically. (장점: HEX 목록, CSS 변수, JSON의 세 가지 팔레트 내보내기 형식을 제공한다.)',
     },
   ],
-  related: ['color-converter', 'image-cropper', 'image-compressor'],
+  related: ['color-converter', 'image-cropper', 'image-compressor', 'contrast-checker'],
 };
