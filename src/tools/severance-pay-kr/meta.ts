@@ -52,5 +52,6 @@ export const meta: ToolMeta = {
     'unemployment-benefit-kr',
     'weekly-holiday-pay-kr',
     'annual-leave-kr',
+    'social-insurance-kr',
   ],
 };

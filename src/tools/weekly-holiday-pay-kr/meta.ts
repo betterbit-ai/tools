@@ -50,5 +50,6 @@ export const meta: ToolMeta = {
     'unemployment-benefit-kr',
     'hours-calculator',
     'annual-leave-kr',
+    'social-insurance-kr',
   ],
 };
