@@ -45,6 +45,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'hourly-wage-kr',
     'salary-calculator-kr',
     'severance-pay-kr',
     'unemployment-benefit-kr',

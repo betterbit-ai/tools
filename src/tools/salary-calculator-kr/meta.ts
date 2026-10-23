@@ -80,6 +80,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'hourly-wage-kr',
     'severance-pay-kr',
     'unemployment-benefit-kr',
     'weekly-holiday-pay-kr',

@@ -46,6 +46,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'hourly-wage-kr',
     'timer',
     'stopwatch',
     'date-calculator',
