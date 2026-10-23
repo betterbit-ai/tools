@@ -1,14 +1,55 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, NumberInput, Panel, Stat, cx } from '../../components/ui';
+import { Button, CopyButton, Field, Notice, NumberInput, Panel, Select, Stat, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { analyze, splitDuration, topKeywords } from './logic';
+import { analyze, splitDuration, topKeywords, type LimitMetric } from './logic';
 
 const STORAGE_KEY = 'tools:word-counter:text';
 const LIMIT_KEY = 'tools:word-counter:limit';
+const METRIC_KEY = 'tools:word-counter:limit-metric';
 const ANALYSIS_DELAY = 200;
+
+type LimitRule =
+  | 'selfIntroduction'
+  | 'koreanSms'
+  | 'koreanLms'
+  | 'instagramCaption'
+  | 'xPost'
+  | 'youtubeTitle'
+  | 'youtubeDescription'
+  | 'naverBlogTitle'
+  | 'globalSms';
+
+interface PresetSource {
+  label: string;
+  url: string;
+}
+
+const isMetric = (value: unknown): value is LimitMetric =>
+  value === 'characters' ||
+  value === 'charactersNoSpaces' ||
+  value === 'bytesLegacy' ||
+  value === 'bytesUtf8' ||
+  value === 'xWeightedLength';
+
+const isRule = (value: unknown): value is LimitRule =>
+  value === 'selfIntroduction' ||
+  value === 'koreanSms' ||
+  value === 'koreanLms' ||
+  value === 'instagramCaption' ||
+  value === 'xPost' ||
+  value === 'youtubeTitle' ||
+  value === 'youtubeDescription' ||
+  value === 'naverBlogTitle' ||
+  value === 'globalSms';
+
+const isSource = (value: unknown): value is PresetSource => {
+  if (!value || typeof value !== 'object') return false;
+  const source = value as Partial<PresetSource>;
+  return typeof source.label === 'string' && typeof source.url === 'string' && source.url.startsWith('https://');
+};
 
 interface TextAnalysis {
   stats: ReturnType<typeof analyze>;
@@ -21,9 +62,14 @@ interface AnalysisResult extends TextAnalysis {
   id: number;
 }
 
-export default function WordCounter({ locale, ui }: ToolProps<UI>) {
+export default function WordCounter({ locale, ui, preset }: ToolProps<UI>) {
+  const presetLimit = typeof preset?.limit === 'number' && preset.limit > 0 ? preset.limit : null;
+  const presetMetric = isMetric(preset?.metric) ? preset.metric : null;
+  const presetRule = isRule(preset?.rule) ? preset.rule : null;
+  const presetSources = Array.isArray(preset?.sources) ? preset.sources.filter(isSource) : [];
   const [text, setText] = useState('');
-  const [limit, setLimit] = useState<number | ''>('');
+  const [limit, setLimit] = useState<number | ''>(presetLimit ?? '');
+  const [metric, setMetric] = useState<LimitMetric>(presetMetric ?? 'characters');
   const [analysis, setAnalysis] = useState(emptyAnalysis);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const requestId = useRef(0);
@@ -32,7 +78,9 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
   useEffect(() => {
     setText(safeStorage.get(STORAGE_KEY) ?? '');
     const savedLimit = Number(safeStorage.get(LIMIT_KEY));
-    if (savedLimit > 0) setLimit(savedLimit);
+    setLimit(presetLimit ?? (savedLimit > 0 ? savedLimit : ''));
+    const savedMetric = safeStorage.get(METRIC_KEY);
+    setMetric(presetMetric ?? (isMetric(savedMetric) ? savedMetric : 'characters'));
   }, []);
 
   useEffect(() => {
@@ -47,6 +95,10 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
     if (limit) safeStorage.set(LIMIT_KEY, String(limit));
     else safeStorage.remove(LIMIT_KEY);
   }, [limit]);
+
+  useEffect(() => {
+    safeStorage.set(METRIC_KEY, metric);
+  }, [metric]);
 
   useEffect(() => {
     const id = ++requestId.current;
@@ -89,8 +141,29 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
     return m > 0 ? ui.minSec.replace('{m}', n(m)).replace('{s}', String(s)) : ui.sec.replace('{s}', String(s));
   };
 
-  const remaining = limit ? limit - stats.characters : 0;
-  const pct = limit ? Math.min(100, (stats.characters / limit) * 100) : 0;
+  const current = stats[metric];
+  const remaining = limit ? limit - current : 0;
+  const pct = limit ? Math.min(100, (current / limit) * 100) : 0;
+  const ruleText =
+    presetRule === 'selfIntroduction'
+      ? ui.ruleSelfIntroduction
+      : presetRule === 'koreanSms'
+        ? ui.ruleKoreanSms
+        : presetRule === 'koreanLms'
+          ? ui.ruleKoreanLms
+          : presetRule === 'instagramCaption'
+            ? ui.ruleInstagramCaption
+            : presetRule === 'xPost'
+              ? ui.ruleXPost
+              : presetRule === 'youtubeTitle'
+                ? ui.ruleYoutubeTitle
+                : presetRule === 'youtubeDescription'
+                  ? ui.ruleYoutubeDescription
+                  : presetRule === 'naverBlogTitle'
+                    ? ui.ruleNaverBlogTitle
+                    : presetRule === 'globalSms'
+                      ? ui.ruleGlobalSms
+                      : ui.ruleDefault;
 
   return (
     <Panel>
@@ -142,14 +215,31 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
                 placeholder="500"
               />
             </Field>
+            <Field label={ui.limitMetricLabel} class="mt-3">
+              <Select<LimitMetric>
+                value={metric}
+                onValue={setMetric}
+                ariaLabel={ui.limitMetricLabel}
+                options={[
+                  { value: 'characters', label: ui.metricCharacters },
+                  { value: 'charactersNoSpaces', label: ui.metricCharactersNoSpaces },
+                  { value: 'bytesLegacy', label: ui.metricBytesLegacy },
+                  { value: 'bytesUtf8', label: ui.metricBytesUtf8 },
+                  { value: 'xWeightedLength', label: ui.metricXWeighted },
+                ]}
+              />
+            </Field>
             {limit !== '' && limit > 0 && (
-              <div class="mt-3">
+              <div class="mt-3" aria-live="polite">
                 <div class="h-2 rounded-full bg-surface-2 overflow-hidden">
                   <div
                     class={cx('h-full transition-[width]', remaining < 0 ? 'bg-danger' : 'bg-accent')}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
+                <p class="mt-1.5 text-xs tabular text-subtle">
+                  {ui.limitUsed.replace('{n}', n(current)).replace('{limit}', n(limit))}
+                </p>
                 <p class={cx('mt-1.5 text-sm tabular', remaining < 0 ? 'text-danger' : 'text-muted')}>
                   {remaining < 0
                     ? ui.limitOver.replace('{n}', n(-remaining))
@@ -157,6 +247,24 @@ export default function WordCounter({ locale, ui }: ToolProps<UI>) {
                 </p>
               </div>
             )}
+            <div class="mt-3">
+              <Notice tone="info">
+                {ruleText}
+                {presetSources.length > 0 && (
+                  <span class="mt-1 block text-xs">
+                    {ui.sourcesLabel}{' '}
+                    {presetSources.map((source, index) => (
+                      <span>
+                        {index > 0 && ' · '}
+                        <a class="underline" href={source.url} target="_blank" rel="noreferrer">
+                          {source.label}
+                        </a>
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </Notice>
+            </div>
           </div>
 
           <div>
