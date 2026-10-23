@@ -59,9 +59,13 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   const [pageSizes, setPageSizes] = useState<{ width: number; height: number }[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [loadError, setLoadError] = useState<LoadError | null>(null);
+  const [loadingFile, setLoadingFile] = useState(false);
 
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [previewSize, setPreviewSize] = useState({ width: 0, height: 0 });
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const [previewRetry, setPreviewRetry] = useState(0);
+  const [renderingPreview, setRenderingPreview] = useState(false);
 
   const [mode, setMode] = useState<SignatureMode>(initialMode);
   const [sizePreset, setSizePreset] = useState<SizePreset>(initialSize);
@@ -85,6 +89,7 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
     height: number;
   } | null>(null);
   const runId = useRef(0);
+  const loadId = useRef(0);
 
   useEffect(() => safeStorage.set(MODE_KEY, mode), [mode]);
   useEffect(() => safeStorage.set(SIZE_KEY, sizePreset), [sizePreset]);
@@ -100,12 +105,18 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   }, [mode, strokes, typedText]);
 
   const loadFile = (picked: File) => {
+    const id = ++loadId.current;
     setFile(picked);
     setBytes(null);
     setPreviewSrc(null);
+    setPreviewSize({ width: 0, height: 0 });
+    setPreviewFailed(false);
+    setRenderingPreview(false);
     setPageCount(0);
     setPageSizes([]);
     setPlacement(DEFAULT_PLACEMENT);
+    setSignFailed(false);
+    setLoadingFile(false);
     if (!isPdfFile(picked.name, picked.type)) {
       setLoadError('invalid');
       return;
@@ -115,10 +126,13 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
       return;
     }
     setLoadError(null);
+    setLoadingFile(true);
     (async () => {
-      const buf = new Uint8Array(await picked.arrayBuffer());
       try {
+        const buf = new Uint8Array(await picked.arrayBuffer());
+        if (loadId.current !== id) return;
         const info = await readPdfInfo(buf, picked.name);
+        if (loadId.current !== id) return;
         if (pageCountExceedsLimit(info.pageCount)) {
           setLoadError('page-count');
           return;
@@ -128,19 +142,27 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
         setPageSizes(info.pageSizes);
         setPageNumber(info.pageCount);
       } catch (err) {
+        if (loadId.current !== id) return;
         setLoadError(err instanceof EncryptedPdfError ? 'encrypted' : 'invalid');
+      } finally {
+        if (loadId.current === id) setLoadingFile(false);
       }
     })();
   };
 
   const clear = () => {
     runId.current++;
+    loadId.current++;
     setFile(null);
     setBytes(null);
     setPreviewSrc(null);
+    setPreviewSize({ width: 0, height: 0 });
+    setPreviewFailed(false);
+    setRenderingPreview(false);
     setPageCount(0);
     setPageSizes([]);
     setLoadError(null);
+    setLoadingFile(false);
     setSignFailed(false);
     setPlacement(DEFAULT_PLACEMENT);
   };
@@ -149,18 +171,26 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   useEffect(() => {
     if (!bytes || loadError || pageCount === 0) return;
     const id = ++runId.current;
+    setPreviewSrc(null);
+    setPreviewFailed(false);
+    setRenderingPreview(true);
     (async () => {
       try {
-        const canvas = await renderPagePreview(bytes, pageNumber - 1, PREVIEW_MAX_WIDTH);
+        // PDF.js transfers its input buffer to its worker. Keep the original
+        // bytes intact for later page changes and the final pdf-lib save.
+        const canvas = await renderPagePreview(bytes.slice(), pageNumber - 1, PREVIEW_MAX_WIDTH);
         if (runId.current !== id) return;
         setPreviewSize({ width: canvas.width, height: canvas.height });
         setPreviewSrc(canvas.toDataURL('image/jpeg', 0.92));
       } catch {
         if (runId.current !== id) return;
         setPreviewSrc(null);
+        setPreviewFailed(true);
+      } finally {
+        if (runId.current === id) setRenderingPreview(false);
       }
     })();
-  }, [bytes, pageNumber, loadError, pageCount]);
+  }, [bytes, pageNumber, loadError, pageCount, previewRetry]);
 
   const onCanvasPointerDown = (e: PointerEvent) => {
     if (mode !== 'draw') return;
@@ -260,7 +290,13 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
     }
   };
 
-  const canDownload = hasSignature(mode, strokes, typedText) && !!bytes && !loadError && pageCount > 0;
+  const canDownload =
+    hasSignature(mode, strokes, typedText) &&
+    !!bytes &&
+    !loadError &&
+    pageCount > 0 &&
+    !!previewSrc &&
+    !renderingPreview;
   const errorMessage =
     loadError === 'encrypted'
       ? ui.encryptedPdf
@@ -305,6 +341,21 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
           {errorMessage && (
             <div class="mt-4">
               <Notice tone="danger">{errorMessage}</Notice>
+            </div>
+          )}
+
+          {loadingFile && (
+            <div class="mt-4">
+              <Notice>{ui.loadingFile}</Notice>
+            </div>
+          )}
+
+          {!errorMessage && previewFailed && (
+            <div class="mt-4">
+              <Notice tone="danger">{ui.previewFailed}</Notice>
+              <Button class="mt-2" size="sm" variant="secondary" onClick={() => setPreviewRetry((value) => value + 1)}>
+                {ui.retryPreview}
+              </Button>
             </div>
           )}
 
@@ -363,6 +414,12 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
               <p id="sign-pdf-drag-hint" class="mt-2 text-xs text-subtle">
                 {ui.dragHint}
               </p>
+            </div>
+          )}
+
+          {!errorMessage && bytes && renderingPreview && (
+            <div class="mt-4">
+              <Notice>{ui.renderingPreview}</Notice>
             </div>
           )}
 

@@ -91,7 +91,14 @@ export function dragPlacement(
   containerWidthPx: number,
   containerHeightPx: number,
 ): Placement {
-  if (containerWidthPx <= 0 || containerHeightPx <= 0) return placement;
+  if (
+    !Number.isFinite(containerWidthPx) ||
+    !Number.isFinite(containerHeightPx) ||
+    containerWidthPx <= 0 ||
+    containerHeightPx <= 0
+  ) {
+    return placement;
+  }
   return {
     ...placement,
     xRatio: placement.xRatio + dxPx / containerWidthPx,
