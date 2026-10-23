@@ -1,11 +1,64 @@
-import type { ToolMeta } from '../types';
+import type { ToolMeta, ToolVariant } from '../types';
+import { calculateSeverance, type SeveranceInput } from './logic';
+
+const MONTHLY_PAY_MANWON = [250, 300, 400] as const;
+const SERVICE_YEARS = [1, 3, 5] as const;
+const REFERENCE_LAST_WORKING_DATE = '2026-02-28';
+
+const comma = (value: number) => Math.round(value).toLocaleString('en-US');
+
+/**
+ * Common-search scenarios use a 2026 reference retirement date whose final
+ * three-month period is exactly 90 calendar days. Every snippet is generated
+ * through the same statutory calculation used by the interactive tool.
+ */
+function scenario(monthlyPay: number, serviceYears: number): SeveranceInput {
+  return {
+    startDate: `${2026 - serviceYears}-03-01`,
+    lastWorkingDate: REFERENCE_LAST_WORKING_DATE,
+    wages: [monthlyPay, monthlyPay, monthlyPay],
+    annualBonus: 0,
+    annualLeavePay: 0,
+    dailyOrdinaryWage: 0,
+    weeklyHours: 40,
+  };
+}
+
+const variants: ToolVariant[] = MONTHLY_PAY_MANWON.flatMap((payManwon) =>
+  SERVICE_YEARS.map((serviceYears) => {
+    const monthlyPay = payManwon * 10_000;
+    const preset = scenario(monthlyPay, serviceYears);
+    const result = calculateSeverance(preset)!;
+    const amount = comma(result.severancePay);
+    const serviceDays = comma(result.serviceDays);
+
+    return {
+      slug: `${payManwon}-manwon-${serviceYears}-${serviceYears === 1 ? 'year' : 'years'}`,
+      preset: { ...preset },
+      content: {
+        en: {
+          title: `₩${payManwon / 100}M Monthly Pay, ${serviceYears} Year${serviceYears === 1 ? '' : 's'} — ₩${amount} Severance Estimate`,
+          description: `With ₩${comma(monthlyPay)} monthly pay and ${serviceYears} year${serviceYears === 1 ? '' : 's'} of service, the statutory Korean severance estimate is ₩${amount} before tax under the stated assumptions.`,
+          h1: `₩${payManwon / 100}M Pay · ${serviceYears}-Year Severance`,
+          intro: `The calculated before-tax estimate is ₩${amount}: three final monthly wage totals of ₩${comma(monthlyPay)}, a 90-day average-wage period, and ${serviceDays} continuous-service days through February 28, 2026. It assumes 40 weekly hours, no eligible bonus or leave pay, and no higher ordinary-wage floor; change any field below for your actual records.`,
+        },
+        ko: {
+          title: `월급 ${payManwon}만원 퇴직금 — 근속 ${serviceYears}년 세전 ${amount}원 (2026 계산법)`,
+          description: `월급 ${payManwon}만원, 근속 ${serviceYears}년이면 퇴직금은 세전 약 ${amount}원입니다. 퇴직 전 3개월 임금과 ${serviceDays}일 재직기간을 법정 산식으로 계산했습니다.`,
+          h1: `월급 ${payManwon}만원·근속 ${serviceYears}년 퇴직금`,
+          intro: `세전 예상 퇴직금은 ${amount}원입니다. 2026년 2월 28일 마지막 근무, 퇴직 전 3개월 임금이 매달 ${comma(monthlyPay)}원, 평균임금 산정기간 90일, 계속근로 ${serviceDays}일로 계산했습니다. 주 40시간, 상여금·연차수당·더 높은 통상임금은 없는 조건이며 실제 날짜와 급여명세서 금액으로 아래에서 다시 계산할 수 있습니다.`,
+        },
+      },
+    };
+  }),
+);
 
 export const meta: ToolMeta = {
   slug: 'severance-pay-kr',
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-13',
-  updated: '2026-10-22',
+  updated: '2026-10-23',
   edges: ['features', 'usability'],
   competitors: [
     {
@@ -54,4 +107,5 @@ export const meta: ToolMeta = {
     'annual-leave-kr',
     'social-insurance-kr',
   ],
+  variants,
 };

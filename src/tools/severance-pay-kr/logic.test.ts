@@ -53,6 +53,22 @@ describe('calculateSeverance', () => {
     expect(result).toMatchObject({ applicableDailyWage: 100_000, severancePay: 3_000_000 });
   });
 
+  it('keeps common monthly-pay landing-page answers on the statutory formula', () => {
+    const result = calculateSeverance({
+      ...baseInput,
+      startDate: '2023-03-01',
+      lastWorkingDate: '2026-02-28',
+      wages: [3_000_000, 3_000_000, 3_000_000],
+    });
+
+    expect(result).toMatchObject({
+      averageWageDays: 90,
+      serviceDays: 1_096,
+      averageDailyWage: 100_000,
+      severancePay: 9_008_219,
+    });
+  });
+
   it('returns a zero reference result when either statutory eligibility threshold is not met', () => {
     expect(calculateSeverance({ ...baseInput, startDate: '2023-01-02' })).toMatchObject({
       serviceDays: 364,

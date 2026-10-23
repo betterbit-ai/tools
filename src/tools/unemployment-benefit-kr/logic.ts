@@ -4,6 +4,7 @@ export const RULES_2026 = {
   hourlyMinimumWage: 10_320,
   benefitRate: 0.6,
   minimumBenefitRate: 0.8,
+  maximumDailyBase: 113_500,
   maximumDailyBenefit: 68_100,
   minimumInsuredUnitDays: 180,
   maximumDailyHours: 8,
@@ -114,7 +115,8 @@ export function calculateUnemploymentBenefit(input: UnemploymentBenefitInput): U
     return null;
   }
 
-  const applicableDailyBase = Math.max(averageDailyWage, ordinaryDailyWage);
+  const uncappedDailyBase = Math.max(averageDailyWage, ordinaryDailyWage);
+  const applicableDailyBase = Math.min(uncappedDailyBase, RULES_2026.maximumDailyBase);
   const dailyWageBenefit = Math.floor(applicableDailyBase * RULES_2026.benefitRate);
   const minimumDailyBenefit = Math.floor(
     RULES_2026.hourlyMinimumWage * RULES_2026.minimumBenefitRate * scheduledHoursPerDay,
@@ -122,7 +124,7 @@ export function calculateUnemploymentBenefit(input: UnemploymentBenefitInput): U
   const maximumDailyBenefit = RULES_2026.maximumDailyBenefit;
   const dailyBenefit = Math.min(Math.max(dailyWageBenefit, minimumDailyBenefit), maximumDailyBenefit);
   const appliedDailyRule: AppliedDailyRule =
-    dailyWageBenefit < minimumDailyBenefit ? 'floor' : dailyWageBenefit > maximumDailyBenefit ? 'cap' : 'wage';
+    dailyWageBenefit < minimumDailyBenefit ? 'floor' : uncappedDailyBase > RULES_2026.maximumDailyBase ? 'cap' : 'wage';
   const eligibility = {
     insuredDays: insuredUnitDays >= RULES_2026.minimumInsuredUnitDays,
     separation: input.eligibleSeparation,
