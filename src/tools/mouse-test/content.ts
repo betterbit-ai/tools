@@ -6,7 +6,9 @@ const uiEn = {
   deviceCheckHint: 'Press each available mouse button and roll the wheel inside the test area.',
   resetCheck: 'Reset check',
   deviceCheckPrompt: 'Click, hold, and scroll here',
-  deviceCheckHelp: 'The counter rises on each browser-observed press. A button’s number grows while it is held.',
+  deviceCheckHelp:
+    'Totals stay cumulative until reset. A button’s number grows while it is held, and wheel movement is counted by direction.',
+  browserUnsupported: 'This browser does not expose Pointer Events, so it cannot run the mouse test.',
   buttonLeft: 'Left button',
   buttonMiddle: 'Middle button',
   buttonRight: 'Right button',
@@ -156,7 +158,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       deviceCheckHint: '테스트 영역 안에서 사용할 수 있는 각 마우스 버튼을 누르고 휠을 굴립니다.',
       resetCheck: '확인 초기화',
       deviceCheckPrompt: '여기에서 클릭·길게 누르기·스크롤',
-      deviceCheckHelp: '브라우저가 받은 누름마다 카운터가 올라갑니다. 누르고 있는 버튼의 숫자는 크게 표시됩니다.',
+      deviceCheckHelp:
+        '초기화할 때까지 누적 횟수를 유지합니다. 누르고 있는 버튼의 숫자는 크게 표시하고 휠 움직임은 방향별로 셉니다.',
+      browserUnsupported: '이 브라우저는 포인터 이벤트를 제공하지 않아 마우스 테스트를 실행할 수 없습니다.',
       buttonLeft: '왼쪽 버튼',
       buttonMiddle: '가운데 버튼',
       buttonRight: '오른쪽 버튼',

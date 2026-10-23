@@ -32,6 +32,13 @@ export interface GuidedSample {
   status: 'ready' | 'collecting' | 'clean' | 'suspect';
 }
 
+export interface PressSummary {
+  counts: Record<MouseButton, number>;
+  suspects: number;
+  shortestInterval: number | null;
+  previous: Partial<Record<MouseButton, number>>;
+}
+
 const emptyCounts = (): Record<MouseButton, number> => ({
   left: 0,
   middle: 0,
@@ -39,6 +46,40 @@ const emptyCounts = (): Record<MouseButton, number> => ({
   back: 0,
   forward: 0,
 });
+
+/** Creates the constant-memory summary used by the open-ended button check. */
+export function createPressSummary(): PressSummary {
+  return { counts: emptyCounts(), suspects: 0, shortestInterval: null, previous: {} };
+}
+
+/**
+ * Adds one browser-observed press without retaining an unbounded event log. Totals and findings
+ * remain cumulative for the whole session, while memory stays limited to five prior timestamps.
+ */
+export function addPressToSummary(
+  summary: PressSummary,
+  press: MousePress,
+  thresholdMs = CLICK_SCREENING_THRESHOLD_MS,
+): PressSummary {
+  if (!MOUSE_BUTTONS.includes(press.button) || !Number.isFinite(press.time)) return summary;
+
+  const counts = { ...summary.counts, [press.button]: summary.counts[press.button] + 1 };
+  const last = summary.previous[press.button];
+  if (last !== undefined && press.time < last) return { ...summary, counts };
+
+  const previous = { ...summary.previous, [press.button]: press.time };
+  if (last === undefined) return { ...summary, counts, previous };
+
+  const milliseconds = press.time - last;
+  const threshold = Number.isFinite(thresholdMs) ? Math.max(0, thresholdMs) : CLICK_SCREENING_THRESHOLD_MS;
+  return {
+    counts,
+    previous,
+    suspects: summary.suspects + (milliseconds < threshold ? 1 : 0),
+    shortestInterval:
+      summary.shortestInterval === null ? milliseconds : Math.min(summary.shortestInterval, milliseconds),
+  };
+}
 
 /** Maps the standard PointerEvent.button value to a browser-visible mouse button. */
 export function mouseButtonFromCode(button: number): MouseButton | null {
