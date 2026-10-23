@@ -131,6 +131,12 @@ describe('dragPlacement', () => {
     const start = { xRatio: 0.5, yRatio: 0.5, widthRatio: 0.3 };
     expect(dragPlacement(start, 10, 10, 0, 0)).toEqual(start);
   });
+
+  it('is a no-op for a non-finite container size (avoids an invalid placement)', () => {
+    const start = { xRatio: 0.5, yRatio: 0.5, widthRatio: 0.3 };
+    expect(dragPlacement(start, 10, 10, NaN, 500)).toEqual(start);
+    expect(dragPlacement(start, 10, 10, 500, Infinity)).toEqual(start);
+  });
 });
 
 describe('nudgePlacement', () => {
