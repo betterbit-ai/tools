@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         'Its Korean page loads Google AdSense and adds per-beat accent editing, grouping and subdivision controls around the core click. Betterbit gives a simple saved BPM, first-beat accent and tap-tempo workflow. (Strength: it supports odd metres, per-beat accents and detailed grouping.)',
     },
   ],
-  related: ['timer', 'stopwatch', 'interval-timer', 'pomodoro-timer'],
+  related: ['timer', 'stopwatch', 'interval-timer', 'pomodoro-timer', 'audio-cutter'],
 };
