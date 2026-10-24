@@ -18,6 +18,9 @@ const uiEn = {
   unnamedCamera: 'Camera {number}',
   cameraDeviceHint: 'Choose another camera after permission is granted.',
   scanning: 'Looking for a QR code…',
+  scanningProgress: 'Looking for a QR code… {percent}%',
+  cancelScan: 'Cancel scan',
+  scanCancelled: 'Scan cancelled. Choose another image when you are ready.',
   ready: 'Choose an image or start the camera to scan.',
   privacyNote: 'Images and camera frames are decoded in this browser and are not uploaded.',
   resultTitle: 'Decoded content',
@@ -44,6 +47,7 @@ const uiEn = {
   noCamera: 'No camera was found on this device.',
   cameraBusy: 'The camera is already being used by another app or browser tab.',
   cameraError: 'The camera could not be started. Try an image instead.',
+  cameraFrameError: 'Camera scanning stopped because a video frame could not be read. Start it again or try an image.',
   shortcut: 'Paste a screenshot with',
 };
 export type UI = typeof uiEn;
@@ -66,6 +70,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     howTo: [
       'Drop a QR-code image, choose a file, or paste a screenshot with Ctrl/⌘ + V.',
+      'For a large phone photo, follow the visible progress. You can cancel the scan without losing the original file.',
       'Alternatively, select Start camera and allow the browser’s video-only permission request.',
       'Hold the complete QR code, including its white border, in the camera view until the scanner stops.',
       'Read the decoded content first; copy it, inspect Wi-Fi fields, or deliberately select Open link for an HTTP or HTTPS address.',
@@ -73,7 +78,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'The scanner reads pixels in this browser',
-        body: 'Selecting an image or starting the camera does not send its pixels to a Betterbit server. The decoder draws the chosen image or current video frame into temporary browser memory, reads a QR value there, and stops the camera as soon as a code is found. The scanner accepts normal image files and screenshots up to 8,192 pixels on either side and 32 megapixels, which keeps a browser canvas from allocating an unsafe amount of memory. Scanned content is not saved as a history, so it disappears when you clear it or close the page.',
+        body: 'Selecting an image or starting the camera does not send its pixels to a Betterbit server. Ordinary 12 MP and 24 MP phone photos are reduced only in a temporary working canvas, then checked in bounded overlapping passes so the original file is never changed. Progress remains visible, you can cancel, and the scan keeps moving between passes if you switch tabs. Images can be up to 8,192 pixels on either side and 32 megapixels. The camera stops as soon as a code is found, and scan content is not saved as history.',
       },
       {
         heading: 'Check a link or Wi-Fi payload before using it',
@@ -87,7 +92,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: 'Can I scan a QR code from a screenshot?',
-        a: 'Yes. Drop the screenshot, choose it as an image file, or paste it with Ctrl+V on Windows/Linux or ⌘+V on macOS. The image is decoded in the browser and is limited to 8,192 pixels per side and 32 megapixels.',
+        a: 'Yes. Drop the screenshot, choose it as an image file, or paste it with Ctrl+V on Windows/Linux or ⌘+V on macOS. The image is decoded in the browser and can be up to 8,192 pixels per side and 32 megapixels. Large images use bounded working passes instead of one full-size scan buffer.',
       },
       {
         q: 'Does this QR scanner upload my image or camera video?',
@@ -115,6 +120,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     keywords: ['qr코드 스캔', '큐알코드 스캔', 'qr코드 인식', '사진 qr코드 인식', '온라인 qr 스캐너'],
     howTo: [
       'QR코드가 담긴 사진이나 캡처 이미지를 끌어놓거나 파일을 고르고, Ctrl/⌘ + V로 붙여넣습니다.',
+      '용량이 큰 휴대폰 사진은 진행률을 확인합니다. 스캔을 취소해도 원본 파일은 바뀌지 않습니다.',
       '실물 QR코드는 카메라 시작을 누른 뒤 브라우저의 카메라 권한을 허용합니다.',
       '흰 여백을 포함한 QR코드 전체가 화면에 들어오게 비추면 인식 후 카메라가 자동으로 멈춥니다.',
       '결과를 먼저 확인하고 복사하거나, HTTP·HTTPS 주소일 때만 링크 열기를 직접 선택합니다.',
@@ -122,7 +128,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '사진과 카메라 영상은 이 브라우저 안에서 읽습니다',
-        body: '이미지를 고르거나 카메라를 켜도 사진 픽셀과 영상 프레임은 Betterbit 서버로 전송되지 않습니다. 선택한 이미지 또는 현재 카메라 프레임을 브라우저의 임시 메모리에서만 읽고, QR코드를 찾으면 카메라를 바로 멈춥니다. 일반 사진과 화면 캡처를 지원하며, 브라우저가 과도한 메모리를 쓰지 않도록 한 변 8,192픽셀 및 총 3,200만 픽셀까지 읽습니다. 스캔 결과는 기록으로 저장하지 않으므로 지우거나 페이지를 닫으면 남지 않습니다.',
+        body: '이미지를 고르거나 카메라를 켜도 사진 픽셀과 영상 프레임은 Betterbit 서버로 전송되지 않습니다. 일반적인 1,200만·2,400만 화소 휴대폰 사진은 원본을 바꾸지 않고, 임시 작업 화면만 줄인 뒤 서로 겹치는 구역으로 나누어 메모리를 제한하며 읽습니다. 진행률을 확인하고 취소할 수 있으며 다른 탭으로 옮겨도 구역 사이의 처리는 계속됩니다. 한 변 8,192픽셀 및 총 3,200만 픽셀까지 지원하고, QR코드를 찾으면 카메라를 바로 멈추며 결과 기록은 저장하지 않습니다.',
       },
       {
         heading: '링크와 와이파이 정보는 열기 전에 확인합니다',
@@ -136,7 +142,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     faq: [
       {
         q: '캡처 이미지 속 QR코드도 인식할 수 있나요?',
-        a: '네. 캡처 이미지를 끌어놓거나 파일로 선택하고, Windows·Linux는 Ctrl+V, macOS는 ⌘+V로 바로 붙여넣을 수 있습니다. 이미지는 기기 안에서 읽으며 한 변 8,192픽셀, 총 3,200만 픽셀까지 지원합니다.',
+        a: '네. 캡처 이미지를 끌어놓거나 파일로 선택하고, Windows·Linux는 Ctrl+V, macOS는 ⌘+V로 바로 붙여넣을 수 있습니다. 이미지는 기기 안에서 읽으며 한 변 8,192픽셀, 총 3,200만 픽셀까지 지원합니다. 큰 사진은 전체 크기의 픽셀 버퍼 하나 대신 제한된 작업 구역으로 나누어 읽습니다.',
       },
       {
         q: '사진이나 카메라 영상이 서버로 전송되나요?',
@@ -168,6 +174,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       unnamedCamera: '카메라 {number}',
       cameraDeviceHint: '권한을 허용한 뒤 다른 카메라를 고를 수 있습니다.',
       scanning: 'QR코드를 찾는 중…',
+      scanningProgress: 'QR코드를 찾는 중… {percent}%',
+      cancelScan: '스캔 취소',
+      scanCancelled: '스캔을 취소했습니다. 준비되면 다른 이미지를 선택하세요.',
       ready: '이미지를 고르거나 카메라를 시작해 스캔하세요.',
       privacyNote: '사진과 카메라 프레임은 이 브라우저 안에서 인식하며 업로드되지 않습니다.',
       resultTitle: '인식한 내용',
@@ -195,6 +204,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       noCamera: '이 기기에서 사용할 수 있는 카메라를 찾지 못했습니다.',
       cameraBusy: '다른 앱이나 브라우저 탭에서 카메라를 사용 중입니다.',
       cameraError: '카메라를 시작할 수 없습니다. 이미지로 스캔해 보세요.',
+      cameraFrameError: '영상 프레임을 읽을 수 없어 카메라 스캔을 멈췄습니다. 다시 시작하거나 이미지를 사용하세요.',
       shortcut: '캡처 이미지는 다음 키로 붙여넣을 수 있습니다',
     },
   },

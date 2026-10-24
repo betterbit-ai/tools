@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_IMAGE_PIXELS,
   MAX_IMAGE_SIDE,
+  MAX_SCAN_PIXELS,
+  MAX_SCAN_SIDE,
   classifyScan,
+  createScanRegions,
+  fitScanDimensions,
   parseWifiPayload,
   safeHttpUrl,
   validateImageDimensions,
@@ -39,5 +43,30 @@ describe('qr-code-scanner', () => {
     expect(validateImageDimensions(0, 400)).toBe('image-too-large');
     expect(validateImageDimensions(Number.NaN, 400)).toBe('image-too-large');
     expect(MAX_IMAGE_PIXELS).toBe(32_000_000);
+  });
+
+  it('reduces ordinary phone photos to bounded decode buffers without changing tiny images', () => {
+    expect(fitScanDimensions(4032, 3024)).toEqual({ width: 1600, height: 1200 });
+    expect(fitScanDimensions(6000, 4000)).toEqual({ width: 1600, height: 1067 });
+    expect(fitScanDimensions(6000, 800)).toEqual({ width: 1600, height: 213 });
+    expect(fitScanDimensions(64, 64)).toEqual({ width: 64, height: 64 });
+  });
+
+  it('adds overlapping detail passes while keeping every working canvas bounded', () => {
+    const regions = createScanRegions(6000, 4000);
+
+    expect(regions).toHaveLength(5);
+    expect(regions[0]).toMatchObject({
+      sourceWidth: 6000,
+      sourceHeight: 4000,
+      targetWidth: 1600,
+      targetHeight: 1067,
+    });
+    expect(regions.slice(1).some((item) => item.sourceX < 3000 && item.sourceX + item.sourceWidth > 3000)).toBe(true);
+    for (const item of regions) {
+      expect(item.targetWidth).toBeLessThanOrEqual(MAX_SCAN_SIDE);
+      expect(item.targetHeight).toBeLessThanOrEqual(MAX_SCAN_SIDE);
+      expect(item.targetWidth * item.targetHeight).toBeLessThanOrEqual(MAX_SCAN_PIXELS);
+    }
   });
 });
