@@ -26,7 +26,9 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [status, setStatus] = useState(ui.ready);
   const [error, setError] = useState('');
+  const [cancelled, setCancelled] = useState('');
   const [busy, setBusy] = useState(false);
+  const [scanningImage, setScanningImage] = useState(false);
   const [active, setActive] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(() => safeStorage.get(CAMERA_KEY) ?? '');
@@ -34,6 +36,8 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<CameraSession | null>(null);
   const requestRef = useRef(0);
+  const imageRequestRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
   const frameRef = useRef<number | null>(null);
   const lastFrameAt = useRef(0);
 
@@ -52,31 +56,72 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
       setResult(classifyScan(value));
       setStatus(ui.ready);
       setError('');
+      setCancelled('');
       setBusy(false);
+      setScanningImage(false);
     },
     [ui.ready],
   );
 
+  const abortImageScan = useCallback(() => {
+    imageRequestRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }, []);
+
+  const stopImageScan = useCallback(() => {
+    abortImageScan();
+    setScanningImage(false);
+  }, [abortImageScan]);
+
+  const cancelImageScan = useCallback(() => {
+    if (!abortRef.current) return;
+    stopImageScan();
+    setBusy(false);
+    setStatus(ui.ready);
+    setError('');
+    setCancelled(ui.scanCancelled);
+  }, [stopImageScan, ui.ready, ui.scanCancelled]);
+
   const clear = useCallback(() => {
+    stopImageScan();
     stopCamera();
     setResult(null);
     setImage(null);
     setError('');
+    setCancelled('');
     setBusy(false);
     setStatus(ui.ready);
-  }, [stopCamera, ui.ready]);
+  }, [stopCamera, stopImageScan, ui.ready]);
 
   const addFiles = useCallback(
     async (files: File[]) => {
       const file = files[0];
       if (!file) return;
+      stopImageScan();
       stopCamera();
+      const request = ++imageRequestRef.current;
+      const controller = new AbortController();
+      abortRef.current = controller;
       setResult(null);
+      setImage(null);
       setError('');
+      setCancelled('');
       setBusy(true);
-      setStatus(ui.scanning);
+      setScanningImage(true);
+      setStatus(ui.scanningProgress.replace('{percent}', '0'));
       try {
-        const decoded = await scanImage(file);
+        const decoded = await scanImage(file, {
+          signal: controller.signal,
+          onProgress: ({ completed, total }) => {
+            if (request !== imageRequestRef.current) return;
+            const percent = Math.round((completed / total) * 100);
+            setStatus(ui.scanningProgress.replace('{percent}', String(percent)));
+          },
+        });
+        if (request !== imageRequestRef.current || controller.signal.aborted) return;
+        abortRef.current = null;
+        setScanningImage(false);
         setImage({ name: file.name, width: decoded.width, height: decoded.height });
         if (decoded.value) showResult(decoded.value);
         else {
@@ -85,21 +130,27 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
           setError(ui.noCode);
         }
       } catch (caught) {
+        if (request !== imageRequestRef.current || controller.signal.aborted) return;
+        abortRef.current = null;
+        setScanningImage(false);
         setBusy(false);
         setStatus(ui.ready);
         setError(scanError(caught, ui));
       }
     },
-    [showResult, stopCamera, ui],
+    [showResult, stopCamera, stopImageScan, ui],
   );
 
   const startCamera = useCallback(
     async (deviceId = selectedDeviceId) => {
+      stopImageScan();
       stopCamera();
       const request = ++requestRef.current;
       setResult(null);
       setImage(null);
       setError('');
+      setCancelled('');
+      setScanningImage(false);
       setBusy(true);
       setStatus(ui.scanning);
       try {
@@ -111,7 +162,7 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
         const video = videoRef.current;
         if (!video) {
           closeCamera(session);
-          return;
+          throw new Error('camera-unavailable');
         }
         sessionRef.current = session;
         video.srcObject = session.stream;
@@ -137,8 +188,16 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
                 showResult(value);
                 return;
               }
-            } catch {
-              // A first video frame may not be available yet; keep looking while the stream is alive.
+            } catch (caught) {
+              if (caught instanceof Error && caught.message === 'no-frame') {
+                // A first video frame may not be available yet; keep looking while the stream is alive.
+              } else {
+                stopCamera();
+                setBusy(false);
+                setStatus(ui.ready);
+                setError(ui.cameraFrameError);
+                return;
+              }
             }
           }
           frameRef.current = requestAnimationFrame(nextFrame);
@@ -152,7 +211,7 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
         setError(cameraError(caught, ui));
       }
     },
-    [selectedDeviceId, showResult, stopCamera, ui],
+    [selectedDeviceId, showResult, stopCamera, stopImageScan, ui],
   );
 
   const chooseDevice = (deviceId: string) => {
@@ -161,7 +220,13 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
     if (active) void startCamera(deviceId);
   };
 
-  useEffect(() => stopCamera, [stopCamera]);
+  useEffect(
+    () => () => {
+      abortImageScan();
+      stopCamera();
+    },
+    [abortImageScan, stopCamera],
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -173,11 +238,12 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
         event.altKey
       )
         return;
-      if (event.key === 'Escape' && active) stopCamera();
+      if (event.key === 'Escape' && scanningImage) cancelImageScan();
+      else if (event.key === 'Escape' && active) stopCamera();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, stopCamera]);
+  }, [active, cancelImageScan, scanningImage, stopCamera]);
 
   const deviceOptions = [
     { value: '', label: ui.defaultCamera },
@@ -254,9 +320,14 @@ export default function QrCodeScanner({ ui }: ToolProps<UI>) {
             />
           </Field>
           <div class="mt-5" aria-live="polite">
-            <Notice tone={error ? 'danger' : active || busy ? 'info' : 'success'}>
-              {error || (active || busy ? status : ui.privacyNote)}
+            <Notice tone={error ? 'danger' : cancelled || active || busy ? 'info' : 'success'}>
+              {error || cancelled || (active || busy ? status : ui.privacyNote)}
             </Notice>
+            {scanningImage && (
+              <Button class="mt-3" variant="danger" size="sm" onClick={cancelImageScan}>
+                {ui.cancelScan}
+              </Button>
+            )}
           </div>
           <div class="mt-6 border-t border-line pt-5">
             <h2 class="text-sm font-medium text-fg">{ui.resultTitle}</h2>
