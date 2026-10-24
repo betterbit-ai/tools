@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its search-visible Korean interface combines device refresh, output-device selection, signal choice, sweep/noise, and two level meters around the first test. Betterbit presents the immediate left/both/right and sweep path in one small panel, with the sweep frequency continuously shown. (Strength: it offers output-device selection, noise, custom frequency and generated-signal meters.)',
     },
   ],
-  related: ['mic-test', 'webcam-test', 'keyboard-tester'],
+  related: ['mic-test', 'webcam-test', 'keyboard-tester', 'audio-cutter'],
 };

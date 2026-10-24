@@ -232,7 +232,7 @@
 | video-to-gif     | 동영상 → GIF  | video to gif                                                           | 업로드 없음                                                                 | P1  | live |
 | video-compressor | 동영상 압축   | compress video / 동영상 용량 줄이기                                    | 업로드 없음(대용량 강점)                                                    | P1  | live |
 | audio-converter  | 오디오 변환   | mp3 converter                                                          | —                                                                           | P2  | todo |
-| audio-cutter     | 오디오 자르기 | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                   | P1  | todo |
+| audio-cutter     | 오디오 자르기 | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                   | P1  | live |
 | voice-recorder   | 음성 녹음     | online voice recorder / 녹음기                                         | 업로드 없음, mp3 저장                                                       | P1  | todo |
 | screen-recorder  | 화면 녹화     | screen recorder online / 화면 녹화                                     | 설치 없음, 워터마크 없음                                                    | P1  | todo |
 | video-to-mp3     | 동영상 → MP3  | mp4 to mp3, extract audio from video / 동영상 mp3 변환, 영상 소리 추출 | 업로드 없음, 브라우저 디코딩 + MP3 인코딩(작은 인코더 지연 로드), 구간 선택 | P1  | todo |

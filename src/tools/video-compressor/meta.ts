@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its web flow accepts one file at a time up to 100MB, then promotes a paid purchase for files over 100MB and multiple files; its fuller tool is a Windows program requiring installation and licence activation. Betterbit needs no installer and does not send the selected browser-playable video away. (Strength: its desktop product supports H.264 input up to 4K and larger paid workloads.)',
     },
   ],
-  related: ['video-to-gif', 'image-compressor'],
+  related: ['video-to-gif', 'image-compressor', 'audio-cutter'],
 };
