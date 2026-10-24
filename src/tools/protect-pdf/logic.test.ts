@@ -4,8 +4,10 @@ import {
   fileExceedsLimit,
   isPasswordPresent,
   isPdfFile,
+  isEncryptedPdfLoadFailure,
   MAX_FILE_BYTES,
   passwordsMatch,
+  protectFailureDiagnostic,
   protectedPdfFileName,
   protectArgs,
 } from './logic';
@@ -57,8 +59,30 @@ describe('protect-pdf', () => {
 
   it('turns qpdf failures into actionable states without exposing the password', () => {
     expect(classifyProtectFailure('qpdf: invalid password')).toBe('encrypted');
+    expect(classifyProtectFailure('PDF is encrypted and requires a password.')).toBe('encrypted');
+    expect(classifyProtectFailure("qpdf: can't find PDF header")).toBe('invalid');
+    expect(classifyProtectFailure('QPDF worker timed out.')).toBe('timeout');
     expect(classifyProtectFailure('file is damaged')).toBe('invalid');
     expect(classifyProtectFailure('WebAssembly out of bounds memory access')).toBe('memory');
     expect(classifyProtectFailure('unexpected worker error')).toBe('failed');
+  });
+
+  it('uses qpdf stderr when the top-level worker error is generic', () => {
+    const encrypted = Object.assign(new Error('qpdf exited with status 2'), {
+      stderr: ['qpdf: input.pdf: invalid password'],
+    });
+    const corrupt = Object.assign(new Error('qpdf exited with status 2'), {
+      stderr: ["qpdf: input.pdf: can't find PDF header"],
+    });
+
+    expect(classifyProtectFailure(protectFailureDiagnostic(encrypted))).toBe('encrypted');
+    expect(classifyProtectFailure(protectFailureDiagnostic(corrupt))).toBe('invalid');
+    expect(protectFailureDiagnostic(new Error('plain failure'))).toBe('plain failure');
+  });
+
+  it('recognizes encrypted pdf-lib failures even when worker class identity is lost', () => {
+    expect(isEncryptedPdfLoadFailure({ name: 'EncryptedPDFError', message: 'opaque' })).toBe(true);
+    expect(isEncryptedPdfLoadFailure(new Error('Input document is encrypted.'))).toBe(true);
+    expect(isEncryptedPdfLoadFailure(new Error('Invalid object reference.'))).toBe(false);
   });
 });
