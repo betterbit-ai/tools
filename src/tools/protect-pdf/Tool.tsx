@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { Button, Dropzone, Field, Notice, Panel, TextInput } from '../../components/ui';
-import { downloadBlob } from '../../lib/browser';
+import { downloadBlob, yieldToBrowser } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -10,9 +10,11 @@ import {
   isPasswordPresent,
   isPdfFile,
   passwordsMatch,
+  protectFailureDiagnostic,
   protectedPdfFileName,
   type ProtectFailure,
 } from './logic';
+import type { ProtectProgress } from './protect';
 
 type FileError = 'invalid' | 'size';
 
@@ -24,56 +26,111 @@ export default function ProtectPdf({ ui, locale }: ToolProps<UI>) {
   const [fileError, setFileError] = useState<FileError | null>(null);
   const [failure, setFailure] = useState<ProtectFailure | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState<'reading' | ProtectProgress | null>(null);
+  const [cancelled, setCancelled] = useState(false);
   const [complete, setComplete] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const runId = useRef(0);
+
+  const stopActiveRun = useCallback(() => {
+    runId.current++;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setProcessing(false);
+    setProgress(null);
+  }, []);
 
   const clear = useCallback(() => {
+    stopActiveRun();
     setFile(null);
     setPassword('');
     setConfirmation('');
     setShowPassword(false);
     setFileError(null);
     setFailure(null);
-    setProcessing(false);
+    setCancelled(false);
     setComplete(false);
-  }, []);
+  }, [stopActiveRun]);
 
-  const loadFile = useCallback((picked: File) => {
-    setFile(picked);
-    setFailure(null);
-    setComplete(false);
-    if (!isPdfFile(picked.name, picked.type)) {
-      setFileError('invalid');
-      return;
-    }
-    if (fileExceedsLimit(picked.size)) {
-      setFileError('size');
-      return;
-    }
-    setFileError(null);
-  }, []);
+  const loadFile = useCallback(
+    (picked: File) => {
+      stopActiveRun();
+      setFile(picked);
+      setFailure(null);
+      setCancelled(false);
+      setComplete(false);
+      if (!isPdfFile(picked.name, picked.type)) {
+        setFileError('invalid');
+        return;
+      }
+      if (fileExceedsLimit(picked.size)) {
+        setFileError('size');
+        return;
+      }
+      setFileError(null);
+    },
+    [stopActiveRun],
+  );
+
+  useEffect(
+    () => () => {
+      runId.current++;
+      abortRef.current?.abort();
+      abortRef.current = null;
+    },
+    [],
+  );
 
   const passwordMismatch = isPasswordPresent(confirmation) && !passwordsMatch(password, confirmation);
   const canProtect =
     !!file && !fileError && isPasswordPresent(password) && passwordsMatch(password, confirmation) && !processing;
 
   const protect = async () => {
-    if (!file || !canProtect) return;
+    if (!file || !canProtect || abortRef.current) return;
+    const id = ++runId.current;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setFailure(null);
+    setCancelled(false);
     setComplete(false);
     setProcessing(true);
+    setProgress('reading');
     try {
+      await yieldToBrowser();
+      if (controller.signal.aborted || runId.current !== id) return;
       const bytes = new Uint8Array(await file.arrayBuffer());
+      if (controller.signal.aborted || runId.current !== id) return;
       const { protectPdf } = await import('./protect');
-      const output = await protectPdf(bytes, password);
+      if (controller.signal.aborted || runId.current !== id) return;
+      const output = await protectPdf(bytes, password, {
+        signal: controller.signal,
+        onProgress: (next) => {
+          if (runId.current === id) setProgress(next);
+        },
+      });
+      if (controller.signal.aborted || runId.current !== id) return;
       downloadBlob(new Blob([output as BlobPart], { type: 'application/pdf' }), protectedPdfFileName(file.name));
       setPassword('');
       setConfirmation('');
       setComplete(true);
     } catch (caught) {
-      setFailure(classifyProtectFailure(caught instanceof Error ? caught.message : String(caught)));
+      if (controller.signal.aborted || runId.current !== id) return;
+      setFailure(classifyProtectFailure(protectFailureDiagnostic(caught)));
     } finally {
-      setProcessing(false);
+      if (runId.current === id) {
+        abortRef.current = null;
+        setProcessing(false);
+        setProgress(null);
+      }
     }
+  };
+
+  const cancel = () => {
+    if (!processing) return;
+    stopActiveRun();
+    setFailure(null);
+    setComplete(false);
+    setCancelled(true);
   };
 
   const errorMessage = fileError === 'size' ? ui.fileSizeLimit : ui.invalidPdf;
@@ -82,9 +139,11 @@ export default function ProtectPdf({ ui, locale }: ToolProps<UI>) {
       ? ui.encryptedPdf
       : failure === 'invalid'
         ? ui.invalidPdf
-        : failure === 'memory'
-          ? ui.memoryError
-          : ui.protectFailed;
+        : failure === 'timeout'
+          ? ui.timeoutError
+          : failure === 'memory'
+            ? ui.memoryError
+            : ui.protectFailed;
 
   return (
     <Panel>
@@ -118,6 +177,11 @@ export default function ProtectPdf({ ui, locale }: ToolProps<UI>) {
           {failure && (
             <div class="mt-4">
               <Notice tone="danger">{failureMessage}</Notice>
+            </div>
+          )}
+          {cancelled && (
+            <div class="mt-4" aria-live="polite">
+              <Notice>{ui.cancelled}</Notice>
             </div>
           )}
           {complete && (
@@ -166,9 +230,28 @@ export default function ProtectPdf({ ui, locale }: ToolProps<UI>) {
             />
           </Field>
 
-          <Button variant="primary" size="lg" class="w-full" disabled={!canProtect} onClick={protect}>
-            {processing ? ui.processing : ui.protect}
-          </Button>
+          {processing ? (
+            <div class="space-y-3" aria-live="polite">
+              <Notice>
+                {progress === 'reading'
+                  ? ui.progressReading
+                  : progress === 'checking'
+                    ? ui.progressChecking
+                    : progress === 'loading'
+                      ? ui.progressLoading
+                      : progress === 'finishing'
+                        ? ui.progressFinishing
+                        : ui.progressEncrypting}
+              </Notice>
+              <Button variant="danger" size="lg" class="w-full" onClick={cancel}>
+                {ui.cancel}
+              </Button>
+            </div>
+          ) : (
+            <Button variant="primary" size="lg" class="w-full" disabled={!canProtect} onClick={protect}>
+              {ui.protect}
+            </Button>
+          )}
           <p class="text-xs leading-5 text-subtle">{ui.compatibilityNote}</p>
         </div>
       </div>

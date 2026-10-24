@@ -35,13 +35,54 @@ export function protectArgs(openPassword: string, ownerPassword: string): string
   return ['--encrypt', openPassword, ownerPassword, '256', '--', 'input.pdf', 'output.pdf'];
 }
 
-export type ProtectFailure = 'invalid' | 'encrypted' | 'memory' | 'failed';
+export type ProtectFailure = 'invalid' | 'encrypted' | 'memory' | 'timeout' | 'failed';
+
+/** Preserve qpdf's useful stderr without coupling the UI to qpdf-run's error class. */
+export function protectFailureDiagnostic(caught: unknown): string {
+  if (!(caught instanceof Error)) return String(caught);
+  const detailed = caught as Error & { stderr?: unknown; warnings?: unknown };
+  const lines = [
+    caught.message,
+    ...(Array.isArray(detailed.stderr)
+      ? detailed.stderr.filter((line): line is string => typeof line === 'string')
+      : []),
+    ...(Array.isArray(detailed.warnings)
+      ? detailed.warnings.filter((line): line is string => typeof line === 'string')
+      : []),
+  ];
+  return lines.join('\n');
+}
+
+/** Worker bundles may not preserve instanceof identity for pdf-lib's encrypted error class. */
+export function isEncryptedPdfLoadFailure(caught: unknown): boolean {
+  if (!caught || typeof caught !== 'object') return false;
+  const candidate = caught as { name?: unknown; message?: unknown };
+  return (
+    candidate.name === 'EncryptedPDFError' ||
+    (typeof candidate.message === 'string' && /encrypted/i.test(candidate.message))
+  );
+}
 
 /** Maps qpdf's technical diagnostics to a useful, non-secret-bearing UI state. */
 export function classifyProtectFailure(message: string): ProtectFailure {
   const lower = message.toLowerCase();
-  if (lower.includes('invalid password') || lower.includes('password is incorrect')) return 'encrypted';
-  if (lower.includes('not a pdf') || lower.includes('damaged') || lower.includes('unable to find')) return 'invalid';
-  if (lower.includes('memory') || lower.includes('out of bounds') || lower.includes('timeout')) return 'memory';
+  if (
+    lower.includes('invalid password') ||
+    lower.includes('password is incorrect') ||
+    lower.includes('is encrypted') ||
+    lower.includes('password-protected')
+  )
+    return 'encrypted';
+  if (
+    lower.includes('not a pdf') ||
+    lower.includes('pdf header') ||
+    lower.includes('xref') ||
+    lower.includes('trailer') ||
+    lower.includes('damaged') ||
+    lower.includes('unable to find')
+  )
+    return 'invalid';
+  if (lower.includes('timeout') || lower.includes('timed out')) return 'timeout';
+  if (lower.includes('memory') || lower.includes('out of bounds')) return 'memory';
   return 'failed';
 }
