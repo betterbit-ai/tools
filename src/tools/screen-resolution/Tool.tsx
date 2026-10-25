@@ -16,6 +16,7 @@ import {
 } from './logic';
 
 const EMPTY_METRICS: ScreenMetrics = {
+  visualViewportSupported: null,
   screenWidth: null,
   screenHeight: null,
   availableWidth: null,
@@ -42,16 +43,17 @@ const STANDARD_LABEL_KEY: Record<ResolutionStandard, keyof UI> = {
 function readMetrics(): ScreenMetrics {
   const viewport = window.visualViewport;
   return {
+    visualViewportSupported: Boolean(viewport),
     screenWidth: safeDimension(window.screen?.width),
     screenHeight: safeDimension(window.screen?.height),
     availableWidth: safeDimension(window.screen?.availWidth),
     availableHeight: safeDimension(window.screen?.availHeight),
     layoutViewportWidth: safeDimension(window.innerWidth),
     layoutViewportHeight: safeDimension(window.innerHeight),
-    visualViewportWidth: safeDimension(viewport?.width ?? window.innerWidth),
-    visualViewportHeight: safeDimension(viewport?.height ?? window.innerHeight),
+    visualViewportWidth: safeDimension(viewport?.width),
+    visualViewportHeight: safeDimension(viewport?.height),
     devicePixelRatio: safeRatio(window.devicePixelRatio),
-    visualViewportScale: safeRatio(viewport?.scale ?? 1),
+    visualViewportScale: safeRatio(viewport?.scale),
     colorDepth: safeDimension(window.screen?.colorDepth),
   };
 }
@@ -63,6 +65,7 @@ function isTextEntry(target: EventTarget | null): boolean {
 
 export default function ScreenResolution({ locale, ui }: ToolProps<UI>) {
   const [metrics, setMetrics] = useState<ScreenMetrics>(EMPTY_METRICS);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   useEffect(() => {
     const update = () => setMetrics(readMetrics());
@@ -167,8 +170,18 @@ export default function ScreenResolution({ locale, ui }: ToolProps<UI>) {
       </div>
 
       <div class="mt-5 grid gap-3 border-t border-line pt-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-        <Notice>{ui.accuracyNotice}</Notice>
-        <CopyButton text={summary} label={ui.copy} copiedLabel={ui.copied} />
+        <div class="space-y-2">
+          <Notice>{ui.accuracyNotice}</Notice>
+          {metrics.visualViewportSupported === false && <Notice>{ui.visualViewportUnavailable}</Notice>}
+          {copyFailed && <Notice tone="danger">{ui.copyError}</Notice>}
+        </div>
+        <CopyButton
+          text={summary}
+          label={ui.copy}
+          copiedLabel={ui.copied}
+          onSuccess={() => setCopyFailed(false)}
+          onError={() => setCopyFailed(true)}
+        />
       </div>
     </Panel>
   );

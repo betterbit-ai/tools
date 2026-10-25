@@ -70,6 +70,7 @@ describe('screen-resolution metrics', () => {
   it('preserves Unicode labels when creating a shareable report', () => {
     const report = displaySummary(
       {
+        visualViewportSupported: true,
         screenWidth: 1920,
         screenHeight: 1080,
         availableWidth: 1920,

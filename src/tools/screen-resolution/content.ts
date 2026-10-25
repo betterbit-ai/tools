@@ -27,8 +27,11 @@ const uiEn = {
   standard8k: '8K UHD',
   accuracyNotice:
     'These are browser-exposed values, not a guaranteed panel-native resolution or physical screen size. Scaling, page zoom, remote desktops, and browser privacy settings can change what a page receives.',
+  visualViewportUnavailable:
+    'This browser does not expose the Visual Viewport API. Visual viewport size and scale are unavailable.',
   copy: 'Copy report and CSS query',
   copied: 'Copied',
+  copyError: 'Could not copy the report. Allow clipboard access or select and copy the values manually.',
   cssSnippet: 'CSS media query',
   unavailable: 'Unavailable',
 };
@@ -62,7 +65,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'Screen, layout viewport, and visual viewport are different rectangles',
-        body: 'A browser exposes more than one size. Screen width and height describe the screen area the browser exposes; available screen removes space reserved by the operating system where that information is available. The layout viewport is the coordinate area used to lay out a page, so CSS width media queries respond to it—not to the monitor’s advertised pixel count. The visual viewport is the part of that layout currently visible. On a phone or when magnified, it can be smaller than the layout viewport. CSSOM View defines these API dimensions in CSS pixels and allows browsers to reduce the screen information they expose for privacy, so this report deliberately labels the source instead of claiming a hardware measurement.',
+        body: 'A browser exposes more than one size. Screen width and height describe the screen area the browser exposes; available screen removes space reserved by the operating system where that information is available. The layout viewport is the coordinate area used to lay out a page, so CSS width media queries respond to it—not to the monitor’s advertised pixel count. The visual viewport is the part of that layout currently visible. On a phone or when magnified, it can be smaller than the layout viewport. Current Chrome, Safari, and Firefox expose the Visual Viewport API; if another browser omits it, this tool shows those readings as unavailable instead of substituting layout values. CSSOM View defines these API dimensions in CSS pixels and allows browsers to reduce the screen information they expose for privacy, so this report deliberately labels the source instead of claiming a hardware measurement.',
       },
       {
         heading: 'DPR and zoom explain why the same device can show different numbers',
@@ -124,7 +127,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '화면·레이아웃 뷰포트·시각 뷰포트는 서로 다른 영역입니다',
-        body: '브라우저는 한 가지 크기만 알려 주지 않습니다. 화면 너비와 높이는 브라우저에 공개된 화면 영역이고, 사용 가능 화면은 운영체제가 예약한 영역을 제외해 제공할 수 있는 값입니다. 레이아웃 뷰포트는 웹페이지를 배치하는 좌표 영역이므로 CSS의 width 미디어 쿼리는 모니터에 적힌 해상도가 아니라 이 값을 기준으로 동작합니다. 시각 뷰포트는 그 레이아웃 중 현재 실제로 보이는 부분입니다. 휴대폰에서 확대하면 레이아웃 뷰포트보다 작아질 수 있습니다. CSSOM View 규격은 이 API 값의 단위를 CSS 픽셀로 정하며, 브라우저는 개인정보 보호를 위해 화면 정보를 줄여서 제공할 수도 있으므로 이 도구는 하드웨어 측정값이라고 단정하지 않습니다.',
+        body: '브라우저는 한 가지 크기만 알려 주지 않습니다. 화면 너비와 높이는 브라우저에 공개된 화면 영역이고, 사용 가능 화면은 운영체제가 예약한 영역을 제외해 제공할 수 있는 값입니다. 레이아웃 뷰포트는 웹페이지를 배치하는 좌표 영역이므로 CSS의 width 미디어 쿼리는 모니터에 적힌 해상도가 아니라 이 값을 기준으로 동작합니다. 시각 뷰포트는 그 레이아웃 중 현재 실제로 보이는 부분입니다. 휴대폰에서 확대하면 레이아웃 뷰포트보다 작아질 수 있습니다. 현재 Chrome·Safari·Firefox는 시각 뷰포트 API를 제공하며, 다른 브라우저에서 이 API가 없으면 레이아웃 값으로 대체하지 않고 확인 불가로 표시합니다. CSSOM View 규격은 이 API 값의 단위를 CSS 픽셀로 정하며, 브라우저는 개인정보 보호를 위해 화면 정보를 줄여서 제공할 수도 있으므로 이 도구는 하드웨어 측정값이라고 단정하지 않습니다.',
       },
       {
         heading: 'DPR과 확대 배율이 같은 기기에서 다른 숫자를 만드는 이유',
@@ -183,8 +186,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       standard8k: '8K UHD',
       accuracyNotice:
         '이 값은 브라우저에 공개된 정보이며 패널의 네이티브 해상도나 실제 화면 크기를 보장하지 않습니다. 운영체제 배율, 페이지 확대, 원격 데스크톱, 브라우저 개인정보 보호 설정에 따라 페이지가 받는 값이 달라질 수 있습니다.',
+      visualViewportUnavailable:
+        '이 브라우저는 시각 뷰포트 API를 제공하지 않아 시각 뷰포트 크기와 배율을 확인할 수 없습니다.',
       copy: '보고서와 CSS 쿼리 복사',
       copied: '복사됨',
+      copyError: '보고서를 복사하지 못했습니다. 클립보드 접근을 허용하거나 값을 직접 선택해 복사하세요.',
       cssSnippet: 'CSS 미디어 쿼리',
       unavailable: '확인 불가',
     },
