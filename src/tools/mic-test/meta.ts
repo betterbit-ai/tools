@@ -35,5 +35,6 @@ export const meta: ToolMeta = {
     'dead-pixel-test',
     'speaker-test',
     'voice-recorder',
+    'screen-recorder',
   ],
 };
