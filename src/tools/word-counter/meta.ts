@@ -238,6 +238,6 @@ export const meta: ToolMeta = {
         'The current page combines its basic counter with readability, streak, writing-sprint and document panels; Betterbit keeps the core counts, byte modes and one character-limit control visible together. (Strength: it lets users choose hyphen, number, quote and bracket counting rules, and includes readability scoring.)',
     },
   ],
-  related: ['remove-line-breaks', 'case-converter', 'lorem-ipsum', 'korean-spell-check'],
+  related: ['remove-line-breaks', 'case-converter', 'lorem-ipsum', 'korean-spell-check', 'pdf-to-text'],
   variants,
 };

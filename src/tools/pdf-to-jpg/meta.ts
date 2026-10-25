@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'States that the selected file is handled by Adobe servers and requires an internet connection; it prompts users to sign in to share or save the result. Its converter does not expose 96/150/300 dpi choices before conversion. (Strength: supports JPG, PNG, and TIFF output, and lets people download only the pages they need after conversion.)',
     },
   ],
-  related: ['compress-pdf', 'image-to-pdf', 'rotate-pdf'],
+  related: ['compress-pdf', 'image-to-pdf', 'rotate-pdf', 'pdf-to-text'],
 };

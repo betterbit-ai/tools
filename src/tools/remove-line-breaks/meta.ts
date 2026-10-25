@@ -55,5 +55,6 @@ export const meta: ToolMeta = {
     'text-to-speech',
     'invisible-character',
     'korean-spell-check',
+    'pdf-to-text',
   ],
 };
