@@ -60,7 +60,7 @@
 | unlock-pdf       | PDF 암호 제거    | unlock pdf                     | 비밀번호를 아는 파일의 보호 해제                 | P1  | live |
 | protect-pdf      | PDF 암호 설정    | password protect pdf           | 업로드 없음                                      | P1  | live |
 | pdf-to-text      | PDF 텍스트 추출  | pdf to text                    | 페이지별 복사                                    | P1  | live |
-| watermark-pdf    | PDF 워터마크     | watermark pdf                  | 텍스트, 이미지, 투명도                           | P1  | todo |
+| watermark-pdf    | PDF 워터마크     | watermark pdf                  | 텍스트, 이미지, 투명도                           | P1  | live |
 
 ## text: 텍스트
 

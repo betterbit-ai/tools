@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         'Its Korean tool directory describes this feature only as numbering every PDF page, whereas this tool exposes a validated physical-page range and a dedicated “Skip cover page” control that resets the visible numbering to 1. (Strength: Kito provides a broad local-tool collection and says files do not leave the device.)',
     },
   ],
-  related: ['merge-pdf', 'rotate-pdf', 'reorder-pdf', 'pdf-to-text'],
+  related: ['merge-pdf', 'rotate-pdf', 'reorder-pdf', 'pdf-to-text', 'watermark-pdf'],
 };

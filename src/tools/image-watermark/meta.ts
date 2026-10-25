@@ -27,5 +27,12 @@ export const meta: ToolMeta = {
         'Its current page is also local and supports batch text/logo marks (Strength: it offers saved templates, multiple combined marks, 900+ fonts, visual effects, free placement, resizing, renaming, and metadata preservation). It is a much broader editor; this tool keeps its direct text/logo, nine-position or repeat-pattern workflow and automatic per-file rendering on one screen.',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'exif-viewer-remover', 'meme-generator', 'signature-generator'],
+  related: [
+    'image-resizer',
+    'image-compressor',
+    'exif-viewer-remover',
+    'meme-generator',
+    'signature-generator',
+    'watermark-pdf',
+  ],
 };
