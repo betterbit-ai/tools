@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean page asks users to type a complete page-number sequence such as “3,1,2,4” to make a new PDF. That is useful for repetition and omission, but can be error-prone when visually sorting a scan. This tool shows all page thumbnails, supports drag placement, and retains visible page numbers. (Strength: 툴한줌 supports intentional omissions and duplicate page numbers.)',
     },
   ],
-  related: ['merge-pdf', 'split-pdf', 'rotate-pdf', 'delete-pdf-pages'],
+  related: ['merge-pdf', 'split-pdf', 'rotate-pdf', 'delete-pdf-pages', 'pdf-page-numbers'],
 };

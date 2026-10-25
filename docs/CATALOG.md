@@ -56,7 +56,7 @@
 | delete-pdf-pages | PDF 페이지 삭제  | delete pages from pdf          | 썸네일 클릭 삭제                                 | P1  | live |
 | reorder-pdf      | PDF 페이지 순서  | rearrange pdf pages            | 드래그 정렬                                      | P1  | live |
 | sign-pdf         | PDF 서명         | sign pdf / pdf 서명            | 손글씨 서명, 업로드 없음                         | P0  | live |
-| pdf-page-numbers | 페이지 번호 넣기 | add page numbers to pdf        | 위치, 서식 선택                                  | P1  | todo |
+| pdf-page-numbers | 페이지 번호 넣기 | add page numbers to pdf        | 위치, 서식 선택                                  | P1  | live |
 | unlock-pdf       | PDF 암호 제거    | unlock pdf                     | 비밀번호를 아는 파일의 보호 해제                 | P1  | live |
 | protect-pdf      | PDF 암호 설정    | password protect pdf           | 업로드 없음                                      | P1  | live |
 | pdf-to-text      | PDF 텍스트 추출  | pdf to text                    | 페이지별 복사                                    | P1  | todo |
