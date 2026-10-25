@@ -75,6 +75,8 @@ export function CopyButton(props: {
   copiedLabel: string;
   size?: ButtonSize;
   variant?: ButtonVariant;
+  onSuccess?: () => void;
+  onError?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -88,8 +90,15 @@ export function CopyButton(props: {
       variant={props.variant ?? 'secondary'}
       disabled={!props.text}
       onClick={async () => {
-        await navigator.clipboard.writeText(props.text);
-        setCopied(true);
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+          await navigator.clipboard.writeText(props.text);
+          setCopied(true);
+          props.onSuccess?.();
+        } catch {
+          setCopied(false);
+          props.onError?.();
+        }
       }}
     >
       {copied ? props.copiedLabel : props.label}

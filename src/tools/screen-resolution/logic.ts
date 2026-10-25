@@ -26,6 +26,7 @@ export interface MetricLabels {
 }
 
 export interface ScreenMetrics {
+  visualViewportSupported: boolean | null;
   screenWidth: number | null;
   screenHeight: number | null;
   availableWidth: number | null;
