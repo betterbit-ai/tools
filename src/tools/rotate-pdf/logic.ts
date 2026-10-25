@@ -1,9 +1,9 @@
 /** Pure, browser-independent decisions used by the PDF preview and writer. */
 
-export const MAX_FILE_BYTES = 100 * 1024 * 1024;
-export const MAX_PAGE_COUNT = 100;
-export const PREVIEW_SCALE = 0.25;
-export const MAX_PREVIEW_PIXELS = 1_000_000;
+export const MAX_FILE_BYTES = 250 * 1024 * 1024;
+export const MAX_PAGE_COUNT = 500;
+export const PREVIEW_SCALE = 0.2;
+export const MAX_PREVIEW_PIXELS = 120_000;
 
 export type Rotation = 0 | 90 | 180 | 270;
 
@@ -81,5 +81,12 @@ export class EncryptedPdfError extends Error {
 export class PdfLimitError extends Error {
   constructor() {
     super(`PDF has more than ${MAX_PAGE_COUNT} pages.`);
+  }
+}
+
+export class PdfOperationCancelledError extends Error {
+  constructor() {
+    super('PDF rotation was cancelled.');
+    this.name = 'PdfOperationCancelledError';
   }
 }

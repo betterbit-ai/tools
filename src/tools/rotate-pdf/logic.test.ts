@@ -7,6 +7,7 @@ import {
   MAX_PAGE_COUNT,
   normalizeRotation,
   pageCountExceedsLimit,
+  PdfOperationCancelledError,
   previewScale,
   previewRotation,
   rotateAll,
@@ -14,7 +15,7 @@ import {
   rotatePage,
   rotatedPdfFileName,
 } from './logic';
-import { writeRotatedPdf } from './rotate';
+import { writeRotatedPdf } from './rotate-core';
 
 describe('rotate-pdf', () => {
   it('normalizes PDF rotations into the four values allowed by the specification', () => {
@@ -45,6 +46,8 @@ describe('rotate-pdf', () => {
   });
 
   it('recognizes PDF files and enforces finite browser-safety limits', () => {
+    expect(MAX_FILE_BYTES).toBe(250 * 1024 * 1024);
+    expect(MAX_PAGE_COUNT).toBe(500);
     expect(isPdfFile('보고서.PDF', '')).toBe(true);
     expect(isPdfFile('scan', 'application/pdf')).toBe(true);
     expect(isPdfFile('scan.pdf.exe', '')).toBe(false);
@@ -53,11 +56,12 @@ describe('rotate-pdf', () => {
     expect(fileExceedsLimit(Number.POSITIVE_INFINITY)).toBe(true);
     expect(pageCountExceedsLimit(1)).toBe(false);
     expect(pageCountExceedsLimit(MAX_PAGE_COUNT + 1)).toBe(true);
+    expect(new PdfOperationCancelledError()).toMatchObject({ name: 'PdfOperationCancelledError' });
   });
 
   it('caps previews and preserves Unicode in downloaded file names', () => {
-    expect(previewScale(612, 792)).toBe(0.25);
-    expect(previewScale(100_000, 100_000)).toBeLessThan(0.25);
+    expect(previewScale(612, 792)).toBe(0.2);
+    expect(previewScale(100_000, 100_000)).toBeLessThan(0.2);
     expect(previewScale(0, 792)).toBe(0);
     expect(rotatedPdfFileName(' 계약서.résumé 📄.PDF ')).toBe('계약서.résumé 📄_rotated.pdf');
     expect(rotatedPdfFileName('')).toBe('document_rotated.pdf');
