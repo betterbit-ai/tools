@@ -39,5 +39,12 @@ export const meta: ToolMeta = {
         'It begins with an online video upload/editor workflow and promotes templates, stock assets, subtitles and collaboration around the conversion. (Strength: it provides a full shared editor and link-based media workflow beyond this focused local converter.)',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-converter', 'video-compressor', 'audio-cutter'],
+  related: [
+    'image-resizer',
+    'image-compressor',
+    'image-converter',
+    'video-compressor',
+    'audio-cutter',
+    'screen-recorder',
+  ],
 };
