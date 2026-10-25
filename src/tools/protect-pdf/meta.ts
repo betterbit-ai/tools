@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         'Its Korean and English pages say protection runs in the cloud on servers in Germany and files are deleted after 1 hour. The tool page visibly includes advertising and states that advertising funds the free service. (Strength: it exposes AES-256 and detailed printing, copying, editing, and form permissions.)',
     },
   ],
-  related: ['unlock-pdf', 'merge-pdf', 'split-pdf', 'sign-pdf'],
+  related: ['unlock-pdf', 'merge-pdf', 'split-pdf', 'sign-pdf', 'watermark-pdf'],
 };
