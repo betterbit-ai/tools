@@ -16,6 +16,7 @@ import {
   isPdfFile,
   nudgePlacement,
   pageCountExceedsLimit,
+  PdfSigningCancelledError,
   placementToPdfRect,
   signedFileName,
   SIGNATURE_ASPECT,
@@ -25,7 +26,7 @@ import {
   type SizePreset,
   type Stroke,
 } from './logic';
-import { drawStrokes, drawTypedSignature, readPdfInfo, renderPagePreview, signPdf } from './sign';
+import { drawStrokes, drawTypedSignature, readPdfInfo, renderPagePreview, signPdf, type SignProgress } from './sign';
 
 const MODE_KEY = 'tools:sign-pdf:mode';
 const SIZE_KEY = 'tools:sign-pdf:size';
@@ -54,7 +55,6 @@ type LoadError = 'invalid' | 'encrypted' | 'file-size' | 'page-count';
 
 export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
-  const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [pageSizes, setPageSizes] = useState<{ width: number; height: number }[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
@@ -76,6 +76,9 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
 
   const [signing, setSigning] = useState(false);
   const [signFailed, setSignFailed] = useState(false);
+  const [signProgress, setSignProgress] = useState<SignProgress | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const [complete, setComplete] = useState(false);
 
   const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -90,9 +93,19 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   } | null>(null);
   const runId = useRef(0);
   const loadId = useRef(0);
+  const signId = useRef(0);
+  const operationControllerRef = useRef<AbortController | null>(null);
+  const previewControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => safeStorage.set(MODE_KEY, mode), [mode]);
   useEffect(() => safeStorage.set(SIZE_KEY, sizePreset), [sizePreset]);
+  useEffect(
+    () => () => {
+      operationControllerRef.current?.abort();
+      previewControllerRef.current?.abort();
+    },
+    [],
+  );
 
   // Redraws the signature canvas whenever its content changes, and keeps the
   // overlay preview image in sync so the placement box always shows real ink.
@@ -105,9 +118,12 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   }, [mode, strokes, typedText]);
 
   const loadFile = (picked: File) => {
+    operationControllerRef.current?.abort();
+    previewControllerRef.current?.abort();
+    const controller = new AbortController();
+    operationControllerRef.current = controller;
     const id = ++loadId.current;
     setFile(picked);
-    setBytes(null);
     setPreviewSrc(null);
     setPreviewSize({ width: 0, height: 0 });
     setPreviewFailed(false);
@@ -116,12 +132,17 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
     setPageSizes([]);
     setPlacement(DEFAULT_PLACEMENT);
     setSignFailed(false);
+    setSignProgress(null);
+    setCancelled(false);
+    setComplete(false);
     setLoadingFile(false);
     if (!isPdfFile(picked.name, picked.type)) {
+      operationControllerRef.current = null;
       setLoadError('invalid');
       return;
     }
     if (fileExceedsLimit(picked.size)) {
+      operationControllerRef.current = null;
       setLoadError('file-size');
       return;
     }
@@ -130,31 +151,35 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
     (async () => {
       try {
         const buf = new Uint8Array(await picked.arrayBuffer());
-        if (loadId.current !== id) return;
-        const info = await readPdfInfo(buf, picked.name);
-        if (loadId.current !== id) return;
+        if (loadId.current !== id || controller.signal.aborted) return;
+        const info = await readPdfInfo(buf, picked.name, controller.signal);
+        if (loadId.current !== id || controller.signal.aborted) return;
         if (pageCountExceedsLimit(info.pageCount)) {
           setLoadError('page-count');
           return;
         }
-        setBytes(buf);
         setPageCount(info.pageCount);
         setPageSizes(info.pageSizes);
         setPageNumber(info.pageCount);
       } catch (err) {
-        if (loadId.current !== id) return;
+        if (loadId.current !== id || controller.signal.aborted || err instanceof PdfSigningCancelledError) return;
         setLoadError(err instanceof EncryptedPdfError ? 'encrypted' : 'invalid');
       } finally {
         if (loadId.current === id) setLoadingFile(false);
+        if (operationControllerRef.current === controller) operationControllerRef.current = null;
       }
     })();
   };
 
   const clear = () => {
+    operationControllerRef.current?.abort();
+    operationControllerRef.current = null;
+    previewControllerRef.current?.abort();
+    previewControllerRef.current = null;
     runId.current++;
     loadId.current++;
+    signId.current++;
     setFile(null);
-    setBytes(null);
     setPreviewSrc(null);
     setPreviewSize({ width: 0, height: 0 });
     setPreviewFailed(false);
@@ -164,33 +189,42 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
     setLoadError(null);
     setLoadingFile(false);
     setSignFailed(false);
+    setSignProgress(null);
+    setCancelled(false);
+    setComplete(false);
+    setSigning(false);
     setPlacement(DEFAULT_PLACEMENT);
   };
 
   // Renders the selected page to a <img> source whenever the file or page changes.
   useEffect(() => {
-    if (!bytes || loadError || pageCount === 0) return;
+    if (!file || loadError || pageCount === 0) return;
+    previewControllerRef.current?.abort();
+    const controller = new AbortController();
+    previewControllerRef.current = controller;
     const id = ++runId.current;
     setPreviewSrc(null);
     setPreviewFailed(false);
     setRenderingPreview(true);
     (async () => {
       try {
-        // PDF.js transfers its input buffer to its worker. Keep the original
-        // bytes intact for later page changes and the final pdf-lib save.
-        const canvas = await renderPagePreview(bytes.slice(), pageNumber - 1, PREVIEW_MAX_WIDTH);
-        if (runId.current !== id) return;
-        setPreviewSize({ width: canvas.width, height: canvas.height });
-        setPreviewSrc(canvas.toDataURL('image/jpeg', 0.92));
-      } catch {
-        if (runId.current !== id) return;
+        const preview = await renderPagePreview(file, pageNumber - 1, PREVIEW_MAX_WIDTH, controller.signal);
+        if (runId.current !== id || controller.signal.aborted) return;
+        setPreviewSize({ width: preview.canvas.width, height: preview.canvas.height });
+        setPreviewSrc(preview.canvas.toDataURL('image/jpeg', 0.92));
+        preview.canvas.width = 0;
+        preview.canvas.height = 0;
+      } catch (caught) {
+        if (runId.current !== id || controller.signal.aborted || caught instanceof PdfSigningCancelledError) return;
         setPreviewSrc(null);
         setPreviewFailed(true);
       } finally {
         if (runId.current === id) setRenderingPreview(false);
+        if (previewControllerRef.current === controller) previewControllerRef.current = null;
       }
     })();
-  }, [bytes, pageNumber, loadError, pageCount, previewRetry]);
+    return () => controller.abort();
+  }, [file, pageNumber, loadError, pageCount, previewRetry]);
 
   const onCanvasPointerDown = (e: PointerEvent) => {
     if (mode !== 'draw') return;
@@ -276,23 +310,54 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
   const download = async () => {
     const canvas = signatureCanvasRef.current;
     const pageSize = pageSizes[pageNumber - 1];
-    if (!bytes || !file || !canvas || !pageSize) return;
+    if (!file || !canvas || !pageSize || signing) return;
+    operationControllerRef.current?.abort();
+    const controller = new AbortController();
+    operationControllerRef.current = controller;
+    const id = ++signId.current;
     setSigning(true);
     setSignFailed(false);
+    setCancelled(false);
+    setComplete(false);
+    setSignProgress('preparing');
     try {
       const rect = placementToPdfRect(placement, pageSize.width, pageSize.height);
-      const output = await signPdf(bytes, file.name, canvas, pageNumber - 1, rect);
+      const output = await signPdf(file, canvas, pageNumber - 1, rect, {
+        signal: controller.signal,
+        onProgress: (progress) => {
+          if (signId.current === id) setSignProgress(progress);
+        },
+      });
+      if (signId.current !== id || controller.signal.aborted) return;
       downloadBlob(new Blob([output as BlobPart], { type: 'application/pdf' }), signedFileName(file.name));
-    } catch {
+      setComplete(true);
+    } catch (caught) {
+      if (signId.current !== id || controller.signal.aborted || caught instanceof PdfSigningCancelledError) return;
       setSignFailed(true);
     } finally {
-      setSigning(false);
+      if (signId.current === id) {
+        setSigning(false);
+        setSignProgress(null);
+      }
+      if (operationControllerRef.current === controller) operationControllerRef.current = null;
     }
+  };
+
+  const cancelSigning = () => {
+    if (!signing) return;
+    signId.current++;
+    operationControllerRef.current?.abort();
+    operationControllerRef.current = null;
+    setSigning(false);
+    setSignProgress(null);
+    setSignFailed(false);
+    setComplete(false);
+    setCancelled(true);
   };
 
   const canDownload =
     hasSignature(mode, strokes, typedText) &&
-    !!bytes &&
+    !!file &&
     !loadError &&
     pageCount > 0 &&
     !!previewSrc &&
@@ -310,6 +375,14 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
 
   const previewRatioPercent =
     previewSize.height && previewSize.width ? (previewSize.height / previewSize.width) * 100 : 0;
+  const progressMessage =
+    signProgress === 'preparing'
+      ? ui.progressPreparing
+      : signProgress === 'signing'
+        ? ui.progressSigning
+        : signProgress === 'finishing'
+          ? ui.progressFinishing
+          : null;
 
   return (
     <Panel>
@@ -359,7 +432,7 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
             </div>
           )}
 
-          {!errorMessage && bytes && previewSrc && pageSizes[pageNumber - 1] && (
+          {!errorMessage && pageCount > 0 && previewSrc && pageSizes[pageNumber - 1] && (
             <div class="mt-4">
               {pageCount > 1 && (
                 <div class="mb-3">
@@ -417,7 +490,7 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
             </div>
           )}
 
-          {!errorMessage && bytes && renderingPreview && (
+          {!errorMessage && pageCount > 0 && renderingPreview && (
             <div class="mt-4">
               <Notice>{ui.renderingPreview}</Notice>
             </div>
@@ -429,16 +502,41 @@ export default function SignPdf({ ui, locale }: ToolProps<UI>) {
             </div>
           )}
 
+          {cancelled && (
+            <div class="mt-4">
+              <Notice>{ui.cancelled}</Notice>
+            </div>
+          )}
+
+          {complete && (
+            <div class="mt-4">
+              <Notice tone="success">{ui.complete}</Notice>
+            </div>
+          )}
+
+          {signing && progressMessage && (
+            <div class="mt-4">
+              <Notice>{progressMessage}</Notice>
+            </div>
+          )}
+
           {!file && (
             <div class="mt-4">
               <Notice>{ui.privacyNote}</Notice>
             </div>
           )}
 
-          {bytes && !errorMessage && pageCount > 0 && (
-            <Button class="mt-4" variant="primary" size="lg" disabled={!canDownload || signing} onClick={download}>
-              {signing ? ui.signing : ui.download}
-            </Button>
+          {file && !errorMessage && pageCount > 0 && (
+            <div class="mt-4 flex flex-wrap gap-2">
+              <Button variant="primary" size="lg" disabled={!canDownload || signing} onClick={download}>
+                {signing ? ui.signing : ui.download}
+              </Button>
+              {signing && (
+                <Button variant="secondary" size="lg" onClick={cancelSigning}>
+                  {ui.cancel}
+                </Button>
+              )}
+            </div>
           )}
         </div>
 

@@ -4,7 +4,7 @@
  * signature image are browser-only work in sign.ts.
  */
 
-export const MAX_FILE_BYTES = 50 * 1024 * 1024;
+export const MAX_FILE_BYTES = 250 * 1024 * 1024;
 export const MAX_PAGE_COUNT = 500;
 
 export function isPdfFile(fileName: string, mimeType: string): boolean {
@@ -30,6 +30,13 @@ export class EncryptedPdfError extends Error {
   constructor(fileName: string) {
     super(`"${fileName}" is password-protected and can't be signed.`);
     this.name = 'EncryptedPdfError';
+  }
+}
+
+export class PdfSigningCancelledError extends Error {
+  constructor() {
+    super('PDF signing was cancelled.');
+    this.name = 'PdfSigningCancelledError';
   }
 }
 
