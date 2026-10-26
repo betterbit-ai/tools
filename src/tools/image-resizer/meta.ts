@@ -34,5 +34,6 @@ export const meta: ToolMeta = {
     'image-upscaler',
     'image-watermark',
     'video-to-gif',
+    'image-to-text',
   ],
 };

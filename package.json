@@ -24,6 +24,8 @@
     "@astrojs/preact": "^6.0.6",
     "@breezystack/lamejs": "^1.2.7",
     "@tailwindcss/vite": "^4.3.3",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/kor": "^1.0.0",
     "astro": "^7.3.6",
     "fflate": "^0.8.3",
     "jsqr": "^1.4.0",
@@ -35,7 +37,8 @@
     "preact": "^10.29.8",
     "qpdf-run": "^0.2.1",
     "qrcode-generator": "^2.0.4",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "tesseract.js": "^7.0.0"
   },
   "allowScripts": {
     "esbuild": true

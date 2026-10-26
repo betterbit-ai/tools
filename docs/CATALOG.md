@@ -42,7 +42,7 @@
 | passport-photo        | 증명사진 규격          | passport photo / 여권사진 사이즈                               | 국가별 규격 프리셋, 인화용 배치                                                           | P1  | live |
 | gif-maker             | GIF 만들기             | gif maker / 움짤 만들기                                        | 이미지 → GIF, 프레임 속도                                                                 | P2  | todo |
 | screenshot-beautifier | 스크린샷 꾸미기        | screenshot mockup                                              | 그라데이션 배경, 그림자, 브라우저 프레임                                                  | P2  | todo |
-| image-to-text         | 이미지 글자 추출 (OCR) | image to text, ocr online / 사진 글자 추출, 이미지 텍스트 변환 | 업로드 없는 온디바이스 OCR(wasm·언어 데이터 지연 로드, 자체 호스팅), 한글+영어, 복사·.txt | P1  | todo |
+| image-to-text         | 이미지 글자 추출 (OCR) | image to text, ocr online / 사진 글자 추출, 이미지 텍스트 변환 | 업로드 없는 온디바이스 OCR(wasm·언어 데이터 지연 로드, 자체 호스팅), 한글+영어, 복사·.txt | P1  | live |
 
 ## pdf: PDF (pdf-lib, pdf.js를 도구 안에서 지연 로드)
 
