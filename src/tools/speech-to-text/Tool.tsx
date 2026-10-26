@@ -7,7 +7,8 @@ import { startOnDeviceRecognition, type RecognitionSession } from './recognition
 import type { UI } from './content';
 
 const TEXT_KEY = 'tools:speech-to-text:transcript';
-type State = 'ready' | 'preparing' | 'listening' | 'unsupported' | 'permission' | 'no-speech' | 'language' | 'error';
+type State =
+  'ready' | 'preparing' | 'listening' | 'unsupported' | 'permission' | 'no-speech' | 'language' | 'setup' | 'error';
 
 export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
   const [text, setText] = useState('');
@@ -15,11 +16,15 @@ export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
   const [language, setLanguage] = useState(locale === 'ko' ? 'ko-KR' : 'en-US');
   const [state, setState] = useState<State>('ready');
   const session = useRef<RecognitionSession | null>(null);
+  const preparation = useRef<AbortController | null>(null);
   const startRef = useRef<() => void>(() => undefined);
 
   useEffect(() => {
     setText(safeStorage.get(TEXT_KEY) ?? '');
-    return () => session.current?.stop();
+    return () => {
+      preparation.current?.abort();
+      session.current?.stop();
+    };
   }, []);
 
   useEffect(() => {
@@ -32,6 +37,8 @@ export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
 
   const stats = useMemo(() => transcriptStats(text), [text]);
   const stop = () => {
+    preparation.current?.abort();
+    preparation.current = null;
     session.current?.stop();
     session.current = null;
     setInterim('');
@@ -39,29 +46,51 @@ export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
   };
   const start = async () => {
     if (state === 'preparing' || state === 'listening') return;
+    const controller = new AbortController();
+    preparation.current = controller;
     setState('preparing');
     setInterim('');
-    const result = await startOnDeviceRecognition(language, {
-      onFinal: (phrase) => setText((current) => appendTranscript(current, phrase)),
-      onInterim: setInterim,
-      onError: (code) => {
-        session.current = null;
-        setInterim('');
-        const error = recognitionErrorKey(code);
-        setState(error === 'generic' ? 'error' : error);
+    const result = await startOnDeviceRecognition(
+      language,
+      {
+        onStart: () => {
+          if (!controller.signal.aborted) setState('listening');
+        },
+        onFinal: (phrase) => setText((current) => appendTranscript(current, phrase)),
+        onInterim: setInterim,
+        onError: (code) => {
+          if (controller.signal.aborted) return;
+          preparation.current = null;
+          session.current = null;
+          setInterim('');
+          const error = recognitionErrorKey(code);
+          setState(error === 'generic' ? 'error' : error);
+        },
+        onEnd: () => {
+          preparation.current = null;
+          session.current = null;
+          setInterim('');
+          setState((current) => (current === 'listening' || current === 'preparing' ? 'ready' : current));
+        },
       },
-      onEnd: () => {
-        session.current = null;
-        setInterim('');
-        setState((current) => (current === 'listening' ? 'ready' : current));
-      },
-    });
+      controller.signal,
+    );
+    if (controller.signal.aborted || result.kind === 'cancelled') return;
+    preparation.current = null;
     if (result.kind === 'unsupported') {
       setState('unsupported');
       return;
     }
+    if (result.kind === 'failed') {
+      if (result.error === 'setup') {
+        setState('setup');
+        return;
+      }
+      const error = recognitionErrorKey(result.error);
+      setState(error === 'generic' ? 'error' : error);
+      return;
+    }
     session.current = result.session;
-    setState('listening');
   };
   startRef.current = () => void start();
 
@@ -71,7 +100,7 @@ export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
       if (isEditableElement(target?.tagName ?? '', target?.isContentEditable ?? false)) return;
       if (event.key !== ' ') return;
       event.preventDefault();
-      if (session.current) stop();
+      if (session.current || preparation.current) stop();
       else startRef.current();
     };
     window.addEventListener('keydown', onKeyDown);
@@ -89,9 +118,11 @@ export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
             ? ui.noSpeechError
             : state === 'language'
               ? ui.languageError
-              : state === 'error'
-                ? ui.genericError
-                : null;
+              : state === 'setup'
+                ? ui.setupError
+                : state === 'error'
+                  ? ui.genericError
+                  : null;
 
   return (
     <Panel>
@@ -140,11 +171,10 @@ export default function SpeechToText({ locale, ui }: ToolProps<UI>) {
           </Field>
           <Button
             size="lg"
-            variant={state === 'listening' ? 'danger' : 'primary'}
-            disabled={state === 'preparing'}
-            onClick={state === 'listening' ? stop : start}
+            variant={state === 'listening' || state === 'preparing' ? 'danger' : 'primary'}
+            onClick={state === 'listening' || state === 'preparing' ? stop : start}
           >
-            {state === 'listening' ? ui.stop : state === 'preparing' ? ui.preparing : ui.start}
+            {state === 'listening' ? ui.stop : state === 'preparing' ? ui.cancelSetup : ui.start}
           </Button>
           <p class="text-xs text-subtle">
             {ui.shortcut} <Kbd>{ui.shortcutKey}</Kbd>
