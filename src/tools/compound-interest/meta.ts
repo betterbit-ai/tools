@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'It does not retain inputs after a visit, so a returning user must enter a scenario again. Betterbit saves the scenario only in the current browser and offers a reset to the locale-appropriate defaults. (Strength: it also shows time to double, a currency selector, and a split contribution-versus-interest chart.)',
     },
   ],
-  related: ['loan-calculator', 'percentage-calculator', 'salary-calculator-kr'],
+  related: ['loan-calculator', 'percentage-calculator', 'salary-calculator-kr', 'rent-conversion-kr'],
 };
