@@ -39,5 +39,5 @@ export const meta: ToolMeta = {
         'Its Korean PDF feature is an OCR workflow for scanned documents, rather than a lightweight extractor for a PDF that already has selectable text. This tool reads the existing text layer page by page immediately after selection, avoiding OCR work when recognition is unnecessary. (Strength: WooaOCR can recognize text in scanned PDF images and supports several OCR languages.)',
     },
   ],
-  related: ['pdf-to-jpg', 'pdf-page-numbers', 'remove-line-breaks', 'word-counter', 'watermark-pdf'],
+  related: ['pdf-to-jpg', 'pdf-page-numbers', 'remove-line-breaks', 'word-counter', 'watermark-pdf', 'image-to-text'],
 };
