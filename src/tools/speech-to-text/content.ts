@@ -17,7 +17,8 @@ const uiEn = {
   korean: 'Korean (South Korea)',
   start: 'Start dictation',
   stop: 'Stop dictation',
-  preparing: 'Preparing the on-device language pack…',
+  preparing: 'Checking or downloading the on-device language pack…',
+  cancelSetup: 'Cancel setup',
   shortcut: 'Start or stop when focus is outside a text field:',
   shortcutKey: 'Space',
   privacyNotice:
@@ -31,6 +32,8 @@ const uiEn = {
     'The selected on-device language pack is not installed or supported. Try installing it again or switch languages.',
   genericError:
     'Dictation stopped before a transcript could be completed. Check the microphone permission and try again.',
+  setupError:
+    'The browser could not prepare on-device dictation. Check your connection and available storage, then try again.',
   characters: 'Characters',
   words: 'Words',
 };
@@ -155,7 +158,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       korean: '한국어 (대한민국)',
       start: '받아쓰기 시작',
       stop: '받아쓰기 중지',
-      preparing: '기기 내 언어 팩을 준비하는 중…',
+      preparing: '기기 내 언어 팩을 확인하거나 내려받는 중…',
+      cancelSetup: '준비 취소',
       shortcut: '텍스트 입력창 밖에서 시작 또는 중지:',
       shortcutKey: '스페이스',
       privacyNotice:
@@ -167,6 +171,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       languageError:
         '선택한 기기 내 언어 팩이 설치되지 않았거나 지원되지 않습니다. 다시 설치하거나 언어를 바꿔 보세요.',
       genericError: '변환 텍스트가 완성되기 전에 받아쓰기가 멈췄습니다. 마이크 권한을 확인하고 다시 시도하세요.',
+      setupError:
+        '브라우저에서 기기 내 받아쓰기를 준비하지 못했습니다. 인터넷 연결과 저장 공간을 확인한 뒤 다시 시도하세요.',
       characters: '글자수',
       words: '단어수',
     },
