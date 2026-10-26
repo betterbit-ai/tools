@@ -14,6 +14,7 @@ import {
   NUDGE_STEP,
   nudgePlacement,
   pageCountExceedsLimit,
+  PdfSigningCancelledError,
   placementToPdfRect,
   signedFileName,
   SIGNATURE_ASPECT,
@@ -35,6 +36,11 @@ describe('isPdfFile', () => {
 });
 
 describe('fileExceedsLimit', () => {
+  it('accepts ordinary large scanned PDFs up to 250 MB', () => {
+    expect(MAX_FILE_BYTES).toBe(250 * 1024 * 1024);
+    expect(fileExceedsLimit(100 * 1024 * 1024)).toBe(false);
+  });
+
   it('allows a file right at the limit', () => {
     expect(fileExceedsLimit(MAX_FILE_BYTES)).toBe(false);
   });
@@ -52,12 +58,21 @@ describe('fileExceedsLimit', () => {
 describe('pageCountExceedsLimit', () => {
   it('allows 1 and the max', () => {
     expect(pageCountExceedsLimit(1)).toBe(false);
+    expect(pageCountExceedsLimit(500)).toBe(false);
   });
 
   it('rejects 0, negative and non-integers', () => {
     expect(pageCountExceedsLimit(0)).toBe(true);
     expect(pageCountExceedsLimit(-3)).toBe(true);
     expect(pageCountExceedsLimit(2.5)).toBe(true);
+  });
+});
+
+describe('PdfSigningCancelledError', () => {
+  it('is distinct from invalid-PDF failures so cancellation is never shown as an error', () => {
+    const error = new PdfSigningCancelledError();
+    expect(error.name).toBe('PdfSigningCancelledError');
+    expect(error.message).toMatch(/cancelled/i);
   });
 });
 
