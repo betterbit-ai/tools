@@ -33,18 +33,28 @@ export default function TextToSpeech({ locale, ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<SpeechSettings>(DEFAULT_SETTINGS);
   const [voices, setVoices] = useState<LocalVoice[]>([]);
   const [state, setState] = useState<PlaybackState>('ready');
+  const [playbackError, setPlaybackError] = useState('');
   const [progress, setProgress] = useState({ index: 0, total: 0 });
   const session = useRef<SpeechSession | null>(null);
   const action = useRef<() => void>(() => undefined);
 
   const refreshVoices = () => {
-    const next = getLocalVoices();
-    setVoices(next);
-    setSettings((current) => {
-      if (next.some((voice) => voice.voiceURI === current.voiceURI)) return current;
-      const preferred = next.find((voice) => voice.lang.toLowerCase().startsWith(locale)) ?? next[0];
-      return { ...current, voiceURI: preferred?.voiceURI ?? '' };
-    });
+    try {
+      const next = getLocalVoices();
+      setVoices(next);
+      setSettings((current) => {
+        if (next.some((voice) => voice.voiceURI === current.voiceURI)) return current;
+        const preferred = next.find((voice) => voice.lang.toLowerCase().startsWith(locale)) ?? next[0];
+        return { ...current, voiceURI: preferred?.voiceURI ?? '' };
+      });
+      setState((current) =>
+        current === 'playing' || current === 'paused' ? current : next.length ? 'ready' : 'no-voices',
+      );
+    } catch {
+      setVoices([]);
+      setState('error');
+      setPlaybackError('voice-list');
+    }
   };
 
   useEffect(() => {
@@ -84,12 +94,14 @@ export default function TextToSpeech({ locale, ui }: ToolProps<UI>) {
   );
   const seconds = estimatedSpeechSeconds(text, settings.rate);
   const selectedVoice = voices.find((voice) => voice.voiceURI === settings.voiceURI);
+  const hasSpeechText = !!normalizeSpeechText(text);
 
   const stop = () => {
-    session.current?.stop();
+    const stopped = session.current?.stop() ?? true;
     session.current = null;
     setProgress({ index: 0, total: 0 });
-    setState('ready');
+    setPlaybackError(stopped ? '' : 'cancel-failed');
+    setState(stopped ? 'ready' : 'error');
   };
 
   const play = () => {
@@ -101,32 +113,42 @@ export default function TextToSpeech({ locale, ui }: ToolProps<UI>) {
       setState('no-voices');
       return;
     }
-    if (!normalizeSpeechText(text) || !selectedVoice) return;
-    if (state === 'paused') {
-      session.current?.resume();
-      setState('playing');
+    if (!hasSpeechText) return;
+    if (!selectedVoice) {
+      setPlaybackError('voice-unavailable');
+      setState('error');
       return;
     }
-    session.current?.stop();
+    if (state === 'paused') {
+      if (session.current?.resume()) setState('playing');
+      return;
+    }
+    if (session.current && !session.current.stop()) {
+      session.current = null;
+      setPlaybackError('cancel-failed');
+      setState('error');
+      return;
+    }
     const next = new SpeechSession(text, settings, voices, {
       onProgress: (index, total) => setProgress({ index, total }),
       onEnd: () => {
         session.current = null;
         setState('ready');
       },
-      onError: () => {
+      onError: (error) => {
         session.current = null;
+        setPlaybackError(error);
         setState('error');
       },
     });
     session.current = next;
+    setPlaybackError('');
     setState('playing');
     next.start();
   };
 
   const pause = () => {
-    session.current?.pause();
-    setState('paused');
+    if (session.current?.pause()) setState('paused');
   };
   action.current = () => (state === 'playing' ? pause() : play());
 
@@ -152,7 +174,7 @@ export default function TextToSpeech({ locale, ui }: ToolProps<UI>) {
       : state === 'no-voices'
         ? ui.noLocalVoices
         : state === 'error'
-          ? ui.playbackError
+          ? errorMessage(playbackError, ui)
           : null;
 
   return (
@@ -223,13 +245,18 @@ export default function TextToSpeech({ locale, ui }: ToolProps<UI>) {
             </Field>
           </div>
           <div class="flex flex-wrap gap-2">
-            <Button size="lg" variant="primary" disabled={!text || !voices.length || !selectedVoice} onClick={play}>
+            <Button
+              size="lg"
+              variant="primary"
+              disabled={!hasSpeechText || !voices.length || !selectedVoice}
+              onClick={play}
+            >
               {state === 'paused' ? ui.resume : ui.play}
             </Button>
             <Button size="lg" disabled={state !== 'playing'} onClick={pause}>
               {ui.pause}
             </Button>
-            <Button size="lg" variant="ghost" disabled={state === 'ready'} onClick={stop}>
+            <Button size="lg" variant="ghost" disabled={state !== 'playing' && state !== 'paused'} onClick={stop}>
               {ui.stop}
             </Button>
           </div>
@@ -259,4 +286,15 @@ function formatDuration(seconds: number, ui: UI): string {
   if (!seconds) return ui.noTime;
   if (seconds < 60) return ui.seconds.replace('{n}', String(Math.ceil(seconds)));
   return ui.minutes.replace('{n}', String(Math.ceil(seconds / 6) / 10));
+}
+
+function errorMessage(error: string, ui: UI): string {
+  if (error === 'voice-list') return ui.voiceListError;
+  if (error === 'voice-unavailable' || error === 'language-unavailable') return ui.voiceUnavailable;
+  if (error === 'cancel-failed') return ui.stopFailed;
+  if (error === 'not-allowed') return ui.playbackBlocked;
+  if (error === 'audio-busy' || error === 'audio-hardware' || error === 'synthesis-unavailable') {
+    return ui.audioUnavailable;
+  }
+  return ui.playbackError;
 }

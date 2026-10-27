@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'text',
   icon: 'microphone',
   added: '2026-10-13',
-  updated: '2026-10-13',
+  updated: '2026-10-27',
   edges: ['privacy', 'usability', 'no-signup'],
   competitors: [
     {
