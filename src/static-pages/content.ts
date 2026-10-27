@@ -61,7 +61,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         'How Betterbit Tools handles your data: tools run locally in your browser, with no accounts and no uploads. Visit statistics come from Cloudflare Web Analytics and Google Analytics.',
       h1: 'Privacy Policy',
       intro: 'In short: your files and text never leave your browser. We built the site this way on purpose.',
-      updated: '2026-10-16',
+      updated: '2026-10-27',
       sections: [
         {
           heading: 'What we collect',
@@ -73,7 +73,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Local storage',
-          body: `Some tools save small conveniences — like your last input, a chosen setting, or timer state — using your browser's localStorage, so they're there when you come back. This data stays on your device, is never transmitted anywhere, and you can clear it at any time through your browser's site settings.`,
+          body: `Some tools save small conveniences — like your last input, a chosen setting, or timer state — using your browser's localStorage, so they're there when you come back. To show recently used tools on the home page, we also save a list of up to eight tool identifiers (their URL slugs). This data stays on your device, is never transmitted anywhere, and you can clear the recent list from the home page or clear it at any time through your browser's site settings.`,
         },
         {
           heading: 'Hosting and server logs',
@@ -99,7 +99,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         '도구는 브라우저에서 로컬로 동작하며 회원가입과 업로드가 없습니다. 방문 통계는 Cloudflare Web Analytics와 Google Analytics로 수집합니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
       h1: '개인정보처리방침',
       intro: '요약하면 이렇습니다: 파일과 텍스트는 브라우저 밖으로 나가지 않습니다. 처음부터 그렇게 만들었습니다.',
-      updated: '2026-10-16',
+      updated: '2026-10-27',
       sections: [
         {
           heading: '수집하는 정보',
@@ -111,7 +111,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '로컬 저장소(localStorage)',
-          body: `일부 도구는 마지막 입력값, 선택한 설정, 타이머 상태처럼 편의를 위한 작은 정보를 브라우저의 localStorage에 저장해, 다시 방문했을 때 이어서 쓸 수 있게 합니다. 이 데이터는 사용자의 기기에만 남고 외부로 전송되지 않으며, 브라우저의 사이트 설정에서 언제든 삭제할 수 있습니다.`,
+          body: `일부 도구는 마지막 입력값, 선택한 설정, 타이머 상태처럼 편의를 위한 작은 정보를 브라우저의 localStorage에 저장해, 다시 방문했을 때 이어서 쓸 수 있게 합니다. 홈에서 최근 사용한 도구를 보여 주기 위해 도구 식별자(URL 슬러그)를 최대 8개까지 함께 저장합니다. 이 데이터는 사용자의 기기에만 남고 외부로 전송되지 않으며, 홈에서 최근 목록을 지우거나 브라우저의 사이트 설정에서 언제든 삭제할 수 있습니다.`,
         },
         {
           heading: '호스팅과 서버 로그',

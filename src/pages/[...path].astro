@@ -22,8 +22,9 @@ import { CONTACT_EMAIL } from '../config/site';
 import { CATEGORIES, CATEGORY_IDS, type CategoryId } from '../tools/categories';
 import { TOOLS } from '../tools/registry';
 import type { ToolModule, ToolVariant } from '../tools/types';
-import { homeCategorySections, popularTools, sortByLocalizedName } from '../tools/home';
+import { homeCategorySections, popularTools, recentToolsIndex, sortByLocalizedName } from '../tools/home';
 import { buildSearchIndex } from '../lib/searchIndex';
+import { RECENT_TOOLS_MAX, RECENT_TOOLS_STORAGE_KEY } from '../lib/recentTools';
 import { STATIC_PAGE_IDS, STATIC_PAGES } from '../static-pages/content';
 import type { StaticPageId } from '../static-pages/types';
 
@@ -74,6 +75,7 @@ const { locale } = props;
 const popular = props.kind === 'home' ? popularTools(TOOLS) : [];
 const homeSections = props.kind === 'home' ? homeCategorySections(TOOLS) : [];
 const searchIndex = props.kind === 'home' ? buildSearchIndex(TOOLS, locale) : [];
+const recentTools = props.kind === 'home' ? recentToolsIndex(TOOLS, locale) : [];
 const categoryTools =
   props.kind === 'category'
     ? sortByLocalizedName(
@@ -128,6 +130,14 @@ const categoryTools =
       </section>
 
       <section class="mt-2">
+        <div
+          id="recent-tools"
+          data-heading={t(locale, 'home.recent')}
+          data-clear-label={t(locale, 'home.clearRecent')}
+          data-key={RECENT_TOOLS_STORAGE_KEY}
+          data-max={RECENT_TOOLS_MAX}
+          hidden
+        ></div>
         <h2 class="text-lg font-semibold tracking-tight mb-4">{t(locale, 'home.popular')}</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {popular.map((tool) => (
@@ -164,6 +174,7 @@ const categoryTools =
     </div>
 
     <script type="application/json" id="search-index" set:html={JSON.stringify(searchIndex)} />
+    <script type="application/json" id="recent-tools-index" set:html={JSON.stringify(recentTools)} />
     <script>
       interface SearchEntry {
         url: string;
@@ -272,6 +283,80 @@ const categoryTools =
           e.preventDefault();
           input.focus();
         });
+      }
+
+      interface RecentToolEntry {
+        slug: string;
+        url: string;
+        name: string;
+        tagline: string;
+      }
+
+      const recentContainer = document.getElementById('recent-tools');
+      const recentData = document.getElementById('recent-tools-index');
+      const recentKey = recentContainer?.dataset.key;
+      const recentMax = Number(recentContainer?.dataset.max);
+
+      if (recentContainer && recentData && recentKey && recentMax) {
+        try {
+          const stored: unknown = JSON.parse(localStorage.getItem(recentKey) || '[]');
+          const slugs = Array.isArray(stored)
+            ? [...new Set(stored.filter((item): item is string => typeof item === 'string'))].slice(0, recentMax)
+            : [];
+          const tools: RecentToolEntry[] = JSON.parse(recentData.textContent || '[]');
+          const toolsBySlug = new Map(tools.map((tool) => [tool.slug, tool]));
+          const recent = slugs.map((slug) => toolsBySlug.get(slug)).filter((tool): tool is RecentToolEntry => !!tool);
+
+          if (recent.length) {
+            const section = document.createElement('section');
+            section.className = 'mt-2';
+
+            const header = document.createElement('div');
+            header.className = 'flex items-center justify-between gap-4 mb-4';
+            const heading = document.createElement('h2');
+            heading.className = 'text-lg font-semibold tracking-tight';
+            heading.textContent = recentContainer.dataset.heading ?? '';
+            const clear = document.createElement('button');
+            clear.type = 'button';
+            clear.className =
+              'h-8 rounded-md px-2 text-sm text-muted hover:text-fg hover:bg-surface-2 transition-colors';
+            clear.textContent = recentContainer.dataset.clearLabel ?? '';
+            header.append(heading, clear);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3';
+            for (const tool of recent) {
+              const link = document.createElement('a');
+              link.href = tool.url;
+              link.className =
+                'group block rounded-lg border border-line bg-surface p-4 shadow-card transition hover:border-line-strong hover:-translate-y-0.5';
+              const name = document.createElement('span');
+              name.className = 'block font-medium text-fg group-hover:text-accent';
+              name.textContent = tool.name;
+              const tagline = document.createElement('span');
+              tagline.className = 'mt-1 block text-sm text-muted line-clamp-2';
+              tagline.textContent = tool.tagline;
+              link.append(name, tagline);
+              grid.appendChild(link);
+            }
+
+            clear.addEventListener('click', () => {
+              try {
+                localStorage.removeItem(recentKey);
+              } catch {
+                // The row remains usable even if storage becomes unavailable.
+              }
+              recentContainer.replaceChildren();
+              recentContainer.hidden = true;
+            });
+
+            section.append(header, grid);
+            recentContainer.appendChild(section);
+            recentContainer.hidden = false;
+          }
+        } catch {
+          // Storage can be unavailable in private browsing or when blocked by the user.
+        }
       }
     </script>
   </BaseLayout>

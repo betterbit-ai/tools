@@ -12,6 +12,23 @@ import { POPULAR_SLUGS } from './popular';
 /** Tools shown per category section on the home page before "View all N →". */
 export const HOME_CATEGORY_PREVIEW = 8;
 
+export interface RecentToolEntry {
+  slug: string;
+  url: string;
+  name: string;
+  tagline: string;
+}
+
+/** Localized data for the client-only recently used tools row. */
+export function recentToolsIndex(tools: ToolData[], locale: Locale): RecentToolEntry[] {
+  return tools.map((tool) => ({
+    slug: tool.meta.slug,
+    url: locale === 'en' ? `/${tool.meta.slug}` : `/${locale}/${tool.meta.slug}`,
+    name: tool.content[locale].name,
+    tagline: tool.content[locale].tagline,
+  }));
+}
+
 /** Curated row, in `POPULAR_SLUGS` order. Slugs that don't exist (yet) are skipped. */
 export function popularTools(tools: ToolData[]): ToolData[] {
   const bySlug = new Map(tools.map((t) => [t.meta.slug, t]));
