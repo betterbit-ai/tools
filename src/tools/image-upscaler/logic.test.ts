@@ -3,6 +3,7 @@ import {
   MAX_INPUT_PIXELS,
   MAX_WORK_PIXELS,
   TILE_SIZE,
+  encodedMimeMatches,
   etaSeconds,
   workDimensions,
   imageDimensionsFromHeader,
@@ -83,6 +84,13 @@ describe('image-upscaler planning', () => {
     expect(etaSeconds(0, 24, 0)).toBeNull();
     expect(etaSeconds(4, 24, 8000)).toBe(40);
     expect(etaSeconds(24, 24, 48000)).toBeNull();
+  });
+
+  it('rejects a browser encoder fallback instead of mislabeling the result', () => {
+    expect(encodedMimeMatches('image/webp', 'image/webp')).toBe(true);
+    expect(encodedMimeMatches('IMAGE/JPEG', 'image/jpeg')).toBe(true);
+    expect(encodedMimeMatches('image/webp', 'image/png')).toBe(false);
+    expect(encodedMimeMatches('image/jpeg', '')).toBe(false);
   });
 
   it('keeps Unicode and emoji filenames readable', () => {

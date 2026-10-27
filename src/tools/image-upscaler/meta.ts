@@ -5,14 +5,14 @@ import type { ToolMeta } from '../types';
  * Source: https://huggingface.co/qualcomm/Real-ESRGAN-General-x4v3
  * Original project: https://github.com/xinntao/Real-ESRGAN
  * License: BSD-3-Clause. Self-hosted as public/models/realesr-general-x4v3-dyn.onnx (same weights, re-exported with dynamic height/width)
- * (4,872,481 bytes / 4.87 MB), below Cloudflare's 25 MiB static-asset limit.
+ * (4,868,454 bytes / 4.87 MB), below Cloudflare's 25 MiB static-asset limit.
  */
 export const meta: ToolMeta = {
   slug: 'image-upscaler',
   category: 'image',
   icon: 'sparkle',
   added: '2026-10-11',
-  updated: '2026-10-15',
+  updated: '2026-10-28',
   edges: ['privacy'],
   competitors: [
     {

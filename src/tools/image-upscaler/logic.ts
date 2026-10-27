@@ -226,6 +226,11 @@ export function etaSeconds(completed: number, total: number, elapsedMs: number):
   return Math.ceil(((elapsedMs / completed) * (total - completed)) / 1000);
 }
 
+/** Browsers may silently return PNG when they cannot encode the requested canvas format. */
+export function encodedMimeMatches(requested: string, actual: string): boolean {
+  return requested.toLowerCase() === actual.toLowerCase();
+}
+
 export function outputName(filename: string, scale: Scale, mime: string): string {
   const base = (filename.startsWith('.') ? filename : filename.replace(/\.[^/.]*$/, '')) || 'image';
   const extension = mime === 'image/jpeg' ? 'jpg' : mime === 'image/webp' ? 'webp' : 'png';

@@ -34,12 +34,14 @@ const uiEn = {
   seconds: '{n} s',
   minutes: '{n} min',
   cpuNote:
-    'Running on the CPU because this browser has no WebGPU. A desktop Chrome or Edge is usually several times faster.',
+    'WebGPU could not be used in this browser, so processing is continuing on the CPU. A desktop Chrome or Edge is usually several times faster.',
   errorRead: 'This image cannot be read by your browser.',
   errorPixels: 'This image has more than {max} pixels. Choose a smaller image first.',
   errorDimension: 'One side is over {max} px. Choose a smaller image first.',
   errorFile: 'This file is over 50 MB. Choose a smaller file first.',
-  errorProcess: 'The AI model could not process this image. Try a smaller JPG, PNG or WebP.',
+  errorModel: 'The local AI model could not load. Check your connection and try again.',
+  errorFormat: 'Your browser could not create the selected output format. Choose another format and try again.',
+  errorProcess: 'The AI could not finish this image. Try 2×, close other tabs to free memory, then try again.',
 };
 export type UI = typeof uiEn;
 
@@ -72,7 +74,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Model, privacy and limits',
-        body: 'The self-hosted model is realesr-general-x4v3, an ONNX export of Real-ESRGAN General x4v3. Its 4,872,481-byte (4.87 MB) model file is distributed under BSD-3-Clause; it and ONNX Runtime load only after you start a job. The image never leaves this tab. To avoid exhausting phone or GPU memory, input is limited to 1,000,000 pixels, 4,096 pixels per side and 25 MB. A 4× result has 16 times as many pixels as the input.',
+        body: 'The self-hosted model is realesr-general-x4v3, an ONNX export of Real-ESRGAN General x4v3. Its 4,868,454-byte (4.87 MB) model file is distributed under BSD-3-Clause; it and ONNX Runtime load only after you start a job. The image never leaves this tab. Inputs up to 50,000,000 pixels, 16,384 px per side and 50 MB are accepted. To bound memory and processing time, the AI works on a proportional copy of at most 2.5 MP at 2× or 1 MP at 4×; the notice above the button shows the exact output dimensions before you start.',
       },
       {
         heading: 'Set realistic expectations',
@@ -132,7 +134,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '사용한 모델과 처리 한도',
-        body: '이 도구는 Real-ESRGAN General x4v3의 ONNX 모델 realesr-general-x4v3를 사용합니다. 모델 파일은 4,872,481바이트(4.87MB)이며 BSD-3-Clause 라이선스로 배포됩니다. 모델과 ONNX Runtime은 작업을 시작한 뒤에만 내려받고, 사진은 현재 브라우저 탭 밖으로 전송되지 않습니다. 휴대폰과 GPU 메모리를 지키기 위해 입력은 최대 1,000,000픽셀, 한 변 4,096px, 25MB로 제한합니다. 4배 결과는 원본보다 픽셀 수가 16배입니다.',
+        body: '이 도구는 Real-ESRGAN General x4v3의 ONNX 모델 realesr-general-x4v3를 사용합니다. 모델 파일은 4,868,454바이트(4.87MB)이며 BSD-3-Clause 라이선스로 배포됩니다. 모델과 ONNX Runtime은 작업을 시작한 뒤에만 내려받고, 사진은 현재 브라우저 탭 밖으로 전송되지 않습니다. 최대 5,000만 픽셀, 한 변 16,384px, 50MB 입력을 받을 수 있습니다. 메모리와 처리 시간을 제한하기 위해 AI는 2배에서 최대 250만, 4배에서 최대 100만 픽셀의 비율을 유지한 사본을 처리하며, 시작 전 안내에 실제 결과 크기를 표시합니다.',
       },
       {
         heading: '화질 개선의 한계와 처리 시간',
@@ -194,12 +196,15 @@ export const content: Record<Locale, ToolContent<UI>> = {
       seconds: '{n}초',
       minutes: '{n}분',
       cpuNote:
-        '이 브라우저는 WebGPU를 지원하지 않아 CPU로 처리합니다. 데스크톱 크롬이나 엣지에서는 보통 몇 배 빠릅니다.',
+        '이 브라우저에서 WebGPU를 사용할 수 없어 CPU로 계속 처리합니다. 데스크톱 크롬이나 엣지에서는 보통 몇 배 빠릅니다.',
       errorRead: '브라우저에서 읽을 수 없는 이미지입니다.',
       errorPixels: '이미지 픽셀이 {max}개를 초과합니다. 더 작은 이미지를 선택하세요.',
       errorDimension: '한 변이 {max}px를 넘습니다. 더 작은 이미지를 선택하세요.',
       errorFile: '파일이 50MB를 초과합니다. 더 작은 파일을 선택하세요.',
-      errorProcess: 'AI 모델이 이 이미지를 처리하지 못했습니다. 더 작은 JPG, PNG, WebP로 다시 시도하세요.',
+      errorModel: '기기 안의 AI 모델을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도하세요.',
+      errorFormat: '브라우저에서 선택한 저장 형식을 만들지 못했습니다. 다른 형식을 고른 뒤 다시 시도하세요.',
+      errorProcess:
+        'AI가 이미지 처리를 끝내지 못했습니다. 2배를 고르고 다른 탭을 닫아 메모리를 확보한 뒤 다시 시도하세요.',
     },
   },
 };

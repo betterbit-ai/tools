@@ -3,6 +3,7 @@ import { yieldToBrowser } from '../../lib/browser';
 import {
   MODEL_SCALE,
   TILE_SIZE,
+  encodedMimeMatches,
   imageDimensionsFromHeader,
   makeTileGrid,
   stitchRect,
@@ -32,6 +33,16 @@ export interface UpscaleOptions {
   onProgress?: (progress: UpscaleProgress) => void;
 }
 
+export class UpscaleError extends Error {
+  constructor(
+    public readonly code: 'model' | 'format' | 'runtime',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'UpscaleError';
+  }
+}
+
 function cancelled(signal?: AbortSignal) {
   if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
 }
@@ -45,29 +56,34 @@ export async function readImageDimensions(file: File) {
 }
 
 async function fetchModel(signal: AbortSignal | undefined, onProgress?: UpscaleOptions['onProgress']) {
-  const response = await fetch(MODEL_URL, { signal });
-  if (!response.ok || !response.body) throw new Error('Could not load the local AI model.');
-  const total = Number(response.headers.get('content-length')) || 0;
-  const reader = response.body.getReader();
-  const parts: Uint8Array[] = [];
-  let completed = 0;
-  while (true) {
-    cancelled(signal);
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) {
-      parts.push(value);
-      completed += value.length;
-      onProgress?.({ phase: 'model', completed, total });
+  try {
+    const response = await fetch(MODEL_URL, { signal });
+    if (!response.ok || !response.body) throw new Error(`Model request returned ${response.status}.`);
+    const total = Number(response.headers.get('content-length')) || 0;
+    const reader = response.body.getReader();
+    const parts: Uint8Array[] = [];
+    let completed = 0;
+    while (true) {
+      cancelled(signal);
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        parts.push(value);
+        completed += value.length;
+        onProgress?.({ phase: 'model', completed, total });
+      }
     }
+    const model = new Uint8Array(completed);
+    let offset = 0;
+    for (const part of parts) {
+      model.set(part, offset);
+      offset += part.length;
+    }
+    return model;
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === 'AbortError') throw cause;
+    throw new UpscaleError('model', 'Could not load the local AI model.');
   }
-  const model = new Uint8Array(completed);
-  let offset = 0;
-  for (const part of parts) {
-    model.set(part, offset);
-    offset += part.length;
-  }
-  return model;
 }
 
 function makeCanvas(width: number, height: number) {
@@ -81,34 +97,108 @@ function readTile(source: CanvasRenderingContext2D, tile: Tile) {
   return source.getImageData(tile.inputX, tile.inputY, tile.inputWidth, tile.inputHeight);
 }
 
-function pixelsToTensor(pixels: ImageData) {
-  const area = pixels.width * pixels.height;
-  const data = new Float32Array(area * 3);
-  for (let pixel = 0; pixel < area; pixel++) {
-    const source = pixel * 4;
-    data[pixel] = pixels.data[source] / 255;
-    data[area + pixel] = pixels.data[source + 1] / 255;
-    data[area * 2 + pixel] = pixels.data[source + 2] / 255;
-  }
-  return data;
+type WorkerResponse =
+  | { type: 'ready'; engine: 'gpu' | 'cpu' }
+  | { type: 'result'; pixels: ArrayBuffer; width: number; height: number }
+  | { type: 'error'; stage: 'runtime' | 'process'; message: string };
+
+interface InferenceWorker {
+  engine: 'gpu' | 'cpu';
+  run(pixels: ImageData): Promise<ImageData>;
+  dispose(): void;
 }
 
-function tensorToImageData(data: Float32Array, width: number, height: number) {
-  const area = width * height;
-  const pixels = new ImageData(width, height);
-  for (let pixel = 0; pixel < area; pixel++) {
-    const destination = pixel * 4;
-    pixels.data[destination] = Math.round(Math.min(1, Math.max(0, data[pixel])) * 255);
-    pixels.data[destination + 1] = Math.round(Math.min(1, Math.max(0, data[area + pixel])) * 255);
-    pixels.data[destination + 2] = Math.round(Math.min(1, Math.max(0, data[area * 2 + pixel])) * 255);
-    pixels.data[destination + 3] = 255;
+function abortError() {
+  return new DOMException('Cancelled', 'AbortError');
+}
+
+/** Starts the model in a disposable worker so CPU fallback never freezes the page. */
+async function createInferenceWorker(model: Uint8Array, signal?: AbortSignal): Promise<InferenceWorker> {
+  const worker = new Worker(new URL('./upscale.worker.ts', import.meta.url), { type: 'module' });
+  let ready = false;
+  let readyResolve: ((engine: 'gpu' | 'cpu') => void) | null = null;
+  let readyReject: ((cause: unknown) => void) | null = null;
+  let active: { resolve: (pixels: ImageData) => void; reject: (cause: unknown) => void } | null = null;
+  let disposed = false;
+
+  const terminate = (cause?: unknown) => {
+    if (disposed) return;
+    disposed = true;
+    signal?.removeEventListener('abort', onAbort);
+    worker.terminate();
+    if (!ready) readyReject?.(cause ?? new UpscaleError('runtime', 'AI runtime stopped.'));
+    active?.reject(cause ?? new UpscaleError('runtime', 'AI runtime stopped.'));
+    active = null;
+  };
+  const onAbort = () => terminate(abortError());
+  signal?.addEventListener('abort', onAbort, { once: true });
+
+  const readyPromise = new Promise<'gpu' | 'cpu'>((resolve, reject) => {
+    readyResolve = resolve;
+    readyReject = reject;
+  });
+  worker.addEventListener('message', ({ data }: MessageEvent<WorkerResponse>) => {
+    if (data.type === 'ready') {
+      ready = true;
+      readyResolve?.(data.engine);
+      return;
+    }
+    if (data.type === 'result') {
+      const pending = active;
+      active = null;
+      pending?.resolve(new ImageData(new Uint8ClampedArray(data.pixels), data.width, data.height));
+      return;
+    }
+    const error = new UpscaleError('runtime', data.message);
+    if (!ready) terminate(error);
+    else {
+      active?.reject(error);
+      active = null;
+    }
+  });
+  worker.addEventListener('error', () => terminate(new UpscaleError('runtime', 'AI worker failed.')));
+
+  if (signal?.aborted) {
+    terminate(abortError());
+  } else {
+    const bytes = model.buffer as ArrayBuffer;
+    worker.postMessage({ type: 'init', model: bytes }, [bytes]);
   }
-  return pixels;
+
+  const engine = await readyPromise;
+  return {
+    engine,
+    run(pixels) {
+      if (disposed || signal?.aborted) return Promise.reject(abortError());
+      if (active) return Promise.reject(new UpscaleError('runtime', 'AI worker is already busy.'));
+      return new Promise<ImageData>((resolve, reject) => {
+        active = { resolve, reject };
+        const bytes = pixels.data.buffer as ArrayBuffer;
+        worker.postMessage({ type: 'run', pixels: bytes, width: pixels.width, height: pixels.height }, [bytes]);
+      });
+    },
+    dispose: () => terminate(),
+  };
 }
 
 async function toBlob(canvas: HTMLCanvasElement, mime: string) {
   return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not encode the image.'))), mime, 0.92),
+    canvas.toBlob(
+      (blob) => {
+        if (!blob || !encodedMimeMatches(mime, blob.type)) {
+          reject(
+            new UpscaleError(
+              'format',
+              `The browser returned ${blob?.type || 'no image'} instead of the requested ${mime}.`,
+            ),
+          );
+          return;
+        }
+        resolve(blob);
+      },
+      mime,
+      0.92,
+    ),
   );
 }
 
@@ -131,24 +221,11 @@ export async function upscaleImage(
     const model = await fetchModel(signal, onProgress);
     cancelled(signal);
 
-    // This code split keeps the normal page bundle small. Use the default (JSEP) build: it
-    // matches the self-hosted public/ort/*.jsep files. 'onnxruntime-web/webgpu' needs the
-    // asyncify build (27 MB, over Cloudflare's 25 MiB asset limit) and silently fell back to CPU.
-    const ort = await import('onnxruntime-web');
-    ort.env.wasm.wasmPaths = {
-      mjs: '/ort/ort-wasm-simd-threaded.jsep.mjs',
-      wasm: '/ort/ort-wasm-simd-threaded.jsep.wasm',
-    };
-    let engine: 'gpu' | 'cpu' = 'gpu';
-    const session = await (async () => {
-      try {
-        if (!('gpu' in navigator)) throw new Error('WebGPU unavailable');
-        return await ort.InferenceSession.create(model, { executionProviders: ['webgpu'] });
-      } catch {
-        engine = 'cpu';
-        return ort.InferenceSession.create(model, { executionProviders: ['wasm'] });
-      }
-    })();
+    // The worker is loaded only after Start, keeping ONNX Runtime out of the normal page bundle.
+    // Its default JSEP build matches the self-hosted public/ort/*.jsep files; the dedicated
+    // WebGPU build needs a 27 MB asyncify asset that exceeds Cloudflare's 25 MiB asset limit.
+    const inference = await createInferenceWorker(model, signal);
+    const engine = inference.engine;
 
     try {
       // Each tile comes out at 4×; for 2× it is drawn at half size straight into the output, so a
@@ -165,19 +242,9 @@ export async function upscaleImage(
       for (let index = 0; index < tiles.length; index++) {
         cancelled(signal);
         const tile = tiles[index];
-        const tensor = new ort.Tensor('float32', pixelsToTensor(readTile(sourceCtx, tile)), [
-          1,
-          3,
-          tile.inputHeight,
-          tile.inputWidth,
-        ]);
-        const outputs = await session.run({ image: tensor });
-        const output = outputs.upscaled_image.data as Float32Array;
-        tileCtx.putImageData(
-          tensorToImageData(output, tile.inputWidth * MODEL_SCALE, tile.inputHeight * MODEL_SCALE),
-          0,
-          0,
-        );
+        const upscaled = await inference.run(readTile(sourceCtx, tile));
+        cancelled(signal);
+        tileCtx.putImageData(upscaled, 0, 0);
         const rect = stitchRect(tile);
         outputCtx.drawImage(
           tileCanvas,
@@ -216,7 +283,7 @@ export async function upscaleImage(
       }
       return { blob: await toBlob(output, mime), width: output.width, height: output.height };
     } finally {
-      await session.release();
+      inference.dispose();
     }
   } finally {
     bitmap.close();
