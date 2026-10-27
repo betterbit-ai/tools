@@ -5,8 +5,10 @@ import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   aspectRatioLabel,
+  cameraFailureKind,
   deviceLabel,
   frameRateLabel,
+  getCameraCapabilities,
   isCurrentCameraRequest,
   resolutionLabel,
   snapshotFilename,
@@ -16,6 +18,7 @@ import {
   listCameras,
   observeFrameRate,
   openCamera,
+  playCameraPreview,
   snapshotFromVideo,
   type CameraSession,
 } from './webcam';
@@ -24,7 +27,9 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [active, setActive] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
+  const [deviceWarning, setDeviceWarning] = useState('');
   const [snapshotError, setSnapshotError] = useState('');
   const [mirrored, setMirrored] = useState(() => safeStorage.get('tools:webcam-test:mirrored') !== 'false');
   const [showGrid, setShowGrid] = useState(() => safeStorage.get('tools:webcam-test:grid') === 'true');
@@ -34,6 +39,8 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stopObserveRef = useRef<() => void>(() => undefined);
   const requestRef = useRef(0);
+  // Server rendering has no browser APIs, so replace these optimistic values after hydration.
+  const [capabilities, setCapabilities] = useState({ test: true, selection: true });
 
   const stopTest = useCallback(() => {
     requestRef.current += 1;
@@ -43,6 +50,7 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
     sessionRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
     setActive(false);
+    setStarting(false);
     setDimensions({ width: 0, height: 0 });
     setFrameRate(0);
   }, []);
@@ -52,7 +60,9 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
       stopTest();
       const requestId = ++requestRef.current;
       setError('');
+      setDeviceWarning('');
       setSnapshotError('');
+      setStarting(true);
       try {
         const session = await openCamera(deviceId);
         if (!isCurrentCameraRequest(requestId, requestRef.current)) {
@@ -62,16 +72,25 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
         const video = videoRef.current;
         if (!video) {
           closeCamera(session);
-          return;
+          throw new Error('preview-unavailable');
         }
         sessionRef.current = session;
         video.srcObject = session.stream;
-        await video.play();
+        await playCameraPreview(video);
         if (!isCurrentCameraRequest(requestId, requestRef.current)) {
           if (video.srcObject === session.stream) video.srcObject = null;
           closeCamera(session);
           return;
         }
+        session.track.addEventListener(
+          'ended',
+          () => {
+            if (!isCurrentCameraRequest(requestId, requestRef.current) || sessionRef.current !== session) return;
+            stopTest();
+            setError(ui.cameraDisconnected);
+          },
+          { once: true },
+        );
         const settings = session.track.getSettings();
         setDimensions({
           width: video.videoWidth || settings.width || 0,
@@ -79,25 +98,46 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
         });
         setFrameRate(settings.frameRate || 0);
         stopObserveRef.current = observeFrameRate(video, setFrameRate);
+        setStarting(false);
         setActive(true);
-        const cameras = await listCameras().catch(() => []);
+        let cameras: MediaDeviceInfo[];
+        try {
+          cameras = await listCameras();
+        } catch {
+          if (isCurrentCameraRequest(requestId, requestRef.current)) setDeviceWarning(ui.deviceListUnavailable);
+          cameras = [];
+        }
         if (isCurrentCameraRequest(requestId, requestRef.current)) setDevices(cameras);
       } catch (caught) {
         if (!isCurrentCameraRequest(requestId, requestRef.current)) return;
         stopTest();
-        const name = caught instanceof DOMException ? caught.name : '';
+        const failure = cameraFailureKind(caught);
         setError(
-          name === 'NotAllowedError'
-            ? ui.permissionDenied
-            : name === 'NotFoundError'
-              ? ui.noCamera
-              : name === 'NotReadableError'
-                ? ui.cameraBusy
-                : ui.startError,
+          {
+            unsupported: ui.unsupported,
+            permission: ui.permissionDenied,
+            'not-found': ui.noCamera,
+            busy: ui.cameraBusy,
+            'device-unavailable': ui.deviceUnavailable,
+            'preview-timeout': ui.previewTimeout,
+            unknown: ui.startError,
+          }[failure],
         );
       }
     },
-    [selectedDeviceId, stopTest, ui.cameraBusy, ui.noCamera, ui.permissionDenied, ui.startError],
+    [
+      selectedDeviceId,
+      stopTest,
+      ui.cameraBusy,
+      ui.cameraDisconnected,
+      ui.deviceListUnavailable,
+      ui.deviceUnavailable,
+      ui.noCamera,
+      ui.permissionDenied,
+      ui.previewTimeout,
+      ui.startError,
+      ui.unsupported,
+    ],
   );
 
   const chooseDevice = useCallback(
@@ -129,11 +169,19 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
   };
 
   useEffect(() => {
-    void listCameras()
-      .then(setDevices)
-      .catch(() => setDevices([]));
+    const detected = getCameraCapabilities();
+    setCapabilities(detected);
+    if (!detected.test) {
+      setError(ui.unsupported);
+    } else if (!detected.selection) {
+      setDeviceWarning(ui.deviceListUnavailable);
+    } else {
+      void listCameras()
+        .then(setDevices)
+        .catch(() => setDeviceWarning(ui.deviceListUnavailable));
+    }
     return stopTest;
-  }, [stopTest]);
+  }, [stopTest, ui.deviceListUnavailable, ui.unsupported]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -147,7 +195,7 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
         return;
       if (event.key === 's' || event.key === 'S') {
         event.preventDefault();
-        if (active) stopTest();
+        if (active || starting) stopTest();
         else void startTest();
       }
       if ((event.key === 'p' || event.key === 'P') && active) {
@@ -165,7 +213,7 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, mirrored, showGrid, startTest, stopTest, takeSnapshot]);
+  }, [active, mirrored, showGrid, startTest, starting, stopTest, takeSnapshot]);
 
   const settings = sessionRef.current?.track.getSettings();
   const width = dimensions.width || settings?.width || 0;
@@ -188,8 +236,12 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
               <h2 class="text-sm font-medium text-fg">{ui.liveTest}</h2>
               <p class="mt-1 text-xs text-muted">{ui.localOnly}</p>
             </div>
-            <Button variant={active ? 'danger' : 'primary'} onClick={() => (active ? stopTest() : void startTest())}>
-              {active ? ui.stopTest : ui.startTest}
+            <Button
+              variant={active || starting ? 'danger' : 'primary'}
+              disabled={!capabilities.test}
+              onClick={() => (active || starting ? stopTest() : void startTest())}
+            >
+              {active ? ui.stopTest : starting ? ui.cancelStart : ui.startTest}
             </Button>
           </div>
 
@@ -236,7 +288,12 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
 
         <aside class="border-t border-line pt-6 lg:border-l lg:border-t-0 lg:pt-0 lg:pl-6">
           <Field label={ui.camera} hint={ui.deviceHint}>
-            <Select value={selectedDeviceId} onValue={chooseDevice} options={deviceOptions} />
+            <Select
+              value={selectedDeviceId}
+              onValue={chooseDevice}
+              options={deviceOptions}
+              disabled={!capabilities.test || !capabilities.selection || starting}
+            />
           </Field>
           <div class="mt-5 space-y-4">
             <Toggle checked={mirrored} onChecked={setMirror} label={ui.mirror} />
@@ -256,8 +313,15 @@ export default function WebcamTest({ ui }: ToolProps<UI>) {
             />
           </div>
           <div class="mt-4">
-            <Notice tone={active ? 'success' : 'info'}>{active ? ui.activeNotice : ui.ready}</Notice>
+            <Notice tone={active ? 'success' : 'info'}>
+              {active ? ui.activeNotice : starting ? ui.startingNotice : ui.ready}
+            </Notice>
           </div>
+          {deviceWarning && (
+            <div class="mt-3">
+              <Notice>{deviceWarning}</Notice>
+            </div>
+          )}
           {error && (
             <div class="mt-3">
               <Notice tone="danger">{error}</Notice>

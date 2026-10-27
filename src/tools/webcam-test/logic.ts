@@ -1,5 +1,45 @@
 /** Pure camera-reading and display helpers. Browser camera and canvas work live in webcam.ts. */
 
+interface CameraEnvironment {
+  navigator?: {
+    mediaDevices?: {
+      getUserMedia?: unknown;
+      enumerateDevices?: unknown;
+    };
+  };
+}
+
+export interface CameraCapabilities {
+  test: boolean;
+  selection: boolean;
+}
+
+export type CameraFailureKind =
+  'unsupported' | 'permission' | 'not-found' | 'busy' | 'device-unavailable' | 'preview-timeout' | 'unknown';
+
+/** Detect only the standard capture APIs exposed by current Chrome, Safari, and Firefox. */
+export function getCameraCapabilities(
+  environment: CameraEnvironment = globalThis as CameraEnvironment,
+): CameraCapabilities {
+  const mediaDevices = environment.navigator?.mediaDevices;
+  return {
+    test: typeof mediaDevices?.getUserMedia === 'function',
+    selection: typeof mediaDevices?.enumerateDevices === 'function',
+  };
+}
+
+/** Convert standard Media Capture failures into stable user-facing categories. */
+export function cameraFailureKind(error: unknown): CameraFailureKind {
+  if (error instanceof Error && error.message === 'camera-unsupported') return 'unsupported';
+  if (error instanceof Error && error.message === 'camera-preview-timeout') return 'preview-timeout';
+  const name = error && typeof error === 'object' && 'name' in error ? String(error.name) : '';
+  if (name === 'NotAllowedError' || name === 'SecurityError') return 'permission';
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return 'not-found';
+  if (name === 'NotReadableError' || name === 'AbortError' || name === 'TrackStartError') return 'busy';
+  if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') return 'device-unavailable';
+  return 'unknown';
+}
+
 function dimension(value: number): number {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
 }

@@ -1,6 +1,8 @@
 /** Browser-only webcam capture. Video frames remain in the current browser tab. */
 
-import { frameRateFromSamples } from './logic';
+import { frameRateFromSamples, getCameraCapabilities } from './logic';
+
+export const CAMERA_PREVIEW_TIMEOUT_MS = 10_000;
 
 export interface CameraSession {
   stream: MediaStream;
@@ -17,7 +19,7 @@ interface FrameCallbackVideo {
 }
 
 export async function openCamera(deviceId: string): Promise<CameraSession> {
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('unsupported');
+  if (!getCameraCapabilities().test) throw new Error('camera-unsupported');
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
     video: deviceId ? { deviceId: { exact: deviceId } } : true,
@@ -31,12 +33,27 @@ export async function openCamera(deviceId: string): Promise<CameraSession> {
 }
 
 export async function listCameras(): Promise<MediaDeviceInfo[]> {
-  if (!navigator.mediaDevices?.enumerateDevices) return [];
+  if (!getCameraCapabilities().selection) throw new Error('camera-list-unsupported');
   return (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === 'videoinput');
 }
 
 export function closeCamera(session: CameraSession | null): void {
   session?.stream.getTracks().forEach((track) => track.stop());
+}
+
+/** Avoid leaving the interface in limbo when a driver opens a track but never delivers a frame. */
+export async function playCameraPreview(video: HTMLVideoElement, timeoutMs = CAMERA_PREVIEW_TIMEOUT_MS): Promise<void> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      video.play(),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => reject(new Error('camera-preview-timeout')), Math.max(1, timeoutMs));
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+  }
 }
 
 /** Measure delivered compositor frames when the browser supports video-frame callbacks. */
