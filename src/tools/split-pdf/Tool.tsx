@@ -17,21 +17,26 @@ import type { UI } from './content';
 import {
   chunkPages,
   EncryptedPdfError,
+  InvalidPdfError,
   parseRangeSpec,
   RangeOutOfBoundsError,
   RangeSyntaxError,
   tokensToPageGroups,
   tokensToRangeGroups,
-  type SplitFile,
+  type SplitProgress,
 } from './logic';
-import { readPdfPageCountOffMainThread, splitPdfOffMainThread, zipSplitFilesOffMainThread } from './split';
+import {
+  PdfSplitCancelledError,
+  prepareSplitOffMainThread,
+  readPdfPageCountOffMainThread,
+  type PreparedSplit,
+} from './split';
 
 type Mode = 'range' | 'every';
-type LoadError = 'invalid' | 'encrypted';
+type LoadError = 'invalid' | 'encrypted' | 'failed';
 
 export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
-  const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<LoadError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,48 +48,54 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
 
   const [parseError, setParseError] = useState<string | null>(null);
   const [splitFailed, setSplitFailed] = useState(false);
+  const [splitCancelled, setSplitCancelled] = useState(false);
   const [isSplitting, setIsSplitting] = useState(false);
+  const [progress, setProgress] = useState<SplitProgress | null>(null);
   const [downloadFailed, setDownloadFailed] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [outputs, setOutputs] = useState<SplitFile[] | null>(null);
+  const [output, setOutput] = useState<PreparedSplit | null>(null);
   const runId = useRef(0);
   const loadId = useRef(0);
   const loadAbort = useRef<AbortController | null>(null);
+  const splitAbort = useRef<AbortController | null>(null);
 
   useEffect(
     () => () => {
       loadAbort.current?.abort();
+      splitAbort.current?.abort();
     },
     [],
   );
 
   const loadFile = (picked: File) => {
     const id = ++loadId.current;
+    ++runId.current;
     loadAbort.current?.abort();
+    splitAbort.current?.abort();
+    splitAbort.current = null;
     const controller = new AbortController();
     loadAbort.current = controller;
     setFile(picked);
     setLoadError(null);
+    setSplitCancelled(false);
     setIsLoading(true);
-    setBytes(null);
     setPageCount(null);
     setParseError(null);
     setSplitFailed(false);
     setDownloadFailed(false);
-    setOutputs(null);
+    setOutput(null);
+    setProgress(null);
     void (async () => {
       try {
-        const buf = new Uint8Array(await picked.arrayBuffer());
+        const count = await readPdfPageCountOffMainThread(picked, controller.signal);
         if (loadId.current !== id || controller.signal.aborted) return;
-        const count = await readPdfPageCountOffMainThread(buf, picked.name, controller.signal);
-        if (loadId.current !== id || controller.signal.aborted) return;
-        setBytes(buf);
         setPageCount(count);
         setRangeInput(count > 0 ? `1-${count}` : '');
       } catch (err) {
         if (loadId.current !== id || controller.signal.aborted) return;
         setPageCount(0);
-        setLoadError(err instanceof EncryptedPdfError ? 'encrypted' : 'invalid');
+        setLoadError(
+          err instanceof EncryptedPdfError ? 'encrypted' : err instanceof InvalidPdfError ? 'invalid' : 'failed',
+        );
       } finally {
         if (loadId.current === id) setIsLoading(false);
       }
@@ -93,30 +104,41 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
 
   const clear = () => {
     ++loadId.current;
+    ++runId.current;
     loadAbort.current?.abort();
     loadAbort.current = null;
+    splitAbort.current?.abort();
+    splitAbort.current = null;
     setFile(null);
-    setBytes(null);
     setPageCount(null);
     setLoadError(null);
     setParseError(null);
     setSplitFailed(false);
+    setSplitCancelled(false);
     setIsLoading(false);
     setIsSplitting(false);
+    setProgress(null);
     setDownloadFailed(false);
-    setIsDownloading(false);
-    setOutputs(null);
+    setOutput(null);
   };
 
   // Debounce so re-splitting doesn't run on every keystroke in the range field.
   useEffect(() => {
-    if (!bytes || !file || loadError || pageCount === null || pageCount === 0) return;
+    if (!file || loadError || pageCount === null || pageCount === 0) return;
+    if (splitCancelled) {
+      setIsSplitting(false);
+      setProgress(null);
+      return;
+    }
     const id = ++runId.current;
     const controller = new AbortController();
-    setOutputs(null);
+    splitAbort.current?.abort();
+    splitAbort.current = controller;
+    setOutput(null);
     setSplitFailed(false);
-    setIsSplitting(false);
-    const timeout = setTimeout(() => {
+    setIsSplitting(true);
+    setProgress(null);
+    const timeout = window.setTimeout(() => {
       (async () => {
         let groups: number[][];
         try {
@@ -130,7 +152,9 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
         } catch (err) {
           if (runId.current !== id) return;
           setSplitFailed(false);
-          setOutputs(null);
+          setOutput(null);
+          setIsSplitting(false);
+          setProgress(null);
           if (err instanceof RangeSyntaxError) {
             setParseError(ui.rangeSyntaxError.replace('{part}', err.part));
           } else if (err instanceof RangeOutOfBoundsError) {
@@ -144,45 +168,57 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
         }
 
         setParseError(null);
-        setIsSplitting(true);
+        setProgress({ done: 0, total: groups.length });
         try {
-          const files = await splitPdfOffMainThread(bytes, file.name, groups, controller.signal);
+          const prepared = await prepareSplitOffMainThread(file, groups, {
+            signal: controller.signal,
+            onProgress: (next) => {
+              if (runId.current === id) setProgress(next);
+            },
+          });
           if (runId.current !== id) return;
           setSplitFailed(false);
-          setOutputs(files);
-        } catch {
-          if (controller.signal.aborted) return;
+          setOutput(prepared);
+        } catch (caught) {
+          if (caught instanceof PdfSplitCancelledError || controller.signal.aborted) return;
           if (runId.current !== id) return;
           setSplitFailed(true);
-          setOutputs(null);
+          setOutput(null);
         } finally {
-          if (!controller.signal.aborted && runId.current === id) setIsSplitting(false);
+          if (!controller.signal.aborted && runId.current === id) {
+            setIsSplitting(false);
+            setProgress(null);
+          }
+          if (splitAbort.current === controller) splitAbort.current = null;
         }
       })();
     }, 250);
     return () => {
       controller.abort();
-      clearTimeout(timeout);
+      window.clearTimeout(timeout);
+      if (splitAbort.current === controller) splitAbort.current = null;
     };
-  }, [bytes, file, loadError, pageCount, mode, rangeInput, perPage, everyN, ui]);
+  }, [file, loadError, pageCount, mode, rangeInput, perPage, everyN, splitCancelled, ui]);
 
-  const download = async () => {
-    if (!outputs || outputs.length === 0 || isDownloading) return;
+  const download = () => {
+    if (!output) return;
     setDownloadFailed(false);
-    setIsDownloading(true);
     try {
-      if (outputs.length === 1) {
-        downloadBlob(new Blob([outputs[0].bytes as BlobPart], { type: 'application/pdf' }), outputs[0].name);
-        return;
-      }
-      const zipped = await zipSplitFilesOffMainThread(outputs);
-      const baseName = file ? file.name.replace(/\.pdf$/i, '') : 'split';
-      downloadBlob(new Blob([zipped as BlobPart], { type: 'application/zip' }), `${baseName}_split.zip`);
+      downloadBlob(output.blob, output.downloadName);
     } catch {
       setDownloadFailed(true);
-    } finally {
-      setIsDownloading(false);
     }
+  };
+
+  const cancelSplit = () => {
+    splitAbort.current?.abort();
+    splitAbort.current = null;
+    runId.current++;
+    setOutput(null);
+    setSplitFailed(false);
+    setSplitCancelled(true);
+    setIsSplitting(false);
+    setProgress(null);
   };
 
   return (
@@ -200,7 +236,9 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
           <div class="min-w-0 flex-1">
             <p class="truncate font-medium text-fg">{file.name}</p>
             {loadError ? (
-              <p class="text-danger">{loadError === 'encrypted' ? ui.encryptedPdf : ui.invalidPdf}</p>
+              <p class="text-danger">
+                {loadError === 'encrypted' ? ui.encryptedPdf : loadError === 'invalid' ? ui.invalidPdf : ui.loadFailed}
+              </p>
             ) : (
               <p class="tabular text-muted" aria-live="polite">
                 {formatBytes(file.size, locale)}
@@ -223,7 +261,10 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
           <Segmented
             label={ui.modeLabel}
             value={mode}
-            onValue={setMode}
+            onValue={(value) => {
+              setSplitCancelled(false);
+              setMode(value);
+            }}
             options={[
               { value: 'range', label: ui.modeRange },
               { value: 'every', label: ui.modeEvery },
@@ -236,49 +277,81 @@ export default function SplitPdf({ ui, locale }: ToolProps<UI>) {
                 <input
                   class={inputClass}
                   value={rangeInput}
-                  onInput={(e) => setRangeInput((e.currentTarget as HTMLInputElement).value)}
+                  onInput={(e) => {
+                    setSplitCancelled(false);
+                    setRangeInput((e.currentTarget as HTMLInputElement).value);
+                  }}
                   placeholder={ui.rangePlaceholder}
                   spellcheck={false}
                 />
               </Field>
-              <Toggle checked={perPage} onChecked={setPerPage} label={ui.perPageToggle} />
+              <Toggle
+                checked={perPage}
+                onChecked={(checked) => {
+                  setSplitCancelled(false);
+                  setPerPage(checked);
+                }}
+                label={ui.perPageToggle}
+              />
             </div>
           ) : (
             <Field label={ui.everyLabel} hint={ui.everyHint}>
-              <NumberInput value={everyN} onValue={setEveryN} min={1} max={pageCount} />
+              <NumberInput
+                value={everyN}
+                onValue={(value) => {
+                  setSplitCancelled(false);
+                  setEveryN(value);
+                }}
+                min={1}
+                max={pageCount}
+              />
             </Field>
           )}
 
           {parseError && <Notice tone="danger">{parseError}</Notice>}
-          {isSplitting && <Notice>{ui.splitting}</Notice>}
           {splitFailed && <Notice tone="danger">{ui.splitFailed}</Notice>}
           {downloadFailed && <Notice tone="danger">{ui.downloadFailed}</Notice>}
 
-          {outputs && outputs.length > 0 && (
+          {splitCancelled && (
+            <div class="flex flex-wrap items-center gap-3">
+              <Notice>{ui.splitCancelled}</Notice>
+              <Button variant="secondary" onClick={() => setSplitCancelled(false)}>
+                {ui.resumeSplit}
+              </Button>
+            </div>
+          )}
+
+          {output && output.files.length > 0 && (
             <ul class="divide-y divide-line rounded-lg border border-line" aria-live="polite">
-              {outputs.map((o) => (
+              {output.files.map((o) => (
                 <li key={o.name} class="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                   <span class="truncate font-medium text-fg">{o.name}</span>
-                  <span class="shrink-0 tabular text-muted">{formatBytes(o.bytes.length, locale)}</span>
+                  <span class="shrink-0 tabular text-muted">{formatBytes(o.size, locale)}</span>
                 </li>
               ))}
             </ul>
           )}
 
           <div class="flex flex-wrap items-center gap-3">
-            <Button
-              variant="primary"
-              size="lg"
-              disabled={!outputs || outputs.length === 0 || isDownloading}
-              onClick={download}
-            >
-              {isDownloading ? ui.preparingDownload : outputs && outputs.length > 1 ? ui.downloadZip : ui.download}
+            <Button variant="primary" size="lg" disabled={!output} onClick={download}>
+              {output && output.files.length > 1 ? ui.downloadZip : ui.download}
             </Button>
-            {outputs && outputs.length > 0 && (
-              <span class="text-sm tabular text-muted" aria-live="polite">
-                {ui.fileCount.replace('{n}', String(outputs.length))}
-              </span>
+            {isSplitting && (
+              <Button variant="ghost" onClick={cancelSplit}>
+                {ui.cancel}
+              </Button>
             )}
+            {isSplitting ? (
+              <span class="text-sm text-muted" role="status" aria-live="polite" aria-busy="true">
+                {progress && progress.done > 0
+                  ? ui.splitProgress.replace('{done}', String(progress.done)).replace('{total}', String(progress.total))
+                  : ui.splitting}
+              </span>
+            ) : output && output.files.length > 0 ? (
+              <span class="text-sm tabular text-muted" aria-live="polite">
+                {ui.fileCount.replace('{n}', String(output.files.length))}
+              </span>
+            ) : null}
           </div>
         </div>
       )}
