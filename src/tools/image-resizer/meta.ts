@@ -36,5 +36,6 @@ export const meta: ToolMeta = {
     'video-to-gif',
     'image-to-text',
     'image-to-base64',
+    'svg-to-png',
   ],
 };

@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean search result promises image or text favicons from 16×16 to 256×256 (Strength: it covers a 256px web icon), but it does not advertise the Apple 180×180 plus Android/PWA 192×192 and 512×512 package, manifest, and install snippet that Betterbit provides together.',
     },
   ],
-  related: ['image-resizer', 'image-converter', 'qr-code-generator', 'image-to-base64'],
+  related: ['image-resizer', 'image-converter', 'qr-code-generator', 'image-to-base64', 'svg-to-png'],
 };
