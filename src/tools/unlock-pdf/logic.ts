@@ -22,15 +22,44 @@ export function unlockArgs(password: string): string[] {
   return [`--password=${password}`, '--decrypt', '--', 'input.pdf', 'output.pdf'];
 }
 
-export type UnlockFailure = 'password' | 'unsupported' | 'invalid' | 'memory' | 'failed';
+export type UnlockFailure = 'password' | 'unsupported' | 'invalid' | 'timeout' | 'memory' | 'failed';
+
+/** Preserve qpdf's useful stderr without coupling the UI to qpdf-run's error class. */
+export function unlockFailureDiagnostic(caught: unknown): string {
+  if (!(caught instanceof Error)) return String(caught);
+  const detailed = caught as Error & { code?: unknown; stdout?: unknown; stderr?: unknown; warnings?: unknown };
+  const lines = [
+    caught.message,
+    typeof detailed.code === 'string' ? detailed.code : '',
+    ...(Array.isArray(detailed.stdout)
+      ? detailed.stdout.filter((line): line is string => typeof line === 'string')
+      : []),
+    ...(Array.isArray(detailed.stderr)
+      ? detailed.stderr.filter((line): line is string => typeof line === 'string')
+      : []),
+    ...(Array.isArray(detailed.warnings)
+      ? detailed.warnings.filter((line): line is string => typeof line === 'string')
+      : []),
+  ];
+  return lines.join('\n');
+}
 
 /** Maps qpdf's technical diagnostics to a useful, non-secret-bearing UI state. */
 export function classifyUnlockFailure(message: string): UnlockFailure {
   const lower = message.toLowerCase();
   if (lower.includes('invalid password') || lower.includes('password is incorrect')) return 'password';
-  if (lower.includes('not a pdf') || lower.includes('damaged') || lower.includes('unable to find')) return 'invalid';
+  if (
+    lower.includes('not a pdf') ||
+    lower.includes('pdf header') ||
+    lower.includes('xref') ||
+    lower.includes('trailer') ||
+    lower.includes('damaged') ||
+    lower.includes('unable to find')
+  )
+    return 'invalid';
   if (lower.includes('encryption') || lower.includes('unsupported') || lower.includes('not supported'))
     return 'unsupported';
-  if (lower.includes('memory') || lower.includes('out of bounds') || lower.includes('timeout')) return 'memory';
+  if (lower.includes('timeout') || lower.includes('timed out') || lower.includes('qpdf_timeout')) return 'timeout';
+  if (lower.includes('memory') || lower.includes('out of bounds') || lower.includes('oom')) return 'memory';
   return 'failed';
 }

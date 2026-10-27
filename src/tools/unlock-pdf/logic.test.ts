@@ -4,6 +4,7 @@ import {
   fileExceedsLimit,
   isPdfFile,
   MAX_FILE_BYTES,
+  unlockFailureDiagnostic,
   unlockedPdfFileName,
   unlockArgs,
 } from './logic';
@@ -42,9 +43,25 @@ describe('unlock-pdf', () => {
 
   it('turns qpdf failures into actionable states without exposing the password', () => {
     expect(classifyUnlockFailure('qpdf: invalid password')).toBe('password');
-    expect(classifyUnlockFailure('file is damaged')).toBe('invalid');
+    expect(classifyUnlockFailure('WARNING: file is damaged; unable to find trailer dictionary')).toBe('invalid');
     expect(classifyUnlockFailure('unsupported encryption filter')).toBe('unsupported');
+    expect(classifyUnlockFailure('QPDF_TIMEOUT: worker timed out')).toBe('timeout');
     expect(classifyUnlockFailure('WebAssembly out of bounds memory access')).toBe('memory');
     expect(classifyUnlockFailure('unexpected worker error')).toBe('failed');
+  });
+
+  it('includes qpdf stderr and its error code when classifying a failed run', () => {
+    const error = Object.assign(new Error('qpdf exited with status 2'), {
+      code: 'QPDF_EXEC_FAILED',
+      stdout: ['qpdf diagnostic output'],
+      stderr: ['qpdf: input.pdf: invalid password'],
+      warnings: ['warning detail'],
+    });
+    const diagnostic = unlockFailureDiagnostic(error);
+    expect(diagnostic).toContain('QPDF_EXEC_FAILED');
+    expect(diagnostic).toContain('qpdf diagnostic output');
+    expect(diagnostic).toContain('invalid password');
+    expect(diagnostic).toContain('warning detail');
+    expect(classifyUnlockFailure(diagnostic)).toBe('password');
   });
 });
