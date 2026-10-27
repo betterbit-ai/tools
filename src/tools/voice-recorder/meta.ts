@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean search result shows a local recording list with playback, duration and file size after stopping (Strength: it can keep multiple recordings in one session). Betterbit keeps a single-take capture flow and makes the MP3 conversion and download state explicit immediately after Stop.',
     },
   ],
-  related: ['mic-test', 'audio-cutter', 'speaker-test', 'video-compressor', 'screen-recorder'],
+  related: ['mic-test', 'audio-cutter', 'video-to-mp3', 'speaker-test', 'video-compressor', 'screen-recorder'],
 };
