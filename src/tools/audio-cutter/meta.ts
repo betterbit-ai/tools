@@ -70,6 +70,6 @@ export const meta: ToolMeta = {
         'Its Korean pricing page says free use is limited to 35 files per day and shows ads, while a Korean search result describes the service upload flow and up to 12-hour retention. (Strength: it supports many input formats, fades and an M4R ringtone preset.) Betterbit reads only a local MP3 and produces the download without a service quota or transfer.',
     },
   ],
-  related: ['video-to-gif', 'video-compressor', 'metronome', 'speaker-test', 'voice-recorder'],
+  related: ['video-to-gif', 'video-compressor', 'video-to-mp3', 'metronome', 'speaker-test', 'voice-recorder'],
   variants,
 };
