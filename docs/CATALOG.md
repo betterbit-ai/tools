@@ -37,7 +37,7 @@
 | image-upscaler        | 이미지 업스케일        | upscale image / 사진 화질 개선                                 | 온디바이스 AI 모델(지연 로드), 2×·4× 비교                                                 | P0  | live |
 | favicon-generator     | 파비콘 생성            | favicon generator                                              | 모든 사이즈 + manifest + 코드 스니펫                                                      | P1  | live |
 | image-to-base64       | 이미지 → Base64        | image to base64                                                | data URI + CSS/HTML 스니펫                                                                | P2  | live |
-| svg-to-png            | SVG → PNG              | svg to png                                                     | 배율 지정, 투명 배경                                                                      | P2  | todo |
+| svg-to-png            | SVG → PNG              | svg to png                                                     | 배율 지정, 투명 배경                                                                      | P2  | live |
 | image-blur-pixelate   | 모자이크·블러          | blur image / 모자이크 처리                                     | 영역 선택 모자이크(개인정보 가리기)                                                       | P1  | live |
 | passport-photo        | 증명사진 규격          | passport photo / 여권사진 사이즈                               | 국가별 규격 프리셋, 인화용 배치                                                           | P1  | live |
 | gif-maker             | GIF 만들기             | gif maker / 움짤 만들기                                        | 이미지 → GIF, 프레임 속도                                                                 | P2  | todo |

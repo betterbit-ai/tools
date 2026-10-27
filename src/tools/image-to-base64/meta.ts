@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean search result offers a prefix toggle and snippet selector, but does not describe editable alt text, CSS selector naming, or an encoded-character count next to the output. (Strength: it supports reverse conversion and download.)',
     },
   ],
-  related: ['image-resizer', 'image-compressor', 'image-converter', 'favicon-generator'],
+  related: ['image-resizer', 'image-compressor', 'image-converter', 'favicon-generator', 'svg-to-png'],
 };
