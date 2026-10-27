@@ -33,5 +33,5 @@ export const meta: ToolMeta = {
         '페이지에 쿠팡 파트너스 제휴 광고가 명시적으로 포함되어 있다고 안내하며, 실제 쿠팡 상품 배너가 테스트 화면 옆에 노출된다. (Strength: 모바일 최적화와 S~D 등급 판정.)',
     },
   ],
-  related: ['keyboard-tester', 'mic-test', 'word-counter', 'stopwatch'],
+  related: ['keyboard-tester', 'mic-test', 'word-counter', 'stopwatch', 'click-speed-test'],
 };

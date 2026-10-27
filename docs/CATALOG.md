@@ -203,18 +203,18 @@
 
 검색량이 매우 크고, 브라우저 API로 100% 구현할 수 있으며, 광고가 많은 경쟁 사이트가 대부분이다.
 
-| slug               | 도구            | 핵심 키워드                          | Edge 아이디어                   | P   | 상태 |
-| ------------------ | --------------- | ------------------------------------ | ------------------------------- | --- | ---- |
-| mic-test           | 마이크 테스트   | mic test / 마이크 테스트             | 레벨 미터, 녹음 재생, 장치 선택 | P0  | live |
-| webcam-test        | 웹캠 테스트     | webcam test / 웹캠 테스트            | 해상도, FPS 표시, 스냅샷        | P0  | live |
-| keyboard-tester    | 키보드 테스트   | keyboard test / 키보드 테스트        | 레이아웃 선택, 동시 입력(NKRO)  | P0  | live |
-| mouse-test         | 마우스 테스트   | mouse test / 더블클릭 테스트         | 더블클릭 오작동 감지            | P1  | live |
-| dead-pixel-test    | 불량화소 테스트 | dead pixel test / 불량화소           | 전체화면 색 순환                | P1  | live |
-| speaker-test       | 스피커 테스트   | speaker test / 좌우 스피커 테스트    | 좌우, 주파수 스윕               | P1  | live |
-| typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM             | P0  | live |
-| refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                               | P2  | todo |
-| click-speed-test   | 클릭 속도       | cps test                             | —                               | P2  | todo |
-| reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                    | P2  | todo |
+| slug               | 도구            | 핵심 키워드                          | Edge 아이디어                    | P   | 상태 |
+| ------------------ | --------------- | ------------------------------------ | -------------------------------- | --- | ---- |
+| mic-test           | 마이크 테스트   | mic test / 마이크 테스트             | 레벨 미터, 녹음 재생, 장치 선택  | P0  | live |
+| webcam-test        | 웹캠 테스트     | webcam test / 웹캠 테스트            | 해상도, FPS 표시, 스냅샷         | P0  | live |
+| keyboard-tester    | 키보드 테스트   | keyboard test / 키보드 테스트        | 레이아웃 선택, 동시 입력(NKRO)   | P0  | live |
+| mouse-test         | 마우스 테스트   | mouse test / 더블클릭 테스트         | 더블클릭 오작동 감지             | P1  | live |
+| dead-pixel-test    | 불량화소 테스트 | dead pixel test / 불량화소           | 전체화면 색 순환                 | P1  | live |
+| speaker-test       | 스피커 테스트   | speaker test / 좌우 스피커 테스트    | 좌우, 주파수 스윕                | P1  | live |
+| typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM              | P0  | live |
+| refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                                | P2  | todo |
+| click-speed-test   | 클릭 속도       | cps test                             | 키보드 조작, 로컬 개인 최고 기록 | P2  | live |
+| reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                     | P2  | todo |
 
 ## color: 색상·디자인 (신규 카테고리)
 
