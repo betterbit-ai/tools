@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its current Korean result opens a broad configuration surface with custom time, rounds, pad size, sound, effects, contrast and left-handed settings around the first run. Betterbit makes the quick path only five duration choices, one test pad, clear fixed-time results and Tab/Space/Enter operation. (Strength: it offers custom durations up to 600 seconds, input modes, many visual settings and shareable challenges.)',
     },
   ],
-  related: ['mouse-test', 'keyboard-tester', 'typing-test'],
+  related: ['mouse-test', 'keyboard-tester', 'typing-test', 'reaction-time-test'],
 };
