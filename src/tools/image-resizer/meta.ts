@@ -35,5 +35,6 @@ export const meta: ToolMeta = {
     'image-watermark',
     'video-to-gif',
     'image-to-text',
+    'image-to-base64',
   ],
 };
