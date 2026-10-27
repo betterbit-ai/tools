@@ -16,6 +16,7 @@ import { breadcrumbLd, faqLd, webAppLd } from '../../lib/seo';
 import { CATEGORIES } from '../../tools/categories';
 import { getToolData } from '../../tools/data';
 import type { ToolModule, ToolVariant } from '../../tools/types';
+import { RECENT_TOOLS_MAX, RECENT_TOOLS_STORAGE_KEY } from '../../lib/recentTools';
 
 interface Props {
   tool: ToolModule;
@@ -163,4 +164,26 @@ const jsonLd = [
 
     <p class="mt-10 text-xs text-subtle">{t(locale, 'tool.updated', { date: meta.updated })}</p>
   </div>
+  <script
+    is:inline
+    data-recent-tool={meta.slug}
+    data-recent-tools-key={RECENT_TOOLS_STORAGE_KEY}
+    data-recent-tools-max={RECENT_TOOLS_MAX}
+  >
+    (() => {
+      const script = document.currentScript;
+      const slug = script?.dataset.recentTool;
+      const key = script?.dataset.recentToolsKey;
+      const max = Number(script?.dataset.recentToolsMax);
+      if (!slug || !key || !max) return;
+
+      try {
+        const stored = JSON.parse(localStorage.getItem(key) || '[]');
+        const recent = Array.isArray(stored) ? stored.filter((item) => typeof item === 'string' && item !== slug) : [];
+        localStorage.setItem(key, JSON.stringify([slug, ...recent].slice(0, max)));
+      } catch {
+        // Storage can be unavailable in private browsing or when blocked by the user.
+      }
+    })();
+  </script>
 </BaseLayout>

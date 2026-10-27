@@ -10,7 +10,13 @@ import { buildSearchIndex } from '../src/lib/searchIndex';
 import { CATEGORY_IDS, type CategoryId } from '../src/tools/categories';
 import type { ToolData } from '../src/tools/data';
 import { TOOL_DATA } from '../src/tools/data';
-import { HOME_CATEGORY_PREVIEW, homeCategorySections, popularTools, sortByLocalizedName } from '../src/tools/home';
+import {
+  HOME_CATEGORY_PREVIEW,
+  homeCategorySections,
+  popularTools,
+  recentToolsIndex,
+  sortByLocalizedName,
+} from '../src/tools/home';
 import { POPULAR_SLUGS } from '../src/tools/popular';
 import type { ToolContent } from '../src/tools/types';
 
@@ -20,6 +26,20 @@ describe('popular row', () => {
     expect(new Set(POPULAR_SLUGS).size).toBe(POPULAR_SLUGS.length);
     const slugs = new Set(TOOL_DATA.map((t) => t.meta.slug));
     for (const slug of POPULAR_SLUGS) expect(slugs.has(slug), `popular slug "${slug}" does not exist`).toBe(true);
+  });
+});
+
+describe('recent tools index', () => {
+  it('uses the active locale for names and links', () => {
+    const tool = TOOL_DATA[0];
+
+    for (const locale of LOCALES) {
+      const entry = recentToolsIndex([tool], locale)[0];
+      expect(entry.slug).toBe(tool.meta.slug);
+      expect(entry.name).toBe(tool.content[locale].name);
+      expect(entry.tagline).toBe(tool.content[locale].tagline);
+      expect(entry.url).toBe(locale === 'en' ? `/${tool.meta.slug}` : `/${locale}/${tool.meta.slug}`);
+    }
   });
 });
 
