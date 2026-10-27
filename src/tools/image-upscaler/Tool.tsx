@@ -16,7 +16,7 @@ import {
   validateInput,
   type Scale,
 } from './logic';
-import { readImageDimensions, upscaleImage, type UpscaleProgress } from './upscale';
+import { readImageDimensions, upscaleImage, UpscaleError, type UpscaleProgress } from './upscale';
 
 type OutputFormat = 'image/png' | 'image/jpeg' | 'image/webp';
 
@@ -159,7 +159,15 @@ export default function ImageUpscaler({ locale, ui }: ToolProps<UI>) {
         setComparison('after');
       }
     } catch (cause) {
-      if (!(cause instanceof DOMException && cause.name === 'AbortError')) setError(ui.errorProcess);
+      if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
+        setError(
+          cause instanceof UpscaleError && cause.code === 'model'
+            ? ui.errorModel
+            : cause instanceof UpscaleError && cause.code === 'format'
+              ? ui.errorFormat
+              : ui.errorProcess,
+        );
+      }
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null;
