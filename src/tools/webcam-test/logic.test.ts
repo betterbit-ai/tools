@@ -1,13 +1,49 @@
 import { describe, expect, it } from 'vitest';
 import {
   aspectRatioLabel,
+  cameraFailureKind,
   deviceLabel,
   frameRateFromSamples,
   frameRateLabel,
+  getCameraCapabilities,
   isCurrentCameraRequest,
   resolutionLabel,
   snapshotFilename,
 } from './logic';
+
+describe('camera browser support and failures', () => {
+  it('requires standard video capture but detects optional device selection separately', () => {
+    expect(
+      getCameraCapabilities({
+        navigator: {
+          mediaDevices: {
+            getUserMedia: () => Promise.resolve({} as MediaStream),
+            enumerateDevices: () => Promise.resolve([]),
+          },
+        },
+      }),
+    ).toEqual({ test: true, selection: true });
+
+    expect(
+      getCameraCapabilities({
+        navigator: { mediaDevices: { getUserMedia: () => Promise.resolve({} as MediaStream) } },
+      }),
+    ).toEqual({ test: true, selection: false });
+    expect(getCameraCapabilities({})).toEqual({ test: false, selection: false });
+  });
+
+  it('distinguishes denied, missing, busy, stale-device, and stalled-preview failures', () => {
+    expect(cameraFailureKind(new Error('camera-unsupported'))).toBe('unsupported');
+    expect(cameraFailureKind(new DOMException('', 'NotAllowedError'))).toBe('permission');
+    expect(cameraFailureKind(new DOMException('', 'SecurityError'))).toBe('permission');
+    expect(cameraFailureKind(new DOMException('', 'NotFoundError'))).toBe('not-found');
+    expect(cameraFailureKind(new DOMException('', 'NotReadableError'))).toBe('busy');
+    expect(cameraFailureKind(new DOMException('', 'AbortError'))).toBe('busy');
+    expect(cameraFailureKind(new DOMException('', 'OverconstrainedError'))).toBe('device-unavailable');
+    expect(cameraFailureKind(new Error('camera-preview-timeout'))).toBe('preview-timeout');
+    expect(cameraFailureKind(new Error('unexpected'))).toBe('unknown');
+  });
+});
 
 describe('camera display helpers', () => {
   it('formats negotiated dimensions and reduces common camera aspect ratios', () => {
