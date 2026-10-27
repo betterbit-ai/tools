@@ -1,3 +1,4 @@
+import { yieldToBrowser } from '../../lib/browser';
 import { splitSpeechText, type SpeechSettings } from './logic';
 
 export interface LocalVoice {
@@ -10,7 +11,7 @@ export interface LocalVoice {
 export interface SpeechCallbacks {
   onProgress: (index: number, total: number) => void;
   onEnd: () => void;
-  onError: () => void;
+  onError: (error: string) => void;
 }
 
 /** The browser reports local service voices; network voices are deliberately excluded. */
@@ -24,7 +25,18 @@ export function getLocalVoices(): LocalVoice[] {
 }
 
 export function isSupported(): boolean {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  if (typeof window === 'undefined' || typeof window.SpeechSynthesisUtterance !== 'function') return false;
+  const synthesis = window.speechSynthesis;
+  return (
+    !!synthesis &&
+    typeof synthesis.getVoices === 'function' &&
+    typeof synthesis.speak === 'function' &&
+    typeof synthesis.pause === 'function' &&
+    typeof synthesis.resume === 'function' &&
+    typeof synthesis.cancel === 'function' &&
+    typeof synthesis.addEventListener === 'function' &&
+    typeof synthesis.removeEventListener === 'function'
+  );
 }
 
 /** A single sequential queue avoids long-utterance cut-offs in browser speech engines. */
@@ -46,24 +58,48 @@ export class SpeechSession {
 
   start(): void {
     if (!this.chunks.length || !this.voice || !isSupported()) {
-      this.callbacks.onError();
+      this.fail(!this.voice ? 'voice-unavailable' : 'synthesis-unavailable');
       return;
     }
-    window.speechSynthesis.cancel();
-    this.speakNext();
+    try {
+      window.speechSynthesis.cancel();
+      this.speakNext();
+    } catch {
+      this.fail('synthesis-failed');
+    }
   }
 
-  pause(): void {
-    window.speechSynthesis.pause();
+  pause(): boolean {
+    try {
+      if (!isSupported()) throw new Error('Speech synthesis unavailable');
+      window.speechSynthesis.pause();
+      return true;
+    } catch {
+      this.fail('synthesis-failed');
+      return false;
+    }
   }
 
-  resume(): void {
-    window.speechSynthesis.resume();
+  resume(): boolean {
+    try {
+      if (!isSupported()) throw new Error('Speech synthesis unavailable');
+      window.speechSynthesis.resume();
+      return true;
+    } catch {
+      this.fail('synthesis-failed');
+      return false;
+    }
   }
 
-  stop(): void {
+  stop(): boolean {
     this.stopped = true;
-    window.speechSynthesis.cancel();
+    try {
+      if (!isSupported()) return false;
+      window.speechSynthesis.cancel();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private speakNext(): void {
@@ -72,23 +108,44 @@ export class SpeechSession {
       this.callbacks.onEnd();
       return;
     }
-    const utterance = new SpeechSynthesisUtterance(this.chunks[this.index]);
-    utterance.lang = this.voice!.lang;
-    utterance.voice =
-      window.speechSynthesis.getVoices().find((voice) => voice.voiceURI === this.voice!.voiceURI) ?? null;
-    utterance.rate = this.settings.rate;
-    utterance.pitch = this.settings.pitch;
-    utterance.volume = this.settings.volume;
-    utterance.onend = () => {
-      if (this.stopped) return;
-      this.index += 1;
+    try {
+      const browserVoice = window.speechSynthesis
+        .getVoices()
+        .find((voice) => voice.voiceURI === this.voice!.voiceURI && voice.localService);
+      if (!browserVoice) {
+        this.fail('voice-unavailable');
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(this.chunks[this.index]);
+      utterance.lang = browserVoice.lang;
+      utterance.voice = browserVoice;
+      utterance.rate = this.settings.rate;
+      utterance.pitch = this.settings.pitch;
+      utterance.volume = this.settings.volume;
+      utterance.onend = () => {
+        if (this.stopped) return;
+        this.index += 1;
+        this.callbacks.onProgress(this.index, this.chunks.length);
+        void this.continueAfterYield();
+      };
+      utterance.onerror = (event) => {
+        if (!this.stopped) this.fail(event.error || 'synthesis-failed');
+      };
       this.callbacks.onProgress(this.index, this.chunks.length);
-      this.speakNext();
-    };
-    utterance.onerror = () => {
-      if (!this.stopped) this.callbacks.onError();
-    };
-    this.callbacks.onProgress(this.index, this.chunks.length);
-    window.speechSynthesis.speak(utterance);
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      this.fail('synthesis-failed');
+    }
+  }
+
+  private async continueAfterYield(): Promise<void> {
+    await yieldToBrowser();
+    if (!this.stopped) this.speakNext();
+  }
+
+  private fail(error: string): void {
+    if (this.stopped) return;
+    this.stopped = true;
+    this.callbacks.onError(error);
   }
 }

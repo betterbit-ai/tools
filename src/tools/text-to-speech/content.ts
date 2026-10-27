@@ -29,7 +29,12 @@ const uiEn = {
     'Speech synthesis is not available in this browser. Try a current browser with device text-to-speech voices.',
   noLocalVoices:
     'No local device voice is available. Install a voice in your operating-system accessibility or language settings, then reload this page.',
-  playbackError: 'Playback stopped unexpectedly. Choose another local voice or shorten the text and try again.',
+  voiceListError: 'The browser could not load its voice list. Reload the page, then try again.',
+  voiceUnavailable: 'The selected local voice is no longer available. Choose another local voice and try again.',
+  stopFailed: 'The browser did not confirm that speech stopped. Use your device audio controls or reload the page.',
+  playbackBlocked: 'The browser blocked speech playback. Select Play again to allow sound.',
+  audioUnavailable: 'The browser cannot use speech audio right now. Check the device audio output, then try again.',
+  playbackError: 'Speech playback failed in the browser. Choose another local voice and try again.',
   characters: 'Characters',
   estimatedTime: 'Estimated time',
   noTime: '—',
@@ -43,7 +48,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
   en: {
     title: 'Text to Speech — Local Device Voices',
     description:
-      'Read text aloud with local voices already installed on your device. Adjust speed, pitch, and volume with no account, ads, text upload, or cloud-voice fallback.',
+      'Read text aloud with local voices already installed on your device. Adjust speed, pitch, and volume without an account, text upload, or cloud-voice fallback.',
     h1: 'Text to Speech',
     tagline: 'Listen with local device voices, not a text-upload form.',
     name: 'Text to Speech',
@@ -170,7 +175,14 @@ export const content: Record<Locale, ToolContent<UI>> = {
         '이 브라우저에서는 음성 합성을 사용할 수 없습니다. 기기 내 텍스트 음성 변환을 지원하는 최신 브라우저에서 시도하세요.',
       noLocalVoices:
         '사용할 수 있는 로컬 기기 음성이 없습니다. 운영체제의 손쉬운 사용 또는 언어 설정에서 음성을 설치한 뒤 이 페이지를 새로고침하세요.',
-      playbackError: '재생이 예기치 않게 멈췄습니다. 다른 로컬 음성을 선택하거나 텍스트를 짧게 나누어 다시 시도하세요.',
+      voiceListError: '브라우저에서 음성 목록을 불러오지 못했습니다. 페이지를 새로고침한 뒤 다시 시도하세요.',
+      voiceUnavailable: '선택한 로컬 음성을 더 이상 사용할 수 없습니다. 다른 로컬 음성을 선택한 뒤 다시 시도하세요.',
+      stopFailed:
+        '브라우저에서 음성 중지를 확인하지 못했습니다. 기기 오디오 제어를 사용하거나 페이지를 새로고침하세요.',
+      playbackBlocked: '브라우저가 음성 재생을 차단했습니다. 소리를 허용하려면 재생을 다시 누르세요.',
+      audioUnavailable:
+        '현재 브라우저에서 음성 오디오를 사용할 수 없습니다. 기기 오디오 출력을 확인한 뒤 다시 시도하세요.',
+      playbackError: '브라우저에서 음성 재생에 실패했습니다. 다른 로컬 음성을 선택한 뒤 다시 시도하세요.',
       characters: '글자수',
       estimatedTime: '예상 시간',
       noTime: '—',
