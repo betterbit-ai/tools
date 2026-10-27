@@ -6,9 +6,11 @@ const uiEn = {
   dropHint: 'One file — split it into as many parts as you like',
   pageCount: '{n} page(s)',
   processing: 'Reading…',
-  splitting: 'Splitting your PDF…',
+  splitting: 'Preparing the split…',
+  splitProgress: 'Splitting part {done} of {total}',
   invalidPdf: "Can't be read — this file isn't a valid PDF.",
   encryptedPdf: "Password-protected — can't be split until it's unlocked.",
+  loadFailed: "Couldn't open this PDF in a background worker. Try reloading the page in a current browser.",
   remove: 'Remove',
   modeLabel: 'Split mode',
   modeRange: 'Range',
@@ -21,8 +23,10 @@ const uiEn = {
   everyHint: 'The PDF is cut into consecutive chunks of this many pages.',
   rangeSyntaxError: '"{part}" isn\'t a valid page or range. Use numbers like "1-3, 5".',
   rangeOutOfBounds: 'Page {page} is out of range — this PDF only has {n} pages.',
-  splitFailed:
-    "Couldn't split this PDF — it may be too large for your browser's available memory. Try a smaller range.",
+  splitFailed: "Couldn't split this PDF. Your browser may be short on memory; try fewer or larger page ranges.",
+  splitCancelled: 'Split cancelled. Your original PDF is still available.',
+  resumeSplit: 'Resume splitting',
+  cancel: 'Cancel',
   downloadFailed: "Couldn't prepare the download. Try again or split the PDF into fewer files.",
   download: 'Download PDF',
   downloadZip: 'Download ZIP',
@@ -66,7 +70,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Large PDFs stay in your browser',
-        body: 'This tool does not impose a file-size or page-count limit before processing. A large PDF still needs enough memory for the original and every output file, so splitting a long image scan into fewer, larger ranges is more reliable than creating hundreds of one-page files. Reading, splitting and ZIP preparation run in a browser worker to keep the page responsive while the document is being processed.',
+        body: 'This tool does not impose a file-size or page-count limit before processing. A large PDF still needs enough memory for the source and finished download, so splitting a long image scan into fewer, larger ranges is more reliable than creating hundreds of one-page files. Reading, splitting and ZIP preparation run in a browser worker; progress is shown for every finished part, and you can cancel without losing the source file. ZIP entries are added one at a time instead of retaining a second full set of output PDFs in the page.',
       },
       {
         heading: 'Password-protected PDFs',
@@ -88,7 +92,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Is there a limit on file size or number of pages?',
-        a: 'This tool does not set a file-size or page-count limit. The practical ceiling is available browser memory, because the original PDF and its output files must fit on your device; for a very large scan, choose fewer and larger page ranges.',
+        a: 'This tool does not set a file-size or page-count limit. The practical ceiling is available browser memory, because the source PDF and finished PDF or ZIP must fit on your device; for a very large scan, choose fewer and larger page ranges.',
       },
       {
         q: 'Can I split a password-protected PDF?',
@@ -126,7 +130,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '큰 PDF도 기기 안에서 처리합니다',
-        body: '이 도구는 파일 크기나 페이지 수를 미리 제한하지 않습니다. 다만 원본 PDF와 결과 파일을 모두 메모리에 올려야 하므로, 이미지가 많은 긴 스캔 문서는 한 장씩 수백 개로 나누기보다 더 큰 범위 몇 개로 나누는 편이 안정적입니다. PDF 읽기·분할·ZIP 만들기는 브라우저 워커에서 처리되어, 작업 중에도 페이지 조작은 멈추지 않습니다.',
+        body: '이 도구는 파일 크기나 페이지 수를 미리 제한하지 않습니다. 다만 원본 PDF와 완성된 다운로드 파일이 브라우저 메모리에 들어가야 하므로, 이미지가 많은 긴 스캔 문서는 한 장씩 수백 개로 나누기보다 더 큰 범위 몇 개로 나누는 편이 안정적입니다. PDF 읽기·분할·ZIP 만들기는 브라우저 워커에서 처리되고, 파일 하나가 끝날 때마다 진행 상황을 표시합니다. 작업을 취소해도 원본은 남아 있으며, ZIP에는 결과 PDF를 한 번에 하나씩 넣어 페이지가 모든 결과와 ZIP을 동시에 들고 있지 않습니다.',
       },
       {
         heading: '암호가 걸린 PDF는',
@@ -148,7 +152,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '파일 용량이나 페이지 수 제한이 있나요?',
-        a: '이 도구는 파일 크기나 페이지 수에 고정된 제한을 두지 않습니다. 다만 원본과 결과 파일이 모두 기기의 브라우저 메모리에 들어가야 하므로, 아주 큰 스캔 문서는 더 적고 큰 페이지 범위로 나누는 편이 좋습니다.',
+        a: '이 도구는 파일 크기나 페이지 수에 고정된 제한을 두지 않습니다. 다만 원본 PDF와 완성된 PDF 또는 ZIP이 기기의 브라우저 메모리에 들어가야 하므로, 아주 큰 스캔 문서는 더 적고 큰 페이지 범위로 나누는 편이 좋습니다.',
       },
       {
         q: '암호가 걸린 PDF도 나눌 수 있나요?',
@@ -164,9 +168,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dropHint: '파일 1개 — 원하는 개수만큼 나눌 수 있어요',
       pageCount: '{n}페이지',
       processing: '읽는 중…',
-      splitting: 'PDF를 나누는 중…',
+      splitting: '분할 준비 중…',
+      splitProgress: '{total}개 중 {done}번째 파일 분할 중',
       invalidPdf: '읽을 수 없음 — 올바른 PDF 파일이 아닙니다.',
       encryptedPdf: '암호 보호됨 — 잠금을 해제해야 나눌 수 있습니다.',
+      loadFailed: '백그라운드 작업에서 PDF를 열지 못했습니다. 최신 브라우저에서 페이지를 새로고침해 보세요.',
       remove: '삭제',
       modeLabel: '분할 방식',
       modeRange: '범위',
@@ -180,7 +186,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       rangeSyntaxError: '"{part}"은 올바른 페이지·범위 형식이 아닙니다. "1-3, 5"처럼 입력하세요.',
       rangeOutOfBounds: '{page}페이지는 범위를 벗어났습니다 — 이 PDF는 총 {n}페이지입니다.',
       splitFailed:
-        'PDF를 나누지 못했습니다 — 브라우저가 처리할 수 있는 메모리보다 클 수 있습니다. 범위를 줄여서 다시 시도해 보세요.',
+        'PDF를 나누지 못했습니다. 브라우저 메모리가 부족할 수 있으니 파일 수를 줄이거나 더 큰 범위로 다시 시도해 보세요.',
+      splitCancelled: '분할을 취소했습니다. 원본 PDF는 그대로 남아 있습니다.',
+      resumeSplit: '분할 다시 시작',
+      cancel: '취소',
       downloadFailed: '다운로드 파일을 준비하지 못했습니다. 다시 시도하거나, 나눌 파일 수를 줄여 보세요.',
       download: 'PDF 다운로드',
       downloadZip: 'ZIP 다운로드',

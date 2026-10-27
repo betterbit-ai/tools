@@ -39,8 +39,73 @@ async function loadPdfLib() {
   return import('pdf-lib');
 }
 
+function isPdfDelimiter(byte: number | undefined): boolean {
+  return (
+    byte === undefined ||
+    byte === 0 ||
+    byte === 9 ||
+    byte === 10 ||
+    byte === 12 ||
+    byte === 13 ||
+    byte === 32 ||
+    byte === 40 ||
+    byte === 41 ||
+    byte === 47 ||
+    byte === 60 ||
+    byte === 62 ||
+    byte === 91 ||
+    byte === 93
+  );
+}
+
+function asciiAt(bytes: Uint8Array, index: number, value: string): boolean {
+  if (index < 0 || index + value.length > bytes.length) return false;
+  for (let offset = 0; offset < value.length; offset++) {
+    if (bytes[index + offset] !== value.charCodeAt(offset)) return false;
+  }
+  return true;
+}
+
+function lastAsciiTokenIndex(bytes: Uint8Array, value: string, from: number, lowerBound: number): number {
+  for (let index = from; index >= lowerBound; index--) {
+    if (
+      asciiAt(bytes, index, value) &&
+      isPdfDelimiter(bytes[index - 1]) &&
+      isPdfDelimiter(bytes[index + value.length])
+    ) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+/** Detects an Encrypt key only in a trailer or xref-stream dictionary. */
+export function hasPdfEncryptionDictionary(bytes: Uint8Array): boolean {
+  const lowerBound = Math.max(0, bytes.length - 256 * 1024);
+  for (let index = lowerBound; index < bytes.length; index++) {
+    if (!asciiAt(bytes, index, '/Encrypt')) continue;
+    if (!isPdfDelimiter(bytes[index - 1]) || !isPdfDelimiter(bytes[index + 8])) continue;
+
+    const contextStart = Math.max(lowerBound, index - 8192);
+    const type = lastAsciiTokenIndex(bytes, '/Type', index, contextStart);
+    const xref = lastAsciiTokenIndex(bytes, '/XRef', index, contextStart);
+    if (type >= 0 && xref > type) return true;
+
+    const stream = lastAsciiTokenIndex(bytes, 'stream', index, contextStart);
+    const endStream = lastAsciiTokenIndex(bytes, 'endstream', index, contextStart);
+    if (stream > endStream) continue;
+
+    const trailer = lastAsciiTokenIndex(bytes, 'trailer', index, contextStart);
+    if (trailer >= 0) return true;
+  }
+  return false;
+}
+
 /** Parses a PDF far enough to report its page count, without modifying it. */
 export async function readPdfPageCount(bytes: Uint8Array, fileName: string): Promise<number> {
+  // pdf-lib can spend a long time parsing some AES-256 xref streams before it
+  // reports encryption, so identify the standard encryption dictionary first.
+  if (hasPdfEncryptionDictionary(bytes)) throw new EncryptedPdfError(fileName);
   const { PDFDocument, EncryptedPDFError } = await loadPdfLib();
   try {
     const doc = await PDFDocument.load(bytes);
@@ -109,6 +174,11 @@ export interface SplitFile {
   bytes: Uint8Array;
 }
 
+export interface SplitProgress {
+  done: number;
+  total: number;
+}
+
 /** Builds the suggested output file name for a 1-based ascending page group. */
 function partName(baseName: string, group: number[], duplicateIndex = 1): string {
   const first = group[0];
@@ -121,23 +191,29 @@ function partName(baseName: string, group: number[], duplicateIndex = 1): string
  * Splits one PDF into several, one output file per page group. Each group is a
  * list of 1-based page numbers (not necessarily contiguous) to include, in order.
  */
-export async function splitPdf(bytes: Uint8Array, fileName: string, groups: number[][]): Promise<SplitFile[]> {
+export async function writeSplitPdfParts(
+  bytes: Uint8Array,
+  fileName: string,
+  groups: number[][],
+  writePart: (file: SplitFile, progress: SplitProgress) => void | Promise<void>,
+): Promise<void> {
   if (groups.length === 0) throw new Error('splitPdf: at least one page group is required');
 
   const { PDFDocument, EncryptedPDFError } = await loadPdfLib();
   let src;
   try {
+    if (hasPdfEncryptionDictionary(bytes)) throw new EncryptedPdfError(fileName);
     src = await PDFDocument.load(bytes);
   } catch (err) {
+    if (err instanceof EncryptedPdfError) throw err;
     if (err instanceof EncryptedPDFError) throw new EncryptedPdfError(fileName);
     throw new InvalidPdfError(fileName);
   }
 
   const baseName = fileName.replace(/\.pdf$/i, '');
-  const results: SplitFile[] = [];
+  const nonEmptyGroups = groups.filter((group) => group.length > 0);
   const names = new Map<string, number>();
-  for (const group of groups) {
-    if (group.length === 0) continue;
+  for (const [index, group] of nonEmptyGroups.entries()) {
     const doc = await PDFDocument.create();
     const pages = await doc.copyPages(
       src,
@@ -147,7 +223,16 @@ export async function splitPdf(bytes: Uint8Array, fileName: string, groups: numb
     const firstName = partName(baseName, group);
     const duplicateIndex = (names.get(firstName) ?? 0) + 1;
     names.set(firstName, duplicateIndex);
-    results.push({ name: partName(baseName, group, duplicateIndex), bytes: await doc.save() });
+    const file = { name: partName(baseName, group, duplicateIndex), bytes: await doc.save() };
+    await writePart(file, { done: index + 1, total: nonEmptyGroups.length });
   }
+}
+
+/** Collects split parts in memory. Browser code uses writeSplitPdfParts to package each part as it is made. */
+export async function splitPdf(bytes: Uint8Array, fileName: string, groups: number[][]): Promise<SplitFile[]> {
+  const results: SplitFile[] = [];
+  await writeSplitPdfParts(bytes, fileName, groups, (file) => {
+    results.push(file);
+  });
   return results;
 }

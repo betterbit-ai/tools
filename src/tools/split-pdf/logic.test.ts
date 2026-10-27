@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   chunkPages,
   EncryptedPdfError,
+  hasPdfEncryptionDictionary,
   InvalidPdfError,
   parseRangeSpec,
   RangeOutOfBoundsError,
@@ -11,6 +12,7 @@ import {
   splitPdf,
   tokensToPageGroups,
   tokensToRangeGroups,
+  writeSplitPdfParts,
 } from './logic';
 
 /** Builds a throwaway PDF with `pageCount` pages, each a distinct width so pages are distinguishable. */
@@ -28,6 +30,20 @@ describe('readPdfPageCount', () => {
 
   it('throws InvalidPdfError for bytes that are not a PDF', async () => {
     await expect(readPdfPageCount(new Uint8Array([1, 2, 3]), '제목.txt')).rejects.toThrow(InvalidPdfError);
+  });
+});
+
+describe('hasPdfEncryptionDictionary', () => {
+  it('recognizes trailer and xref-stream encryption dictionaries', () => {
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('trailer\n<< /Size 8 /Encrypt 7 0 R >>'))).toBe(true);
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('<< /Type /XRef /Encrypt 8 0 R >>'))).toBe(true);
+  });
+
+  it('does not mistake document text or EncryptMetadata for an encryption dictionary', () => {
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('stream\nBT (/Encrypt) Tj\nendstream'))).toBe(false);
+    expect(hasPdfEncryptionDictionary(new TextEncoder().encode('<< /Type /XRef /EncryptMetadata false >>'))).toBe(
+      false,
+    );
   });
 });
 
@@ -192,6 +208,19 @@ describe('splitPdf', () => {
     const [result] = await splitPdf(bytes, 'a.pdf', [[1, 2]]);
     const doc = await PDFDocument.load(result.bytes);
     expect(doc.getPageCount()).toBe(2);
+  });
+
+  it('writes one part at a time with determinate progress', async () => {
+    const seen: string[] = [];
+    const progress: string[] = [];
+    await writeSplitPdfParts(await makePdf(5), 'doc.pdf', [[1, 2], [3], [4, 5]], async (file, current) => {
+      seen.push(file.name);
+      progress.push(`${current.done}/${current.total}`);
+      const document = await PDFDocument.load(file.bytes);
+      expect(document.getPageCount()).toBe(current.done === 2 ? 1 : 2);
+    });
+    expect(seen).toEqual(['doc_p1-2.pdf', 'doc_p3.pdf', 'doc_p4-5.pdf']);
+    expect(progress).toEqual(['1/3', '2/3', '3/3']);
   });
 });
 
