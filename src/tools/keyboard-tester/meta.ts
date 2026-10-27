@@ -27,5 +27,13 @@ export const meta: ToolMeta = {
         'It offers Windows and Mac modifier labels but its visible letter keys remain QWERTY, not the 2-set Hangul jamo printed on a Korean keyboard; its keyboard test is also bundled with mouse testing. (Strength: it visualizes a full navigation cluster and numpad.)',
     },
   ],
-  related: ['mic-test', 'typing-test', 'mouse-test', 'dead-pixel-test', 'speaker-test', 'click-speed-test'],
+  related: [
+    'mic-test',
+    'typing-test',
+    'mouse-test',
+    'dead-pixel-test',
+    'speaker-test',
+    'click-speed-test',
+    'reaction-time-test',
+  ],
 };

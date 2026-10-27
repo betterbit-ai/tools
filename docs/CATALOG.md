@@ -214,7 +214,7 @@
 | typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM              | P0  | live |
 | refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                                | P2  | todo |
 | click-speed-test   | 클릭 속도       | cps test                             | 키보드 조작, 로컬 개인 최고 기록 | P2  | live |
-| reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                     | P2  | todo |
+| reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                     | P2  | live |
 
 ## color: 색상·디자인 (신규 카테고리)
 
