@@ -59,7 +59,14 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout locale={locale} title={title} description={description} segments={segments} jsonLd={jsonLd}>
+<BaseLayout
+  locale={locale}
+  title={title}
+  description={description}
+  segments={segments}
+  jsonLd={jsonLd}
+  ogImage={`/og/${locale}/${meta.slug}.png`}
+>
   <div class="mx-auto max-w-5xl px-4 pt-6">
     <Breadcrumbs crumbs={crumbs} />
 

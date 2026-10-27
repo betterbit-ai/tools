@@ -24,9 +24,11 @@ interface Props {
   brandTitle?: boolean;
   /** Error/utility pages: emit robots noindex and no canonical/hreflang. */
   noindex?: boolean;
+  /** Site-relative Open Graph image path. Tool pages provide a localized card. */
+  ogImage?: string;
 }
 
-const { locale, title, description, segments, jsonLd = [], brandTitle = true, noindex = false } = Astro.props;
+const { locale, title, description, segments, jsonLd = [], brandTitle = true, noindex = false, ogImage } = Astro.props;
 const canonical = absoluteUrl(localePath(locale, ...segments));
 const alts = alternates(segments);
 const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
@@ -62,7 +64,7 @@ const fullTitle = brandTitle ? `${title} | ${SITE_NAME}` : title;
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={LOCALE_META[locale].ogLocale} />
-    <meta property="og:image" content={absoluteUrl('/og-default.png')} />
+    <meta property="og:image" content={absoluteUrl(ogImage ?? '/og-default.png')} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />

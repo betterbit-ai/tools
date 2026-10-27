@@ -78,6 +78,17 @@ for (const file of pages) {
   if (!desc) fail(page, 'missing meta description');
   else if ([...desc].length < 40 || [...desc].length > 200) warn(page, `meta description length ${[...desc].length}`);
 
+  const ogImage = head.match(/<meta property="og:image" content="([^"]+)"/)?.[1];
+  if (!ogImage) fail(page, 'missing Open Graph image');
+  else {
+    try {
+      const imagePath = new URL(ogImage).pathname;
+      if (!existsSync(fileForPath(imagePath))) fail(page, `missing Open Graph image asset ${imagePath}`);
+    } catch {
+      fail(page, 'Open Graph image is not an absolute URL');
+    }
+  }
+
   if (!noindex) {
     const canonical = head.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
     if (!canonical?.startsWith('https://')) fail(page, 'missing absolute canonical');
