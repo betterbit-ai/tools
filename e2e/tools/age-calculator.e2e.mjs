@@ -2,6 +2,64 @@ function statText(page, label) {
   return page.getByText(label, { exact: true }).locator('..').innerText();
 }
 
+function calendarDaysBetween(start, end) {
+  const toUtcDay = (iso) => {
+    const [year, month, day] = iso.split('-').map(Number);
+    return Date.UTC(year, month - 1, day) / 86_400_000;
+  };
+  return toUtcDay(end) - toUtcDay(start);
+}
+
+function internationalAge(birth, reference) {
+  const [birthYear, birthMonth, birthDay] = birth.split('-').map(Number);
+  const [referenceYear, referenceMonth, referenceDay] = reference.split('-').map(Number);
+  return (
+    referenceYear -
+    birthYear -
+    (referenceMonth < birthMonth || (referenceMonth === birthMonth && referenceDay < birthDay) ? 1 : 0)
+  );
+}
+
+function localTodayIso() {
+  const now = new Date();
+  return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join(
+    '-',
+  );
+}
+
+async function assertEnglishResults(t, birth, reference) {
+  const expectedInternationalAge = internationalAge(birth, reference);
+  const expectedDaysLived = calendarDaysBetween(birth, reference) + 1;
+  const expectedNextBirthdayDays = calendarDaysBetween(reference, '2026-02-28');
+
+  t.assert(
+    (await statText(t.page, 'International age (만 나이)')).includes(`${expectedInternationalAge} years old`),
+    'international age should use the independently calculated birthday rule',
+  );
+  t.assert(
+    (await statText(t.page, 'Exact age')).includes('25y 0m 1d'),
+    'leap-day exact age should clamp to February 28',
+  );
+  t.assert(
+    (await statText(t.page, 'Korean counting age (세는 나이)')).includes('26 years old'),
+    'Korean counting age should use birth year as age one',
+  );
+  t.assert(
+    (await statText(t.page, 'Year age (연 나이)')).includes('25 years old'),
+    'year age should ignore the birthday',
+  );
+  t.assert((await statText(t.page, 'Chinese zodiac')).includes('Dragon'), 'zodiac should match the birth year');
+  t.assert((await statText(t.page, 'Star sign')).includes('Pisces'), 'star sign should match the birth month and day');
+  t.assert(
+    (await statText(t.page, 'Days lived')).includes(`${expectedDaysLived.toLocaleString('en-US')}rd day`),
+    'days lived should include the birth date and match an independent UTC-day count',
+  );
+  t.assert(
+    (await statText(t.page, 'Next birthday')).includes(`in ${expectedNextBirthdayDays} days`),
+    'next birthday countdown should use the clamped non-leap-year birthday',
+  );
+}
+
 async function checkKoreanVariant(t, birthYear, expectSchool) {
   await t.open(`/ko/age-calculator/${birthYear}-born`);
 
@@ -34,31 +92,88 @@ async function checkKoreanVariant(t, birthYear, expectSchool) {
 }
 
 export default async function (t) {
-  await t.open('/ko/age-calculator');
-  await t.page.getByLabel('생년월일').fill('1999-12-31');
-  await t.page.waitForFunction(() => localStorage.getItem('tools:age-calculator:birthDate') === '1999-12-31');
+  const birth = '2000-02-29';
+  const reference = '2025-03-01';
 
-  await checkKoreanVariant(t, 2000, false);
+  await t.open('/age-calculator');
+  await t.page.getByLabel('Date of birth').fill(birth);
+  await t.page.getByLabel('As of date').fill(reference);
+  await assertEnglishResults(t, birth, reference);
+
+  await t.page.getByLabel('Date of birth').fill('1999-12-31');
+  t.assert(
+    (await statText(t.page, 'Year age (연 나이)')).includes('26 years old'),
+    'changing the birth-date control should recalculate year age immediately',
+  );
+  await t.page.getByLabel('Date of birth').fill(birth);
+
+  await t.page.getByLabel('Date of birth').fill('2025-03-02');
+  await t.waitForText('The date of birth must be on or before the "as of" date.');
+  await t.page.getByLabel('Date of birth').fill('');
+  await t.waitForText('Choose a valid calendar date.');
+  await t.page.getByLabel('Date of birth').fill(birth);
+
+  await t.click('Reset to today');
+  t.assert(
+    (await t.page.getByLabel('As of date').inputValue()) === localTodayIso(),
+    'Reset to today should replace the comparison date with the browser-local calendar date',
+  );
+  await t.page.getByLabel('As of date').fill(reference);
+  await assertEnglishResults(t, birth, reference);
+
+  await t.click('Copy summary');
+  await t.waitForText('Copied');
+  t.assert(
+    (await t.page.evaluate(() => navigator.clipboard.readText())).includes('25 years old'),
+    'Copy summary should put the visible result on the clipboard',
+  );
+
+  await t.page.evaluate(() =>
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async () => Promise.reject(new Error('Clipboard permission denied')) },
+    }),
+  );
+  await t.click('Copy summary');
+  await t.waitForText('Could not copy the summary. Check your browser clipboard permission and try again.');
+
+  await t.page.waitForFunction(
+    (savedBirthDate) => localStorage.getItem('tools:age-calculator:birthDate') === savedBirthDate,
+    birth,
+  );
+  await t.open('/age-calculator');
+  await t.page.waitForFunction(
+    (savedBirthDate) => document.querySelector('input[type="date"]')?.value === savedBirthDate,
+    birth,
+  );
+  t.assert(
+    (await t.page.getByLabel('Date of birth').inputValue()) === birth,
+    'a valid birth date should persist in this browser',
+  );
+
+  await t.open('/ko/age-calculator');
+  await t.page.getByLabel('생년월일').fill(birth);
+  await t.page.getByLabel('기준일').fill(reference);
+  t.assert(
+    (await statText(t.page, '만 나이')).includes('25세'),
+    'Korean result should show the localized international age',
+  );
+  t.assert(
+    (await statText(t.page, '정확한 만 나이')).includes('25년 0개월 1일'),
+    'Korean exact-age formatting should remain readable',
+  );
+  t.assert(
+    (await statText(t.page, '세는 나이')).includes('26세'),
+    'Korean counting age should update from the same dates',
+  );
+  t.assert(
+    (await statText(t.page, '태어난 지')).includes('9,133일째'),
+    'Korean number formatting should keep digit grouping',
+  );
+
   await checkKoreanVariant(t, 2010, true);
-  await checkKoreanVariant(t, 2015, true);
 
   await t.open('/age-calculator/2000-born');
-  const englishIntro = await t.page.locator('header p').innerText();
-  const englishDescription = await t.page.locator('meta[name="description"]').getAttribute('content');
-  const englishAnswer = englishIntro.match(
-    /is (\d+) before their birthday and (\d+) from their birthday in (\d+); their Korean year age is (\d+), and their zodiac animal is ([A-Za-z]+)/,
-  );
-  t.assert(englishAnswer, 'English intro should answer the age range, year age and zodiac');
-  const [, beforeBirthday, fromBirthday, referenceYear, yearAge, zodiac] = englishAnswer;
-  t.assert(
-    englishDescription.includes(
-      `${beforeBirthday} before their birthday and ${fromBirthday} from it in ${referenceYear}`,
-    ),
-    'English snippet should carry the same age range',
-  );
-  t.assert(englishDescription.includes(`Korean year age ${yearAge}`), 'English snippet should carry the same year age');
-  t.assert(englishDescription.includes(`${zodiac} zodiac`), 'English snippet should carry the same zodiac');
-
   await t.page.setViewportSize({ width: 375, height: 812 });
   await t.page.emulateMedia({ colorScheme: 'dark' });
   const overflow = await t.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -73,6 +188,5 @@ export default async function (t) {
       .evaluate((element) => element === document.activeElement);
   }
   t.assert(referenceDateFocused, 'date fields should remain reachable in keyboard order');
-
-  t.assert(t.errors.page.length === 0, 'variant pages should have no uncaught page errors');
+  t.assert(t.errors.page.length === 0, 'calculator pages should have no uncaught page errors');
 }

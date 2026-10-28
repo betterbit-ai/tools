@@ -31,6 +31,7 @@ const uiEn = {
   inDaysPlural: 'in {n} days',
   copy: 'Copy summary',
   copied: 'Copied',
+  copyFailed: 'Could not copy the summary. Check your browser clipboard permission and try again.',
   summary:
     'Born {birth} ({weekday}). As of {reference}: {intlAge} years old (international age), {countingAge} by Korean counting age, {yearAge} by year age — {animal}, {sign}.',
   animalRat: 'Rat',
@@ -226,6 +227,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       inDaysPlural: '{n}일 후',
       copy: '요약 복사',
       copied: '복사됨',
+      copyFailed: '요약을 복사하지 못했습니다. 브라우저의 클립보드 권한을 확인한 뒤 다시 시도하세요.',
       summary:
         '{birth}({weekday}) 출생. {reference} 기준 만 {intlAge}세, 세는 나이 {countingAge}세, 연 나이 {yearAge}세 — {animal}, {sign}.',
       animalRat: '쥐띠',
