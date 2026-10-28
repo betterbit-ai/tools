@@ -1,0 +1,166 @@
+import type { Locale } from '../../i18n/locales';
+import type { ToolContent } from '../types';
+
+const uiEn = {
+  dropTitle: 'Drop photos here, click to choose, or paste',
+  dropHint: 'Choose 2–30 JPG, PNG, or WebP images',
+  privacy: 'Your photos stay in this browser and are never uploaded.',
+  frameCount: '{count} frames',
+  frame: 'Frame {number}',
+  moveEarlier: 'Move earlier',
+  moveLater: 'Move later',
+  remove: 'Remove',
+  addMore: 'Add more photos',
+  limit: 'Only the first {max} photos were added to keep GIF creation responsive.',
+  unsupported: 'One or more photos could not be read. Try JPG, PNG, or WebP files your browser can open.',
+  needMore: 'Add at least two photos to make a GIF.',
+  size: 'GIF width',
+  sizeSmall: 'Small · 320 px',
+  sizeMedium: 'Medium · 480 px',
+  sizeLarge: 'Large · 640 px',
+  speed: 'Time per photo',
+  speedFast: 'Fast · 100 ms',
+  speedMedium: 'Quick · 250 ms',
+  speedStandard: 'Standard · 500 ms',
+  speedSlow: 'Slow · 1 sec',
+  fit: 'Different photo shapes',
+  fitContain: 'Show all',
+  fitCover: 'Fill frame',
+  loop: 'Loop forever',
+  output: 'Output',
+  outputValue: '{width}×{height} px · {frames} frames',
+  building: 'Making GIF… {current} of {total} photos',
+  ready: 'GIF ready',
+  failed: 'The GIF could not be made. Try fewer photos or choose a smaller width.',
+  download: 'Download GIF',
+  replace: 'Start over',
+  resultSize: '{size} · {duration} seconds',
+};
+export type UI = typeof uiEn;
+
+export const content: Record<Locale, ToolContent<UI>> = {
+  en: {
+    title: 'GIF Maker — Make GIFs from Photos Locally',
+    description:
+      'Make an animated GIF from JPG, PNG, or WebP photos in your browser. Reorder frames, choose speed and size, then download without uploading images.',
+    h1: 'GIF Maker',
+    tagline: 'Turn photos into a looping GIF with frame order, speed, and size under your control.',
+    name: 'GIF Maker',
+    keywords: ['gif maker', 'images to gif', 'photo to gif', 'animated gif creator', 'make gif from photos'],
+    howTo: [
+      'Drop or paste 2 to 30 JPG, PNG, or WebP photos.',
+      'Use Move earlier and Move later to set the animation order.',
+      'Choose the GIF width and how long each photo stays on screen.',
+      'Choose whether different photo shapes should show fully or fill the frame.',
+      'Download the GIF as soon as the preview is ready.',
+    ],
+    sections: [
+      {
+        heading: 'Choose a speed that matches the photos',
+        body: 'A GIF stores a delay for every frame in hundredths of a second. This tool offers 100 ms, 250 ms, 500 ms, and 1 second per photo: 100 ms suits a quick stop-motion sequence, while 500 ms gives people time to read a before-and-after image. Very short delays are not reliable everywhere: Ezgif notes that browsers may ignore delays below 20 centiseconds (200 ms). If you need the same rhythm throughout, keep one delay for every frame; the total running time is the number of photos multiplied by that delay.',
+      },
+      {
+        heading: 'Why a photo GIF can look less smooth than the originals',
+        body: 'GIF uses indexed colour, with at most 256 colours in a frame, rather than the millions of colours in a JPEG, PNG, or WebP photo. That limit can create banding in skies and gradients, and the file grows quickly as pixel count and frame count rise. Start with 320 or 480 px for chat and document GIFs. This maker keeps a fixed output canvas based on the first photo, so the animation does not jump in size; use Show all for letterboxing or Fill frame when matching edges matter more than showing every pixel.',
+      },
+    ],
+    faq: [
+      {
+        q: 'How many photos can I turn into one GIF?',
+        a: 'This GIF maker accepts 2 to 30 JPG, PNG, or WebP photos at a time. Limiting the sequence to 30 frames keeps browser memory and GIF file size practical on phones as well as desktops.',
+      },
+      {
+        q: 'Are photos uploaded to make the GIF?',
+        a: 'No. Photo decoding, frame ordering, and GIF encoding run in the current browser tab, so the selected images are not sent to a server.',
+      },
+      {
+        q: 'What frame delay should I use for a GIF?',
+        a: 'Use 100 or 250 ms for a fast sequence, 500 ms for most photo pairs, and 1 second for a slideshow. Two photos at 500 ms each produce a GIF that takes 1 second to play once.',
+      },
+      {
+        q: 'Why does my GIF have white space around a photo?',
+        a: 'White space appears when Show all fits a photo with a different aspect ratio inside the first frame’s canvas. Choose Fill frame to crop the edges instead and make every frame cover the same rectangle.',
+      },
+    ],
+    ui: uiEn,
+  },
+  ko: {
+    title: '움짤 만들기 — 사진을 GIF로 바로 만들기',
+    description:
+      '사진 여러 장을 올려 순서와 재생 속도, 크기를 정하고 GIF 움짤로 저장합니다. 사진은 업로드하지 않고 현재 브라우저에서만 처리합니다.',
+    h1: '움짤 만들기',
+    tagline: '사진을 이어 붙여 순서와 속도를 직접 정하는 GIF 움짤을 만듭니다.',
+    name: '움짤 만들기',
+    keywords: ['움짤 만들기', 'GIF 만들기', '사진 GIF 만들기', '사진 여러 장 움짤', '움직이는 사진 만들기'],
+    howTo: [
+      'JPG, PNG, WebP 사진 2~30장을 놓거나 붙여넣습니다.',
+      '앞으로 이동과 뒤로 이동으로 사진이 보일 순서를 정합니다.',
+      'GIF 크기와 사진 한 장이 표시될 시간을 고릅니다.',
+      '사진 비율이 다를 때 전체를 보이게 할지 프레임을 채울지 고릅니다.',
+      '미리 보기가 준비되면 GIF를 저장합니다.',
+    ],
+    sections: [
+      {
+        heading: '사진 한 장을 보여줄 시간 정하기',
+        body: 'GIF 파일은 각 프레임의 지연 시간을 1/100초 단위로 기록합니다. 이 도구에서는 100ms, 250ms, 500ms, 1초를 고를 수 있습니다. 빠르게 이어지는 사진은 100ms나 250ms가 어울리고, 전후 비교나 글자가 있는 사진은 500ms 이상이 읽기 편합니다. Ezgif도 일부 브라우저가 20센티초(200ms)보다 짧은 지연 시간을 무시할 수 있다고 안내합니다. 전체 재생 시간은 사진 장수에 사진 한 장 표시 시간을 곱하면 됩니다.',
+      },
+      {
+        heading: '움짤 용량과 사진 비율',
+        body: 'GIF는 프레임 하나에 최대 256색만 담을 수 있어 사진의 하늘, 피부, 그라데이션은 원본보다 색 띠가 보일 수 있습니다. 또 GIF 용량은 대체로 가로·세로 픽셀 수와 프레임 수에 함께 비례합니다. 카카오톡이나 문서에 넣을 움짤은 먼저 320px 또는 480px로 만들어 보는 편이 좋습니다. 첫 사진의 비율이 결과 캔버스를 정하며, 전체 보이게는 여백을 남기고 프레임 채우기는 가장자리를 잘라 모든 장면을 같은 크기로 맞춥니다.',
+      },
+    ],
+    faq: [
+      {
+        q: '사진 몇 장까지 움짤로 만들 수 있나요?',
+        a: '이 도구에서는 JPG, PNG, WebP 사진을 최소 2장부터 최대 30장까지 한 GIF로 만들 수 있습니다. 30장 제한은 휴대폰에서도 메모리 사용량과 GIF 용량이 지나치게 커지지 않도록 둔 기준입니다.',
+      },
+      {
+        q: '움짤을 만들 때 사진이 서버에 업로드되나요?',
+        a: '아니요. 사진 읽기, 순서 변경, GIF 인코딩은 현재 브라우저 탭에서 처리하므로 선택한 사진은 서버로 전송되지 않습니다.',
+      },
+      {
+        q: '사진 재생 시간은 몇 ms가 좋은가요?',
+        a: '빠른 연속 사진에는 100ms 또는 250ms, 일반적인 사진 두 장에는 500ms, 슬라이드쇼에는 1초가 적합합니다. 사진 2장을 각 500ms로 설정하면 한 번 재생하는 데 1초가 걸립니다.',
+      },
+      {
+        q: '사진 주변에 흰 여백이 생기는 이유는 무엇인가요?',
+        a: '전체 보이게 설정에서 첫 사진과 다른 비율의 사진을 같은 캔버스에 맞추면 흰 여백이 생깁니다. 여백 없이 같은 사각형을 채우려면 프레임 채우기를 선택하면 되지만 사진 가장자리는 잘릴 수 있습니다.',
+      },
+    ],
+    ui: {
+      dropTitle: '사진을 놓거나, 선택하거나, 붙여넣으세요',
+      dropHint: 'JPG, PNG, WebP 사진 2~30장',
+      privacy: '사진은 이 브라우저에서만 처리되며 업로드되지 않습니다.',
+      frameCount: '{count}장',
+      frame: '{number}번째 사진',
+      moveEarlier: '앞으로 이동',
+      moveLater: '뒤로 이동',
+      remove: '제거',
+      addMore: '사진 더 추가',
+      limit: '움짤을 빠르게 만들 수 있도록 처음 {max}장만 추가했습니다.',
+      unsupported: '사진을 읽을 수 없습니다. 브라우저에서 열 수 있는 JPG, PNG, WebP 파일인지 확인하세요.',
+      needMore: 'GIF를 만들려면 사진을 두 장 이상 추가하세요.',
+      size: 'GIF 가로 크기',
+      sizeSmall: '작게 · 320px',
+      sizeMedium: '보통 · 480px',
+      sizeLarge: '크게 · 640px',
+      speed: '사진 한 장 표시 시간',
+      speedFast: '빠르게 · 100ms',
+      speedMedium: '조금 빠르게 · 250ms',
+      speedStandard: '보통 · 500ms',
+      speedSlow: '천천히 · 1초',
+      fit: '사진 비율이 다를 때',
+      fitContain: '전체 보이게',
+      fitCover: '프레임 채우기',
+      loop: '계속 반복',
+      output: '결과 설정',
+      outputValue: '{width}×{height}px · {frames}장',
+      building: 'GIF 만드는 중… 사진 {current}/{total}',
+      ready: 'GIF 준비 완료',
+      failed: 'GIF를 만들지 못했습니다. 사진 수를 줄이거나 작은 크기를 선택해 보세요.',
+      download: 'GIF 저장',
+      replace: '처음부터 다시 하기',
+      resultSize: '{size} · {duration}초',
+    },
+  },
+};

@@ -34,6 +34,7 @@ export const meta: ToolMeta = {
     'exif-viewer-remover',
     'image-watermark',
     'video-to-gif',
+    'gif-maker',
     'video-compressor',
     'image-to-base64',
   ],

@@ -105,6 +105,7 @@ export const meta: ToolMeta = {
     'image-upscaler',
     'heic-to-jpg',
     'video-to-gif',
+    'gif-maker',
     'image-to-text',
     'image-to-base64',
     'svg-to-png',
