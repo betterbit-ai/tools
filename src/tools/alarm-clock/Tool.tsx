@@ -17,6 +17,7 @@ import {
 
 const STATE_KEY = 'tools:alarm-clock:alarms';
 const QUICK_MINUTES = [5, 10, 30] as const;
+type AudioIssue = 'unavailable' | 'blocked' | null;
 
 function createId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -31,19 +32,24 @@ function formatCurrentTime(now: number, locale: 'en' | 'ko'): string {
   }).format(now);
 }
 
-function playTone(audio: AudioContext | null): void {
-  if (!audio || audio.state !== 'running') return;
-  const oscillator = audio.createOscillator();
-  const gain = audio.createGain();
-  oscillator.type = 'square';
-  oscillator.frequency.value = 880;
-  gain.gain.setValueAtTime(0.0001, audio.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.16, audio.currentTime + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.32);
-  oscillator.connect(gain);
-  gain.connect(audio.destination);
-  oscillator.start();
-  oscillator.stop(audio.currentTime + 0.34);
+function playTone(audio: AudioContext | null): boolean {
+  if (!audio || audio.state !== 'running') return false;
+  try {
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+    oscillator.type = 'square';
+    oscillator.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.16, audio.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.32);
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.34);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export default function AlarmClock({ locale, ui }: ToolProps<UI>) {
@@ -53,6 +59,7 @@ export default function AlarmClock({ locale, ui }: ToolProps<UI>) {
   const [now, setNow] = useState(() => Date.now());
   const [ringing, setRinging] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [audioIssue, setAudioIssue] = useState<AudioIssue>(null);
   const alarmsRef = useRef<Alarm[]>([]);
   const lastCheck = useRef(Date.now());
   const audio = useRef<AudioContext | null>(null);
@@ -60,9 +67,24 @@ export default function AlarmClock({ locale, ui }: ToolProps<UI>) {
   const timeInput = useRef<HTMLInputElement>(null);
 
   const unlockAudio = useCallback(async (): Promise<AudioContext | null> => {
-    if (!audio.current && typeof AudioContext !== 'undefined') audio.current = new AudioContext();
-    await audio.current?.resume();
-    return audio.current;
+    const AudioContextConstructor = window.AudioContext;
+    if (!AudioContextConstructor) {
+      setAudioIssue('unavailable');
+      return null;
+    }
+    try {
+      const context = (audio.current ??= new AudioContextConstructor());
+      await context.resume();
+      if (context.state !== 'running') {
+        setAudioIssue('blocked');
+        return null;
+      }
+      setAudioIssue(null);
+      return context;
+    } catch {
+      setAudioIssue('blocked');
+      return null;
+    }
   }, []);
 
   useEffect(() => {
@@ -102,8 +124,14 @@ export default function AlarmClock({ locale, ui }: ToolProps<UI>) {
 
   useEffect(() => {
     if (!ringing.length) return;
-    playTone(audio.current);
-    const id = window.setInterval(() => playTone(audio.current), 1_000);
+    if (!playTone(audio.current)) {
+      setAudioIssue(typeof window.AudioContext === 'undefined' ? 'unavailable' : 'blocked');
+      return;
+    }
+    const id = window.setInterval(() => {
+      if (!playTone(audio.current))
+        setAudioIssue(typeof window.AudioContext === 'undefined' ? 'unavailable' : 'blocked');
+    }, 1_000);
     return () => clearInterval(id);
   }, [ringing.length]);
 
@@ -234,7 +262,8 @@ export default function AlarmClock({ locale, ui }: ToolProps<UI>) {
               <Button
                 size="lg"
                 onClick={async () => {
-                  playTone(await unlockAudio());
+                  const context = await unlockAudio();
+                  if (context && !playTone(context)) setAudioIssue('blocked');
                 }}
               >
                 {ui.testSound}
@@ -245,6 +274,12 @@ export default function AlarmClock({ locale, ui }: ToolProps<UI>) {
           {error && (
             <div class="mt-4">
               <Notice tone="danger">{error}</Notice>
+            </div>
+          )}
+
+          {audioIssue && (
+            <div class="mt-4">
+              <Notice tone="danger">{audioIssue === 'unavailable' ? ui.soundUnavailable : ui.soundBlocked}</Notice>
             </div>
           )}
 

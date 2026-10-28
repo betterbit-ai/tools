@@ -22,6 +22,8 @@ const uiEn = {
   dismiss: 'Dismiss alarms',
   invalidTime: 'Choose a valid alarm time.',
   limitReached: 'You can keep up to {count} alarms in this browser.',
+  soundUnavailable: 'This browser cannot play the alarm sound. The alarm will still appear on screen.',
+  soundBlocked: 'The browser blocked the alarm sound. Press Test sound to enable it, then try again.',
   keyboardAdd: 'Focus alarm time',
   keyboardDismiss: 'Dismiss alarms',
   browserNotice:
@@ -157,6 +159,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dismiss: '알람 끄기',
       invalidTime: '올바른 알람 시각을 선택하세요.',
       limitReached: '이 브라우저에는 알람을 최대 {count}개까지 저장할 수 있습니다.',
+      soundUnavailable: '이 브라우저에서는 알람 소리를 재생할 수 없습니다. 알람은 화면에 표시됩니다.',
+      soundBlocked: '브라우저가 알람 소리를 차단했습니다. 소리 테스트를 눌러 활성화한 뒤 다시 시도하세요.',
       keyboardAdd: '알람 시각으로 이동',
       keyboardDismiss: '알람 끄기',
       browserNotice:
