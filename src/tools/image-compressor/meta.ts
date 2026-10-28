@@ -37,5 +37,6 @@ export const meta: ToolMeta = {
     'gif-maker',
     'video-compressor',
     'image-to-base64',
+    'screenshot-beautifier',
   ],
 };

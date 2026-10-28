@@ -34,5 +34,6 @@ export const meta: ToolMeta = {
     'meme-generator',
     'qr-code-scanner',
     'color-picker',
+    'screenshot-beautifier',
   ],
 };
