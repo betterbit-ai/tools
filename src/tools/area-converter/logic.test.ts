@@ -4,6 +4,7 @@ import {
   MAX_AREA,
   SQUARE_METERS_PER_PYEONG,
   convertArea,
+  isValidArea,
   isAreaUnit,
   parseAreaNumber,
   quickTable,
@@ -59,6 +60,15 @@ describe('parseAreaNumber', () => {
     expect(parseAreaNumber('84㎡')).toBeNull();
     expect(parseAreaNumber('이십 평')).toBeNull();
     expect(parseAreaNumber(Infinity)).toBeNull();
+  });
+});
+
+describe('isValidArea', () => {
+  it('rejects negative, non-finite, and over-limit inputs before the UI presents a result', () => {
+    expect(isValidArea(MAX_AREA)).toBe(true);
+    expect(isValidArea(MAX_AREA + 1)).toBe(false);
+    expect(isValidArea(-0.01)).toBe(false);
+    expect(isValidArea(Infinity)).toBe(false);
   });
 });
 

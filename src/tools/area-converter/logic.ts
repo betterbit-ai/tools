@@ -39,7 +39,8 @@ export function parseAreaNumber(value: number | string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function isValidArea(value: number): boolean {
+/** Whether a parsed area can be converted and displayed without exceeding the UI guardrail. */
+export function isValidArea(value: number): boolean {
   return Number.isFinite(value) && value >= 0 && value <= MAX_AREA;
 }
 
