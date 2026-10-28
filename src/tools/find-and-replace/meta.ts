@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened Korean page advertises multi-rule replacement and a comparison view, but does not show draft restoration or an apply-and-undo history in its visible controls. Betterbit saves the draft locally and makes each source-changing step reversible. (Strength: it supports several replacement rules in one run.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'text-diff'],
+  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'text-diff', 'reverse-text'],
 };
