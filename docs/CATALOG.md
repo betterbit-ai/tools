@@ -88,7 +88,7 @@
 | remove-duplicate-lines | 중복 줄 제거      | remove duplicate lines               | 정렬, 공백 무시 옵션                                  | P1  | live |
 | text-diff              | 텍스트 비교       | text compare / 텍스트 비교           | 단어·글자 단위 diff, 한글 자모 정확                   | P0  | live |
 | sort-lines             | 줄 정렬           | sort lines alphabetically            | 자연 정렬, 한글 가나다순, 역순, 셔플                  | P2  | live |
-| find-and-replace       | 찾아 바꾸기       | find and replace text                | 정규식, 대소문자 옵션                                 | P2  | todo |
+| find-and-replace       | 찾아 바꾸기       | find and replace text                | 정규식, 대소문자 옵션                                 | P2  | live |
 | lorem-ipsum            | 더미 텍스트       | lorem ipsum generator / 더미 텍스트  | 한국어 더미 텍스트                                    | P1  | live |
 | korean-spell-check     | 맞춤법 검사       | 맞춤법 검사기                        | 브라우저 즉시 검사, 입력 전송 없음, 로컬 초안 복원    | P1  | live |
 | hangul-romanization    | 한글 로마자 변환  | 한글 영문 변환 / korean romanization | 국립국어원 표기법 + 여권 이름 표기                    | P1  | live |

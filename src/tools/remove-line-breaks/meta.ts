@@ -57,5 +57,6 @@ export const meta: ToolMeta = {
     'invisible-character',
     'korean-spell-check',
     'pdf-to-text',
+    'find-and-replace',
   ],
 };

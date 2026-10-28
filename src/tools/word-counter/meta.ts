@@ -244,6 +244,7 @@ export const meta: ToolMeta = {
     'sort-lines',
     'lorem-ipsum',
     'korean-spell-check',
+    'find-and-replace',
     'pdf-to-text',
     'image-to-text',
   ],
