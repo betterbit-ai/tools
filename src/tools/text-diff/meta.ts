@@ -37,5 +37,6 @@ export const meta: ToolMeta = {
     'base64',
     'hangul-romanization',
     'korean-spell-check',
+    'find-and-replace',
   ],
 };
