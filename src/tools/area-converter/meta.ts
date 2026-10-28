@@ -52,7 +52,7 @@ export const meta: ToolMeta = {
   category: 'converter',
   icon: 'convert',
   added: '2026-10-14',
-  updated: '2026-10-14',
+  updated: '2026-10-28',
   edges: ['usability'],
   competitors: [
     {
