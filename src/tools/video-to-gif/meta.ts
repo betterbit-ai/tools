@@ -43,6 +43,7 @@ export const meta: ToolMeta = {
     'image-resizer',
     'image-compressor',
     'image-converter',
+    'gif-maker',
     'video-compressor',
     'video-to-mp3',
     'audio-cutter',
