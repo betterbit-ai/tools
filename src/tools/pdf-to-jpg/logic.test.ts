@@ -10,6 +10,7 @@ import {
   MAX_TOTAL_RASTER_PIXELS,
   pageCountExceedsLimit,
   pageExceedsRasterLimit,
+  PdfConversionCancelledError,
   PageRangeOutOfBoundsError,
   PageRangeSyntaxError,
   PageRangeTooLongError,
@@ -78,6 +79,13 @@ describe('file names', () => {
 });
 
 describe('file and browser safety checks', () => {
+  it('uses a distinct cancellation error that callers can ignore without hiding failures', () => {
+    expect(new PdfConversionCancelledError()).toMatchObject({
+      name: 'PdfConversionCancelledError',
+      message: 'PDF to JPG conversion was cancelled.',
+    });
+  });
+
   it('accepts only PDF MIME types or final extensions', () => {
     expect(isPdfFile('document', 'application/pdf')).toBe(true);
     expect(isPdfFile('document', ' Application/PDF; charset=binary ')).toBe(true);
