@@ -241,6 +241,7 @@ export const meta: ToolMeta = {
   related: [
     'remove-line-breaks',
     'case-converter',
+    'sort-lines',
     'lorem-ipsum',
     'korean-spell-check',
     'pdf-to-text',

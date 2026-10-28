@@ -49,6 +49,7 @@ export const meta: ToolMeta = {
     'word-counter',
     'case-converter',
     'remove-duplicate-lines',
+    'sort-lines',
     'text-diff',
     'lorem-ipsum',
     'speech-to-text',

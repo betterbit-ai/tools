@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'Its Title Case setting has a generic minor-word toggle rather than a selectable AP or Chicago rule, so writers cannot choose the publication rule directly. (Strength: it displays nine formats at once, preserves acronyms on request, and clearly explains Korean identifier splitting.)',
     },
   ],
-  related: ['word-counter', 'remove-line-breaks', 'remove-duplicate-lines', 'text-diff'],
+  related: ['word-counter', 'remove-line-breaks', 'remove-duplicate-lines', 'sort-lines', 'text-diff'],
 };

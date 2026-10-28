@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its visible Korean page is a one-click converter with custom delimiters, case matching, blank-line removal, and trimming, but does not show first/last occurrence retention, natural sorting, Unicode-normalization matching, or live result counters. (Strength: custom input and output delimiters support non-line-separated lists.)',
     },
   ],
-  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'text-diff', 'lorem-ipsum'],
+  related: ['word-counter', 'case-converter', 'remove-line-breaks', 'sort-lines', 'text-diff', 'lorem-ipsum'],
 };
