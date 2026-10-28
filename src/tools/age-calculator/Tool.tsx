@@ -32,6 +32,7 @@ export default function AgeCalculator({ locale, ui, preset }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
   const [birthDate, setBirthDate] = useState(presetBirthDate ?? DEFAULT_BIRTH_DATE);
   const [referenceDate, setReferenceDate] = useState(DEFAULT_REFERENCE_DATE);
+  const [copyError, setCopyError] = useState(false);
 
   useEffect(() => {
     const today = todayIso(Date.now());
@@ -178,8 +179,15 @@ export default function AgeCalculator({ locale, ui, preset }: ToolProps<UI>) {
                 />
               </div>
               {result.zodiacBoundary && <Notice tone="info">{ui.zodiacBoundaryNotice}</Notice>}
+              {copyError && <Notice tone="danger">{ui.copyFailed}</Notice>}
               <div class="mt-1 flex items-center gap-2">
-                <CopyButton text={summary} label={ui.copy} copiedLabel={ui.copied} />
+                <CopyButton
+                  text={summary}
+                  label={ui.copy}
+                  copiedLabel={ui.copied}
+                  onSuccess={() => setCopyError(false)}
+                  onError={() => setCopyError(true)}
+                />
               </div>
             </>
           )}
