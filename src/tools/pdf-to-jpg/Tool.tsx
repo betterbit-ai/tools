@@ -15,6 +15,7 @@ import {
   PageRangeSyntaxError,
   PageRangeTooLongError,
   parsePageSelection,
+  PdfConversionCancelledError,
   PdfLimitError,
   type Resolution,
   zipFileName,
@@ -38,6 +39,7 @@ function ownedArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
   const [file, setFile] = useState<File | null>(null);
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
+  const [loadedFileId, setLoadedFileId] = useState<number | null>(null);
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [resolution, setResolution] = useState<Resolution>(initialResolution);
   const [rangeInput, setRangeInput] = useState('');
@@ -45,36 +47,54 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
   const [fileError, setFileError] = useState<FileError | null>(null);
   const [downloadError, setDownloadError] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [output, setOutput] = useState<{ pageNumber: number; blob: Blob }[] | null>(null);
-  const runId = useRef(0);
+  const fileRunId = useRef(0);
+  const conversionRunId = useRef(0);
+  const readControllerRef = useRef<AbortController | null>(null);
+  const conversionControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => safeStorage.set(STORAGE_KEY, resolution), [resolution]);
 
   const clear = useCallback(() => {
-    runId.current++;
+    readControllerRef.current?.abort();
+    readControllerRef.current = null;
+    conversionControllerRef.current?.abort();
+    conversionControllerRef.current = null;
+    fileRunId.current++;
+    conversionRunId.current++;
     setFile(null);
     setBytes(null);
+    setLoadedFileId(null);
     setPageCount(null);
     setRangeInput('');
     setRangeError(null);
     setFileError(null);
     setDownloadError(false);
     setDownloading(false);
+    setCancelled(false);
     setProgress(null);
     setOutput(null);
   }, []);
 
   const loadFile = useCallback((picked: File) => {
-    const id = ++runId.current;
+    readControllerRef.current?.abort();
+    readControllerRef.current = null;
+    conversionControllerRef.current?.abort();
+    conversionControllerRef.current = null;
+    const id = ++fileRunId.current;
+    conversionRunId.current++;
     setFile(picked);
     setBytes(null);
+    setLoadedFileId(null);
     setPageCount(null);
     setRangeInput('');
     setRangeError(null);
     setOutput(null);
     setDownloadError(false);
     setDownloading(false);
+    setCancelled(false);
     if (!isPdfFile(picked.name, picked.type)) {
       setProgress(null);
       setFileError('invalid');
@@ -85,22 +105,27 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
       setFileError('file-size');
       return;
     }
+    const controller = new AbortController();
+    readControllerRef.current = controller;
     setFileError(null);
     setProgress({ done: 0, total: 0 });
-    void (async () => {
+    const task = (async () => {
       try {
         const source = new Uint8Array(await picked.arrayBuffer());
         const { readPdfPageCount } = await import('./convert');
         // PDF.js can transfer its byte array to a worker, so retain `source` and inspect a copy.
-        const count = await readPdfPageCount(source.slice(), picked.name);
-        if (runId.current !== id) return;
+        const count = await readPdfPageCount(source.slice(), picked.name, controller.signal);
+        if (fileRunId.current !== id || controller.signal.aborted) return;
         setBytes(source);
+        setLoadedFileId(id);
         setPageCount(count);
         setRangeInput(`1-${count}`);
         setProgress(null);
       } catch (caught) {
-        if (runId.current !== id) return;
+        if (fileRunId.current !== id || caught instanceof PdfConversionCancelledError || controller.signal.aborted)
+          return;
         setBytes(null);
+        setLoadedFileId(null);
         setPageCount(null);
         setProgress(null);
         setFileError(
@@ -110,12 +135,25 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
               ? caught.limit
               : 'invalid',
         );
+      } finally {
+        if (readControllerRef.current === controller) readControllerRef.current = null;
       }
     })();
+    void task;
   }, []);
 
+  useEffect(
+    () => () => {
+      fileRunId.current++;
+      conversionRunId.current++;
+      readControllerRef.current?.abort();
+      conversionControllerRef.current?.abort();
+    },
+    [],
+  );
+
   useEffect(() => {
-    if (!bytes || !file || !pageCount || fileError) return;
+    if (!bytes || !file || !pageCount || fileError || cancelled || loadedFileId !== fileRunId.current) return;
     let selectedPages: number[];
     try {
       selectedPages = parsePageSelection(rangeInput, pageCount);
@@ -133,9 +171,12 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
       return;
     }
 
-    const id = ++runId.current;
+    const id = ++conversionRunId.current;
+    const controller = new AbortController();
+    conversionControllerRef.current?.abort();
+    conversionControllerRef.current = controller;
     const timeout = setTimeout(() => {
-      void (async () => {
+      const task = (async () => {
         setOutput(null);
         setFileError(null);
         setProgress({ done: 0, total: selectedPages.length });
@@ -147,14 +188,23 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
             selectedPages,
             resolution,
             (done, total) => {
-              if (runId.current === id) setProgress({ done, total });
+              if (conversionRunId.current === id && fileRunId.current === loadedFileId) {
+                setProgress({ done, total });
+              }
             },
+            controller.signal,
           );
-          if (runId.current !== id) return;
+          if (conversionRunId.current !== id || fileRunId.current !== loadedFileId || controller.signal.aborted) return;
           setOutput(converted);
           setProgress(null);
         } catch (caught) {
-          if (runId.current !== id) return;
+          if (
+            conversionRunId.current !== id ||
+            fileRunId.current !== loadedFileId ||
+            caught instanceof PdfConversionCancelledError ||
+            controller.signal.aborted
+          )
+            return;
           setOutput(null);
           setProgress(null);
           setFileError(
@@ -168,12 +218,38 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
           );
         }
       })();
+      void task.finally(() => {
+        if (conversionControllerRef.current === controller) conversionControllerRef.current = null;
+      });
     }, 250);
     return () => {
       clearTimeout(timeout);
-      runId.current++;
+      controller.abort();
+      if (conversionControllerRef.current === controller) conversionControllerRef.current = null;
+      conversionRunId.current++;
     };
-  }, [bytes, file, pageCount, rangeInput, resolution, ui]);
+  }, [bytes, cancelled, file, loadedFileId, pageCount, rangeInput, resolution, ui]);
+
+  const cancel = () => {
+    readControllerRef.current?.abort();
+    readControllerRef.current = null;
+    conversionControllerRef.current?.abort();
+    conversionControllerRef.current = null;
+    if (!bytes) fileRunId.current++;
+    conversionRunId.current++;
+    setOutput(null);
+    setProgress(null);
+    setCancelled(true);
+  };
+
+  const resume = () => {
+    if (!file) return;
+    if (!bytes) {
+      loadFile(file);
+      return;
+    }
+    setCancelled(false);
+  };
 
   const download = async () => {
     if (!output || !file || !pageCount) return;
@@ -236,8 +312,13 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
                   {pageCount !== null ? ` · ${ui.pageCount.replace('{n}', String(pageCount))}` : ''}
                 </p>
               </div>
-              <Button size="sm" variant="ghost" onClick={clear} aria-label={ui.remove}>
-                {ui.remove}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={progress ? cancel : clear}
+                aria-label={progress ? ui.cancel : ui.remove}
+              >
+                {progress ? ui.cancel : ui.remove}
               </Button>
             </div>
           )}
@@ -255,6 +336,15 @@ export default function PdfToJpg({ ui, locale }: ToolProps<UI>) {
           {fileError && (
             <div class="mt-4">
               <Notice tone="danger">{errorMessage}</Notice>
+            </div>
+          )}
+
+          {cancelled && file && (
+            <div class="mt-4">
+              <Notice>{ui.cancelled}</Notice>
+              <Button class="mt-3" variant="secondary" onClick={resume}>
+                {ui.resume}
+              </Button>
             </div>
           )}
 

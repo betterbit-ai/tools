@@ -152,3 +152,10 @@ export class PdfLimitError extends Error {
     this.name = 'PdfLimitError';
   }
 }
+
+export class PdfConversionCancelledError extends Error {
+  constructor() {
+    super('PDF to JPG conversion was cancelled.');
+    this.name = 'PdfConversionCancelledError';
+  }
+}

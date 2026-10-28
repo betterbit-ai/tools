@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'pdf',
   icon: 'image',
   added: '2026-10-11',
-  updated: '2026-10-16',
+  updated: '2026-10-28',
   edges: ['privacy', 'performance'],
   competitors: [
     {
