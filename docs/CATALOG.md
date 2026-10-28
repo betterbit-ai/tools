@@ -44,6 +44,13 @@
 | screenshot-beautifier | 스크린샷 꾸미기        | screenshot mockup                                              | 그라데이션 배경, 그림자, 브라우저 프레임                                                  | P2  | live |
 | image-to-text         | 이미지 글자 추출 (OCR) | image to text, ocr online / 사진 글자 추출, 이미지 텍스트 변환 | 업로드 없는 온디바이스 OCR(wasm·언어 데이터 지연 로드, 자체 호스팅), 한글+영어, 복사·.txt | P1  | live |
 
+| image-splitter | 이미지 분할 | split image into grid / 사진 분할, 인스타 그리드 만들기 | 격자·정확한 픽셀·Instagram 비율 프리셋, 분할본 ZIP | P1 | todo |
+| contact-sheet-maker | 연락처 시트 만들기 | contact sheet maker / 사진 컨택트 시트 | 폴더 사진을 번호·파일명과 함께 한 장의 인쇄용 PDF/PNG로, 업로드 없음 | P2 | todo |
+| image-dpi-changer | 이미지 DPI 변경 | change image dpi / 사진 DPI 변경, 인쇄 해상도 변경 | 픽셀은 보존하고 72·150·300 DPI와 인쇄 크기를 함께 미리보기 | P1 | todo |
+| photo-date-stamper | 사진 날짜 넣기 | add date stamp to photo / 사진 날짜 넣기 | EXIF 촬영일 자동 읽기, 위치·서식 일괄 적용, 원본 메타데이터 유지 선택 | P2 | todo |
+| gif-frame-extractor | GIF 프레임 추출 | extract frames from gif / GIF 프레임 추출 | 프레임별 PNG/WebP, 지연 시간 목록, 선택 프레임만 ZIP | P2 | todo |
+| sprite-sheet-generator | 스프라이트 시트 만들기 | sprite sheet generator / 스프라이트 시트 만들기 | 이미지 순서를 유지한 시트 PNG와 CSS/JSON 좌표를 함께 생성 | P2 | todo |
+
 ## pdf: PDF (pdf-lib, pdf.js를 도구 안에서 지연 로드)
 
 | slug             | 도구             | 핵심 키워드                    | Edge 아이디어                                    | P   | 상태 |
@@ -61,6 +68,15 @@
 | protect-pdf      | PDF 암호 설정    | password protect pdf           | 업로드 없음                                      | P1  | live |
 | pdf-to-text      | PDF 텍스트 추출  | pdf to text                    | 페이지별 복사                                    | P1  | live |
 | watermark-pdf    | PDF 워터마크     | watermark pdf                  | 텍스트, 이미지, 투명도                           | P1  | live |
+
+| pdf-crop | PDF 여백 자르기 | crop pdf / PDF 여백 자르기 | 페이지별 미리보기에서 영역 지정, 모든 페이지 적용, 파일 업로드 없음 | P1 | todo |
+| pdf-page-size | PDF 용지 크기 변경 | resize pdf pages / PDF A4 변환 | A4·Letter·B5 프리셋과 맞춤/자르기 차이를 미리보기로 명확히 표시 | P1 | todo |
+| pdf-booklet | PDF 소책자 만들기 | pdf booklet maker / PDF 책자 인쇄 | 양면 인쇄용 페이지 재배치, 제본 방향·빈 페이지 자동 보완 | P2 | todo |
+| pdf-n-up | PDF 모아찍기 | pdf n-up / PDF 모아찍기 | 2·4·6·9쪽 인쇄 레이아웃, 여백·테두리·용지 방향 선택 | P2 | todo |
+| pdf-extract-images | PDF 이미지 추출 | extract images from pdf / PDF 이미지 추출 | 원본 내장 이미지와 페이지 렌더링을 구분해 선택, 원본명 유지 ZIP | P1 | todo |
+| pdf-metadata-remover | PDF 메타데이터 삭제 | remove pdf metadata / PDF 개인정보 삭제 | 제목·작성자·생성 도구를 검사 후 한 번에 삭제, 결과 전후 비교 | P1 | todo |
+| pdf-form-filler | PDF 양식 작성 | fill pdf form / PDF 양식 작성 | AcroForm 필드 자동 인식, 입력값은 로컬 저장, 평면화 사본 선택 | P1 | todo |
+| pdf-to-png | PDF → PNG | pdf to png / PDF PNG 변환 | 투명 배경·해상도·페이지 선택, 여러 페이지는 ZIP | P1 | todo |
 
 ## text: 텍스트
 
@@ -84,6 +100,14 @@
 | word-frequency         | 단어 빈도         | word frequency counter               | CJK 분절, CSV 내보내기                                | P2  | todo |
 | markdown-editor        | 마크다운 미리보기 | markdown editor online               | 실시간 미리보기, HTML 복사                            | P2  | todo |
 | character-map          | 특수문자표        | special characters / 특수문자        | 한국어 키보드 특수문자(ㅁ+한자) 카테고리              | P1  | live |
+
+| text-cleaner | 텍스트 정리 | clean up text / 텍스트 정리 | 줄바꿈·공백·스마트 따옴표·제로폭 문자를 목적별로 한 번에 정리 | P1 | todo |
+| text-to-slug | URL 슬러그 만들기 | text to slug / URL 슬러그 변환 | 한글·일본어를 읽기 좋은 로마자로 변환하고 중복 구분자·예약어 검사 | P2 | todo |
+| unicode-normalizer | 유니코드 정규화 | unicode normalizer / 유니코드 정규화 | NFC·NFD·NFKC 결과와 변경된 코드포인트를 나란히 표시 | P2 | todo |
+| unicode-inspector | 유니코드 검사기 | unicode character inspector / 유니코드 문자 확인 | 이모지·결합 문자·보이지 않는 문자의 코드포인트와 이름을 즉시 표시 | P2 | todo |
+| html-to-text | HTML 텍스트 추출 | html to text / HTML 텍스트 변환 | 스크립트·스타일 제외, 링크 URL 유지 여부와 읽기용 줄바꿈을 선택 | P1 | todo |
+| text-chunker | 텍스트 나누기 | split text into chunks / 긴 글 나누기 | 글자·단어·토큰 추정 한도와 문장 경계를 함께 지켜 LLM 붙여넣기용으로 분할 | P1 | todo |
+| whitespace-visualizer | 공백 문자 표시 | show whitespace characters / 공백 문자 표시 | 탭·줄바꿈·전각 공백·제로폭 문자를 구분해 보이고 원문 복사도 유지 | P2 | todo |
 
 ## time: 시간·날짜
 
@@ -137,6 +161,16 @@
 | social-insurance-kr     | 4대보험 계산기       | korea social insurance calculator / 4대보험 계산기, 4대보험 요율 | 2026 요율로 근로자·사업주 부담 분리, 월급·연봉 입력, 항목별 상한·하한 반영                                    | P0  | live |
 | rent-conversion-kr      | 전월세 전환율 계산기 | jeonse to monthly rent korea / 전월세 전환율, 전세 월세 전환     | 법정 전환율 상한 자동 적용, 보증금 ↔ 월세 양방향, 계산 근거 표시                                              | P1  | live |
 
+| overtime-pay-kr | 연장근로수당 계산기 | korea overtime pay calculator / 연장근로수당 계산기, 야근수당 | 통상시급과 연장·야간·휴일 시간을 분리해 가산율·근거를 월급명세서 형태로 표시 | P1 | todo |
+| night-shift-pay-kr | 야간수당 계산기 | korea night shift pay / 야간수당 계산기 | 22시~06시 구간을 날짜 넘김 근무에도 자동 분리하고 연장근로와 중첩 가산 표시 | P1 | todo |
+| freelance-withholding-kr | 프리랜서 3.3% 계산기 | 3.3% calculator korea / 프리랜서 3.3 계산기 | 세전·실수령액 양방향 계산, 소득세와 지방소득세를 분리하고 환급 가능성 안내 | P1 | todo |
+| employer-cost-kr | 인건비 계산기 | korea employer cost calculator / 직원 고용비용 계산기 | 사업주 4대보험·퇴직급여 충당·복리후생을 분리해 1인·팀 총비용 비교 | P1 | todo |
+| broker-fee-kr | 부동산 중개수수료 계산기 | korea real estate broker fee / 복비 계산기 | 매매·전세·월세별 상한 요율과 거래금액 구간을 보여 주고 부가세 포함 여부 선택 | P1 | todo |
+| acquisition-tax-kr | 취득세 계산기 | korea acquisition tax calculator / 취득세 계산기 | 주택 수·조정대상지역·취득가를 입력해 세율 분기와 지방교육세를 계산 근거와 함께 표시 | P1 | todo |
+| profit-margin-calculator | 마진율 계산기 | profit margin calculator / 마진율 계산기 | 원가·판매가·수수료·배송비를 분리해 마진율과 마크업을 혼동 없이 동시 계산 | P1 | todo |
+| break-even-calculator | 손익분기점 계산기 | break even calculator / 손익분기점 계산기 | 고정비·변동비·목표이익을 입력해 판매량·매출 기준을 그래프로 함께 표시 | P1 | todo |
+| savings-goal-calculator | 저축 목표 계산기 | savings goal calculator / 저축 목표 계산기 | 목표일·초기금·월 저축액 중 모르는 한 값을 역산하고 월별 진행표 표시 | P1 | todo |
+
 ## converter: 단위 변환
 
 단위 변환은 **도구 1개 + 단위 쌍 variants**로 롱테일을 공략한다(예: `/length-converter/cm-to-inches`).
@@ -181,6 +215,17 @@
 | user-agent        | 내 브라우저 정보 | what is my browser / user agent            | 해석된 정보 + 복사                   | P2  | todo |
 | screen-resolution | 화면 해상도 확인 | what is my screen resolution / 해상도 확인 | DPR, 뷰포트 함께                     | P1  | live |
 
+| json-to-typescript | JSON → TypeScript | json to typescript / JSON 타입스크립트 변환 | 중첩 배열·optional 필드를 추론하고 interface·type·Zod 스키마 선택 | P1 | todo |
+| xml-formatter | XML 포맷터 | xml formatter / XML 정렬 | 오류 행·열 표시, 접기 가능한 트리와 대용량 붙여넣기 처리 | P1 | todo |
+| xml-json | XML ↔ JSON 변환 | xml to json / XML JSON 변환 | 속성·CDATA·반복 요소의 변환 규칙을 미리보기로 명시 | P1 | todo |
+| url-parser | URL 분석기 | url parser / URL 분석 | 쿼리 파라미터·인코딩·fragment·상대 URL을 표로 분해하고 안전하게 복사 | P1 | todo |
+| open-graph-generator | OG 태그 생성기 | open graph meta generator / OG 태그 생성기 | 입력 즉시 Facebook·X·카카오 공유 카드 미리보기와 HTML 메타 태그 생성 | P1 | todo |
+| robots-txt-generator | robots.txt 생성기 | robots.txt generator / robots.txt 만들기 | User-agent별 allow/disallow·sitemap 구문 검사와 복사 가능한 결과 | P2 | todo |
+| sitemap-generator | 사이트맵 생성기 | xml sitemap generator / XML 사이트맵 만들기 | URL 목록에서 lastmod·changefreq·priority를 검증해 XML과 robots.txt 줄을 함께 생성 | P2 | todo |
+| css-box-shadow-generator | CSS 그림자 생성기 | css box shadow generator / CSS 그림자 만들기 | 다중 그림자·inset·색 대비를 실시간 미리보기와 복사 가능한 CSS로 제공 | P2 | todo |
+| css-clip-path-generator | CSS 클리핑 경로 생성기 | css clip path generator / CSS 도형 만들기 | 점을 드래그해 polygon·circle·inset 값을 만들고 반응형 좌표 복사 | P2 | todo |
+| css-grid-generator | CSS Grid 생성기 | css grid generator / CSS 그리드 생성기 | 드래그로 행·열·gap·영역 이름을 만들고 바로 붙여넣을 HTML/CSS 출력 | P1 | todo |
+
 ## generator: 생성기
 
 | slug                | 도구           | 핵심 키워드                          | Edge 아이디어                                     | P   | 상태 |
@@ -199,6 +244,12 @@
 | username-generator  | 닉네임 생성    | username generator / 닉네임 추천     | 한글 닉네임                                       | P2  | todo |
 | signature-generator | 서명 만들기    | signature generator / 서명 만들기    | 손글씨, 폰트 서명, 투명 PNG                       | P1  | live |
 
+| wifi-qr-generator | Wi-Fi QR 코드 만들기 | wifi qr code generator / 와이파이 QR코드 만들기 | SSID·보안 방식·숨김 네트워크를 전용 폼으로 입력하고 비밀번호가 기기를 떠나지 않음 | P1 | todo |
+| vcard-qr-generator | 연락처 QR 코드 만들기 | vcard qr code generator / 연락처 QR코드 만들기 | 이름·전화·이메일·조직을 vCard 표준으로 검증하고 QR·.vcf를 함께 저장 | P2 | todo |
+| calendar-qr-generator | 일정 QR 코드 만들기 | calendar event qr code / 일정 QR코드 만들기 | 시간대·종일 일정·알림을 포함한 iCalendar QR와 .ics 파일을 함께 생성 | P2 | todo |
+| bingo-card-generator | 빙고판 만들기 | bingo card generator / 빙고판 만들기 | 항목 목록에서 중복 없는 여러 장의 인쇄용 빙고판 PDF를 생성 | P1 | todo |
+| word-search-generator | 단어 찾기 퍼즐 만들기 | word search generator / 단어 찾기 퍼즐 만들기 | 한글·영문 단어를 겹쳐 배치하고 정답지 포함 인쇄용 PDF를 생성 | P2 | todo |
+
 ## device: 기기 테스트 (신규 카테고리)
 
 검색량이 매우 크고, 브라우저 API로 100% 구현할 수 있으며, 광고가 많은 경쟁 사이트가 대부분이다.
@@ -216,6 +267,11 @@
 | click-speed-test   | 클릭 속도       | cps test                             | 키보드 조작, 로컬 개인 최고 기록 | P2  | live |
 | reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                     | P2  | live |
 
+| gamepad-tester | 게임패드 테스트 | gamepad tester / 게임패드 테스트 | 버튼·스틱·트리거의 실시간 값, 데드존과 진동 지원 여부를 한 화면에서 검사 | P1 | todo |
+| touch-screen-test | 터치스크린 테스트 | touch screen test / 터치 테스트 | 멀티터치 점·압력·좌표를 전체화면에서 표시하고 누락 영역을 확인 | P1 | todo |
+| browser-permissions-test | 브라우저 권한 확인 | browser permissions test / 브라우저 권한 확인 | 카메라·마이크·위치 권한 상태와 브라우저별 재설정 경로를 로컬에서 안내 | P2 | todo |
+| webgl-test | WebGL 테스트 | webgl test / WebGL 확인 | 렌더러·WebGL 버전·확장 기능·컨텍스트 손실을 짧은 그래픽 테스트로 점검 | P2 | todo |
+
 ## color: 색상·디자인 (신규 카테고리)
 
 | slug               | 도구        | 핵심 키워드             | Edge 아이디어           | P   | 상태 |
@@ -225,14 +281,30 @@
 | gradient-generator | 그라데이션  | css gradient generator  | OKLCH 보간              | P2  | todo |
 | palette-generator  | 팔레트 생성 | color palette generator | 접근성 검증 포함        | P2  | todo |
 
+| color-blindness-simulator | 색각 이상 시뮬레이터 | color blindness simulator / 색맹 시뮬레이터 | 이미지를 프로타노피아·듀테라노피아·트리타노피아로 즉시 비교하고 파일은 업로드하지 않음 | P1 | todo |
+| color-name-finder | 색상 이름 찾기 | color name from hex / 색상 이름 찾기 | HEX·RGB에서 CSS·일반 색상 이름과 가장 가까운 접근성 대체색을 함께 표시 | P2 | todo |
+| css-color-mixer | CSS 색상 혼합기 | css color mixer / CSS 색상 섞기 | sRGB·OKLCH 혼합 결과와 대비율·복사 가능한 color-mix() 코드를 나란히 제공 | P2 | todo |
+
 ## media: 오디오·비디오 (신규 카테고리, ffmpeg.wasm 지연 로드, JS 예산 예외 검토)
 
-| slug             | 도구          | 핵심 키워드                                                            | Edge 아이디어                                                               | P   | 상태 |
-| ---------------- | ------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- | --- | ---- |
-| video-to-gif     | 동영상 → GIF  | video to gif                                                           | 업로드 없음                                                                 | P1  | live |
-| video-compressor | 동영상 압축   | compress video / 동영상 용량 줄이기                                    | 업로드 없음(대용량 강점)                                                    | P1  | live |
-| audio-converter  | 오디오 변환   | mp3 converter                                                          | —                                                                           | P2  | todo |
-| audio-cutter     | 오디오 자르기 | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                   | P1  | live |
-| voice-recorder   | 음성 녹음     | online voice recorder / 녹음기                                         | 업로드 없음, mp3 저장                                                       | P1  | live |
-| screen-recorder  | 화면 녹화     | screen recorder online / 화면 녹화                                     | 설치 없음, 워터마크 없음                                                    | P1  | live |
-| video-to-mp3     | 동영상 → MP3  | mp4 to mp3, extract audio from video / 동영상 mp3 변환, 영상 소리 추출 | 업로드 없음, 브라우저 디코딩 + MP3 인코딩(작은 인코더 지연 로드), 구간 선택 | P1  | live |
+| slug                  | 도구               | 핵심 키워드                                                            | Edge 아이디어                                                                 | P   | 상태 |
+| --------------------- | ------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --- | ---- |
+| video-to-gif          | 동영상 → GIF       | video to gif                                                           | 업로드 없음                                                                   | P1  | live |
+| video-compressor      | 동영상 압축        | compress video / 동영상 용량 줄이기                                    | 업로드 없음(대용량 강점)                                                      | P1  | live |
+| audio-converter       | 오디오 변환        | mp3 converter                                                          | —                                                                             | P2  | todo |
+| audio-cutter          | 오디오 자르기      | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                     | P1  | live |
+| voice-recorder        | 음성 녹음          | online voice recorder / 녹음기                                         | 업로드 없음, mp3 저장                                                         | P1  | live |
+| screen-recorder       | 화면 녹화          | screen recorder online / 화면 녹화                                     | 설치 없음, 워터마크 없음                                                      | P1  | live |
+| video-to-mp3          | 동영상 → MP3       | mp4 to mp3, extract audio from video / 동영상 mp3 변환, 영상 소리 추출 | 업로드 없음, 브라우저 디코딩 + MP3 인코딩(작은 인코더 지연 로드), 구간 선택   | P1  | live |
+| video-trimmer         | 동영상 자르기      | trim video / 동영상 자르기                                             | 프레임 미리보기로 시작·끝을 정확히 고르고 재인코딩 없이 가능한 경우 즉시 저장 | P1  | todo |
+| video-merger          | 동영상 합치기      | merge videos / 동영상 합치기                                           | 순서 드래그·해상도 불일치 경고·전환 없는 한 파일 출력, 업로드 없음            | P1  | todo |
+| video-cropper         | 동영상 화면 자르기 | crop video / 동영상 화면 자르기                                        | 9:16·1:1·16:9 프리셋과 프레임별 미리보기, 개인정보 영역 가리기 연계           | P1  | todo |
+| video-rotate-flip     | 동영상 회전·뒤집기 | rotate video / 동영상 회전                                             | 세로 영상 방향 자동 감지, 90° 회전·좌우 반전을 미리보기로 확인                | P1  | todo |
+| video-resizer         | 동영상 크기 조절   | resize video / 동영상 해상도 변경                                      | SNS·메신저 프리셋, 비율 잠금·예상 용량 표시, 파일 업로드 없음                 | P1  | todo |
+| video-muter           | 동영상 소리 제거   | mute video / 동영상 음소거                                             | 오디오 트랙만 안전하게 제거하고 원본 영상 코덱·해상도를 최대한 유지           | P1  | todo |
+| video-speed-changer   | 동영상 속도 조절   | change video speed / 동영상 배속 조절                                  | 0.25×~4×와 오디오 피치 유지 선택, 길이·예상 용량을 즉시 표시                  | P1  | todo |
+| video-frame-extractor | 동영상 프레임 추출 | extract frames from video / 동영상 사진 추출                           | 시간·장면 간격으로 JPG/PNG를 뽑고 선택 프레임만 ZIP                           | P1  | todo |
+| audio-joiner          | 오디오 합치기      | join audio files / mp3 합치기                                          | 여러 파일 순서·간격·크로스페이드를 파형으로 확인하고 로컬에서 하나로 저장     | P1  | todo |
+| audio-volume-booster  | 오디오 볼륨 조절   | increase audio volume / mp3 볼륨 키우기                                | 클리핑 경고·정규화·페이드 인/아웃을 파형 미리보기로 제공                      | P1  | todo |
+| audio-speed-changer   | 오디오 속도 조절   | change audio speed / mp3 배속 조절                                     | 음성 피치 유지 옵션과 결과 길이·파형 비교, 구간 반복 미리듣기                 | P1  | todo |
+| audio-reverser        | 오디오 역재생      | reverse audio / 오디오 거꾸로 재생                                     | 전체·선택 구간 역재생, 즉시 미리듣기와 WAV/MP3 저장                           | P2  | todo |
