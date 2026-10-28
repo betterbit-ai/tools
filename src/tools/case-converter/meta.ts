@@ -34,5 +34,6 @@ export const meta: ToolMeta = {
     'sort-lines',
     'text-diff',
     'find-and-replace',
+    'reverse-text',
   ],
 };

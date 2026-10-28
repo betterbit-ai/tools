@@ -58,5 +58,6 @@ export const meta: ToolMeta = {
     'korean-spell-check',
     'pdf-to-text',
     'find-and-replace',
+    'reverse-text',
   ],
 };

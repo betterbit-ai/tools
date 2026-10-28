@@ -96,7 +96,7 @@
 | speech-to-text         | 받아쓰기          | speech to text / 음성 텍스트 변환    | 기기 내 Web Speech API, 음성 업로드 없음              | P1  | live |
 | fancy-text             | 특수 폰트 텍스트  | fancy text generator                 | 인스타 바이오용 유니코드 서체                         | P1  | live |
 | invisible-character    | 공백 문자         | invisible character / 투명 문자      | 복사 한 번, 플랫폼별 동작 안내                        | P1  | live |
-| reverse-text           | 텍스트 뒤집기     | reverse text                         | 거꾸로, 상하 뒤집기                                   | P2  | todo |
+| reverse-text           | 텍스트 뒤집기     | reverse text                         | 거꾸로, 상하 뒤집기                                   | P2  | live |
 | word-frequency         | 단어 빈도         | word frequency counter               | CJK 분절, CSV 내보내기                                | P2  | todo |
 | markdown-editor        | 마크다운 미리보기 | markdown editor online               | 실시간 미리보기, HTML 복사                            | P2  | todo |
 | character-map          | 특수문자표        | special characters / 특수문자        | 한국어 키보드 특수문자(ㅁ+한자) 카테고리              | P1  | live |
