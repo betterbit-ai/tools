@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its FAQ states that entered numbers are sent to its server to calculate the result, even though they are not stored. Betterbit performs exact arithmetic entirely in the browser and never sends input to a server. (장점: 4단계 입력 흐름으로 처음 쓰는 사람에게 순서를 안내한다.)',
     },
   ],
-  related: ['percentage-calculator', 'scientific-calculator', 'discount-calculator'],
+  related: ['percentage-calculator', 'scientific-calculator', 'discount-calculator', 'ratio-calculator'],
 };
