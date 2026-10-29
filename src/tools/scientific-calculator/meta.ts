@@ -33,5 +33,11 @@ export const meta: ToolMeta = {
         '키보드 입력과 Deg/Rad 전환은 되지만, 페이지 설명상 계산 버튼을 누르면 백엔드 API가 결과를 반환하며 과거 계산을 다시 볼 기록도 없다. Betterbit는 수식을 브라우저에서 계산하고 최근 30개를 기록에 남겨 탭으로 바로 불러올 수 있다. (장점: 역수, 삼각함수의 여함수, 진법 변환, 반올림·내림·올림 키를 갖추고 있다.)',
     },
   ],
-  related: ['fraction-calculator', 'number-base-converter', 'area-converter', 'temperature-converter'],
+  related: [
+    'fraction-calculator',
+    'number-base-converter',
+    'area-converter',
+    'temperature-converter',
+    'ratio-calculator',
+  ],
 };
