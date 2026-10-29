@@ -27,5 +27,12 @@ export const meta: ToolMeta = {
         'Its four calculator sections are followed immediately by an unrelated “Payment options” field, and its third and fourth sections calculate a discounted or raised final price rather than the change between two entered values. Betterbit keeps the surface focused on percentage questions and shows the substituted formula under each answer. (장점: 할인 후 가격과 인상 후 가격을 각각 바로 계산한다.)',
     },
   ],
-  related: ['discount-calculator', 'vat-calculator', 'tip-calculator', 'compound-interest', 'ratio-calculator'],
+  related: [
+    'discount-calculator',
+    'vat-calculator',
+    'tip-calculator',
+    'compound-interest',
+    'ratio-calculator',
+    'average-calculator',
+  ],
 };

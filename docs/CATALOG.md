@@ -152,7 +152,7 @@
 | unemployment-benefit-kr | 실업급여 계산기      | 실업급여 계산기                                                  | 2026년 상하한액                                                                                               | P1  | live |
 | pyeong-calculator       | 평수 계산기          | 평수 계산 / 평 제곱미터                                          | 공급·전용 면적 설명                                                                                           | P1  | live |
 | ratio-calculator        | 비율 계산기          | ratio calculator / 비례식 계산                                   | 화면비, 레시피 비율                                                                                           | P2  | live |
-| average-calculator      | 평균 계산기          | average calculator                                               | 평균, 중앙값, 최빈값, 표준편차 한번에                                                                         | P2  | todo |
+| average-calculator      | 평균 계산기          | average calculator                                               | 평균, 중앙값, 최빈값, 표준편차 한번에                                                                         | P2  | live |
 | electricity-bill-kr     | 전기요금 계산기      | 전기요금 계산기                                                  | 누진 구간 시각화                                                                                              | P2  | todo |
 | exchange-rate           | 환율 계산기          | currency converter / 환율 계산기                                 | 실제 제시 환율·수수료·실질 환율을 함께 계산                                                                   | P1  | live |
 | weekly-holiday-pay-kr   | 주휴수당 계산기      | weekly holiday pay korea / 주휴수당 계산기, 주휴수당 조건        | 요일별 근무시간 입력 → 주휴 발생 여부(주 15시간·개근)와 금액, 월급 환산, 2026 최저임금 비교, 미발생 이유 표시 | P0  | live |

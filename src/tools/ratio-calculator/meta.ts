@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its opened page is focused on one blank in a/b = c/d, with a written cross-multiplication explanation; it does not offer a ratio simplifier or recipe servings inputs on the visible tool. Betterbit adds those two tasks while retaining immediate missing-value calculation and the displayed equation. (장점: 단계별 풀이를 자세히 보여 준다.)',
     },
   ],
-  related: ['percentage-calculator', 'fraction-calculator', 'scientific-calculator'],
+  related: ['percentage-calculator', 'fraction-calculator', 'scientific-calculator', 'average-calculator'],
 };
