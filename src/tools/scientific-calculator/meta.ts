@@ -39,5 +39,6 @@ export const meta: ToolMeta = {
     'area-converter',
     'temperature-converter',
     'ratio-calculator',
+    'average-calculator',
   ],
 };

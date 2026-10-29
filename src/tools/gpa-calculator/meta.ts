@@ -45,5 +45,11 @@ export const meta: ToolMeta = {
         'Its visible description asks users to choose either a 4.5 or 4.3 school scale and returns that GPA and total credits, so comparing scales requires changing the selection. Betterbit는 4.5·4.3·4.0 세 결과를 한 화면에서 유지한다. (장점: 이수학점을 빼고 단순 평균하면 틀릴 수 있다는 예시를 명확히 설명한다.)',
     },
   ],
-  related: ['percentage-calculator', 'scientific-calculator', 'compound-interest', 'discount-calculator'],
+  related: [
+    'percentage-calculator',
+    'scientific-calculator',
+    'compound-interest',
+    'discount-calculator',
+    'average-calculator',
+  ],
 };
