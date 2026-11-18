@@ -48,6 +48,11 @@ const uiEn = {
   copied: 'Copied',
   autosaved: 'Saved in this browser only',
   analyzing: 'Counting…',
+  directMode:
+    'The background counter could not load, so this page is counting the text itself. Very long text may pause for a moment.',
+  countFailed:
+    'The background counter could not load and this text is too long to count on the page. Reload the page to try again.',
+  saveFailed: 'Too long to save — reload will lose this text',
 };
 export type UI = typeof uiEn;
 
@@ -205,6 +210,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       copied: '복사됨',
       autosaved: '이 브라우저에만 저장됨',
       analyzing: '계산 중…',
+      directMode: '백그라운드 계산기를 불러오지 못해 이 화면에서 직접 셉니다. 아주 긴 글은 잠깐 멈출 수 있습니다.',
+      countFailed:
+        '백그라운드 계산기를 불러오지 못했고 글이 너무 길어 이 화면에서 셀 수 없습니다. 페이지를 새로고침한 뒤 다시 시도하세요.',
+      saveFailed: '너무 길어 저장 안 됨 — 새로고침하면 사라집니다',
     },
   },
 };

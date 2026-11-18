@@ -216,7 +216,7 @@ export const meta: ToolMeta = {
   category: 'text',
   icon: 'count',
   added: '2026-10-07',
-  updated: '2026-10-23',
+  updated: '2026-11-19',
   edges: ['accuracy', 'privacy', 'features'],
   competitors: [
     {

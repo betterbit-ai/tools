@@ -10,6 +10,10 @@ const STORAGE_KEY = 'tools:word-counter:text';
 const LIMIT_KEY = 'tools:word-counter:limit';
 const METRIC_KEY = 'tools:word-counter:limit-metric';
 const ANALYSIS_DELAY = 200;
+/** Above this length a synchronous count would freeze the page, so a broken worker is reported instead. */
+const MAX_DIRECT_CHARS = 400_000;
+/** A worker that never answers is treated as broken rather than leaving the page "counting" forever. */
+const WORKER_TIMEOUT = 20_000;
 
 type LimitRule =
   | 'selfIntroduction'
@@ -72,7 +76,16 @@ export default function WordCounter({ locale, ui, preset }: ToolProps<UI>) {
   const [metric, setMetric] = useState<LimitMetric>(presetMetric ?? 'characters');
   const [analysis, setAnalysis] = useState(emptyAnalysis);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  /** The worker could not be used, so the page is counting directly. */
+  const [directMode, setDirectMode] = useState(false);
+  /** Nothing can count this text: the worker is gone and the text is too long for this page. */
+  const [countFailed, setCountFailed] = useState(false);
+  /** The browser refused to store the text (quota, private mode) although the page says it is saved. */
+  const [saveFailed, setSaveFailed] = useState(false);
   const requestId = useRef(0);
+  const latestText = useRef('');
+  const workerRef = useRef<Worker | null>(null);
+  const workerFailed = useRef(false);
 
   // Restore after hydration (server render has no storage).
   useEffect(() => {
@@ -84,9 +97,13 @@ export default function WordCounter({ locale, ui, preset }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
+    latestText.current = text;
     const id = setTimeout(() => {
-      if (text) safeStorage.set(STORAGE_KEY, text);
-      else safeStorage.remove(STORAGE_KEY);
+      if (text) setSaveFailed(!safeStorage.trySet(STORAGE_KEY, text));
+      else {
+        safeStorage.remove(STORAGE_KEY);
+        setSaveFailed(false);
+      }
     }, 300);
     return () => clearTimeout(id);
   }, [text]);
@@ -100,37 +117,91 @@ export default function WordCounter({ locale, ui, preset }: ToolProps<UI>) {
     safeStorage.set(METRIC_KEY, metric);
   }, [metric]);
 
+  useEffect(
+    () => () => {
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    },
+    [],
+  );
+
+  /** Counts on this page. Used when no worker is available, and reported to the reader. */
+  const runDirect = (id: number, value: string) => {
+    if (id !== requestId.current) return;
+    if (value.length > MAX_DIRECT_CHARS) {
+      setCountFailed(true);
+      setIsAnalyzing(false);
+      return;
+    }
+    try {
+      setAnalysis({ stats: analyze(value), keywords: topKeywords(value) });
+      setCountFailed(false);
+      setDirectMode(true);
+    } catch {
+      setCountFailed(true);
+    }
+    setIsAnalyzing(false);
+  };
+
+  const dropWorker = () => {
+    workerFailed.current = true;
+    workerRef.current?.terminate();
+    workerRef.current = null;
+  };
+
+  const ensureWorker = (): Worker | null => {
+    if (workerFailed.current) return null;
+    if (workerRef.current) return workerRef.current;
+    try {
+      const worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' });
+      worker.onmessage = (event: MessageEvent<AnalysisResult>) => {
+        if (event.data.id !== requestId.current) return;
+        setAnalysis({ stats: event.data.stats, keywords: event.data.keywords });
+        setIsAnalyzing(false);
+        setCountFailed(false);
+      };
+      // A chunk that cannot load (blocked request, strict CSP, stale cached page) fires here.
+      // Without this the counters stayed at 0 with "Counting…" on screen forever.
+      worker.onerror = () => {
+        dropWorker();
+        runDirect(requestId.current, latestText.current);
+      };
+      workerRef.current = worker;
+      return worker;
+    } catch {
+      workerFailed.current = true;
+      return null;
+    }
+  };
+
   useEffect(() => {
     const id = ++requestId.current;
     if (!text) {
       setAnalysis(emptyAnalysis);
       setIsAnalyzing(false);
+      setCountFailed(false);
       return;
     }
 
     setIsAnalyzing(true);
-    let worker: Worker | undefined;
-    const timeout = setTimeout(() => {
-      try {
-        worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' });
-        worker.onmessage = (event: MessageEvent<AnalysisResult>) => {
-          if (event.data.id !== requestId.current) return;
-          setAnalysis({ stats: event.data.stats, keywords: event.data.keywords });
-          setIsAnalyzing(false);
-        };
+    let watchdog: number | undefined;
+    const delay = window.setTimeout(() => {
+      const worker = ensureWorker();
+      if (worker) {
         worker.postMessage({ id, text });
-      } catch {
-        // Very old browsers without module workers retain the previous synchronous behavior.
-        if (id === requestId.current) {
-          setAnalysis({ stats: analyze(text), keywords: topKeywords(text) });
-          setIsAnalyzing(false);
-        }
+        watchdog = window.setTimeout(() => {
+          if (requestId.current !== id) return;
+          dropWorker();
+          runDirect(id, text);
+        }, WORKER_TIMEOUT);
+        return;
       }
+      runDirect(id, text);
     }, ANALYSIS_DELAY);
 
     return () => {
-      clearTimeout(timeout);
-      worker?.terminate();
+      window.clearTimeout(delay);
+      if (watchdog !== undefined) window.clearTimeout(watchdog);
     };
   }, [text]);
 
@@ -185,7 +256,9 @@ export default function WordCounter({ locale, ui, preset }: ToolProps<UI>) {
             <Button size="sm" variant="ghost" onClick={() => setText('')} disabled={!text}>
               {ui.clear}
             </Button>
-            <span class="ml-auto text-xs text-subtle">{ui.autosaved}</span>
+            <span class={cx('ml-auto text-xs', saveFailed ? 'text-danger' : 'text-subtle')}>
+              {saveFailed ? ui.saveFailed : ui.autosaved}
+            </span>
           </div>
         </div>
 
@@ -205,6 +278,9 @@ export default function WordCounter({ locale, ui, preset }: ToolProps<UI>) {
           <p class="min-h-5 text-xs text-subtle" role="status">
             {isAnalyzing ? ui.analyzing : ''}
           </p>
+          {(countFailed || directMode) && (
+            <Notice tone={countFailed ? 'danger' : 'info'}>{countFailed ? ui.countFailed : ui.directMode}</Notice>
+          )}
 
           <div>
             <Field label={ui.limitLabel} hint={ui.limitHint}>
