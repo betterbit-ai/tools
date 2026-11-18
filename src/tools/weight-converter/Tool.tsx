@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, Field, NumberInput, Panel, Select, Stat } from '../../components/ui';
+import { Button, Field, Panel, Select, Stat, TextInput, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
-import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { convertWeight, isWeightUnit, quickTable, WEIGHT_UNITS, type WeightUnit } from './logic';
+import {
+  convertWeight,
+  formatInputValue,
+  formatWeight,
+  isWeightUnit,
+  parseWeightInput,
+  quickTable,
+  WEIGHT_UNITS,
+  type WeightUnit,
+} from './logic';
 
 const STORAGE_KEY = 'tools:weight-converter:state';
 
@@ -49,15 +57,7 @@ function restoreState(): State {
   }
 }
 
-/** More decimals for tiny results (e.g. mg -> t), fewer for large ones. */
-function resultDecimals(n: number): number {
-  const abs = Math.abs(n);
-  if (abs === 0) return 0;
-  if (abs < 0.001) return 8;
-  if (abs < 1) return 6;
-  if (abs < 100) return 4;
-  return 2;
-}
+const asText = (value: number | '') => (value === '' ? '' : String(value));
 
 export default function WeightConverter({ locale, ui, preset }: ToolProps<UI>) {
   const presetFrom = isWeightUnit(preset?.from) ? preset.from : undefined;
@@ -75,39 +75,69 @@ export default function WeightConverter({ locale, ui, preset }: ToolProps<UI>) {
         }
       : DEFAULT_STATE,
   );
+  /** The field keeps exactly what was typed, so a decimal point or a separator is never eaten. */
+  const [text, setText] = useState(() =>
+    asText(hasPreset ? (presetValue ?? DEFAULT_STATE.value) : DEFAULT_STATE.value),
+  );
+  const [saveFailed, setSaveFailed] = useState(false);
 
   // Variant (preset) pages always start in the promised state; the plain tool page restores it.
   useEffect(() => {
-    if (!hasPreset) setState(restoreState());
+    if (!hasPreset) {
+      const restored = restoreState();
+      setState(restored);
+      setText(asText(restored.value));
+    }
     setReady(true);
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
+    if (!ready) return;
+    // The page says the value is saved automatically; a blocked or full store has to say otherwise.
+    setSaveFailed(!safeStorage.trySet(STORAGE_KEY, JSON.stringify(state)));
   }, [ready, state]);
 
   const update = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
-  const value = isFiniteNumber(state.value) ? state.value : 0;
-  const result = useMemo(() => convertWeight(value, state.from, state.to), [value, state.from, state.to]);
+  const parsed = parseWeightInput(text);
+  const value = parsed.status === 'valid' ? parsed.value : parsed.status === 'empty' ? 0 : null;
+  const result = value === null ? null : convertWeight(value, state.from, state.to);
   const rows = useMemo(() => quickTable(state.from, state.to), [state.from, state.to]);
-  const n = (num: number) => formatNumber(num, locale, resultDecimals(num));
   const unitOptions = WEIGHT_UNITS.map((u) => ({ value: u, label: ui[UNIT_LABEL_KEY[u]] }));
 
+  const onValueText = (next: string) => {
+    setText(next);
+    const reading = parseWeightInput(next);
+    if (reading.status === 'valid') update({ value: reading.value });
+    else if (reading.status === 'empty') update({ value: '' });
+  };
+
   const swap = () => {
-    const decimals = resultDecimals(result);
-    const factor = 10 ** decimals;
-    const rounded = Math.round(result * factor) / factor;
-    setState((s) => ({ value: rounded, from: s.to, to: s.from }));
+    const reading = parseWeightInput(text);
+    const converted = reading.status === 'valid' ? convertWeight(reading.value, state.from, state.to) : null;
+    setState((s) => ({ value: converted ?? s.value, from: s.to, to: s.from }));
+    if (converted !== null) setText(formatInputValue(converted));
   };
 
   return (
     <Panel>
       <div class="flex flex-wrap items-end gap-3">
-        <Field label={ui.valueLabel} class="w-32">
-          <NumberInput value={state.value} onValue={(v) => update({ value: v })} />
+        <Field label={ui.valueLabel} class="w-40">
+          <TextInput
+            inputMode="decimal"
+            autoComplete="off"
+            spellcheck={false}
+            value={text}
+            placeholder="70"
+            onInput={(event) => onValueText(event.currentTarget.value)}
+          />
         </Field>
         <Field label={ui.fromLabel} class="w-48">
-          <Select value={state.from} onValue={(from) => update({ from })} options={unitOptions} />
+          <Select
+            value={state.from}
+            onValue={(from) => update({ from })}
+            ariaLabel={ui.fromLabel}
+            options={unitOptions}
+          />
         </Field>
         <Button variant="secondary" aria-label={ui.swap} onClick={swap} class="mb-0.5">
           <svg
@@ -128,15 +158,22 @@ export default function WeightConverter({ locale, ui, preset }: ToolProps<UI>) {
           </svg>
         </Button>
         <Field label={ui.toLabel} class="w-48">
-          <Select value={state.to} onValue={(to) => update({ to })} options={unitOptions} />
+          <Select value={state.to} onValue={(to) => update({ to })} ariaLabel={ui.toLabel} options={unitOptions} />
         </Field>
       </div>
+      {parsed.status === 'invalid' && (
+        <p class="mt-3 rounded-md bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
+          {ui.invalidValue}
+        </p>
+      )}
 
       <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div aria-live="polite">
-          <Stat label={ui.resultLabel} value={n(result)} emphasis />
+          <Stat label={ui.resultLabel} value={result === null ? '—' : formatWeight(result, locale)} emphasis />
         </div>
-        <span class="text-xs text-subtle">{ui.autosaved}</span>
+        <span class={cx('text-xs', saveFailed ? 'text-danger' : 'text-subtle')}>
+          {saveFailed ? ui.saveFailed : ui.autosaved}
+        </span>
       </div>
 
       <div class="mt-6 border-t border-line pt-6">
@@ -156,8 +193,8 @@ export default function WeightConverter({ locale, ui, preset }: ToolProps<UI>) {
             <tbody>
               {rows.map((row) => (
                 <tr class="border-t border-line">
-                  <td class="px-3 py-1.5 tabular text-fg">{n(row.value)}</td>
-                  <td class="px-3 py-1.5 tabular text-fg">{n(row.result)}</td>
+                  <td class="px-3 py-1.5 tabular text-fg">{formatWeight(row.value, locale)}</td>
+                  <td class="px-3 py-1.5 tabular text-fg">{formatWeight(row.result, locale)}</td>
                 </tr>
               ))}
             </tbody>

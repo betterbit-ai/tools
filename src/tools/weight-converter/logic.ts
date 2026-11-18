@@ -2,6 +2,8 @@
  * Pure logic for weight-converter — no DOM, no Preact. Everything testable lives here.
  */
 
+import type { Locale } from '../../i18n/locales';
+
 export type WeightUnit =
   'mg' | 'g' | 'kg' | 't' | 'oz' | 'lb' | 'st' | 'don' | 'nyang' | 'geunMeat' | 'geunProduce' | 'gwan';
 
@@ -51,6 +53,65 @@ export function convertWeight(value: number, from: WeightUnit, to: WeightUnit): 
   if (!Number.isFinite(value)) return 0;
   if (from === to) return value;
   return (value * GRAMS_PER_UNIT[from]) / GRAMS_PER_UNIT[to];
+}
+
+export type WeightInput = { status: 'empty' } | { status: 'invalid' } | { status: 'valid'; value: number };
+
+/**
+ * Reads what people actually type into a value field: a plain number, a decimal still being
+ * typed ("70."), thousands separators copied from a document ("1,000"), a comma decimal
+ * ("70,5"), and full-width digits from a Korean IME. Anything else is reported as invalid
+ * rather than silently becoming 0.
+ */
+export function parseWeightInput(text: string): WeightInput {
+  const normalized = text
+    .replace(/[\uFF10-\uFF19\uFF0E]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0xfee0))
+    .trim();
+  if (normalized === '') return { status: 'empty' };
+  const compact = normalized.replace(/[\s\u00A0\u202F_']/g, '');
+  if (/^[+-]?[.,]?$/.test(compact)) return { status: 'empty' };
+
+  let numeric = compact;
+  if (/^[+-]?\d{1,3}(,\d{3})+(\.\d*)?$/.test(compact)) numeric = compact.replace(/,/g, '');
+  else if (/^[+-]?\d+,\d+$/.test(compact)) numeric = compact.replace(',', '.');
+  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(numeric)) return { status: 'invalid' };
+
+  const value = Number(numeric);
+  return Number.isFinite(value) ? { status: 'valid', value } : { status: 'invalid' };
+}
+
+/** More decimals for tiny results (e.g. mg -> t), fewer for large ones. */
+export function resultDecimals(value: number): number {
+  const abs = Math.abs(value);
+  if (abs === 0) return 0;
+  if (abs < 0.001) return 8;
+  if (abs < 1) return 6;
+  if (abs < 100) return 4;
+  return 2;
+}
+
+/**
+ * Formats a converted weight. A real value is never displayed as "0": below the precision of
+ * the fixed-decimal rule the result switches to scientific notation, so 1 mg = 0.000000001 t
+ * reads as "1E-9" instead of "0".
+ */
+export function formatWeight(value: number, locale: Locale): string {
+  if (!Number.isFinite(value)) return '—';
+  const abs = Math.abs(value);
+  if (abs !== 0 && (abs < 5e-9 || abs >= 1e15)) {
+    return new Intl.NumberFormat(locale, { notation: 'scientific', maximumSignificantDigits: 4 }).format(value);
+  }
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: resultDecimals(value) }).format(value);
+}
+
+/**
+ * The value written back into the field after a swap: precise enough that unit pairs survive a
+ * round trip, short enough to stay readable.
+ */
+export function formatInputValue(value: number): string {
+  if (!Number.isFinite(value)) return '';
+  if (value === 0) return '0';
+  return String(Number(value.toPrecision(12)));
 }
 
 /** Common, realistically-searched values per unit, used to build a quick reference table. */

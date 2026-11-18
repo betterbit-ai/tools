@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { convertWeight, isWeightUnit, quickTable, WEIGHT_UNITS } from './logic';
+import {
+  convertWeight,
+  formatInputValue,
+  formatWeight,
+  isWeightUnit,
+  parseWeightInput,
+  quickTable,
+  WEIGHT_UNITS,
+} from './logic';
 
 describe('convertWeight', () => {
   it('converts kg to lbs using the exact international pound factor', () => {
@@ -91,5 +99,57 @@ describe('quickTable', () => {
     for (const unit of WEIGHT_UNITS) {
       expect(quickTable(unit, 'g').length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('parseWeightInput', () => {
+  it('reads the numbers people type, including decimals and grouped thousands', () => {
+    expect(parseWeightInput('70')).toEqual({ status: 'valid', value: 70 });
+    expect(parseWeightInput('70.5')).toEqual({ status: 'valid', value: 70.5 });
+    expect(parseWeightInput('70.')).toEqual({ status: 'valid', value: 70 });
+    expect(parseWeightInput('1,000')).toEqual({ status: 'valid', value: 1000 });
+    expect(parseWeightInput('1,000.5')).toEqual({ status: 'valid', value: 1000.5 });
+    expect(parseWeightInput('70,5')).toEqual({ status: 'valid', value: 70.5 });
+    expect(parseWeightInput(' 70 ')).toEqual({ status: 'valid', value: 70 });
+    expect(parseWeightInput('７０')).toEqual({ status: 'valid', value: 70 });
+    expect(parseWeightInput('1e-9')).toEqual({ status: 'valid', value: 1e-9 });
+    expect(parseWeightInput('-2.5')).toEqual({ status: 'valid', value: -2.5 });
+  });
+
+  it('separates an empty field from an entry that is not a number', () => {
+    expect(parseWeightInput('')).toEqual({ status: 'empty' });
+    expect(parseWeightInput('-')).toEqual({ status: 'empty' });
+    expect(parseWeightInput('.')).toEqual({ status: 'empty' });
+    expect(parseWeightInput('abc')).toEqual({ status: 'invalid' });
+    expect(parseWeightInput('70 lb')).toEqual({ status: 'invalid' });
+    expect(parseWeightInput('1,2,3')).toEqual({ status: 'invalid' });
+  });
+});
+
+describe('formatWeight', () => {
+  it('never shows a real weight as 0', () => {
+    expect(formatWeight(1e-9, 'en')).toBe('1E-9');
+    expect(formatWeight(5e-10, 'ko')).toBe('5E-10');
+    expect(formatWeight(0, 'en')).toBe('0');
+  });
+
+  it('keeps the everyday precision of each magnitude', () => {
+    expect(formatWeight(154.323583, 'en')).toBe('154.32');
+    expect(formatWeight(1.1023113, 'en')).toBe('1.1023');
+    expect(formatWeight(0.45359237, 'en')).toBe('0.453592');
+    expect(formatWeight(5e-8, 'en')).toBe('0.00000005');
+    expect(formatWeight(1_000_000, 'ko')).toBe('1,000,000');
+  });
+});
+
+describe('formatInputValue', () => {
+  it('writes a precise, readable value back into the field after a swap', () => {
+    expect(formatInputValue(convertWeight(70, 'kg', 'lb'))).toBe('154.323583529');
+    expect(formatInputValue(1e-9)).toBe('1e-9');
+    expect(formatInputValue(0)).toBe('0');
+    expect(parseWeightInput(formatInputValue(convertWeight(100, 'lb', 'kg')))).toEqual({
+      status: 'valid',
+      value: 45.359237,
+    });
   });
 });
