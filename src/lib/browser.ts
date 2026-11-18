@@ -44,6 +44,15 @@ export const safeStorage = {
       /* ignore */
     }
   },
+  /** Like `set`, but reports whether the value was stored (blocked storage, quota) so callers can say so. */
+  trySet(key: string, value: string): boolean {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
   remove(key: string): void {
     try {
       localStorage.removeItem(key);

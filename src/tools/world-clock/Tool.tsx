@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Button, Field, Panel, Segmented, TextInput, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
-import { cityFromInput, cityLabel, formatOffset, isTimeZone, searchCities } from '../time-zone-converter/logic';
+import {
+  cityFromInput,
+  cityLabel,
+  formatOffset,
+  isTimeZone,
+  resolveCity,
+  searchCities,
+} from '../time-zone-converter/logic';
 import type { UI } from './content';
 import {
   DEFAULT_ZONES,
@@ -33,8 +40,11 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
   const [now, setNow] = useState(() => Date.now());
   const [query, setQuery] = useState('');
   const [message, setMessage] = useState('');
+  const [storageWarning, setStorageWarning] = useState(false);
   const [date, setDate] = useState(() => currentDateInZone(Date.now(), DEFAULT_ZONES[0]));
   const restored = useRef(false);
+  /** The planner follows "today" until the person picks a date themselves. */
+  const followsToday = useRef(true);
   const referenceZone = zones[0] ?? DEFAULT_ZONES[0];
 
   useEffect(() => {
@@ -52,21 +62,60 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (restored.current) safeStorage.set(STORAGE_KEY, JSON.stringify({ zones, hourCycle } satisfies SavedState));
+    if (!restored.current) return;
+    // Storage can be full or blocked (private browsing); the copy promises the city list is kept,
+    // so a failed save has to be visible instead of silently dropping the list.
+    setStorageWarning(!safeStorage.trySet(STORAGE_KEY, JSON.stringify({ zones, hourCycle } satisfies SavedState)));
   }, [zones, hourCycle]);
 
+  // Tick on the wall clock, aligned to the second boundary, and refresh as soon as the tab is
+  // visible again: a hidden tab throttles timers to about once a minute, so a clock that only
+  // counts its own ticks shows a stale time right when someone comes back to it.
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(interval);
+    let timer = 0;
+    let stopped = false;
+    const schedule = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(tick, 1000 - (Date.now() % 1000));
+    };
+    const tick = () => {
+      if (stopped) return;
+      setNow(Date.now());
+      schedule();
+    };
+    const refresh = () => {
+      if (document.hidden) return;
+      setNow(Date.now());
+      schedule();
+    };
+    schedule();
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      stopped = true;
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('focus', refresh);
+    };
   }, []);
+
+  // Keep the reference date on today (also across midnight and when the reference city changes)
+  // until the person chooses a date.
+  useEffect(() => {
+    if (!followsToday.current) return;
+    setDate(currentDateInZone(now, referenceZone));
+  }, [now, referenceZone]);
 
   const suggestions = searchCities(query, locale).map((city) => cityLabel(city, locale));
   const hours = useMemo(() => overlapHours(date, referenceZone, zones), [date, referenceZone, zones]);
   const fullRanges = useMemo(() => fullOverlapRanges(hours), [hours]);
 
   const addCity = () => {
-    const city = cityFromInput(query, locale);
-    const zone = city?.zone ?? (isTimeZone(query) ? query : undefined);
+    const trimmed = query.trim();
+    const city = resolveCity(trimmed, locale);
+    const zone = city?.zone ?? (isTimeZone(trimmed) ? trimmed : undefined);
     if (!zone) {
       setMessage(ui.invalidCity);
       return;
@@ -90,14 +139,18 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
     setMessage('');
   };
 
-  const useToday = () => setDate(currentDateInZone(Date.now(), referenceZone));
+  const useToday = () => {
+    followsToday.current = true;
+    setDate(currentDateInZone(Date.now(), referenceZone));
+  };
 
   return (
     <Panel>
       <div class="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
-        <Field label={ui.cityLabel} hint={ui.cityHint} class="min-w-0 flex-1">
-          <div class="flex gap-2">
+        <Field label={ui.cityLabel} hint={ui.cityHint} class="min-w-0 flex-1 max-sm:basis-full">
+          <div class="flex gap-2 max-sm:flex-col">
             <TextInput
+              class="min-w-0 flex-1"
               list="world-clock-cities"
               value={query}
               placeholder={ui.cityPlaceholder}
@@ -117,7 +170,7 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
                 <option value={suggestion} />
               ))}
             </datalist>
-            <Button variant="primary" onClick={addCity} class="shrink-0">
+            <Button variant="primary" onClick={addCity} class="shrink-0 max-sm:w-full">
               {ui.addCity}
             </Button>
           </div>
@@ -188,8 +241,16 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
           </div>
           <Field label={ui.plannerDate} class="w-full sm:w-auto">
             <div class="flex gap-2">
-              <TextInput type="date" value={date} onInput={(event) => setDate(event.currentTarget.value)} />
-              <Button size="sm" onClick={useToday}>
+              <TextInput
+                class="min-w-0"
+                type="date"
+                value={date}
+                onInput={(event) => {
+                  followsToday.current = false;
+                  setDate(event.currentTarget.value);
+                }}
+              />
+              <Button size="sm" onClick={useToday} class="shrink-0">
                 {ui.now}
               </Button>
             </div>
@@ -202,7 +263,7 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
           <div class="mt-3 flex flex-wrap gap-2" aria-live="polite">
             {fullRanges.map((range) => (
               <span class="rounded-md bg-accent-soft px-3 py-2 text-sm font-medium text-accent">
-                {formatHour(range.start, hourCycle, locale)}–{formatHour(range.end, hourCycle, locale)} ·{' '}
+                {formatHour(range.start, hourCycle, locale)}–{formatHour(range.end % 24, hourCycle, locale)} ·{' '}
                 {ui.fullOverlap}
               </span>
             ))}
@@ -230,7 +291,9 @@ export default function WorldClock({ locale, ui }: ToolProps<UI>) {
         </ol>
       </section>
 
-      <p class="mt-5 text-xs text-subtle">{ui.private}</p>
+      <p class={cx('mt-5 text-xs', storageWarning ? 'text-danger' : 'text-subtle')}>
+        {storageWarning ? ui.storageFailed : ui.private}
+      </p>
     </Panel>
   );
 }

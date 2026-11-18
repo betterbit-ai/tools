@@ -104,6 +104,27 @@ export function cityFromInput(value: string, locale: Locale): City | undefined {
   return CITIES.find((city) => normalized(cityLabel(city, locale)) === input || normalized(city.zone) === input);
 }
 
+/**
+ * Resolves what someone types into a city field: the full suggestion label, an IANA zone, a plain
+ * city name in either language ("뉴욕", "Tokyo"), a search alias, or a search that matches exactly
+ * one city. Ambiguous fragments return undefined instead of guessing.
+ */
+export function resolveCity(value: string, locale: Locale): City | undefined {
+  const typed = cityFromInput(value, locale);
+  if (typed) return typed;
+  const term = normalized(value);
+  if (!term) return undefined;
+  const named = CITIES.find(
+    (city) =>
+      normalized(city.en) === term ||
+      normalized(city.ko) === term ||
+      city.aliases.some((alias) => normalized(alias) === term),
+  );
+  if (named) return named;
+  const matches = searchCities(value, locale);
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
 export function isTimeZone(value: string): boolean {
   // Accept named IANA zones (and UTC), not ambiguous abbreviations such as EST.
   if (value !== 'UTC' && !value.includes('/')) return false;

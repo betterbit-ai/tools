@@ -3,6 +3,7 @@ import {
   cityFromInput,
   formatOffset,
   isNearOffsetTransition,
+  resolveCity,
   resolveLocalTime,
   searchCities,
   zonedParts,
@@ -16,6 +17,16 @@ describe('time-zone-converter', () => {
     expect(searchCities('Asia/Seoul', 'en').map((city) => city.zone)).toContain('Asia/Seoul');
     expect(cityFromInput('America/New_York', 'ko')?.en).toBe('New York');
     expect(searchCities('🕒', 'en')).toEqual([]);
+  });
+
+  it('resolves a typed city name or alias, and refuses an ambiguous fragment', () => {
+    expect(resolveCity('뉴욕', 'ko')?.zone).toBe('America/New_York');
+    expect(resolveCity('Tokyo', 'ko')?.zone).toBe('Asia/Tokyo');
+    expect(resolveCity('  nyc ', 'en')?.zone).toBe('America/New_York');
+    expect(resolveCity('서울, 대한민국 — Asia/Seoul', 'ko')?.zone).toBe('Asia/Seoul');
+    expect(resolveCity('아시아', 'ko')).toBeUndefined();
+    expect(resolveCity('미국', 'ko')).toBeUndefined();
+    expect(resolveCity('', 'ko')).toBeUndefined();
   });
 
   it('converts standard-time and fractional UTC offsets', () => {
