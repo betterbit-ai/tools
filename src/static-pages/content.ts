@@ -12,10 +12,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
   about: {
     en: {
       title: `About ${SITE_NAME}`,
-      description: `${SITE_NAME} is a growing collection of small, fast, private web tools. No sign-up, no uploads, no ads — everything runs in your browser.`,
+      description: `${SITE_NAME} is a growing collection of small, fast, private web tools. No sign-up, no uploads — everything runs in your browser.`,
       h1: `About ${SITE_NAME}`,
       intro: 'Simple tools, done right — fast, private, and built to actually be better than the alternative.',
-      updated: '2026-10-08',
+      updated: '2026-11-18',
       sections: [
         {
           heading: 'Our mission',
@@ -27,16 +27,16 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Who publishes this site',
-          body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts and no advertising. We use Cloudflare Web Analytics and Google Analytics to learn which tools people find useful and how they find us; see our Privacy Policy for exactly what each one collects.`,
+          body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts. It is free to use, and advertising from Google AdSense in the content area below each tool pays part of what it costs to run; the Privacy Policy describes exactly what the site collects, ads included.`,
         },
       ],
     },
     ko: {
       title: `${SITE_NAME} 소개`,
-      description: `${SITE_NAME}는 가입·업로드·광고 없이 브라우저에서 바로 실행되는 단순하고 빠른 웹 도구 모음입니다.`,
+      description: `${SITE_NAME}는 가입과 업로드 없이 브라우저에서 바로 실행되는 단순하고 빠른 웹 도구 모음입니다.`,
       h1: `${SITE_NAME} 소개`,
       intro: '단순한 도구를 제대로 만듭니다 — 빠르고, 안전하고, 기존 도구보다 실제로 나은 것만 올립니다.',
-      updated: '2026-10-08',
+      updated: '2026-11-18',
       sections: [
         {
           heading: '미션',
@@ -48,7 +48,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '운영 주체',
-          body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 이 사이트에는 회원가입과 광고가 없습니다. 어떤 도구가 실제로 쓰이고 사람들이 어떻게 찾아오는지 알기 위해 Cloudflare Web Analytics와 Google Analytics를 사용하며, 각각 무엇을 수집하는지는 개인정보처리방침에서 확인할 수 있습니다.`,
+          body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 이 사이트에는 회원가입이 없습니다. 누구나 무료로 쓰며, 운영 비용의 일부는 각 도구 아래 콘텐츠 영역에 표시되는 Google AdSense 광고로 충당합니다. 사이트가 수집하는 항목은 광고를 포함해 개인정보처리방침에 적혀 있습니다.`,
         },
       ],
     },
@@ -58,10 +58,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
     en: {
       title: `Privacy Policy — ${SITE_NAME}`,
       description:
-        'How Betterbit Tools handles your data: tools run locally in your browser, with no accounts and no uploads. Visit statistics come from Cloudflare Web Analytics and Google Analytics.',
+        'How Betterbit Tools handles your data: tools run locally in your browser with no accounts or uploads. See what Cloudflare, Google Analytics and AdSense collect.',
       h1: 'Privacy Policy',
       intro: 'In short: your files and text never leave your browser. We built the site this way on purpose.',
-      updated: '2026-10-27',
+      updated: '2026-11-18',
       sections: [
         {
           heading: 'What we collect',
@@ -69,7 +69,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Accounts and cookies',
-          body: `There is no sign-up and no account system. The tools themselves set no cookies. The only cookies on ${SITE_NAME} come from Google Analytics, described below — and in the EU/EEA, the UK and Switzerland it runs without cookies.`,
+          body: `There is no sign-up and no account system. The tools themselves set no cookies. The cookies on ${SITE_NAME} come from Google Analytics and from Google AdSense, both described below. In the EU/EEA, the UK and Switzerland, Google Analytics runs without cookies and ads are personalized only after you consent.`,
         },
         {
           heading: 'Local storage',
@@ -81,7 +81,11 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: 'Visit statistics (updated October 16, 2026)',
-          body: `To learn which tools are actually useful, ${SITE_NAME} uses Cloudflare Web Analytics. It is privacy-first by design: it sets no cookies, uses no localStorage, and does not fingerprint or track individual visitors across sites or visits. It reports aggregate numbers only — pages viewed, referring site, browser and device type, country, and page-load performance. It never sees the files or text you use in our tools.\n\nSince October 16, 2026 we also use Google Analytics 4 to see how people find and use the site: which search engine or website sent a visit, which pages were viewed, and for how long. It sets first-party cookies (_ga and _ga_<ID>) holding a random identifier, so a returning browser can be counted once. Google receives your IP address to estimate your country and city; Google Analytics 4 does not log or store IP addresses. We have not turned on advertising features, Google signals, or user IDs, and the files and text you use in our tools are never sent. In the EU/EEA, the UK and Switzerland, Google Analytics runs in consent mode with analytics storage denied, so it sets no cookies there. You can opt out anywhere with Google's browser add-on (https://tools.google.com/dlpage/gaoptout) or by blocking cookies for this site.\n\n${SITE_NAME} shows no advertising. If that ever changes, we will update this page first and say plainly what is being added and why — before it goes live, not after.`,
+          body: `To learn which tools are actually useful, ${SITE_NAME} uses Cloudflare Web Analytics. It is privacy-first by design: it sets no cookies, uses no localStorage, and does not fingerprint or track individual visitors across sites or visits. It reports aggregate numbers only — pages viewed, referring site, browser and device type, country, and page-load performance. It never sees the files or text you use in our tools.\n\nSince October 16, 2026 we also use Google Analytics 4 to see how people find and use the site: which search engine or website sent a visit, which pages were viewed, and for how long. It sets first-party cookies (_ga and _ga_<ID>) holding a random identifier, so a returning browser can be counted once. Google receives your IP address to estimate your country and city; Google Analytics 4 does not log or store IP addresses. We have not turned on advertising features, Google signals, or user IDs, and the files and text you use in our tools are never sent. In the EU/EEA, the UK and Switzerland, Google Analytics runs in consent mode with analytics storage denied, so it sets no cookies there. You can opt out anywhere with Google's browser add-on (https://tools.google.com/dlpage/gaoptout) or by blocking cookies for this site.\n\nFor the cookies that come with advertising, see the next section.`,
+        },
+        {
+          heading: 'Advertising (added November 18, 2026)',
+          body: `${SITE_NAME} is free to use and paid for in part by advertising served by Google AdSense. The ad code loads on every page, and ads appear inside the content area below a tool — never over the tool, never as a pop-up or an interstitial, and never between you and a result. Because every tool runs in your browser, Google and its partners never see the files or text you process.\n\nGoogle and its partners use cookies and similar technologies to serve ads based on your visits to this site and to other sites. Third-party vendors, including Google, use advertising cookies to do this, which is what makes an ad personalized; Google's own explanation is at https://policies.google.com/technologies/ads. You can turn off personalized advertising in Google Ads Settings (https://adssettings.google.com) — you will still see ads, but they will not be based on your interests — and you can opt out of third-party vendors' use of cookies for personalized advertising at https://www.aboutads.info/choices.\n\nIn the EU/EEA, the UK and Switzerland, a Google-certified consent management platform asks for your consent before advertising cookies are used. If you decline, Google serves non-personalized ads only, or no ads at all. You can change that choice at any time through the consent message or the link shown with the ad.`,
         },
         {
           heading: 'Changes to this policy',
@@ -96,10 +100,10 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
     ko: {
       title: `개인정보처리방침 — ${SITE_NAME}`,
       description:
-        '도구는 브라우저에서 로컬로 동작하며 회원가입과 업로드가 없습니다. 방문 통계는 Cloudflare Web Analytics와 Google Analytics로 수집합니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
+        '도구는 브라우저에서 로컬로 동작하며 회원가입과 업로드가 없습니다. 방문 통계는 Cloudflare Web Analytics와 Google Analytics로, 광고는 Google AdSense로 제공합니다. Betterbit Tools의 개인정보 처리 방식을 설명합니다.',
       h1: '개인정보처리방침',
       intro: '요약하면 이렇습니다: 파일과 텍스트는 브라우저 밖으로 나가지 않습니다. 처음부터 그렇게 만들었습니다.',
-      updated: '2026-10-27',
+      updated: '2026-11-18',
       sections: [
         {
           heading: '수집하는 정보',
@@ -107,7 +111,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '계정과 쿠키',
-          body: `회원가입이나 계정 시스템이 없습니다. 도구 자체는 쿠키를 설치하지 않습니다. ${SITE_NAME}에서 쓰이는 쿠키는 아래에서 설명하는 Google Analytics의 쿠키뿐이며, EU/EEA·영국·스위스에서는 쿠키 없이 동작합니다.`,
+          body: `회원가입이나 계정 시스템이 없습니다. 도구 자체는 쿠키를 설치하지 않습니다. ${SITE_NAME}에서 쓰이는 쿠키는 아래에서 설명하는 Google Analytics와 Google AdSense의 쿠키입니다. EU/EEA·영국·스위스에서는 Google Analytics가 쿠키 없이 동작하고, 광고는 동의한 뒤에만 맞춤형으로 게재됩니다.`,
         },
         {
           heading: '로컬 저장소(localStorage)',
@@ -119,7 +123,11 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         },
         {
           heading: '방문 통계 (2026년 10월 16일 변경)',
-          body: `어떤 도구가 실제로 쓸모 있는지 알기 위해 ${SITE_NAME}는 Cloudflare Web Analytics를 사용합니다. 개인정보 보호를 우선하도록 설계된 도구로, 쿠키나 localStorage를 사용하지 않고, 개별 방문자를 식별하거나 사이트·방문 간에 추적하지 않습니다. 조회된 페이지, 유입 경로, 브라우저와 기기 종류, 국가, 페이지 로딩 성능 같은 집계 수치만 보고하며, 도구에서 사용하는 파일이나 텍스트는 전혀 보지 못합니다.\n\n2026년 10월 16일부터는 사람들이 사이트를 어떻게 찾아오고 쓰는지 알기 위해 Google Analytics 4도 함께 사용합니다. 어떤 검색엔진이나 웹사이트를 통해 들어왔는지, 어떤 페이지를 얼마나 오래 봤는지를 수집합니다. 다시 방문한 브라우저를 한 번으로 세기 위해 무작위 식별자가 담긴 자사 쿠키(_ga, _ga_<ID>)를 설치합니다. Google은 국가와 도시를 추정하기 위해 IP 주소를 받지만, Google Analytics 4는 IP 주소를 기록하거나 저장하지 않습니다. 광고 기능, Google 신호, 사용자 ID 기능은 켜지 않았고, 도구에서 사용하는 파일과 텍스트는 전송되지 않습니다. EU/EEA·영국·스위스에서는 분석 저장소가 거부된 동의 모드로 동작해 쿠키를 설치하지 않습니다. 어디서든 Google의 브라우저 부가기능(https://tools.google.com/dlpage/gaoptout)이나 이 사이트의 쿠키 차단으로 수집을 거부할 수 있습니다.\n\n${SITE_NAME}에는 광고가 없습니다. 앞으로 광고를 추가하게 된다면, 적용 전에 먼저 이 페이지를 업데이트해 무엇을 왜 추가하는지 명확히 밝히겠습니다.`,
+          body: `어떤 도구가 실제로 쓸모 있는지 알기 위해 ${SITE_NAME}는 Cloudflare Web Analytics를 사용합니다. 개인정보 보호를 우선하도록 설계된 도구로, 쿠키나 localStorage를 사용하지 않고, 개별 방문자를 식별하거나 사이트·방문 간에 추적하지 않습니다. 조회된 페이지, 유입 경로, 브라우저와 기기 종류, 국가, 페이지 로딩 성능 같은 집계 수치만 보고하며, 도구에서 사용하는 파일이나 텍스트는 전혀 보지 못합니다.\n\n2026년 10월 16일부터는 사람들이 사이트를 어떻게 찾아오고 쓰는지 알기 위해 Google Analytics 4도 함께 사용합니다. 어떤 검색엔진이나 웹사이트를 통해 들어왔는지, 어떤 페이지를 얼마나 오래 봤는지를 수집합니다. 다시 방문한 브라우저를 한 번으로 세기 위해 무작위 식별자가 담긴 자사 쿠키(_ga, _ga_<ID>)를 설치합니다. Google은 국가와 도시를 추정하기 위해 IP 주소를 받지만, Google Analytics 4는 IP 주소를 기록하거나 저장하지 않습니다. 광고 기능, Google 신호, 사용자 ID 기능은 켜지 않았고, 도구에서 사용하는 파일과 텍스트는 전송되지 않습니다. EU/EEA·영국·스위스에서는 분석 저장소가 거부된 동의 모드로 동작해 쿠키를 설치하지 않습니다. 어디서든 Google의 브라우저 부가기능(https://tools.google.com/dlpage/gaoptout)이나 이 사이트의 쿠키 차단으로 수집을 거부할 수 있습니다.\n\n광고와 함께 쓰이는 쿠키는 아래 섹션에서 설명합니다.`,
+        },
+        {
+          heading: '광고 (2026년 11월 18일 추가)',
+          body: `${SITE_NAME}는 무료로 제공되며, 그 비용의 일부를 Google AdSense가 게재하는 광고로 충당합니다. 광고 코드는 모든 페이지에 실리고, 광고는 도구 아래 콘텐츠 영역 안에만 나타납니다 — 도구를 덮거나, 팝업이나 전면 광고로 끼어들거나, 결과를 가리는 일은 없습니다. 모든 도구가 브라우저 안에서 동작하므로 Google과 그 파트너는 도구에서 처리하는 파일이나 텍스트를 볼 수 없습니다.\n\nGoogle과 그 파트너는 이 사이트와 다른 사이트의 방문 기록을 바탕으로 광고를 게재하기 위해 쿠키와 유사한 기술을 사용합니다. Google을 포함한 제3자 광고 사업자는 이러한 광고 쿠키를 사용하며, 이것이 광고가 맞춤형으로 표시되는 이유입니다. Google의 설명은 https://policies.google.com/technologies/ads 에서 확인할 수 있습니다. Google 광고 설정(https://adssettings.google.com)에서 맞춤형 광고를 끌 수 있고, 끄더라도 광고는 계속 표시되지만 관심사에 맞춰지지는 않습니다. 제3자 사업자의 맞춤형 광고 쿠키 사용은 https://www.aboutads.info/choices 에서 거부할 수 있습니다.\n\nEU/EEA·영국·스위스에서는 Google이 인증한 동의 관리 플랫폼이 광고 쿠키 사용 전에 동의를 요청합니다. 동의하지 않으면 Google은 맞춤형이 아닌 광고만 게재하거나 광고를 게재하지 않습니다. 이 선택은 동의 메시지나 광고에 함께 표시되는 링크에서 언제든 바꿀 수 있습니다.`,
         },
         {
           heading: '방침 변경',

@@ -1,0 +1,18 @@
+---
+/**
+ * Google AdSense loader. The only place site-wide ad code lives (see docs/VISION.md:
+ * ad code is managed in one shared layout component, never per tool).
+ *
+ * The loader enables Auto ads, so ad units are placed by AdSense inside the content area
+ * below each tool — never over the tool itself. Consent for ad cookies in the EEA, the UK
+ * and Switzerland is collected by Google's certified CMP configured in the AdSense account;
+ * `Analytics.astro` declares ad storage denied until that CMP grants it.
+ *
+ * Update public/ads.txt and the privacy policy (src/static-pages/content.ts) with any change here.
+ */
+import { ADSENSE_CLIENT_ID } from '../../config/site';
+
+const src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`;
+---
+
+{ADSENSE_CLIENT_ID && <script is:inline async src={src} crossorigin="anonymous"></script>}

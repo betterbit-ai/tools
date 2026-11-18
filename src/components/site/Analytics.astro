@@ -4,8 +4,9 @@
  * Renders nothing until GA_MEASUREMENT_ID is set.
  *
  * Consent mode: analytics cookies are off by default in the EEA, UK and Switzerland (GA sends
- * cookieless pings there) until a consent banner exists; ad storage is off everywhere because
- * the site shows no ads yet. Update the privacy policy (src/static-pages/content.ts) with any change here.
+ * cookieless pings there) until a consent banner exists; ad storage is off by default everywhere
+ * and Google's certified CMP (configured in the AdSense account) updates it once a visitor consents.
+ * Update the privacy policy (src/static-pages/content.ts) with any change here.
  */
 import { GA_MEASUREMENT_ID, SITE_URL } from '../../config/site';
 

@@ -27,3 +27,9 @@ export const SITE_VERIFICATION = {
  * Rendered only by components/site/Analytics.astro.
  */
 export const GA_MEASUREMENT_ID = 'G-65WPS26YBJ';
+
+/**
+ * Google AdSense publisher ID (ca-pub-…). Public, not a secret. Empty = no ads on the site.
+ * Rendered only by components/site/AdSense.astro, and must match public/ads.txt.
+ */
+export const ADSENSE_CLIENT_ID = 'ca-pub-3778786002363861';

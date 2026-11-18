@@ -54,6 +54,22 @@ if (!existsSync(DIST)) {
 const pages = walk(DIST).filter((f) => f.endsWith('.html'));
 const titles = new Map();
 
+// Ads: ads.txt must publish the same publisher ID the pages load, from the site root.
+// AdSense rejects the pair when they disagree, and a mis-served ads.txt warns in the account.
+let adsPub = null;
+const adsTxt = join(DIST, 'ads.txt');
+if (!existsSync(adsTxt)) {
+  fail('/ads.txt', 'missing — AdSense expects it at the site root');
+} else {
+  const line = readFileSync(adsTxt, 'utf8').trim();
+  const m = line.match(/^google\.com, pub-(\d{16}), DIRECT, f08c47fec0942fa0$/i);
+  if (!m) fail('/ads.txt', `unexpected content: ${JSON.stringify(line)}`);
+  else adsPub = m[1];
+  for (const extra of readFileSync(adsTxt, 'utf8').trim().split(/\r?\n/).slice(1)) {
+    if (extra.trim()) warn('/ads.txt', `extra line ignored: ${extra.trim()}`);
+  }
+}
+
 for (const file of pages) {
   const page = '/' + relative(DIST, file);
   const html = readFileSync(file, 'utf8');
@@ -93,6 +109,11 @@ for (const file of pages) {
     const canonical = head.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
     if (!canonical?.startsWith('https://')) fail(page, 'missing absolute canonical');
     if (!/hreflang="x-default"/.test(head)) fail(page, 'missing hreflang x-default');
+  }
+
+  if (!noindex && adsPub) {
+    const loader = `pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-${adsPub}`;
+    if (!head.includes(loader)) fail(page, 'missing the AdSense loader named in /ads.txt');
   }
 
   for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
