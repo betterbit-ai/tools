@@ -1,5 +1,7 @@
 /** Pure volume conversions. This module deliberately has no browser or UI dependencies. */
 
+import type { Locale } from '../../i18n/locales';
+
 export type VolumeUnit =
   | 'milliliter'
   | 'liter'
@@ -69,6 +71,35 @@ export function parseVolumeNumber(value: number | string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export type VolumeInput =
+  | { status: 'empty' }
+  | { status: 'invalid' }
+  | { status: 'out-of-range'; value: number }
+  | { status: 'valid'; value: number };
+
+/**
+ * Reads what people actually type into a volume field: a plain number, a decimal still being
+ * typed ("0."), a decimal point typed as a comma ("0,5"), thousands separators copied from a
+ * document or a recipe ("1,000"), and full-width digits from a Korean IME. Anything else is
+ * reported instead of silently becoming 0, and a value outside the supported range says so.
+ */
+export function parseVolumeInput(text: string): VolumeInput {
+  const normalized = text.normalize('NFKC').trim();
+  if (normalized === '') return { status: 'empty' };
+  const compact = normalized.replace(/[\s\u00A0\u202F_']/g, '');
+  if (/^[+-]?[.,]?$/.test(compact)) return { status: 'empty' };
+
+  let numeric = compact;
+  if (/^[+-]?\d{1,3}(,\d{3})+(\.\d*)?$/.test(compact)) numeric = compact.replace(/,/g, '');
+  else if (/^[+-]?\d+,\d+$/.test(compact)) numeric = compact.replace(',', '.');
+  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(numeric)) return { status: 'invalid' };
+
+  const value = Number(numeric);
+  if (!Number.isFinite(value)) return { status: 'invalid' };
+  if (value < 0 || value > MAX_VOLUME) return { status: 'out-of-range', value };
+  return { status: 'valid', value };
+}
+
 function isValidVolume(value: number): boolean {
   return Number.isFinite(value) && value >= 0 && value <= MAX_VOLUME;
 }
@@ -80,25 +111,85 @@ export function convertVolume(value: number, from: VolumeUnit, to: VolumeUnit): 
   return (value * MILLILITERS_PER_UNIT[from]) / MILLILITERS_PER_UNIT[to];
 }
 
-const COMMON_VALUES: Record<VolumeUnit, number[]> = {
-  milliliter: [5, 15, 60, 100, 200, 500, 1000],
-  liter: [0.25, 0.5, 0.75, 1, 1.5, 2],
-  koreanCup: [0.25, 0.5, 0.75, 1, 1.5, 2],
-  usCup: [0.25, 1 / 3, 0.5, 2 / 3, 0.75, 1, 2],
-  usLegalCup: [0.25, 0.5, 0.75, 1, 2],
-  metricCup: [0.25, 1 / 3, 0.5, 0.75, 1, 2],
-  imperialCup: [0.25, 0.5, 0.75, 1, 2],
-  usFluidOunce: [1, 2, 4, 6, 8, 16],
-  usTablespoon: [1, 2, 3, 4, 8, 16],
-  usTeaspoon: [0.25, 0.5, 1, 2, 3, 6, 12],
+/** Recipe fractions are written as fractions, not as 0.333333 — the value people actually see in a recipe. */
+interface CommonValue {
+  value: number;
+  label?: string;
+}
+
+const COMMON_VALUES: Record<VolumeUnit, CommonValue[]> = {
+  milliliter: [5, 15, 60, 100, 200, 500, 1000].map((value) => ({ value })),
+  liter: [0.25, 0.5, 0.75, 1, 1.5, 2].map((value) => ({ value })),
+  koreanCup: [0.25, 0.5, 0.75, 1, 1.5, 2].map((value) => ({ value })),
+  usCup: [
+    { value: 0.25, label: '¼' },
+    { value: 1 / 3, label: '⅓' },
+    { value: 0.5, label: '½' },
+    { value: 2 / 3, label: '⅔' },
+    { value: 0.75, label: '¾' },
+    { value: 1 },
+    { value: 2 },
+  ],
+  usLegalCup: [0.25, 0.5, 0.75, 1, 2].map((value) => ({ value })),
+  metricCup: [
+    { value: 0.25, label: '¼' },
+    { value: 1 / 3, label: '⅓' },
+    { value: 0.5, label: '½' },
+    { value: 0.75, label: '¾' },
+    { value: 1 },
+    { value: 2 },
+  ],
+  imperialCup: [0.25, 0.5, 0.75, 1, 2].map((value) => ({ value })),
+  usFluidOunce: [1, 2, 4, 6, 8, 16].map((value) => ({ value })),
+  usTablespoon: [1, 2, 3, 4, 8, 16].map((value) => ({ value })),
+  usTeaspoon: [0.25, 0.5, 1, 2, 3, 6, 12].map((value) => ({ value })),
 };
 
 export interface QuickTableRow {
   value: number;
+  /** Fraction shown in place of the decimal for recipe-sized values (⅓, ⅔). */
+  label?: string;
   result: number;
 }
 
 /** Common recipe-size values for the selected source unit. */
 export function quickTable(from: VolumeUnit, to: VolumeUnit): QuickTableRow[] {
-  return COMMON_VALUES[from].map((value) => ({ value, result: convertVolume(value, from, to) }));
+  return COMMON_VALUES[from].map((entry) => ({
+    value: entry.value,
+    label: entry.label,
+    result: convertVolume(entry.value, from, to),
+  }));
+}
+
+/** More decimals for tiny results, fewer for large ones. */
+export function resultDecimals(value: number): number {
+  const absolute = Math.abs(value);
+  if (absolute === 0) return 0;
+  if (absolute < 0.001) return 8;
+  if (absolute < 1) return 6;
+  if (absolute < 100) return 4;
+  return 2;
+}
+
+/**
+ * Formats a converted volume. A real value is never displayed as "0": below the precision of
+ * the fixed-decimal rule the result switches to scientific notation.
+ */
+export function formatVolume(value: number, locale: Locale): string {
+  if (!Number.isFinite(value)) return '—';
+  const absolute = Math.abs(value);
+  if (absolute !== 0 && (absolute < 5e-9 || absolute >= 1e15)) {
+    return new Intl.NumberFormat(locale, { notation: 'scientific', maximumSignificantDigits: 4 }).format(value);
+  }
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: resultDecimals(value) }).format(value);
+}
+
+/**
+ * The value written back into the field after a swap: precise enough that unit pairs survive a
+ * round trip, short enough to stay readable.
+ */
+export function formatInputValue(value: number): string {
+  if (!Number.isFinite(value)) return '';
+  if (value === 0) return '0';
+  return String(Number(value.toPrecision(12)));
 }

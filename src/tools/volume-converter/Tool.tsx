@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, NumberInput, Panel, Select, Stat } from '../../components/ui';
+import { Button, CopyButton, Field, Panel, Select, Stat, TextInput, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
-import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { MAX_VOLUME, VOLUME_UNITS, convertVolume, isVolumeUnit, quickTable, type VolumeUnit } from './logic';
+import {
+  MAX_VOLUME,
+  VOLUME_UNITS,
+  convertVolume,
+  formatInputValue,
+  formatVolume,
+  isVolumeUnit,
+  parseVolumeInput,
+  quickTable,
+  type VolumeUnit,
+} from './logic';
 
 const STORAGE_KEY = 'tools:volume-converter:state';
 
@@ -52,14 +61,7 @@ function restoreState(locale: string): State {
   }
 }
 
-function resultDecimals(value: number): number {
-  const absolute = Math.abs(value);
-  if (absolute === 0) return 0;
-  if (absolute < 0.001) return 8;
-  if (absolute < 1) return 6;
-  if (absolute < 100) return 4;
-  return 2;
-}
+const asText = (value: number | '') => (value === '' ? '' : String(value));
 
 export default function VolumeConverter({ locale, ui, preset }: ToolProps<UI>) {
   const presetFrom = isVolumeUnit(preset?.from) ? preset.from : undefined;
@@ -74,31 +76,56 @@ export default function VolumeConverter({ locale, ui, preset }: ToolProps<UI>) {
       ? { value: presetValue ?? fallback.value, from: presetFrom ?? fallback.from, to: presetTo ?? fallback.to }
       : fallback,
   );
+  /** The field keeps exactly what was typed, so a decimal point or a separator is never eaten. */
+  const [text, setText] = useState(() => asText(hasPreset ? (presetValue ?? fallback.value) : fallback.value));
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
-    if (!hasPreset) setState(restoreState(locale));
+    if (!hasPreset) {
+      const restored = restoreState(locale);
+      setState(restored);
+      setText(asText(restored.value));
+    }
     setReady(true);
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
+    if (!ready) return;
+    // The page says the value is saved automatically; a blocked or full store has to say otherwise.
+    setSaveFailed(!safeStorage.trySet(STORAGE_KEY, JSON.stringify(state)));
   }, [ready, state]);
 
   const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
-  const inputValue = isFiniteNumber(state.value) ? state.value : 0;
-  const result = useMemo(() => convertVolume(inputValue, state.from, state.to), [inputValue, state.from, state.to]);
+  const parsed = parseVolumeInput(text);
+  const value = parsed.status === 'valid' ? parsed.value : parsed.status === 'empty' ? 0 : null;
+  const result = value === null ? null : convertVolume(value, state.from, state.to);
   const rows = useMemo(() => quickTable(state.from, state.to), [state.from, state.to]);
   const otherUnits = VOLUME_UNITS.filter((unit) => unit !== state.from && unit !== state.to);
   const unitOptions = VOLUME_UNITS.map((unit) => ({ value: unit, label: ui[UNIT_LABEL_KEY[unit]] }));
-  const n = (value: number) => formatNumber(value, locale, resultDecimals(value));
-  const copyText = VOLUME_UNITS.map(
-    (unit) => `${ui[UNIT_LABEL_KEY[unit]]}: ${n(convertVolume(inputValue, state.from, unit))}`,
-  ).join('\n');
+  const n = (amount: number) => formatVolume(amount, locale);
+  const copyText =
+    value === null
+      ? ''
+      : VOLUME_UNITS.map((unit) => `${ui[UNIT_LABEL_KEY[unit]]}: ${n(convertVolume(value, state.from, unit))}`).join(
+          '\n',
+        );
+
+  const onValueText = (next: string) => {
+    setText(next);
+    const reading = parseVolumeInput(next);
+    if (reading.status === 'valid') update({ value: reading.value });
+    else if (reading.status === 'empty') update({ value: '' });
+  };
 
   const swap = () => {
-    const decimals = resultDecimals(result);
-    const roundedResult = Math.round(result * 10 ** decimals) / 10 ** decimals;
-    setState((current) => ({ value: roundedResult, from: current.to, to: current.from }));
+    if (result === null) {
+      setState((current) => ({ value: current.value, from: current.to, to: current.from }));
+      return;
+    }
+    // Keep 12 significant digits so the value survives swapping back, instead of the 2–4 decimals
+    // the result card happens to show.
+    setState((current) => ({ value: result, from: current.to, to: current.from }));
+    setText(formatInputValue(result));
   };
 
   return (
@@ -106,20 +133,26 @@ export default function VolumeConverter({ locale, ui, preset }: ToolProps<UI>) {
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div class="grid gap-4 sm:grid-cols-2">
           <Field label={ui.valueLabel} class="sm:col-span-2">
-            <NumberInput
-              value={state.value}
-              min="0"
-              max={MAX_VOLUME}
-              step="any"
-              onValue={(value) => update({ value })}
+            <TextInput
+              inputMode="decimal"
+              autoComplete="off"
+              spellcheck={false}
+              value={text}
+              placeholder="1"
+              onInput={(event) => onValueText(event.currentTarget.value)}
             />
           </Field>
           <Field label={ui.fromLabel}>
-            <Select value={state.from} onValue={(from) => update({ from })} options={unitOptions} />
+            <Select
+              value={state.from}
+              onValue={(from) => update({ from })}
+              ariaLabel={ui.fromLabel}
+              options={unitOptions}
+            />
           </Field>
           <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
             <Field label={ui.toLabel}>
-              <Select value={state.to} onValue={(to) => update({ to })} options={unitOptions} />
+              <Select value={state.to} onValue={(to) => update({ to })} ariaLabel={ui.toLabel} options={unitOptions} />
             </Field>
             <Button variant="secondary" aria-label={ui.swap} onClick={swap} class="mb-0.5">
               <svg
@@ -144,17 +177,37 @@ export default function VolumeConverter({ locale, ui, preset }: ToolProps<UI>) {
         </div>
 
         <div class="flex flex-col gap-3" aria-live="polite">
-          <Stat label={ui.resultLabel.replace('{unit}', ui[UNIT_LABEL_KEY[state.to]])} value={n(result)} emphasis />
+          <Stat
+            label={ui.resultLabel.replace('{unit}', ui[UNIT_LABEL_KEY[state.to]])}
+            value={result === null ? '—' : n(result)}
+            emphasis
+          />
           <CopyButton text={copyText} label={ui.copy} copiedLabel={ui.copied} />
-          <span class="text-xs text-subtle">{ui.autosaved}</span>
+          <span class={cx('text-xs', saveFailed ? 'text-danger' : 'text-subtle')}>
+            {saveFailed ? ui.saveFailed : ui.autosaved}
+          </span>
         </div>
       </div>
+
+      {parsed.status === 'invalid' && (
+        <p class="mt-4 rounded-md bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
+          {ui.invalidValue}
+        </p>
+      )}
+      {parsed.status === 'out-of-range' && (
+        <p class="mt-4 rounded-md bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
+          {ui.outOfRange.replace('{max}', new Intl.NumberFormat(locale).format(MAX_VOLUME))}
+        </p>
+      )}
 
       <div class="mt-6 border-t border-line pt-6">
         <h3 class="text-sm font-medium text-fg">{ui.otherUnitsTitle}</h3>
         <div class="mt-3 grid grid-cols-2 gap-2" aria-live="polite">
           {otherUnits.map((unit) => (
-            <Stat label={ui[UNIT_LABEL_KEY[unit]]} value={n(convertVolume(inputValue, state.from, unit))} />
+            <Stat
+              label={ui[UNIT_LABEL_KEY[unit]]}
+              value={result === null ? '—' : n(convertVolume(value ?? 0, state.from, unit))}
+            />
           ))}
         </div>
       </div>
@@ -176,7 +229,7 @@ export default function VolumeConverter({ locale, ui, preset }: ToolProps<UI>) {
             <tbody>
               {rows.map((row) => (
                 <tr class="border-t border-line">
-                  <td class="px-3 py-1.5 tabular text-fg">{n(row.value)}</td>
+                  <td class="px-3 py-1.5 tabular text-fg">{row.label ?? n(row.value)}</td>
                   <td class="px-3 py-1.5 tabular text-fg">{n(row.result)}</td>
                 </tr>
               ))}
