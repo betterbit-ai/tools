@@ -75,20 +75,42 @@ export function formatUuid(bytes: Uint8Array, format: UuidTextFormat, uppercase 
   return value;
 }
 
+/** Generates a batch of raw UUID bytes. v7 values share the supplied millisecond timestamp by design. */
+export function generateUuidBytes(
+  settings: UuidSettings,
+  source: RandomBytes,
+  timestamp: number,
+): { ok: true; bytes: Uint8Array[] } | { ok: false; error: ValidationError } {
+  const error = validateSettings(settings);
+  if (error) return { ok: false, error };
+
+  const create = settings.version === 'v4' ? () => createV4(source) : () => createV7(timestamp, source);
+  return { ok: true, bytes: Array.from({ length: settings.count }, () => create()) };
+}
+
 /** Generates a batch. v7 values share the supplied millisecond timestamp by design. */
 export function generateUuids(
   settings: UuidSettings,
   source: RandomBytes,
   timestamp: number,
 ): { ok: true; values: string[] } | { ok: false; error: ValidationError } {
-  const error = validateSettings(settings);
-  if (error) return { ok: false, error };
-
-  const create = settings.version === 'v4' ? () => createV4(source) : () => createV7(timestamp, source);
+  const batch = generateUuidBytes(settings, source, timestamp);
+  if (!batch.ok) return batch;
   return {
     ok: true,
-    values: Array.from({ length: settings.count }, () => formatUuid(create(), settings.format, settings.uppercase)),
+    values: batch.bytes.map((bytes) => formatUuid(bytes, settings.format, settings.uppercase)),
   };
+}
+
+/** Reads a typed batch size: digits, with thousands separators, spaces or full-width digits. */
+export function parseUuidCount(text: string): number | null {
+  const normalized = text
+    .normalize('NFKC')
+    .trim()
+    .replace(/[\s\u00A0\u202F_']/g, '');
+  if (!/^\d{1,3}(,\d{3})+$|^\d+$/.test(normalized)) return null;
+  const value = Number(normalized.replaceAll(',', ''));
+  return Number.isSafeInteger(value) ? value : null;
 }
 
 /** Turns a batch into a copy-ready plain-text list or JSON array. */

@@ -30,6 +30,7 @@ const uiEn = {
   charactersLabel: 'Characters',
   invalidCount: 'Enter a whole number from 1 to 10,000.',
   cryptoError: 'Web Crypto is unavailable in this browser, so secure UUIDs cannot be generated.',
+  saveFailed: 'These options could not be saved — this browser is blocking site storage.',
   privacyNote: 'Generated UUIDs and saved options stay in this browser. Nothing is uploaded or sent to a server.',
 };
 export type UI = typeof uiEn;
@@ -183,6 +184,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       charactersLabel: '문자 수',
       invalidCount: '1부터 10,000까지의 정수를 입력하세요.',
       cryptoError: '이 브라우저에서는 Web Crypto를 사용할 수 없어 안전한 UUID를 생성할 수 없습니다.',
+      saveFailed: '선택한 옵션을 저장하지 못했습니다 — 브라우저가 사이트 저장소를 막고 있습니다.',
       privacyNote: '생성한 UUID와 선택한 옵션은 이 브라우저 안에만 있습니다. 서버로 업로드하거나 전송하지 않습니다.',
     },
   },

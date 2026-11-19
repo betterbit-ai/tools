@@ -5,7 +5,9 @@ import {
   createV7,
   formatOutput,
   formatUuid,
+  generateUuidBytes,
   generateUuids,
+  parseUuidCount,
   validateSettings,
   type RandomBytes,
   type UuidSettings,
@@ -56,5 +58,46 @@ describe('uuid-generator', () => {
     expect(() => createV7(-1, bytes(...Array(16).fill(0)))).toThrow(RangeError);
     expect(() => createV7(0x1_0000_0000_0000, bytes(...Array(16).fill(0)))).toThrow(RangeError);
     expect(() => formatUuid(new Uint8Array(15), 'standard')).toThrow(RangeError);
+  });
+});
+
+describe('generateUuidBytes and re-formatting', () => {
+  it('keeps the same 128-bit value when only the text format or case changes', () => {
+    const batch = generateUuidBytes({ ...defaults, count: 3 }, bytes(...Array(16).fill(7)), 0);
+    expect(batch.ok).toBe(true);
+    if (!batch.ok) return;
+    const first = batch.bytes[0]!;
+    const standard = formatUuid(first, 'standard');
+    const compact = formatUuid(first, 'compact');
+    const braces = formatUuid(first, 'braces', true);
+    expect(compact).toBe(standard.replaceAll('-', ''));
+    expect(braces).toBe(`{${standard.toUpperCase()}}`);
+  });
+
+  it('rejects an invalid count before touching the random source', () => {
+    let calls = 0;
+    const source: RandomBytes = (length) => {
+      calls++;
+      return new Uint8Array(length);
+    };
+    expect(generateUuidBytes({ ...defaults, count: 0 }, source, 0)).toEqual({ ok: false, error: 'invalid-count' });
+    expect(calls).toBe(0);
+  });
+});
+
+describe('parseUuidCount', () => {
+  it('accepts digits, grouped thousands and full-width input', () => {
+    expect(parseUuidCount('100')).toBe(100);
+    expect(parseUuidCount('1,000')).toBe(1000);
+    expect(parseUuidCount('10 000')).toBe(10_000);
+    expect(parseUuidCount('１００')).toBe(100);
+  });
+
+  it('rejects fractions, signs and text', () => {
+    expect(parseUuidCount('')).toBeNull();
+    expect(parseUuidCount('1.5')).toBeNull();
+    expect(parseUuidCount('-2')).toBeNull();
+    expect(parseUuidCount('1e3')).toBeNull();
+    expect(parseUuidCount('백')).toBeNull();
   });
 });

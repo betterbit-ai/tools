@@ -3,13 +3,15 @@ import {
   Button,
   CopyButton,
   Field,
+  FieldGroup,
   Kbd,
   Notice,
-  NumberInput,
   Panel,
   Segmented,
   Stat,
+  TextInput,
   Toggle,
+  cx,
 } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
@@ -17,7 +19,9 @@ import type { UI } from './content';
 import {
   MAX_COUNT,
   formatOutput,
-  generateUuids,
+  formatUuid,
+  generateUuidBytes,
+  parseUuidCount,
   type OutputFormat,
   type UuidSettings,
   type UuidTextFormat,
@@ -40,25 +44,52 @@ function cryptoBytes(length: number): Uint8Array {
 
 export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<UuidSettings>(DEFAULT_SETTINGS);
-  const [values, setValues] = useState<string[]>([]);
-  const [error, setError] = useState<'invalid-count' | 'crypto' | null>(null);
+  /** The current batch as raw bytes, so changing the text format re-renders the same IDs. */
+  const [batch, setBatch] = useState<Uint8Array[]>([]);
+  const [countText, setCountText] = useState('1');
+  const [countError, setCountError] = useState(false);
+  const [cryptoError, setCryptoError] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const hasGeneratedInitialResult = useRef(false);
 
-  const update = (patch: Partial<UuidSettings>) => setSettings((current) => ({ ...current, ...patch }));
-  const generate = useCallback(() => {
+  const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+
+  const makeBatch = useCallback((next: UuidSettings) => {
     try {
-      const result = generateUuids(settings, cryptoBytes, Date.now());
+      const result = generateUuidBytes(next, cryptoBytes, Date.now());
       if (!result.ok) {
-        setError(result.error);
-        return;
+        setCountError(true);
+        return false;
       }
-      setValues(result.values);
-      setError(null);
+      setBatch(result.bytes);
+      setCountError(false);
+      setCryptoError(false);
+      return true;
     } catch {
-      setError('crypto');
+      setCryptoError(true);
+      return false;
     }
-  }, [settings]);
+  }, []);
+
+  /** Reads the number field; typing an invalid size keeps the last valid batch on screen. */
+  const readCount = (text: string): number | null => {
+    const parsed = parseUuidCount(text);
+    if (parsed === null || parsed < 1 || parsed > MAX_COUNT) {
+      setCountError(true);
+      return null;
+    }
+    setCountError(false);
+    return parsed;
+  };
+
+  const generate = useCallback(() => {
+    const count = readCount(countText);
+    if (count === null) return;
+    const next = { ...settings, count };
+    setSettings(next);
+    makeBatch(next);
+  }, [countText, makeBatch, settings]);
 
   useEffect(() => {
     try {
@@ -67,12 +98,13 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
         saved &&
         typeof saved === 'object' &&
         (saved.version === 'v4' || saved.version === 'v7') &&
-        typeof saved.count === 'number' &&
+        Number.isSafeInteger(saved.count) &&
         ['standard', 'compact', 'braces', 'urn'].includes(saved.format) &&
         typeof saved.uppercase === 'boolean' &&
         ['lines', 'json'].includes(saved.output)
       ) {
         setSettings(saved as UuidSettings);
+        setCountText(String(saved.count));
       }
     } catch {
       /* Ignore malformed local settings. */
@@ -81,7 +113,9 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
+    if (!ready) return;
+    // The notice below says the options stay in this browser; a blocked store has to say otherwise.
+    setSaveFailed(!safeStorage.trySet(STORAGE_KEY, JSON.stringify(settings)));
   }, [ready, settings]);
 
   useEffect(() => {
@@ -110,8 +144,29 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [generate]);
 
+  const update = (patch: Partial<UuidSettings>) => setSettings((current) => ({ ...current, ...patch }));
+
+  const changeVersion = (version: UuidVersion) => {
+    const next = { ...settings, version };
+    setSettings(next);
+    // A v7 batch cannot stay on screen while the page says v4, so the batch follows the version.
+    if (!countError) makeBatch(next);
+  };
+
+  const applyPreset = (count: number) => {
+    setCountText(String(count));
+    const next = { ...settings, count };
+    setSettings(next);
+    setCountError(false);
+    makeBatch(next);
+  };
+
+  /** The same 16-byte values, re-rendered in the chosen text format and case. */
+  const values = useMemo(
+    () => batch.map((bytes) => formatUuid(bytes, settings.format, settings.uppercase)),
+    [batch, settings.format, settings.uppercase],
+  );
   const output = useMemo(() => formatOutput(values, settings.output), [settings.output, values]);
-  const errorText = error === 'invalid-count' ? ui.invalidCount : error === 'crypto' ? ui.cryptoError : null;
   const versionDescription = settings.version === 'v4' ? ui.v4Description : ui.v7Description;
 
   return (
@@ -126,28 +181,42 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
           <div>
             <p class="text-sm text-muted">{ui.intro}</p>
             <div class="mt-4 flex flex-col gap-4">
-              <Field label={ui.versionLabel} hint={versionDescription}>
+              <FieldGroup label={ui.versionLabel} hint={versionDescription}>
                 <Segmented<UuidVersion>
                   label={ui.versionLabel}
                   value={settings.version}
-                  onValue={(version) => update({ version })}
+                  onValue={changeVersion}
                   options={[
                     { value: 'v4', label: ui.v4 },
                     { value: 'v7', label: ui.v7 },
                   ]}
                 />
-              </Field>
+              </FieldGroup>
               <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label={ui.countLabel} hint={ui.countHint.replace('{max}', MAX_COUNT.toLocaleString(locale))}>
-                  <NumberInput
-                    value={settings.count}
-                    min={1}
-                    max={MAX_COUNT}
-                    step={1}
-                    onValue={(count) => update({ count: count === '' ? Number.NaN : count })}
-                  />
-                </Field>
-                <Field label={ui.formatLabel}>
+                <div>
+                  <Field label={ui.countLabel} hint={ui.countHint.replace('{max}', numberFormat.format(MAX_COUNT))}>
+                    <TextInput
+                      inputMode="numeric"
+                      autoComplete="off"
+                      spellcheck={false}
+                      value={countText}
+                      placeholder="10"
+                      aria-invalid={countError}
+                      onInput={(event) => {
+                        const next = event.currentTarget.value;
+                        setCountText(next);
+                        const count = readCount(next);
+                        if (count !== null) update({ count });
+                      }}
+                    />
+                  </Field>
+                  {countError && (
+                    <p class="mt-1 text-xs text-danger" role="alert">
+                      {ui.invalidCount}
+                    </p>
+                  )}
+                </div>
+                <FieldGroup label={ui.formatLabel}>
                   <Segmented<UuidTextFormat>
                     label={ui.formatLabel}
                     value={settings.format}
@@ -159,7 +228,7 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
                       { value: 'urn', label: ui.formatUrn },
                     ]}
                   />
-                </Field>
+                </FieldGroup>
               </div>
               <Toggle
                 checked={settings.uppercase}
@@ -168,8 +237,8 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
               />
               <div class="flex flex-wrap gap-2">
                 {[1, 10, 100, 1000].map((count) => (
-                  <Button size="sm" onClick={() => update({ count })}>
-                    {ui.preset.replace('{count}', count.toLocaleString(locale))}
+                  <Button size="sm" onClick={() => applyPreset(count)}>
+                    {ui.preset.replace('{count}', numberFormat.format(count))}
                   </Button>
                 ))}
               </div>
@@ -200,9 +269,9 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
                 ]}
               />
             </div>
-            {errorText ? (
+            {cryptoError ? (
               <div class="mt-3">
-                <Notice tone="danger">{errorText}</Notice>
+                <Notice tone="danger">{ui.cryptoError}</Notice>
               </div>
             ) : (
               <output
@@ -213,13 +282,15 @@ export default function UuidGenerator({ locale, ui }: ToolProps<UI>) {
               </output>
             )}
             <div class="mt-3 grid grid-cols-2 gap-2" aria-live="polite">
-              <Stat label={ui.generatedLabel} value={values.length} emphasis />
-              <Stat label={ui.charactersLabel} value={output.length} />
+              <Stat label={ui.generatedLabel} value={numberFormat.format(values.length)} emphasis />
+              <Stat label={ui.charactersLabel} value={numberFormat.format(output.length)} />
             </div>
           </div>
         </div>
       </form>
-      <p class="mt-4 text-xs text-subtle">{ui.privacyNote}</p>
+      <p class={cx('mt-4 text-xs', saveFailed ? 'text-danger' : 'text-subtle')}>
+        {saveFailed ? ui.saveFailed : ui.privacyNote}
+      </p>
     </Panel>
   );
 }
