@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateVat, MAX_AMOUNT, MAX_RATE, parseVatNumber } from './logic';
+import { calculateVat, displayVat, MAX_AMOUNT, MAX_RATE, parseVatNumber, readVatNumber } from './logic';
 
 describe('calculateVat', () => {
   it('adds VAT to a tax-exclusive amount', () => {
@@ -58,5 +58,54 @@ describe('parseVatNumber', () => {
     expect(parseVatNumber('')).toBeNull();
     expect(parseVatNumber('₩10,000')).toBeNull();
     expect(parseVatNumber(NaN)).toBeNull();
+  });
+});
+
+describe('readVatNumber', () => {
+  it('accepts what people type into an amount or rate field', () => {
+    expect(readVatNumber('120000')).toEqual({ status: 'valid', value: 120_000 });
+    expect(readVatNumber('120,000.50')).toEqual({ status: 'valid', value: 120_000.5 });
+    expect(readVatNumber('7.5')).toEqual({ status: 'valid', value: 7.5 });
+    expect(readVatNumber('7,5')).toEqual({ status: 'valid', value: 7.5 });
+    expect(readVatNumber('１，１００')).toEqual({ status: 'valid', value: 1_100 });
+    expect(readVatNumber('10.')).toEqual({ status: 'valid', value: 10 });
+  });
+
+  it('distinguishes an empty field from text that is not a number', () => {
+    expect(readVatNumber('')).toEqual({ status: 'empty' });
+    expect(readVatNumber('  ')).toEqual({ status: 'empty' });
+    expect(readVatNumber('10%')).toEqual({ status: 'invalid' });
+    expect(readVatNumber('₩10,000')).toEqual({ status: 'invalid' });
+    expect(readVatNumber('1.2.3')).toEqual({ status: 'invalid' });
+  });
+});
+
+describe('displayVat', () => {
+  it('keeps the printed net + VAT equal to the printed gross', () => {
+    const cases: [number, number][] = [
+      [1.015, 10],
+      [0.05, 10],
+      [33.33, 10],
+      [2.5, 7.5],
+      [99.995, 20],
+      [1_000_000.555, 19],
+    ];
+    for (const [amount, rate] of cases) {
+      for (const mode of ['add', 'remove'] as const) {
+        const exact = calculateVat({ amount, rate, mode });
+        expect(exact).not.toBeNull();
+        const shown = displayVat(exact!);
+        // What a reader checks: the figures printed to two decimals add up.
+        expect(Number((shown.net + shown.tax).toFixed(2))).toBe(Number(shown.gross.toFixed(2)));
+      }
+    }
+  });
+
+  it('does not change a breakdown that already lands on whole cents', () => {
+    expect(displayVat(calculateVat({ amount: 120, rate: 20, mode: 'remove' })!)).toEqual({
+      net: 100,
+      tax: 20,
+      gross: 120,
+    });
   });
 });

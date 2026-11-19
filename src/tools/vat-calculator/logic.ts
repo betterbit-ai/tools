@@ -34,6 +34,28 @@ export function parseVatNumber(value: number | string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+export type VatReading = { status: 'empty' } | { status: 'invalid' } | { status: 'valid'; value: number };
+
+/**
+ * Reads what people type into an amount or rate field: a plain or comma-decimal number, a
+ * number pasted from a spreadsheet with thousands separators, and full-width digits from a
+ * Korean IME. Text that is not a number is reported instead of silently becoming 0.
+ */
+export function readVatNumber(text: string): VatReading {
+  const normalized = text.normalize('NFKC').trim();
+  if (normalized === '') return { status: 'empty' };
+  const compact = normalized.replace(/[\s\u00A0\u202F_']/g, '');
+  if (/^[+-]?[.,]?$/.test(compact)) return { status: 'empty' };
+
+  let numeric = compact;
+  if (/^[+-]?\d{1,3}(,\d{3})+(\.\d*)?$/.test(compact)) numeric = compact.replace(/,/g, '');
+  else if (/^[+-]?\d+,\d+$/.test(compact)) numeric = compact.replace(',', '.');
+  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(numeric)) return { status: 'invalid' };
+
+  const value = Number(numeric);
+  return Number.isFinite(value) ? { status: 'valid', value } : { status: 'invalid' };
+}
+
 /**
  * Calculates a consistent net, VAT, and gross breakdown. A tax-inclusive total
  * is divided by (1 + rate / 100); subtracting the percentage from the total is
@@ -73,4 +95,19 @@ export function calculateVat(input: VatInput): VatResult | null {
 function roundVatNumber(value: number): number {
   const factor = 10 ** 10;
   return Math.round((value + Number.EPSILON * Math.sign(value || 1)) * factor) / factor;
+}
+
+/**
+ * The three figures as they are shown, rounded to the currency precision used for display.
+ * Net and VAT are rounded independently for display, so their sum can differ from the rounded
+ * gross by a minor unit (1.015 + 10% shows net 1.02, VAT 0.10 and gross 1.12). Taking the VAT
+ * as the difference between the shown gross and the shown net keeps the printed breakdown adding
+ * up, which is what a reader checks.
+ */
+export function displayVat(result: VatResult, decimals = 2): VatResult {
+  const factor = 10 ** decimals;
+  const round = (value: number) => Math.round((value + Number.EPSILON * Math.sign(value || 1)) * factor) / factor;
+  const net = round(result.net);
+  const gross = round(result.gross);
+  return { net, tax: round(gross - net), gross };
 }

@@ -32,6 +32,21 @@ export function Field(props: { label: string; hint?: string; children: Component
   );
 }
 
+/**
+ * Same look as Field, for a group of controls rather than one input (segmented buttons, a set of
+ * radios). A <label> around a group makes the group's label text part of every button's
+ * accessible name, so screen readers and tests hear the label twice.
+ */
+export function FieldGroup(props: { label: string; hint?: string; children: ComponentChildren; class?: string }) {
+  return (
+    <div class={cx('block', props.class)}>
+      <span class="block text-sm font-medium text-fg mb-1.5">{props.label}</span>
+      {props.children}
+      {props.hint && <span class="block mt-1 text-xs text-subtle">{props.hint}</span>}
+    </div>
+  );
+}
+
 /* ───────────── Actions ───────────── */
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
