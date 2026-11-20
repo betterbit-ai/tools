@@ -6,9 +6,11 @@ const uiEn = {
   autosaved: 'Saved in this browser only',
   wageHeading: 'Pay and working hours',
   averageDailyWageLabel: 'Average daily wage before leaving (KRW)',
-  averageDailyWageHint: 'Use the average daily wage on your employment-separation confirmation when available.',
+  averageDailyWageHint:
+    'Use the average daily wage on your employment-separation confirmation when available. Commas or a 만원 amount such as 10만원 are accepted.',
   ordinaryDailyWageLabel: 'Daily ordinary wage, if known (KRW)',
-  ordinaryDailyWageHint: 'Enter 0 if unknown. A higher ordinary wage is used as the statutory base.',
+  ordinaryDailyWageHint:
+    'Enter 0 if unknown. A higher ordinary wage is used as the statutory base; commas and 만원 amounts are accepted.',
   hoursLabel: 'Contracted hours per day',
   hoursHint: 'The 2026 statutory floor is 80% of ₩10,320 × these hours.',
   coverageHeading: 'Employment Insurance record',
@@ -49,7 +51,7 @@ const uiEn = {
   estimateNotice:
     'Reference estimate for ordinary employees only. Day workers, artists, labour providers, self-employed people, justified voluntary resignations, and special waiting periods need the official Work24 simulator or an Employment Center.',
   invalidInput:
-    'Enter positive whole numbers: 1–8 daily hours, 0–1,200 coverage months, and 0–10,000 insured-unit days.',
+    'Enter positive whole numbers: a daily wage of 1–10,000,000 KRW, 1–8 daily hours, 0–1,200 coverage months, and 0–10,000 insured-unit days.',
   copy: 'Copy estimate',
   copied: 'Copied',
   reset: 'Reset',
@@ -172,9 +174,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       autosaved: '이 브라우저에만 저장됨',
       wageHeading: '임금과 근로시간',
       averageDailyWageLabel: '이직 전 1일 평균임금(원)',
-      averageDailyWageHint: '가능하면 이직확인서에 기재된 1일 평균임금을 입력합니다.',
+      averageDailyWageHint:
+        '가능하면 이직확인서에 기재된 1일 평균임금을 입력합니다. 100,000처럼 콤마를 넣거나 10만원처럼 적어도 됩니다.',
       ordinaryDailyWageLabel: '확인한 1일 통상임금(원)',
-      ordinaryDailyWageHint: '모르면 0을 입력합니다. 평균임금보다 높으면 통상임금을 기초로 사용합니다.',
+      ordinaryDailyWageHint:
+        '모르면 0을 입력합니다. 평균임금보다 높으면 통상임금을 기초로 사용합니다. 콤마·만원 단위 입력도 됩니다.',
       hoursLabel: '이직 당시 1일 소정근로시간',
       hoursHint: '2026년 하한액은 10,320원 × 80% × 입력 시간으로 계산합니다.',
       coverageHeading: '고용보험 가입 이력',
@@ -213,7 +217,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       estimateNotice:
         '일반 근로자용 참고 계산입니다. 일용근로자·예술인·노무제공자·자영업자, 정당한 자발적 퇴사, 대기기간 특례는 고용24 모의계산 또는 관할 고용센터에서 확인하세요.',
       invalidInput:
-        '1일 소정근로시간은 1~8시간의 정수, 가입기간은 0~1,200개월, 피보험단위기간은 0~10,000일의 정수로 입력하세요.',
+        '1일 임금은 1~10,000,000원, 1일 소정근로시간은 1~8시간, 가입기간은 0~1,200개월, 피보험단위기간은 0~10,000일 범위의 정수로 입력하세요.',
       copy: '예상액 복사',
       copied: '복사됨',
       reset: '초기화',

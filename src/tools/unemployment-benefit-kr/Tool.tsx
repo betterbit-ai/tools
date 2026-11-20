@@ -5,6 +5,7 @@ import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import { calculateUnemploymentBenefit, type AgeGroup } from './logic';
+import { KrwInput } from './KrwInput';
 
 const STORAGE_KEY = 'tools:unemployment-benefit-kr:state';
 
@@ -129,20 +130,16 @@ export default function UnemploymentBenefitKr({ locale, ui, preset }: ToolProps<
             </p>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
               <Field label={ui.averageDailyWageLabel} hint={ui.averageDailyWageHint}>
-                <NumberInput
+                <KrwInput
                   value={state.averageDailyWage}
-                  min="1"
-                  max="10000000"
-                  step="1000"
+                  locale={locale}
                   onValue={(averageDailyWage) => update({ averageDailyWage })}
                 />
               </Field>
               <Field label={ui.ordinaryDailyWageLabel} hint={ui.ordinaryDailyWageHint}>
-                <NumberInput
+                <KrwInput
                   value={state.ordinaryDailyWage}
-                  min="0"
-                  max="10000000"
-                  step="1000"
+                  locale={locale}
                   onValue={(ordinaryDailyWage) => update({ ordinaryDailyWage })}
                 />
               </Field>
