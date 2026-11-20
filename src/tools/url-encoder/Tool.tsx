@@ -162,10 +162,7 @@ export default function UrlEncoder({ ui }: ToolProps<UI>) {
             ) : (
               <div class="flex flex-col gap-2">
                 {query.parameters.map((parameter, index) => (
-                  <div
-                    class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2"
-                    key={`${index}-${parameter.name}`}
-                  >
+                  <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2" key={index}>
                     <TextInput
                       value={parameter.name}
                       onInput={(event) => updateQuery(index, 'name', (event.currentTarget as HTMLInputElement).value)}

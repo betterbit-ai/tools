@@ -120,6 +120,8 @@
   /* Long-form text below the tool (sections, FAQ answers). */
   .prose-tool {
     @apply text-[15px] leading-7 text-muted;
+    /* A long percent-encoded URL or hash in the copy must not widen a phone layout. */
+    overflow-wrap: anywhere;
   }
   .prose-tool p + p {
     @apply mt-4;
