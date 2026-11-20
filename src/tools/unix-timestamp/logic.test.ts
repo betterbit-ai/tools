@@ -58,12 +58,20 @@ describe('date and time input', () => {
   it('converts a UTC datetime exactly and formats it back for the input', () => {
     const value = dateTimeToMilliseconds('2024-01-01T00:00', 'utc');
     expect(value).toBe(1_704_067_200_000);
-    expect(formatDateTimeInput(value!, 'utc')).toBe('2024-01-01T00:00');
+    expect(formatDateTimeInput(value!, 'utc')).toBe('2024-01-01T00:00:00');
+  });
+
+  it('keeps the seconds a log line carries', () => {
+    expect(dateTimeToMilliseconds('2024-03-01T09:30:45', 'utc')).toBe(1_709_285_445_000);
+    expect(dateTimeToMilliseconds('2024-03-01T09:30:00', 'utc')).toBe(1_709_285_400_000);
+    expect(formatDateTimeInput(1_709_285_445_000, 'utc')).toBe('2024-03-01T09:30:45');
+    expect(formatDateTimeInput(1_709_285_400_000, 'utc')).toBe('2024-03-01T09:30:00');
   });
 
   it('rejects impossible calendar dates and malformed Unicode values', () => {
     expect(dateTimeToMilliseconds('2024-02-30T12:00', 'utc')).toBeUndefined();
     expect(dateTimeToMilliseconds('2024-01-01T24:00', 'utc')).toBeUndefined();
+    expect(dateTimeToMilliseconds('2024-01-01T12:00:60', 'utc')).toBeUndefined();
     expect(dateTimeToMilliseconds('2024년-01-01T12:00', 'utc')).toBeUndefined();
     expect(dateTimeToMilliseconds('2024-01-01T12:00🕒', 'utc')).toBeUndefined();
   });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, Kbd, Notice, Panel, Segmented, TextInput } from '../../components/ui';
+import { Button, CopyButton, Field, FieldGroup, Kbd, Notice, Panel, Segmented, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -33,7 +33,7 @@ export default function UnixTimestamp({ locale, ui }: ToolProps<UI>) {
   const [dateTime, setDateTime] = useState(() => formatDateTimeInput(Date.now(), 'utc'));
   const [source, setSource] = useState<'timestamp' | 'date'>('timestamp');
   const [hydrated, setHydrated] = useState(false);
-  const timestampInput = useRef<HTMLInputElement>(null);
+  const timestampField = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -71,7 +71,9 @@ export default function UnixTimestamp({ locale, ui }: ToolProps<UI>) {
         return;
       }
       event.preventDefault();
-      timestampInput.current?.focus();
+      const field = timestampField.current?.querySelector('input');
+      field?.focus();
+      field?.select();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -143,15 +145,16 @@ export default function UnixTimestamp({ locale, ui }: ToolProps<UI>) {
       <div class="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div class="space-y-5">
           <Field label={ui.timestampLabel} hint={ui.timestampHint}>
-            <TextInput
-              ref={timestampInput}
-              value={timestamp}
-              inputMode="numeric"
-              placeholder={ui.timestampPlaceholder}
-              onInput={(event) => applyTimestamp(event.currentTarget.value)}
-            />
+            <div ref={timestampField}>
+              <TextInput
+                value={timestamp}
+                inputMode="numeric"
+                placeholder={ui.timestampPlaceholder}
+                onInput={(event) => applyTimestamp(event.currentTarget.value)}
+              />
+            </div>
           </Field>
-          <Field label={ui.unitLabel} hint={ui.unitHint}>
+          <FieldGroup label={ui.unitLabel} hint={ui.unitHint}>
             <Segmented
               label={ui.unitLabel}
               value={unit}
@@ -162,11 +165,12 @@ export default function UnixTimestamp({ locale, ui }: ToolProps<UI>) {
                 { value: 'milliseconds', label: ui.millisecondsShort },
               ]}
             />
-          </Field>
+          </FieldGroup>
           <div class="border-t border-line pt-5">
             <Field label={ui.dateTimeLabel} hint={ui.dateTimeHint}>
               <TextInput
                 type="datetime-local"
+                step="1"
                 value={dateTime}
                 onInput={(event) => applyDateTime(event.currentTarget.value)}
               />

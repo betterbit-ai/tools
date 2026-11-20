@@ -66,41 +66,59 @@ export function millisecondsToSeconds(milliseconds: bigint): string {
   return `${sign}${whole}.${remainder.toString().padStart(3, '0').replace(/0+$/, '')}`;
 }
 
-/** Strictly reads a datetime-local value as UTC or the device's local time. */
+/** Strictly reads a datetime-local value (seconds optional) as UTC or the device's local time. */
 export function dateTimeToMilliseconds(value: string, zone: DateTimeZone): number | undefined {
-  const match = /^(\d{4,})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+  const match = /^(\d{4,})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value);
   if (!match) return undefined;
-  const [, yearText, monthText, dayText, hourText, minuteText] = match;
-  const [year, month, day, hour, minute] = [yearText, monthText, dayText, hourText, minuteText].map(Number);
-  if (hour > 23 || minute > 59) return undefined;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText = '0'] = match;
+  const [year, month, day, hour, minute, second] = [yearText, monthText, dayText, hourText, minuteText, secondText].map(
+    Number,
+  );
+  if (hour > 23 || minute > 59 || second > 59) return undefined;
 
   const date =
     zone === 'utc'
-      ? new Date(Date.UTC(year, month - 1, day, hour, minute))
-      : new Date(year, month - 1, day, hour, minute);
+      ? new Date(Date.UTC(year, month - 1, day, hour, minute, second))
+      : new Date(year, month - 1, day, hour, minute, second);
   const matches =
     zone === 'utc'
       ? date.getUTCFullYear() === year &&
         date.getUTCMonth() === month - 1 &&
         date.getUTCDate() === day &&
         date.getUTCHours() === hour &&
-        date.getUTCMinutes() === minute
+        date.getUTCMinutes() === minute &&
+        date.getUTCSeconds() === second
       : date.getFullYear() === year &&
         date.getMonth() === month - 1 &&
         date.getDate() === day &&
         date.getHours() === hour &&
-        date.getMinutes() === minute;
+        date.getMinutes() === minute &&
+        date.getSeconds() === second;
   return matches ? date.getTime() : undefined;
 }
 
 /** Formats an instant for a datetime-local input without relying on Date.parse. */
 export function formatDateTimeInput(milliseconds: number, zone: DateTimeZone): string {
   const date = new Date(milliseconds);
-  const [year, month, day, hour, minute] =
+  const [year, month, day, hour, minute, second] =
     zone === 'utc'
-      ? [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes()]
-      : [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes()];
-  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      ? [
+          date.getUTCFullYear(),
+          date.getUTCMonth() + 1,
+          date.getUTCDate(),
+          date.getUTCHours(),
+          date.getUTCMinutes(),
+          date.getUTCSeconds(),
+        ]
+      : [
+          date.getFullYear(),
+          date.getMonth() + 1,
+          date.getDate(),
+          date.getHours(),
+          date.getMinutes(),
+          date.getSeconds(),
+        ];
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
 }
 
 export function formatDisplayTime(milliseconds: number, locale: string, zone: DateTimeZone): string {

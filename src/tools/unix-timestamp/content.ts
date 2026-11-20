@@ -58,7 +58,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       'Paste an integer into “Unix timestamp”; the converted seconds, milliseconds, ISO 8601, and readable time appear immediately.',
       'Leave Input unit on “Auto” for ordinary 10-digit seconds and 13-digit milliseconds, or select the known unit to override that convention.',
-      'To convert in the other direction, edit “Date and time” and choose whether that clock time means UTC or your device’s local time.',
+      'To convert in the other direction, edit “Date and time” (down to the second) and choose whether that clock time means UTC or your device’s local time.',
       'Use “Use current time” to start from the current instant, then copy an individual value or all values together.',
       'Your last inputs stay only in this browser; press / outside a field to focus the timestamp input again.',
     ],
@@ -119,7 +119,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     howTo: [
       '“유닉스 타임스탬프”에 정수를 붙여넣으면 초·밀리초·ISO 8601·읽기 쉬운 시간이 바로 나옵니다.',
       '일반적인 10자리 초와 13자리 밀리초 값은 “자동”으로 두거나, 출처의 단위를 알면 직접 선택합니다.',
-      '반대로 변환하려면 “날짜와 시간”을 고치고 그 시각을 UTC로 읽을지 현재 기기 시간대로 읽을지 선택합니다.',
+      '반대로 변환하려면 “날짜와 시간”을 초 단위까지 고치고, 그 시각을 UTC로 읽을지 현재 기기 시간대로 읽을지 선택합니다.',
       '“현재 시각 사용”으로 지금 시각을 채운 뒤, 필요한 값 하나 또는 전체 값을 복사합니다.',
       '마지막 입력값은 이 브라우저에만 남고, 입력 칸 밖에서는 / 키로 타임스탬프 칸에 다시 초점을 맞춥니다.',
     ],
