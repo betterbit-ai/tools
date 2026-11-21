@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { CopyButton, Field, Notice, Panel, Segmented, Select, Stat, TextInput } from '../../components/ui';
+import { CopyButton, Field, Notice, Panel, Segmented, Select, Stat, TextInput, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculateTip, parseAmount } from './logic';
+import { calculateTip, parseAmount, parsePeople, parsePercent } from './logic';
 
 const STORAGE_KEY = 'tools:tip-calculator:state';
 
@@ -77,6 +77,7 @@ export default function TipCalculator({ locale, ui }: ToolProps<UI>) {
   const fallback = defaultState(locale);
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(fallback);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     setState(restoreState(fallback));
@@ -84,15 +85,16 @@ export default function TipCalculator({ locale, ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
+    // The page says the inputs stay in this browser; blocked storage has to say otherwise.
+    if (ready) setSaveFailed(!safeStorage.trySet(STORAGE_KEY, JSON.stringify(state)));
   }, [ready, state]);
 
   const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
   const country = COUNTRIES[state.country];
   const bill = parseAmount(state.bill);
-  const tipPercent = parseAmount(state.tipPercent);
-  const serviceChargePercent = parseAmount(state.serviceChargePercent);
-  const people = parseAmount(state.people);
+  const tipPercent = parsePercent(state.tipPercent);
+  const serviceChargePercent = parsePercent(state.serviceChargePercent);
+  const people = parsePeople(state.people);
   const result = useMemo(
     () =>
       bill === null || tipPercent === null || serviceChargePercent === null || people === null
@@ -138,7 +140,9 @@ export default function TipCalculator({ locale, ui }: ToolProps<UI>) {
     <Panel>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <p class="text-sm text-muted">{ui.intro}</p>
-        <span class="text-xs text-subtle">{ui.autosaved}</span>
+        <span class={cx('text-xs', saveFailed ? 'text-danger' : 'text-subtle')} role={saveFailed ? 'alert' : undefined}>
+          {saveFailed ? ui.saveFailed : ui.autosaved}
+        </span>
       </div>
 
       <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">

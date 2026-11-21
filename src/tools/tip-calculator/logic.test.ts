@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateTip, parseAmount, splitExactly } from './logic';
+import { calculateTip, parseAmount, parsePeople, parsePercent, splitExactly } from './logic';
 
 describe('parseAmount', () => {
   it('accepts plain amounts and common pasted currency formatting', () => {
@@ -8,12 +8,55 @@ describe('parseAmount', () => {
     expect(parseAmount('₩ 50,000')).toBe(50_000);
   });
 
+  it('accepts a trailing currency name, which is how a Korean receipt is pasted', () => {
+    expect(parseAmount('50,000원')).toBe(50_000);
+    expect(parseAmount('50000원')).toBe(50_000);
+    expect(parseAmount('50,000 원')).toBe(50_000);
+    expect(parseAmount('1,234.56 USD')).toBe(1234.56);
+    expect(parseAmount('12.5달러')).toBe(12.5);
+  });
+
   it('rejects empty, negative, malformed, and unicode text input', () => {
     expect(parseAmount('')).toBeNull();
     expect(parseAmount('-12')).toBeNull();
     expect(parseAmount('12..5')).toBeNull();
     expect(parseAmount('오만원')).toBeNull();
+    expect(parseAmount('원')).toBeNull();
     expect(parseAmount('50😀')).toBeNull();
+    expect(parseAmount('50원50')).toBeNull();
+  });
+});
+
+describe('parsePercent', () => {
+  it('accepts the percent sign people copy from a receipt or a label', () => {
+    expect(parsePercent('18')).toBe(18);
+    expect(parsePercent('18%')).toBe(18);
+    expect(parsePercent('18 %')).toBe(18);
+    expect(parsePercent('18％')).toBe(18);
+    expect(parsePercent('1,000%')).toBe(1000);
+    expect(parsePercent('7.5%')).toBe(7.5);
+  });
+
+  it('still rejects text that is not a rate', () => {
+    expect(parsePercent('')).toBeNull();
+    expect(parsePercent('%')).toBeNull();
+    expect(parsePercent('%18')).toBeNull();
+    expect(parsePercent('십팔%')).toBeNull();
+    expect(parsePercent('-18%')).toBeNull();
+  });
+});
+
+describe('parsePeople', () => {
+  it('accepts a trailing 명 or people', () => {
+    expect(parsePeople('3')).toBe(3);
+    expect(parsePeople('3명')).toBe(3);
+    expect(parsePeople('3 people')).toBe(3);
+  });
+
+  it('rejects empty and non-numeric input', () => {
+    expect(parsePeople('')).toBeNull();
+    expect(parsePeople('세 명')).toBeNull();
+    expect(parsePeople('-3')).toBeNull();
   });
 });
 
