@@ -19,6 +19,7 @@ const uiEn = {
   restartHint: 'restarts',
   privacyHint:
     'Everything happens in your browser. Nothing you type is uploaded — your personal best is saved only in this browser.',
+  saveFailed: 'Personal best not saved — this browser is blocking site storage.',
   tierEnBeginner: 'Beginner — most adults land around 40 WPM for everyday typing.',
   tierEnAverage: 'Average — a solid, everyday typing speed.',
   tierEnGood: 'Good — 60+ WPM is considered a strong typist.',
@@ -154,6 +155,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       restartHint: '다시 시작',
       privacyHint:
         '모든 계산은 브라우저 안에서 이루어집니다. 입력 내용은 전송되지 않고, 개인 최고 기록만 이 브라우저에 저장됩니다.',
+      saveFailed: '개인 최고 기록을 저장하지 못했습니다 — 브라우저가 사이트 저장소를 막고 있습니다.',
       tierEnBeginner: '초급 — 일반적인 영문 타이핑은 평균 분당 40단어(WPM) 정도입니다.',
       tierEnAverage: '평균 — 무난한 영문 타자 속도입니다.',
       tierEnGood: '좋음 — 분당 60단어 이상이면 빠른 편입니다.',

@@ -47,6 +47,7 @@ export default function TypingTest({ locale, ui }: ToolProps<UI>) {
   const [now, setNow] = useState(() => Date.now());
   const [best, setBest] = useState<number | null>(null);
   const [justBeatBest, setJustBeatBest] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const startRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -113,17 +114,27 @@ export default function TypingTest({ locale, ui }: ToolProps<UI>) {
 
   const liveScore = useMemo(() => score(language, sample, typed, elapsedMs), [language, sample, typed, elapsedMs]);
 
-  // Save a new personal best once the test is scored.
+  // Save a new personal best once the test is scored. Blocked storage has to say so instead of
+  // silently dropping the record the page promises to keep.
   useEffect(() => {
     if (status !== 'done') return;
     const key = bestKey(language, duration);
     const prev = Number(safeStorage.get(key)) || 0;
     if (liveScore.speed > prev) {
-      safeStorage.set(key, String(liveScore.speed));
-      setBest(liveScore.speed);
-      setJustBeatBest(true);
+      const saved = safeStorage.trySet(key, String(liveScore.speed));
+      setSaveFailed(!saved);
+      if (saved) {
+        setBest(liveScore.speed);
+        setJustBeatBest(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  // The box is disabled while a result is on screen, so a restart has to put the cursor back
+  // once it is editable again — otherwise the next run cannot start by typing.
+  useEffect(() => {
+    if (status !== 'done') inputRef.current?.focus();
   }, [status]);
 
   const onInput = (e: Event) => {
@@ -257,6 +268,11 @@ export default function TypingTest({ locale, ui }: ToolProps<UI>) {
       )}
 
       <p class="mt-4 text-xs text-subtle">{ui.privacyHint}</p>
+      {saveFailed && (
+        <p class="mt-1 text-xs text-danger" role="alert">
+          {ui.saveFailed}
+        </p>
+      )}
     </Panel>
   );
 }

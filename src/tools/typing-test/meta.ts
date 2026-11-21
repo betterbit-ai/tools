@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'device',
   icon: 'zap',
   added: '2026-10-11',
-  updated: '2026-10-11',
+  updated: '2026-11-21',
   edges: ['no-signup', 'accuracy', 'usability'],
   competitors: [
     {
