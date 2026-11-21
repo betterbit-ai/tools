@@ -134,6 +134,10 @@ export default async function (t) {
     `the exact 55,000원 split is not explained: ${koNotices}`,
   );
   t.assert(!koNotices.includes('입력하세요'), 'the page still reports an input error');
+  // The printed formula repeats the rate the person typed: a pasted "10%" must not print "10%%".
+  const formula = await t.page.locator('main p.font-mono').first().innerText();
+  t.assert(formula.includes('× 10% ÷ 100'), `the printed formula is wrong: ${formula}`);
+  t.assert(!formula.includes('%%'), `the printed formula repeats the percent sign: ${formula}`);
 
   // Copying the summary carries the same figures.
   await t.page.getByRole('button', { name: '요약 복사' }).click();

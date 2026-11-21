@@ -229,8 +229,9 @@ export default function TipCalculator({ locale, ui }: ToolProps<UI>) {
               <p class="font-mono text-xs text-subtle">
                 {ui.formula
                   .replaceAll('{bill}', formatMoney(result.billMinor, country))
-                  .replaceAll('{tip}', state.tipPercent)
-                  .replaceAll('{service}', state.serviceChargePercent)}
+                  // The rates as numbers, not the typed text: a pasted "10%" would print "10%%".
+                  .replaceAll('{tip}', String(tipPercent))
+                  .replaceAll('{service}', String(serviceChargePercent))}
               </p>
             </>
           )}
