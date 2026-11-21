@@ -3,6 +3,7 @@ import {
   cityFromInput,
   formatOffset,
   isNearOffsetTransition,
+  readZoneInput,
   resolveCity,
   resolveLocalTime,
   searchCities,
@@ -27,6 +28,23 @@ describe('time-zone-converter', () => {
     expect(resolveCity('아시아', 'ko')).toBeUndefined();
     expect(resolveCity('미국', 'ko')).toBeUndefined();
     expect(resolveCity('', 'ko')).toBeUndefined();
+  });
+
+  it('reads a city field the way people type into it, and returns the label to show', () => {
+    expect(readZoneInput('Tokyo', 'en')).toEqual({ zone: 'Asia/Tokyo', label: 'Tokyo, Japan — Asia/Tokyo' });
+    expect(readZoneInput('도쿄', 'ko')).toEqual({ zone: 'Asia/Tokyo', label: '도쿄, 일본 — Asia/Tokyo' });
+    expect(readZoneInput('  seoul  ', 'en')?.zone).toBe('Asia/Seoul');
+    expect(readZoneInput('Europe/London', 'en')).toEqual({
+      zone: 'Europe/London',
+      label: 'London, United Kingdom — Europe/London',
+    });
+    expect(readZoneInput('UTC', 'ko')?.zone).toBe('UTC');
+    // Partial and ambiguous text stays unresolved instead of jumping to a guess.
+    expect(readZoneInput('', 'en')).toBeUndefined();
+    expect(readZoneInput('zzz', 'en')).toBeUndefined();
+    expect(readZoneInput('미국', 'ko')).toBeUndefined();
+    // A fixed offset is not a zone this converter can apply DST rules to.
+    expect(readZoneInput('UTC+09:00', 'en')).toBeUndefined();
   });
 
   it('converts standard-time and fractional UTC offsets', () => {

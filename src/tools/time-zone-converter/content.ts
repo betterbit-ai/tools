@@ -4,7 +4,7 @@ import type { ToolContent } from '../types';
 const uiEn = {
   fromLabel: 'From city or IANA time zone',
   toLabel: 'To city or IANA time zone',
-  cityHint: 'Search a city in English or Korean, or enter an IANA name such as Europe/London.',
+  cityHint: 'Type a city in English or Korean — “Seoul”, “서울”, or “tokyo” — or an IANA name such as Europe/London.',
   cityPlaceholder: 'Search city or enter IANA time zone',
   dateLabel: 'Date in the source city',
   timeLabel: 'Time in the source city',
@@ -28,6 +28,7 @@ const uiEn = {
   copied: 'Copied',
   dstTransition: 'A daylight-saving transition is within 36 hours of this time. Check the date before scheduling.',
   private: 'Calculated in this browser. Your dates and cities are not sent anywhere.',
+  saveFailed: 'Recent cities were not saved — this browser is blocking site storage.',
 };
 
 export type UI = typeof uiEn;
@@ -139,7 +140,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       fromLabel: '기준 도시 또는 IANA 시간대',
       toLabel: '변환할 도시 또는 IANA 시간대',
-      cityHint: '한국어·영문 도시를 검색하거나 Europe/London 같은 IANA 이름을 입력하세요.',
+      cityHint: '한국어·영문 도시 이름(예: 서울, 뉴욕, tokyo)이나 Europe/London 같은 IANA 이름을 입력하세요.',
       cityPlaceholder: '도시 검색 또는 IANA 시간대 입력',
       dateLabel: '기준 도시의 날짜',
       timeLabel: '기준 도시의 시각',
@@ -164,6 +165,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       dstTransition:
         '선택한 시각 전후 36시간 안에 서머타임 전환이 있습니다. 일정을 정하기 전에 날짜를 다시 확인하세요.',
       private: '브라우저에서만 계산합니다. 날짜와 도시는 어디에도 전송되지 않습니다.',
+      saveFailed: '최근 선택한 도시를 저장하지 못했습니다 — 브라우저가 사이트 저장소를 막고 있습니다.',
     },
   },
 };

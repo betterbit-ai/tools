@@ -136,6 +136,19 @@ export function isTimeZone(value: string): boolean {
   }
 }
 
+/**
+ * Reads a city field once the person has typed into it: a plain city name in either language
+ * ("Tokyo", "도쿄"), a search alias, a full suggestion label, or an IANA zone name. Returns the
+ * zone to convert from plus the label to show, or undefined while the text is ambiguous.
+ */
+export function readZoneInput(value: string, locale: Locale): { zone: string; label: string } | undefined {
+  const city = resolveCity(value, locale);
+  if (city) return { zone: city.zone, label: cityLabel(city, locale) };
+  const typed = value.trim();
+  if (isTimeZone(typed)) return { zone: typed, label: typed };
+  return undefined;
+}
+
 const partsOptions: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: '2-digit',

@@ -13,6 +13,7 @@ import {
   formatTimeInput,
   isNearOffsetTransition,
   isTimeZone,
+  readZoneInput,
   resolveLocalTime,
   searchCities,
   timeZoneAbbreviation,
@@ -51,6 +52,8 @@ export default function TimeZoneConverter({ locale, ui }: ToolProps<UI>) {
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
   const [hourCycle, setHourCycle] = useState<'12' | '24'>('24');
+  const [editing, setEditing] = useState<'from' | 'to' | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const restored = useRef(false);
 
   useEffect(() => {
@@ -73,20 +76,22 @@ export default function TimeZoneConverter({ locale, ui }: ToolProps<UI>) {
 
   useEffect(() => {
     if (!restored.current) return;
-    safeStorage.set(STORAGE_KEY, JSON.stringify({ fromZone, toZone, date, time, hourCycle } satisfies SavedState));
+    // The FAQ promises the last choices come back after a refresh; blocked storage has to say so.
+    setSaveFailed(
+      !safeStorage.trySet(
+        STORAGE_KEY,
+        JSON.stringify({ fromZone, toZone, date, time, hourCycle } satisfies SavedState),
+      ),
+    );
   }, [fromZone, toZone, date, time, hourCycle]);
 
-  const fromCity = cityFromInput(fromQuery, locale);
-  const toCity = cityFromInput(toQuery, locale);
-  const fromInputValid = Boolean(fromCity || isTimeZone(fromQuery));
-  const toInputValid = Boolean(toCity || isTimeZone(toQuery));
-  const resolution = useMemo(
-    () =>
-      fromInputValid && toInputValid
-        ? resolveLocalTime(date, time, fromZone)
-        : { status: 'invalid' as const, alternatives: [] },
-    [date, time, fromZone, fromInputValid, toInputValid],
-  );
+  // A typed city name resolves as soon as it is unambiguous; the zone used for the conversion is
+  // the last one that resolved, so a half-typed name does not blank the result.
+  const fromReading = readZoneInput(fromQuery, locale);
+  const toReading = readZoneInput(toQuery, locale);
+  const fromInputValid = fromReading !== undefined;
+  const toInputValid = toReading !== undefined;
+  const resolution = useMemo(() => resolveLocalTime(date, time, fromZone), [date, time, fromZone]);
   const instant = resolution.instant;
   const targetParts = instant === undefined ? undefined : zonedParts(instant, toZone);
   const sourceOffset = instant === undefined ? undefined : zoneOffsetMs(instant, fromZone);
@@ -102,15 +107,34 @@ export default function TimeZoneConverter({ locale, ui }: ToolProps<UI>) {
 
   const applyFromInput = (value: string) => {
     setFromQuery(value);
-    const city = cityFromInput(value, locale);
-    if (city) setFromZone(city.zone);
-    else if (isTimeZone(value)) setFromZone(value);
+    const reading = readZoneInput(value, locale);
+    if (reading) setFromZone(reading.zone);
   };
   const applyToInput = (value: string) => {
     setToQuery(value);
-    const city = cityFromInput(value, locale);
-    if (city) setToZone(city.zone);
-    else if (isTimeZone(value)) setToZone(value);
+    const reading = readZoneInput(value, locale);
+    if (reading) setToZone(reading.zone);
+  };
+  /** Leaving the field settles the wording: “tokyo” becomes “Tokyo, Japan — Asia/Tokyo”. */
+  const settleFromInput = () => {
+    const reading = readZoneInput(fromQuery, locale);
+    if (!reading) return;
+    setFromQuery(reading.label);
+    setFromZone(reading.zone);
+  };
+  const commitFromInput = () => {
+    setEditing(null);
+    settleFromInput();
+  };
+  const settleToInput = () => {
+    const reading = readZoneInput(toQuery, locale);
+    if (!reading) return;
+    setToQuery(reading.label);
+    setToZone(reading.zone);
+  };
+  const commitToInput = () => {
+    setEditing(null);
+    settleToInput();
   };
   const useNow = () => {
     const values = currentInputs(fromZone);
@@ -136,6 +160,9 @@ export default function TimeZoneConverter({ locale, ui }: ToolProps<UI>) {
               id="tz-from"
               value={fromQuery}
               onValue={applyFromInput}
+              onFocus={() => setEditing('from')}
+              onBlur={commitFromInput}
+              onCommit={settleFromInput}
               options={searchCities(fromQuery, locale).map((city) => cityLabel(city, locale))}
               placeholder={ui.cityPlaceholder}
             />
@@ -170,11 +197,14 @@ export default function TimeZoneConverter({ locale, ui }: ToolProps<UI>) {
               id="tz-to"
               value={toQuery}
               onValue={applyToInput}
+              onFocus={() => setEditing('to')}
+              onBlur={commitToInput}
+              onCommit={settleToInput}
               options={searchCities(toQuery, locale).map((city) => cityLabel(city, locale))}
               placeholder={ui.cityPlaceholder}
             />
           </Field>
-          {!fromInputValid || !toInputValid ? (
+          {(!fromInputValid && editing !== 'from') || (!toInputValid && editing !== 'to') ? (
             <p class="rounded-md bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
               {ui.unknownZone}
             </p>
@@ -228,6 +258,11 @@ export default function TimeZoneConverter({ locale, ui }: ToolProps<UI>) {
               </p>
             )}
           <p class="text-xs text-subtle">{ui.private}</p>
+          {saveFailed && (
+            <p class="text-xs text-danger" role="alert">
+              {ui.saveFailed}
+            </p>
+          )}
         </div>
       </div>
     </Panel>
@@ -238,6 +273,9 @@ function ZoneInput(props: {
   id: string;
   value: string;
   onValue: (value: string) => void;
+  onFocus: () => void;
+  onBlur: () => void;
+  onCommit: () => void;
   options: string[];
   placeholder: string;
 }) {
@@ -249,6 +287,11 @@ function ZoneInput(props: {
         list={listId}
         value={props.value}
         onInput={(event) => props.onValue(event.currentTarget.value)}
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') props.onCommit();
+        }}
         placeholder={props.placeholder}
         autocomplete="off"
       />
