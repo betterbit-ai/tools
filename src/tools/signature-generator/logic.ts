@@ -88,6 +88,29 @@ export function isSignatureMode(value: unknown): value is SignatureMode {
   return value === 'type' || value === 'draw';
 }
 
+/**
+ * Largest font size that keeps `text` inside `maxWidth`.
+ *
+ * Measured once at a reference size and scaled, rather than stepping down in 2 px
+ * steps: the old loop stopped at its last step even when the text was still too
+ * wide, so an 80-character Korean name was drawn past both canvas edges and the
+ * exported PNG lost its first and last characters.
+ */
+export function fitTextSize(
+  text: string,
+  maxWidth: number,
+  startSize: number,
+  measureAt: (text: string, size: number) => number,
+  minSize = 8,
+): number {
+  if (maxWidth <= 0 || startSize <= 0) return Math.max(1, Math.floor(minSize));
+  const reference = 100;
+  const atReference = measureAt(text, reference);
+  if (!Number.isFinite(atReference) || atReference <= 0) return Math.floor(startSize);
+  const fitted = Math.floor((maxWidth * reference) / atReference);
+  return Math.max(Math.floor(minSize), Math.min(Math.floor(startSize), fitted));
+}
+
 export function isSignatureStyle(value: unknown): value is SignatureStyle {
   return value === 'script' || value === 'formal' || value === 'simple';
 }

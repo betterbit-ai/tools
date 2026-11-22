@@ -114,4 +114,19 @@ describe('calculateSeverance', () => {
       }),
     ).toBeNull();
   });
+
+  it('treats an empty monthly wage total as missing data instead of 0원', () => {
+    // Clearing one of the three payslip totals must not quietly shrink the average wage.
+    expect(calculateSeverance({ ...baseInput, wages: ['', 3_000_000, 3_000_000] })).toBeNull();
+    expect(calculateSeverance({ ...baseInput, wages: [3_000_000, '   ', 3_000_000] })).toBeNull();
+    expect(calculateSeverance({ ...baseInput, wages: [3_000_000, 3_000_000, ''] })).toBeNull();
+    // The optional add-ons stay optional: an empty bonus or leave-pay field is still 0원.
+    expect(
+      calculateSeverance({ ...baseInput, annualBonus: '', annualLeavePay: '', dailyOrdinaryWage: '' }),
+    ).toMatchObject({ includedBonus: 0, includedAnnualLeavePay: 0 });
+    // A typed 0 is a real entry, not a blank field.
+    expect(calculateSeverance({ ...baseInput, wages: [0, 3_000_000, 3_000_000] })).toMatchObject({
+      threeMonthWages: 6_000_000,
+    });
+  });
 });

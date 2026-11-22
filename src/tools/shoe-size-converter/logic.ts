@@ -55,6 +55,16 @@ export function isShoeSystem(value: unknown): value is ShoeSystem {
   return typeof value === 'string' && (SHOE_SYSTEMS as string[]).includes(value);
 }
 
+export type ShoeUnit = 'mm' | 'cm';
+
+/** Reads the unit a shopper typed or pasted next to the number, if any. */
+export function shoeUnitOf(value: string): ShoeUnit | null {
+  const text = value.normalize('NFKC').toLowerCase();
+  if (text.includes('cm') || text.includes('센티')) return 'cm';
+  if (text.includes('mm') || text.includes('밀리')) return 'mm';
+  return null;
+}
+
 /** Parses values such as `8½`, `26.0 cm`, and `260㎜` into a numeric size. */
 export function parseShoeSize(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
@@ -77,6 +87,26 @@ export function convertShoeSize(value: number, from: ShoeSystem): ShoeSizeRow | 
   return ADULT_SIZE_CHART.reduce((closest, row) =>
     Math.abs(row[from] - value) < Math.abs(closest[from] - value) ? row : closest,
   );
+}
+
+/**
+ * Reads a size the way shoppers actually write it: "260", "260 mm", "26.5 cm",
+ * "US 8½", "EU 42.5". A cm or mm unit in the text is converted into the unit
+ * the chosen system uses, so "26.5cm" read as Korea (mm) means 265 mm rather
+ * than an out-of-range 26.5.
+ */
+export function readShoeSize(value: unknown, system: ShoeSystem): number | null {
+  const parsed = parseShoeSize(value);
+  if (parsed === null || typeof value !== 'string') return parsed;
+  const unit = shoeUnitOf(value);
+  if (unit === 'cm' && system === 'kr') return parsed * 10;
+  if (unit === 'mm' && system === 'jp') return parsed / 10;
+  return parsed;
+}
+
+/** The plain number to show back in the field once it loses focus. */
+export function formatShoeSizeInput(value: number): string {
+  return String(Number(value.toFixed(2)));
 }
 
 export function supportedRange(system: ShoeSystem): { min: number; max: number } {
