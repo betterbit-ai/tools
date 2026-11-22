@@ -102,7 +102,9 @@ function* diffTokensSteps(a: string[], b: string[], budget: number): Generator<n
     }
     trace.push(new Map(v));
     work += v.size;
-    if (work > budget) return null;
+    // A round that finished the search keeps its exact result even past the budget: the memory is
+    // already spent, and downgrading a comparison that succeeded would be a lie about the output.
+    if (!found && work > budget) return null;
     yield Math.min(1, work / budget);
     if (found) break;
   }
