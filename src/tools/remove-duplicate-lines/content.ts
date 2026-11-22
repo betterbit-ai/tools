@@ -59,7 +59,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Line endings and privacy',
-        body: 'The remover recognizes Windows CRLF, Unix and current macOS LF, classic Mac CR, and Unicode line and paragraph separators as line boundaries. A pasted trailing line break counts as one final empty line; enable Remove empty lines to exclude it along with blank and whitespace-only lines. This is a line tool, so a CSV row or a sentence with commas is still compared as one complete line.\n\nProcessing and the optional saved draft stay in this browser. The page does not upload the text for comparison. Use Clear to remove the saved input from this tool, then copy the cleaned list into a spreadsheet, editor, terminal, or import form.',
+        body: 'The remover recognizes Windows CRLF, Unix and current macOS LF, classic Mac CR, and Unicode line and paragraph separators as line boundaries. A pasted trailing line break counts as one final empty line; enable Remove empty lines to exclude it along with blank and whitespace-only lines. This is a line tool, so a CSV row or a sentence with commas is still compared as one complete line. The invisible byte-order mark that starts an Excel CSV UTF-8 copy is dropped rather than kept as part of the first line.\n\nProcessing and the optional saved draft stay in this browser. The page does not upload the text for comparison. Use Clear to remove the saved input from this tool, then copy the cleaned list into a spreadsheet, editor, terminal, or import form.',
       },
     ],
     faq: [
@@ -112,7 +112,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '줄바꿈 형식과 입력값 보호',
-        body: '이 도구는 Windows CRLF, Unix·현재 macOS의 LF, 이전 Mac의 CR, 유니코드 줄·문단 구분 문자를 모두 줄 경계로 인식합니다. 마지막에 엔터가 있는 텍스트는 끝의 빈 줄 하나를 포함합니다. 빈 줄 제거를 켜면 이 줄과 공백·탭만 있는 줄을 결과에서 뺍니다. 쉼표가 있는 CSV 행도 이 도구에서는 한 줄 전체가 하나의 비교 단위입니다.\n\n중복 제거와 정렬은 브라우저 안에서 실행되고 텍스트는 비교를 위해 서버로 전송되지 않습니다. 새로고침 대비용 입력값만 현재 브라우저의 로컬 저장소에 보관합니다. 지우기를 누르면 이 도구에 저장된 입력값을 삭제할 수 있습니다.',
+        body: '이 도구는 Windows CRLF, Unix·현재 macOS의 LF, 이전 Mac의 CR, 유니코드 줄·문단 구분 문자를 모두 줄 경계로 인식합니다. 마지막에 엔터가 있는 텍스트는 끝의 빈 줄 하나를 포함합니다. 빈 줄 제거를 켜면 이 줄과 공백·탭만 있는 줄을 결과에서 뺍니다. 쉼표가 있는 CSV 행도 이 도구에서는 한 줄 전체가 하나의 비교 단위입니다. 엑셀의 CSV UTF-8 복사본 맨 앞에 붙는 보이지 않는 BOM 문자는 첫 줄의 글자로 세지 않고 지웁니다.\n\n중복 제거와 정렬은 브라우저 안에서 실행되고 텍스트는 비교를 위해 서버로 전송되지 않습니다. 새로고침 대비용 입력값만 현재 브라우저의 로컬 저장소에 보관합니다. 지우기를 누르면 이 도구에 저장된 입력값을 삭제할 수 있습니다.',
       },
     ],
     faq: [

@@ -32,7 +32,9 @@ export const DEFAULT_OPTIONS: DeduplicateOptions = {
 
 /** Split all common line ending forms. An empty editor has zero lines. */
 export function splitLines(input: string): string[] {
-  return input ? input.split(/\r\n|[\n\r\u0085\u2028\u2029]/) : [];
+  // Excel's "CSV UTF-8" export starts with a byte-order mark. Left on the first line it made that
+  // entry different from the same text further down, and stayed invisibly in the result.
+  return input ? input.replace(/^\uFEFF/, '').split(/\r\n|[\n\r\u0085\u2028\u2029]/) : [];
 }
 
 /**

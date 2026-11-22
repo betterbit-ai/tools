@@ -30,6 +30,9 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
   const [removeWinner, setRemoveWinner] = useState(true);
   const [winner, setWinner] = useState<Winner | null>(null);
   const [history, setHistory] = useState<Winner[]>([]);
+  // Draws this page session. Kept apart from `history`, which only holds the last 10 results:
+  // a session of 30 draws used to stop counting at 10.
+  const [draws, setDraws] = useState(0);
   const [preview, setPreview] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [error, setError] = useState<PickerError | 'crypto' | null>(null);
@@ -108,6 +111,7 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
         setPreview(selected.value);
         setWinner(nextWinner);
         setHistory((current) => [nextWinner, ...current].slice(0, 10));
+        setDraws((current) => current + 1);
         if (removeWinner) setInput(removeEntryAt(currentEntries, selected.index).join('\n'));
         setSpinning(false);
         spinTimer.current = null;
@@ -208,7 +212,7 @@ export default function RandomPicker({ locale, ui }: ToolProps<UI>) {
           </output>
           <div class="mt-3 grid grid-cols-2 gap-2">
             <Stat label={ui.entriesRemainingLabel} value={entries.length} />
-            <Stat label={ui.drawnLabel} value={history.length} />
+            <Stat label={ui.drawnLabel} value={draws} />
           </div>
           <p class="mt-3 text-xs text-subtle">{ui.cryptoNote}</p>
         </div>

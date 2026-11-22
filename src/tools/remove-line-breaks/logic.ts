@@ -45,7 +45,9 @@ export function countLineBreaks(input: string): number {
  * are detected only at the start of a line, so ordinary hyphens remain untouched.
  */
 export function removeLineBreaks(input: string, options: CleanupOptions): CleanupResult {
-  const normalized = normalizeLineBreaks(input);
+  // Excel's CSV-UTF8 export and some PDFs start with a byte-order mark. Left in place it becomes
+  // part of the first word, invisible on screen and impossible to find in the result.
+  const normalized = normalizeLineBreaks(input).replace(/^\uFEFF/, '');
   const inputLineBreaks = countLineBreaks(normalized);
   if (!normalized) return { text: '', inputLineBreaks, outputLineBreaks: 0, removedLineBreaks: 0 };
 
@@ -65,7 +67,11 @@ export function removeLineBreaks(input: string, options: CleanupOptions): Cleanu
 }
 
 function joinParagraph(paragraph: string, options: CleanupOptions): string {
-  const lines = paragraph.split('\n').map((line) => (options.trimLineWhitespace ? line.trim() : line));
+  const allLines = paragraph.split('\n').map((line) => (options.trimLineWhitespace ? line.trim() : line));
+  // A line with no text adds no word: the newline that ends a paste, or a blank line inside a
+  // paragraph when blank lines are not kept. Joining them on used to leave a stray space in the
+  // copied text.
+  const lines = allLines.filter((line) => line.trim() !== '');
   let output = '';
 
   for (const line of lines) {

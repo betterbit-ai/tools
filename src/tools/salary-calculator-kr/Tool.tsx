@@ -1,31 +1,42 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { CopyButton, Field, Notice, NumberInput, Panel, Segmented, Stat } from '../../components/ui';
+import { CopyButton, Field, Notice, NumberInput, Panel, Segmented, Stat, TextInput } from '../../components/ui';
+import type { Locale } from '../../i18n/locales';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculateSalary, type WithholdingRate } from './logic';
+import { calculateSalary, explainSalaryInput, parseWon, type SalaryIssue, type WithholdingRate } from './logic';
 
 const STORAGE_KEY = 'tools:salary-calculator-kr:state';
 
 interface State {
-  annualSalary: number | '';
-  monthlyNonTaxable: number | '';
+  /** Kept as typed so "5,000만" survives a re-render; parseWon reads it. */
+  annualSalary: string;
+  monthlyNonTaxable: string;
   dependents: number | '';
   childrenAge8To20: number | '';
   withholdingRate: WithholdingRate;
 }
 
 const fallbackState: State = {
-  annualSalary: 50_000_000,
-  monthlyNonTaxable: 0,
+  annualSalary: '50000000',
+  monthlyNonTaxable: '0',
   dependents: 1,
   childrenAge8To20: 0,
   withholdingRate: 100,
 };
 
+/** Below this, the entered "salary" is almost certainly a 만원 figure with the unit left off. */
+const SUSPICIOUSLY_LOW_ANNUAL_SALARY = 1_000_000;
+
 function isStoredNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
+}
+
+function storedMoney(saved: unknown, fallback: string): string {
+  if (typeof saved === 'string' && saved.length <= 40) return saved;
+  if (isStoredNumber(saved)) return String(saved);
+  return fallback;
 }
 
 function restoreState(): State {
@@ -33,10 +44,8 @@ function restoreState(): State {
     const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
     if (!saved || typeof saved !== 'object') return fallbackState;
     return {
-      annualSalary: isStoredNumber(saved.annualSalary) ? saved.annualSalary : fallbackState.annualSalary,
-      monthlyNonTaxable: isStoredNumber(saved.monthlyNonTaxable)
-        ? saved.monthlyNonTaxable
-        : fallbackState.monthlyNonTaxable,
+      annualSalary: storedMoney(saved.annualSalary, fallbackState.annualSalary),
+      monthlyNonTaxable: storedMoney(saved.monthlyNonTaxable, fallbackState.monthlyNonTaxable),
       dependents: isStoredNumber(saved.dependents) ? saved.dependents : fallbackState.dependents,
       childrenAge8To20: isStoredNumber(saved.childrenAge8To20)
         ? saved.childrenAge8To20
@@ -51,10 +60,56 @@ function restoreState(): State {
   }
 }
 
+/**
+ * A won field that accepts what people actually type — 50000000, 50,000,000, 5,000만, 1억 5천만 —
+ * groups plain digits as they are typed, and shows the amount it read whenever the text uses units.
+ */
+function MoneyField(props: {
+  label: string;
+  hint?: string;
+  value: string;
+  locale: Locale;
+  won: string;
+  unreadable: string;
+  onValue: (value: string) => void;
+}) {
+  const parsed = parseWon(props.value);
+  const grouped = parsed === null ? null : formatNumber(parsed, props.locale);
+  // Units and symbols stay exactly as typed; only plain digits are grouped, so parseWon can always
+  // read the field back (it ignores commas).
+  const hasUnits = /[^\d,\s]/.test(props.value);
+  const shown = hasUnits || grouped === null ? props.value : grouped;
+
+  return (
+    <div>
+      <Field label={props.label} hint={props.hint}>
+        <TextInput
+          value={shown}
+          inputMode="numeric"
+          autoComplete="off"
+          spellcheck={false}
+          class="tabular"
+          onInput={(event) => props.onValue((event.currentTarget as HTMLInputElement).value)}
+        />
+      </Field>
+      {hasUnits && props.value.trim() !== '' ? (
+        parsed === null ? (
+          <p class="mt-1 text-xs text-danger">{props.unreadable}</p>
+        ) : (
+          <p class="mt-1 text-xs text-muted">
+            = {grouped}
+            {props.won}
+          </p>
+        )
+      ) : null}
+    </div>
+  );
+}
+
 export default function SalaryCalculatorKr({ locale, ui, preset }: ToolProps<UI>) {
   // Salary landing pages (/salary-calculator-kr/3000-manwon) open on their salary; other saved
   // conditions (non-taxable pay, dependents…) still come back.
-  const presetSalary = typeof preset?.annualSalary === 'number' ? preset.annualSalary : null;
+  const presetSalary = typeof preset?.annualSalary === 'number' ? String(preset.annualSalary) : null;
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(() =>
     presetSalary === null ? fallbackState : { ...fallbackState, annualSalary: presetSalary },
@@ -72,6 +127,19 @@ export default function SalaryCalculatorKr({ locale, ui, preset }: ToolProps<UI>
 
   const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
   const result = useMemo(() => calculateSalary(state), [state]);
+  const issue = useMemo(() => explainSalaryInput(state), [state]);
+  const issueText: Record<SalaryIssue, string> = {
+    'annual-salary': ui.issueAnnualSalary,
+    'annual-salary-too-large': ui.issueAnnualTooLarge,
+    'non-taxable': ui.issueNonTaxable,
+    'non-taxable-over-pay': ui.issueNonTaxableOverPay,
+    dependents: ui.issueDependents,
+    children: ui.issueChildren,
+    'children-over-dependents': ui.issueChildrenOverDependents,
+    'withholding-rate': ui.issueWithholding,
+  };
+  const annualSalary = parseWon(state.annualSalary);
+  const looksLikeManwon = annualSalary !== null && annualSalary > 0 && annualSalary < SUSPICIOUSLY_LOW_ANNUAL_SALARY;
   const money = (value: number) => `${formatNumber(value, locale)}${ui.won}`;
   const summary = result
     ? `${ui.monthlyTakeHome}: ${money(result.monthlyTakeHome)}\n${ui.annualTakeHome}: ${money(result.annualTakeHome)}`
@@ -86,24 +154,24 @@ export default function SalaryCalculatorKr({ locale, ui, preset }: ToolProps<UI>
 
       <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div class="flex flex-col gap-4">
-          <Field label={ui.annualSalaryLabel} hint={ui.annualSalaryHint}>
-            <NumberInput
-              value={state.annualSalary}
-              min="1"
-              max="1000000000"
-              step="10000"
-              onValue={(annualSalary) => update({ annualSalary })}
-            />
-          </Field>
-          <Field label={ui.nonTaxableLabel} hint={ui.nonTaxableHint}>
-            <NumberInput
-              value={state.monthlyNonTaxable}
-              min="0"
-              max="100000000"
-              step="10000"
-              onValue={(monthlyNonTaxable) => update({ monthlyNonTaxable })}
-            />
-          </Field>
+          <MoneyField
+            label={ui.annualSalaryLabel}
+            hint={ui.annualSalaryHint}
+            value={state.annualSalary}
+            locale={locale}
+            won={ui.won}
+            unreadable={ui.moneyUnreadable}
+            onValue={(annualSalary) => update({ annualSalary })}
+          />
+          <MoneyField
+            label={ui.nonTaxableLabel}
+            hint={ui.nonTaxableHint}
+            value={state.monthlyNonTaxable}
+            locale={locale}
+            won={ui.won}
+            unreadable={ui.moneyUnreadable}
+            onValue={(monthlyNonTaxable) => update({ monthlyNonTaxable })}
+          />
           <Field label={ui.dependentsLabel} hint={ui.dependentsHint}>
             <NumberInput
               value={state.dependents}
@@ -144,9 +212,10 @@ export default function SalaryCalculatorKr({ locale, ui, preset }: ToolProps<UI>
             <CopyButton text={summary} label={ui.copyResult} copiedLabel={ui.copiedResult} />
           </div>
           {!result ? (
-            <Notice tone="danger">{ui.invalidInput}</Notice>
+            <Notice tone="danger">{issue ? issueText[issue] : ui.invalidInput}</Notice>
           ) : (
             <>
+              {looksLikeManwon && <Notice tone="danger">{ui.lowSalaryWarning}</Notice>}
               <div class="grid grid-cols-2 gap-2" aria-live="polite">
                 <Stat label={ui.monthlyTakeHome} value={money(result.monthlyTakeHome)} emphasis />
                 <Stat label={ui.annualTakeHome} value={money(result.annualTakeHome)} />

@@ -16,10 +16,17 @@ import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { DEFAULT_REGEX_STATE, explainPattern, testRegex, type ExplanationKind } from './logic';
+import { DEFAULT_REGEX_STATE, explainPattern, testRegex, type ExplanationKind, type RegexResult } from './logic';
 
 const STORAGE_KEY = 'tools:regex-tester:state';
 const FLAG_ORDER = 'gimsuy';
+/** How long one match run may take before the page stops waiting for it. */
+const MATCH_TIMEOUT_MS = 1_500;
+/** Typing delay, so a pattern is not re-run on every keystroke. */
+const MATCH_DELAY_MS = 80;
+/** Longest text run on the page itself when a worker cannot be created. */
+const MAX_DIRECT_CHARS = 20_000;
+const EMPTY_RESULT: RegexResult = { matches: [], hasMoreMatches: false };
 
 interface RegexState {
   pattern: string;
@@ -61,6 +68,13 @@ export default function RegexTester({ locale, ui }: ToolProps<UI>) {
   const [state, setState] = useState<RegexState>({ ...DEFAULT_REGEX_STATE });
   const [ready, setReady] = useState(false);
   const patternRef = useRef<HTMLInputElement>(null);
+  const [result, setResult] = useState<RegexResult>(EMPTY_RESULT);
+  // A run that outlived MATCH_TIMEOUT_MS: the pattern is exponential on this text.
+  const [slow, setSlow] = useState(false);
+  const [noWorker, setNoWorker] = useState(false);
+  const workerRef = useRef<Worker | null>(null);
+  const workerFailed = useRef(false);
+  const requestId = useRef(0);
 
   useEffect(() => {
     try {
@@ -87,10 +101,84 @@ export default function RegexTester({ locale, ui }: ToolProps<UI>) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const result = useMemo(
-    () => testRegex(state.pattern, state.flags, state.text, state.replacement || undefined),
-    [state],
-  );
+  // Match off the page: a pattern such as (a+)+$ takes seconds on 30 characters and cannot be
+  // cancelled once it starts, so on the page it froze every script on the tab, typing included.
+  useEffect(() => {
+    const id = ++requestId.current;
+    if (!state.pattern) {
+      setResult(EMPTY_RESULT);
+      setSlow(false);
+      return;
+    }
+
+    /** The worker is created once per page, so its reply is matched by request id, not by closure. */
+    const accept = (finishedId: number, next: RegexResult) => {
+      if (finishedId !== requestId.current) return;
+      setResult(next);
+      setSlow(false);
+    };
+    const giveUp = () => {
+      if (id !== requestId.current) return;
+      workerRef.current?.terminate();
+      workerRef.current = null;
+      setResult(EMPTY_RESULT);
+      setSlow(true);
+    };
+    const ensureWorker = (): Worker | null => {
+      if (workerRef.current) return workerRef.current;
+      if (workerFailed.current) return null;
+      try {
+        const worker = new Worker(new URL('./match.worker.ts', import.meta.url), { type: 'module' });
+        worker.onmessage = (event: MessageEvent<{ id: number; result: RegexResult }>) =>
+          accept(event.data.id, event.data.result);
+        // A chunk that cannot load (blocked request, strict CSP, stale cached page) fires here.
+        worker.onerror = () => {
+          workerFailed.current = true;
+          workerRef.current?.terminate();
+          workerRef.current = null;
+          setNoWorker(true);
+        };
+        workerRef.current = worker;
+        return worker;
+      } catch {
+        workerFailed.current = true;
+        setNoWorker(true);
+        return null;
+      }
+    };
+
+    let watchdog: number | undefined;
+    const delay = window.setTimeout(() => {
+      const request = {
+        id,
+        pattern: state.pattern,
+        flags: state.flags,
+        text: state.text,
+        replacement: state.replacement || undefined,
+      };
+      const worker = ensureWorker();
+      if (worker) {
+        worker.postMessage(request);
+        watchdog = window.setTimeout(giveUp, MATCH_TIMEOUT_MS);
+        return;
+      }
+      // No worker (rare: it was blocked and could not load). A short text is still checked here,
+      // and a long one is refused out loud rather than risking a frozen page.
+      if (state.text.length > MAX_DIRECT_CHARS) {
+        setSlow(true);
+        return;
+      }
+      accept(id, testRegex(request.pattern, request.flags, request.text, request.replacement));
+    }, MATCH_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(delay);
+      window.clearTimeout(watchdog);
+    };
+  }, [state]);
+
+  useEffect(() => () => workerRef.current?.terminate(), []);
+
   const explanation = useMemo(() => explainPattern(state.pattern), [state.pattern]);
   const segments = useMemo(() => highlightSegments(state.text, result.matches), [state.text, result.matches]);
   const n = (value: number) => formatNumber(value, locale);
@@ -191,10 +279,12 @@ export default function RegexTester({ locale, ui }: ToolProps<UI>) {
 
         <div class="flex min-w-0 flex-col gap-5">
           <div class="grid grid-cols-2 gap-2" aria-live="polite">
-            <Stat label={ui.matchCount} value={n(result.matches.length)} emphasis />
+            <Stat label={ui.matchCount} value={slow ? '—' : n(result.matches.length)} emphasis />
             <Stat label={ui.characterCount} value={n(state.text.length)} />
           </div>
 
+          {slow ? <Notice tone="danger">{noWorker ? ui.noWorkerLong : ui.slowPattern}</Notice> : null}
+          {noWorker && !slow ? <Notice tone="danger">{ui.workerBlocked}</Notice> : null}
           {result.error ? (
             <Notice tone="danger">
               {ui.errorLabel}: {result.error}
@@ -207,15 +297,17 @@ export default function RegexTester({ locale, ui }: ToolProps<UI>) {
             <pre class="min-h-32 overflow-auto whitespace-pre-wrap break-words rounded-md border border-line bg-bg p-3 font-mono text-sm leading-6 text-fg">
               {!state.pattern
                 ? ui.noPattern
-                : result.error
-                  ? ui.noMatches
-                  : result.matches.length === 0
+                : slow
+                  ? ui.slowResult
+                  : result.error
                     ? ui.noMatches
-                    : segments.map((segment) => (
-                        <span class={cx(segment.matched && 'rounded-sm bg-accent-soft text-fg')} key={segment.key}>
-                          {segment.value}
-                        </span>
-                      ))}
+                    : result.matches.length === 0
+                      ? ui.noMatches
+                      : segments.map((segment) => (
+                          <span class={cx(segment.matched && 'rounded-sm bg-accent-soft text-fg')} key={segment.key}>
+                            {segment.value}
+                          </span>
+                        ))}
             </pre>
           </div>
 
@@ -239,7 +331,9 @@ export default function RegexTester({ locale, ui }: ToolProps<UI>) {
         <div>
           <h3 class="mb-3 text-sm font-medium text-fg">{ui.matchListLabel}</h3>
           {result.matches.length === 0 ? (
-            <p class="text-sm text-subtle">{state.pattern && !result.error ? ui.noMatches : ui.noPattern}</p>
+            <p class="text-sm text-subtle">
+              {slow ? ui.slowResult : state.pattern && !result.error ? ui.noMatches : ui.noPattern}
+            </p>
           ) : (
             <ol class="max-h-96 space-y-2 overflow-auto pr-1">
               {result.matches.map((match, index) => {
