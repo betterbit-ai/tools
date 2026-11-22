@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Kbd, Panel, cx } from '../../components/ui';
+import { Button, Kbd, Notice, Panel, cx } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -22,6 +22,7 @@ const STATE_KEY = 'tools:stopwatch:state';
 export default function Stopwatch({ ui }: ToolProps<UI>) {
   const [state, setState] = useState<StopwatchState>(idle);
   const [now, setNow] = useState(() => Date.now());
+  const [notice, setNotice] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // An active elapsed timestamp and lap history are restored after refresh.
@@ -70,12 +71,24 @@ export default function Stopwatch({ ui }: ToolProps<UI>) {
     setState(reset());
   }, []);
 
+  // Full screen can be refused (an embedded view, a permissions policy) or missing on some
+  // browsers; say so instead of leaving the button looking broken.
   const fullscreen = useCallback(() => {
     const panel = panelRef.current;
     if (!panel) return;
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void panel.requestFullscreen?.();
-  }, []);
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => setNotice(ui.fullscreenError));
+      return;
+    }
+    if (typeof panel.requestFullscreen !== 'function') {
+      setNotice(ui.fullscreenError);
+      return;
+    }
+    panel.requestFullscreen().then(
+      () => setNotice(null),
+      () => setNotice(ui.fullscreenError),
+    );
+  }, [ui.fullscreenError]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -88,6 +101,9 @@ export default function Stopwatch({ ui }: ToolProps<UI>) {
       )
         return;
       if (event.code === 'Space') {
+        // A focused button, link or summary must keep its own Space activation (Lap, Reset, full
+        // screen); otherwise the shortcut would pause the clock instead of pressing the control.
+        if (target.closest('button, a[href], summary, [role="button"]')) return;
         event.preventDefault();
         toggle();
       } else if (event.key === 'l' || event.key === 'L') {
@@ -150,12 +166,18 @@ export default function Stopwatch({ ui }: ToolProps<UI>) {
               stroke-linecap="round"
               aria-hidden="true"
             >
-              <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2 2v-3" />
+              <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" />
             </svg>
             <span class="hidden sm:inline">{ui.fullscreen}</span>
           </Button>
         </div>
       </div>
+
+      {notice && (
+        <div class="mt-4">
+          <Notice tone="danger">{notice}</Notice>
+        </div>
+      )}
 
       <section class="mt-6 border-t border-line pt-6" aria-label={ui.laps}>
         <div class="flex flex-wrap items-center justify-between gap-3">

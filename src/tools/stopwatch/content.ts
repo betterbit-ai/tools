@@ -12,6 +12,7 @@ const uiEn = {
   lap: 'Lap',
   reset: 'Reset',
   fullscreen: 'Full screen',
+  fullscreenError: 'Full screen is not available here. Open this page in its own browser tab and try again.',
   laps: 'Lap records',
   lapHint: 'Record a split without stopping. The newest lap is shown first.',
   noLaps: 'Start timing, then press Lap to add your first split.',
@@ -144,6 +145,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       lap: '랩',
       reset: '초기화',
       fullscreen: '전체화면',
+      fullscreenError:
+        '이 화면에서는 전체화면을 사용할 수 없습니다. 페이지를 브라우저 탭에서 직접 열고 다시 시도하세요.',
       laps: '랩 기록',
       lapHint: '측정을 멈추지 않고 구간을 기록합니다. 최신 랩이 위에 표시됩니다.',
       noLaps: '측정을 시작한 뒤 랩 버튼을 눌러 첫 구간 기록을 남깁니다.',
