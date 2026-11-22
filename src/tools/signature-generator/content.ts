@@ -26,7 +26,8 @@ const uiEn = {
   undo: 'Undo stroke',
   clear: 'Clear',
   privacyNote: 'Your name and strokes are drawn and saved only in this browser. Nothing is uploaded.',
-  transparentNote: 'The PNG is cropped to the ink and keeps a transparent background.',
+  transparentNote:
+    'The PNG is cropped to the ink and keeps a transparent background, in the black or blue ink you chose — not your screen theme.',
   download: 'Download transparent PNG',
   downloadShortcutKey: 'D',
   downloadShortcut: 'to download when no text field is active',
@@ -157,7 +158,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       undo: '한 획 취소',
       clear: '지우기',
       privacyNote: '이름과 손글씨는 이 브라우저 안에서만 그리고 저장합니다. 어디에도 업로드되지 않습니다.',
-      transparentNote: 'PNG는 잉크 부분에 맞춰 잘리고 배경은 투명하게 유지됩니다.',
+      transparentNote:
+        'PNG는 잉크 부분에 맞춰 잘리고 배경은 투명하게 유지됩니다. 잉크는 고른 검정·파랑 그대로 저장되며 화면 테마를 따르지 않습니다.',
       download: '투명 PNG 다운로드',
       downloadShortcutKey: 'D',
       downloadShortcut: '텍스트 입력 중이 아닐 때 다운로드',

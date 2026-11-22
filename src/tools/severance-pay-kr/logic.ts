@@ -64,7 +64,7 @@ export function calculateSeverance(input: SeveranceInput): SeveranceResult | nul
   if (retirement.getTime() <= start.getTime()) return null;
 
   if (input.wages.length !== 3) return null;
-  const wages = input.wages.map(parseOptionalAmount);
+  const wages = input.wages.map(parseRequiredAmount);
   const annualBonus = parseOptionalAmount(input.annualBonus);
   const annualLeavePay = parseOptionalAmount(input.annualLeavePay);
   const dailyOrdinaryWage = parseOptionalAmount(input.dailyOrdinaryWage);
@@ -122,6 +122,16 @@ function parseOptionalAmount(value: number | string): number | null {
   if (typeof value === 'string' && !value.trim()) return 0;
   const parsed = parseSeveranceNumber(value);
   return parsed === null || parsed < 0 || parsed > MAX_AMOUNT ? null : parsed;
+}
+
+/**
+ * A monthly wage total is data the estimate cannot do without: an empty field means
+ * "not entered yet", not "0원". Reading it as 0 quietly shrank the average wage and
+ * produced a smaller, still plausible-looking estimate.
+ */
+function parseRequiredAmount(value: number | string): number | null {
+  if (typeof value === 'string' && !value.trim()) return null;
+  return parseOptionalAmount(value);
 }
 
 function parseIsoDate(value: string): Date | null {

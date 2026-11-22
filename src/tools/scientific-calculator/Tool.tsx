@@ -107,6 +107,8 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
   const [state, setState] = useState<PersistedState>(DEFAULT_STATE);
   const [justEvaluated, setJustEvaluated] = useState(false);
   const [submitError, setSubmitError] = useState<EvalErrorKind | null>(null);
+  /** Set when MC/MR/M+/M− was asked to work on an expression that has no value. */
+  const [memoryError, setMemoryError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -141,6 +143,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
 
   const setInput = (input: string) => {
     setSubmitError(null);
+    setMemoryError(false);
     setJustEvaluated(false);
     setState((s) => ({ ...s, input }));
   };
@@ -148,6 +151,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
   /** Button presses append at the end; typing on the keyboard edits the field normally. */
   const press = (text: string) => {
     setSubmitError(null);
+    setMemoryError(false);
     setState((s) => {
       if (justEvaluated) {
         const input = CONTINUES_AFTER_RESULT.has(text) ? s.input + text : text;
@@ -168,6 +172,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
       return;
     }
     setSubmitError(null);
+    setMemoryError(false);
     const entry: HistoryEntry = { expr, result: result.value, at: Date.now() };
     setState((s) => ({ ...s, input: toPlainString(result.value), history: pushHistory(s.history, entry) }));
     setJustEvaluated(true);
@@ -176,6 +181,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
 
   const handleClear = () => {
     setSubmitError(null);
+    setMemoryError(false);
     setState((s) => ({ ...s, input: '' }));
     setJustEvaluated(false);
     focusInput();
@@ -183,6 +189,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
 
   const handleBackspace = () => {
     setSubmitError(null);
+    setMemoryError(false);
     if (justEvaluated) {
       setState((s) => ({ ...s, input: '' }));
     } else {
@@ -209,6 +216,7 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
 
   const loadHistoryEntry = (entry: HistoryEntry) => {
     setSubmitError(null);
+    setMemoryError(false);
     setState((s) => ({ ...s, input: toPlainString(entry.result) }));
     setJustEvaluated(true);
     focusInput();
@@ -216,18 +224,23 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
 
   const clearHistory = () => setState((s) => ({ ...s, history: [] }));
 
-  const memPlus = () =>
-    setState((s) => {
-      const r = evaluate(s.input, s.angleMode);
-      return r.ok ? { ...s, memory: s.memory + r.value } : s;
-    });
-  const memMinus = () =>
-    setState((s) => {
-      const r = evaluate(s.input, s.angleMode);
-      return r.ok ? { ...s, memory: s.memory - r.value } : s;
-    });
+  /** Adds or subtracts the value on screen; says so when the display has no value to use. */
+  const changeMemory = (direction: 1 | -1) => {
+    const result = evaluate(state.input, state.angleMode);
+    if (!result.ok) {
+      setMemoryError(true);
+      return;
+    }
+    setMemoryError(false);
+    setState((s) => ({ ...s, memory: s.memory + direction * result.value }));
+  };
+  const memPlus = () => changeMemory(1);
+  const memMinus = () => changeMemory(-1);
   const memRecall = () => press(toPlainString(state.memory));
-  const memClear = () => setState((s) => ({ ...s, memory: 0 }));
+  const memClear = () => {
+    setMemoryError(false);
+    setState((s) => ({ ...s, memory: 0 }));
+  };
 
   return (
     <Panel>
@@ -264,7 +277,20 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
               aria-label={ui.expressionLabel}
               value={state.input}
               placeholder="0"
-              onInput={(e) => setInput((e.currentTarget as HTMLInputElement).value)}
+              onInput={(e) => {
+                const next = (e.currentTarget as HTMLInputElement).value;
+                if (!justEvaluated) {
+                  setInput(next);
+                  return;
+                }
+                // After "=" the display holds the answer. Typing on it starts a new
+                // calculation, the same way the keypad's digits do, instead of gluing
+                // the new digits onto the result (144 + "7" must not become 1447).
+                setSubmitError(null);
+                setMemoryError(false);
+                setJustEvaluated(false);
+                setState((s) => ({ ...s, input: next.startsWith(s.input) ? next.slice(s.input.length) : next }));
+              }}
               onKeyDown={handleKeyDown}
               onFocus={(e) => (e.currentTarget as HTMLInputElement).setSelectionRange(9999, 9999)}
               class="mt-3 w-full bg-transparent text-right font-mono text-3xl tabular text-fg outline-none placeholder:text-subtle"
@@ -336,6 +362,11 @@ export default function ScientificCalculator({ locale, ui }: ToolProps<UI>) {
           <Button class="mt-1.5 w-full" variant="primary" size="lg" onClick={handleEquals}>
             =
           </Button>
+          {memoryError && (
+            <div class="mt-1.5">
+              <Notice tone="danger">{ui.memoryError}</Notice>
+            </div>
+          )}
 
           <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-3 text-xs text-subtle">
             <span class="inline-flex items-center gap-1.5">

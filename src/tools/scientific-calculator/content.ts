@@ -20,6 +20,8 @@ const uiEn = {
   clearHistory: 'Clear',
   kbdEquals: 'calculates',
   kbdClear: 'clears everything',
+  memoryError:
+    'The expression in the display has no value yet, so memory was not changed. Fix or clear it, then press M+ again.',
 };
 export type UI = typeof uiEn;
 
@@ -177,6 +179,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       clearHistory: '지우기',
       kbdEquals: '계산합니다',
       kbdClear: '전체를 지웁니다',
+      memoryError:
+        '지금 표시된 식을 계산할 수 없어 메모리를 바꾸지 않았습니다. 식을 고치거나 지운 뒤 다시 M+를 누르세요.',
     },
   },
 };

@@ -1,20 +1,29 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { CopyButton, Field, Notice, NumberInput, Panel, Select, Stat } from '../../components/ui';
+import { CopyButton, Field, Notice, Panel, Select, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { convertShoeSize, formatSizeSummary, isShoeSystem, supportedRange, type ShoeSystem } from './logic';
+import {
+  convertShoeSize,
+  formatShoeSizeInput,
+  formatSizeSummary,
+  isShoeSystem,
+  readShoeSize,
+  supportedRange,
+  type ShoeSystem,
+} from './logic';
 
 const STORAGE_KEY = 'tools:shoe-size-converter:state';
 type Brand = 'none' | 'nike' | 'adidas' | 'newBalance';
 
 interface State {
-  value: number | '';
+  /** Kept as typed so "26.5 cm" or "US 8½" survives until it is read. */
+  text: string;
   system: ShoeSystem;
   brand: Brand;
 }
 
-const DEFAULT_STATE: State = { value: 260, system: 'kr', brand: 'none' };
+const DEFAULT_STATE: State = { text: '260', system: 'kr', brand: 'none' };
 
 const SYSTEM_LABEL_KEY: Record<ShoeSystem, keyof UI> = {
   kr: 'systemKr',
@@ -38,10 +47,6 @@ const BRAND_NOTICE_KEY: Record<Exclude<Brand, 'none'>, keyof UI> = {
   newBalance: 'newBalanceNotice',
 };
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
 function isBrand(value: unknown): value is Brand {
   return value === 'none' || value === 'nike' || value === 'adidas' || value === 'newBalance';
 }
@@ -51,7 +56,13 @@ function restoreState(): State {
     const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
     if (!saved || typeof saved !== 'object') return DEFAULT_STATE;
     return {
-      value: isFiniteNumber(saved.value) ? saved.value : DEFAULT_STATE.value,
+      // Older builds stored only the number; keep that work when it is still there.
+      text:
+        typeof saved.text === 'string'
+          ? saved.text
+          : typeof saved.value === 'number' && Number.isFinite(saved.value)
+            ? formatShoeSizeInput(saved.value)
+            : DEFAULT_STATE.text,
       system: isShoeSystem(saved.system) ? saved.system : DEFAULT_STATE.system,
       brand: isBrand(saved.brand) ? saved.brand : DEFAULT_STATE.brand,
     };
@@ -75,16 +86,14 @@ export default function ShoeSizeConverter({ ui }: ToolProps<UI>) {
 
   const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
   const range = supportedRange(state.system);
-  const row = useMemo(
-    () => (isFiniteNumber(state.value) ? convertShoeSize(state.value, state.system) : null),
-    [state.value, state.system],
-  );
-  const systemOptions = Object.keys(SYSTEM_LABEL_KEY).map((value) => {
-    const system = value as ShoeSystem;
+  const value = useMemo(() => readShoeSize(state.text, state.system), [state.text, state.system]);
+  const row = useMemo(() => (value === null ? null : convertShoeSize(value, state.system)), [value, state.system]);
+  const systemOptions = Object.keys(SYSTEM_LABEL_KEY).map((option) => {
+    const system = option as ShoeSystem;
     return { value: system, label: ui[SYSTEM_LABEL_KEY[system]] };
   });
-  const brandOptions = Object.keys(BRAND_LABEL_KEY).map((value) => {
-    const brand = value as Brand;
+  const brandOptions = Object.keys(BRAND_LABEL_KEY).map((option) => {
+    const brand = option as Brand;
     return { value: brand, label: ui[BRAND_LABEL_KEY[brand]] };
   });
   const labels = Object.fromEntries(
@@ -104,15 +113,23 @@ export default function ShoeSizeConverter({ ui }: ToolProps<UI>) {
               label={ui.sizeLabel}
               hint={ui.sizeHint.replace('{min}', String(range.min)).replace('{max}', String(range.max))}
             >
-              <NumberInput
-                value={state.value}
-                min={String(range.min)}
-                max={String(range.max)}
-                step="0.5"
-                onValue={(value) => update({ value })}
+              <TextInput
+                value={state.text}
+                placeholder={ui.sizePlaceholder}
+                inputMode="decimal"
+                autoComplete="off"
+                aria-describedby="shoe-size-hint"
+                onInput={(event) => update({ text: event.currentTarget.value })}
+                onBlur={() => {
+                  // Show the number that was read, so "26.5 cm" becomes the 265 mm it means.
+                  if (value !== null) update({ text: formatShoeSizeInput(value) });
+                }}
               />
             </Field>
           </div>
+          <p id="shoe-size-hint" class="text-xs text-subtle">
+            {ui.sizeFormats}
+          </p>
 
           {!row && <Notice tone="danger">{ui.outOfRange}</Notice>}
 

@@ -28,6 +28,14 @@
   --warning: #a16207;
   --focus: #2f5bea;
   --shadow-color: 20 20 30;
+  /*
+   * Signature ink and the paper it is previewed on. Deliberately outside the dark-mode block:
+   * a downloaded signature PNG is placed on a white document, so its ink must not follow the
+   * visitor's screen theme, and the preview shows that same ink on a paper-coloured surface.
+   */
+  --ink-black: #18181b;
+  --ink-blue: #2f5bea;
+  --ink-paper: #ffffff;
   color-scheme: light;
 }
 
@@ -74,6 +82,7 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-warning: var(--warning);
+  --color-ink-paper: var(--ink-paper);
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Hiragino Sans',

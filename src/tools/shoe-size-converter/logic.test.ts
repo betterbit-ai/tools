@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   ADULT_SIZE_CHART,
   convertShoeSize,
+  formatShoeSizeInput,
   formatSizeSummary,
   isShoeSystem,
   parseShoeSize,
+  readShoeSize,
+  shoeUnitOf,
   supportedRange,
 } from './logic';
 
@@ -76,5 +79,50 @@ describe('size-input helpers', () => {
     expect(summary).toContain('KR: 260');
     expect(summary).toContain('US Women: 9.5');
     expect(summary.split('\n')).toHaveLength(6);
+  });
+});
+
+describe('readShoeSize', () => {
+  it('reads a bare number in the system the shopper picked', () => {
+    expect(readShoeSize('260', 'kr')).toBe(260);
+    expect(readShoeSize('8', 'usMen')).toBe(8);
+    expect(readShoeSize(26.5, 'jp')).toBe(26.5);
+  });
+
+  it('reads sizes written with a unit, a country prefix, or a Unicode half size', () => {
+    expect(readShoeSize('260 mm', 'kr')).toBe(260);
+    expect(readShoeSize('260㎜', 'kr')).toBe(260);
+    expect(readShoeSize('26.5 cm', 'jp')).toBe(26.5);
+    expect(readShoeSize('US 8½', 'usMen')).toBe(8.5);
+    expect(readShoeSize('EU 42.5', 'eu')).toBe(42.5);
+    expect(readShoeSize('８．５', 'usWomen')).toBe(8.5);
+  });
+
+  it('converts a typed unit into the unit the chosen system uses', () => {
+    // 26.5 cm is 265 mm, not an out-of-range 26.5 — and 260 mm is 26 cm in Japan.
+    expect(readShoeSize('26.5cm', 'kr')).toBe(265);
+    expect(convertShoeSize(readShoeSize('26.5cm', 'kr')!, 'kr')).toMatchObject({ footMm: 265 });
+    expect(readShoeSize('260mm', 'jp')).toBe(26);
+    expect(convertShoeSize(readShoeSize('260mm', 'jp')!, 'jp')).toMatchObject({ footMm: 260 });
+    expect(readShoeSize('260밀리', 'kr')).toBe(260);
+    expect(readShoeSize('26.5센티', 'jp')).toBe(26.5);
+  });
+
+  it('leaves an unreadable value null so the page can say so', () => {
+    expect(readShoeSize('', 'kr')).toBeNull();
+    expect(readShoeSize('large', 'kr')).toBeNull();
+    expect(readShoeSize('사이즈', 'kr')).toBeNull();
+  });
+
+  it('recognises the unit tokens only when they are really there', () => {
+    expect(shoeUnitOf('260 mm')).toBe('mm');
+    expect(shoeUnitOf('26.5CM')).toBe('cm');
+    expect(shoeUnitOf('US 8½')).toBeNull();
+  });
+
+  it('shows a read value back as a plain number', () => {
+    expect(formatShoeSizeInput(260)).toBe('260');
+    expect(formatShoeSizeInput(26.5)).toBe('26.5');
+    expect(formatShoeSizeInput(42.5000001)).toBe('42.5');
   });
 });

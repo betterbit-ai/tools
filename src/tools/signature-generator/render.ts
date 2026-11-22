@@ -2,6 +2,7 @@
 import {
   EXPORT_PADDING,
   findInkBounds,
+  fitTextSize,
   paddedBounds,
   SIGNATURE_HEIGHT,
   SIGNATURE_WIDTH,
@@ -62,6 +63,10 @@ function drawStrokes(
   }
 }
 
+function fontFor(style: SignatureStyle, size: number): string {
+  return `${style === 'formal' ? 'italic ' : ''}${size}px ${FONT_STACKS[style]}`;
+}
+
 function drawText(
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -74,12 +79,12 @@ function drawText(
   context.fillStyle = ink;
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  let size = canvas.height * 0.62;
-  do {
-    context.font = `${style === 'formal' ? 'italic ' : ''}${size}px ${FONT_STACKS[style]}`;
-    if (context.measureText(value).width <= canvas.width * 0.88) break;
-    size -= 2;
-  } while (size > 12);
+  const maxWidth = canvas.width * 0.88;
+  const size = fitTextSize(value, maxWidth, canvas.height * 0.62, (measured, sizeAt) => {
+    context.font = fontFor(style, sizeAt);
+    return context.measureText(measured).width;
+  });
+  context.font = fontFor(style, size);
   context.fillText(value, canvas.width / 2, canvas.height / 2);
 }
 

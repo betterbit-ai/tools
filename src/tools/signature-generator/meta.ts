@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'generator',
   icon: 'signature',
   added: '2026-10-18',
-  updated: '2026-10-18',
+  updated: '2026-11-22',
   edges: ['privacy', 'usability'],
   competitors: [
     {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EXPORT_PADDING,
   findInkBounds,
+  fitTextSize,
   hasSignature,
   isSignatureBlank,
   MAX_SIGNATURE_TEXT_LENGTH,
@@ -94,5 +95,32 @@ describe('paddedBounds', () => {
       right: 7,
       bottom: 8,
     });
+  });
+});
+
+describe('fitTextSize', () => {
+  // A proportional-font stand-in: width grows with the character count and the size.
+  const measureAt = (text: string, size: number) => [...text].length * size * 0.6;
+
+  it('uses the full starting size when a short name already fits', () => {
+    expect(fitTextSize('Alex', 1_056, 248, measureAt)).toBe(248);
+  });
+
+  it('shrinks a long Korean name until it fits inside both edges', () => {
+    const name = '가'.repeat(MAX_SIGNATURE_TEXT_LENGTH);
+    const size = fitTextSize(name, 1_056, 248, measureAt);
+    expect(size).toBeLessThan(248);
+    expect(measureAt(name, size)).toBeLessThanOrEqual(1_056);
+    expect(size).toBeGreaterThanOrEqual(8);
+  });
+
+  it('bottoms out at the minimum size for text far past the 80-character input limit', () => {
+    const text = 'x'.repeat(5_000);
+    expect(fitTextSize(text, 1_056, 248, measureAt)).toBe(8);
+  });
+
+  it('falls back safely when the font cannot be measured', () => {
+    expect(fitTextSize('가', 1_056, 248, () => 0)).toBe(248);
+    expect(fitTextSize('가', 0, 248, measureAt)).toBe(8);
   });
 });

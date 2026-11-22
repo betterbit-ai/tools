@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Field, Kbd, Notice, Panel, Segmented, TextInput } from '../../components/ui';
+import { Button, Field, FieldGroup, Kbd, Notice, Panel, Segmented, TextInput } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -47,6 +47,10 @@ function areStrokes(value: unknown): value is Stroke[] {
   );
 }
 
+function defaultSettings(defaultName: string): Settings {
+  return { mode: 'type', text: defaultName, style: 'script', ink: 'accent', penWidth: 'medium', strokes: [] };
+}
+
 function readSettings(defaultName: string): Settings {
   try {
     const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null') as Partial<Settings> | null;
@@ -60,27 +64,37 @@ function readSettings(defaultName: string): Settings {
       strokes: areStrokes(saved.strokes) ? saved.strokes : [],
     };
   } catch {
-    return { mode: 'type', text: defaultName, style: 'script', ink: 'accent', penWidth: 'medium', strokes: [] };
+    return defaultSettings(defaultName);
   }
 }
 
 function inkColor(ink: Ink): string {
+  // Fixed ink tokens, not --fg/--accent: the downloaded PNG lands on a white document,
+  // so "Black" must stay black even when the visitor uses dark mode.
   return getComputedStyle(document.documentElement)
-    .getPropertyValue(ink === 'accent' ? '--accent' : '--fg')
+    .getPropertyValue(ink === 'accent' ? '--ink-blue' : '--ink-black')
     .trim();
 }
 
 export default function SignatureGenerator({ ui }: ToolProps<UI>) {
-  const [settings, setSettings] = useState<Settings>(() => readSettings(ui.defaultName));
+  const [settings, setSettings] = useState<Settings>(() => defaultSettings(ui.defaultName));
+  const [restored, setRestored] = useState(false);
   const [message, setMessage] = useState<'downloaded' | 'failed' | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeStroke = useRef<Stroke | null>(null);
 
   const ready = hasSignature(settings.mode, settings.text, settings.strokes);
 
+  // Restore after hydration, not in the state initializer: a value read there leaves the
+  // server-rendered input showing the sample name until some other control changes.
   useEffect(() => {
-    safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
-  }, [settings]);
+    setSettings(readSettings(ui.defaultName));
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (restored) safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
+  }, [restored, settings]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -166,6 +180,10 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
       const target = event.target as HTMLElement | null;
       if (
         target?.matches('input, textarea, select') ||
+        // Cmd/Ctrl+D is the browser's own bookmark shortcut; only a plain D downloads.
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
         event.key.toLowerCase() !== ui.downloadShortcutKey.toLowerCase()
       )
         return;
@@ -181,7 +199,7 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
     <Panel>
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0 space-y-5">
-          <Field label={ui.modeLabel}>
+          <FieldGroup label={ui.modeLabel}>
             <Segmented<SignatureMode>
               value={settings.mode}
               onValue={(mode) => update({ mode })}
@@ -191,21 +209,20 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
                 { value: 'draw', label: ui.modeDraw },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           {settings.mode === 'type' && (
             <Field label={ui.nameLabel} hint={ui.nameHint}>
               <TextInput
                 value={settings.text}
                 placeholder={ui.namePlaceholder}
-                maxLength={80}
                 onInput={(event) => update({ text: normalizeSignatureText(event.currentTarget.value) })}
               />
             </Field>
           )}
 
           <Field label={ui.previewLabel} hint={settings.mode === 'draw' ? ui.drawHint : ui.transparentNote}>
-            <div class="relative overflow-hidden rounded-lg border border-line bg-surface-2">
+            <div class="relative overflow-hidden rounded-lg border border-line bg-ink-paper">
               <canvas
                 ref={canvasRef}
                 width={SIGNATURE_WIDTH}
@@ -221,7 +238,7 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
                 <p class="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-subtle">
                   {ui.drawPlaceholder}
                 </p>
-              )}
+              )}{' '}
             </div>
           </Field>
 
@@ -239,7 +256,7 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
 
         <div class="space-y-5 border-t border-line pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-6">
           {settings.mode === 'type' && (
-            <Field label={ui.styleLabel}>
+            <FieldGroup label={ui.styleLabel}>
               <Segmented<SignatureStyle>
                 value={settings.style}
                 onValue={(style) => update({ style })}
@@ -250,10 +267,10 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
                   { value: 'simple', label: ui.styleSimple },
                 ]}
               />
-            </Field>
+            </FieldGroup>
           )}
 
-          <Field label={ui.inkLabel}>
+          <FieldGroup label={ui.inkLabel}>
             <Segmented<Ink>
               value={settings.ink}
               onValue={(ink) => update({ ink })}
@@ -263,10 +280,10 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
                 { value: 'fg', label: ui.inkBlack },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           {settings.mode === 'draw' && (
-            <Field label={ui.penLabel}>
+            <FieldGroup label={ui.penLabel}>
               <Segmented<PenWidth>
                 value={settings.penWidth}
                 onValue={(penWidth) => update({ penWidth })}
@@ -277,7 +294,7 @@ export default function SignatureGenerator({ ui }: ToolProps<UI>) {
                   { value: 'bold', label: ui.penBold },
                 ]}
               />
-            </Field>
+            </FieldGroup>
           )}
 
           <Notice>{ui.privacyNote}</Notice>

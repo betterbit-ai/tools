@@ -56,6 +56,8 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
   const [removeWinner, setRemoveWinner] = useState(true);
   const [winner, setWinner] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
+  /** Every spin this session, not just the ones the eight-item result list can show. */
+  const [spins, setSpins] = useState(0);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [error, setError] = useState<WheelError | 'crypto' | null>(null);
@@ -118,6 +120,7 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
       setRotation((current) => targetRotation(current, selected.index, currentEntries.length));
       spinTimer.current = window.setTimeout(() => {
         setWinner(selected.value);
+        setSpins((current) => current + 1);
         setHistory((current) => [selected.value, ...current].slice(0, 8));
         if (removeWinner) setInput(removeEntryAt(currentEntries, selected.index).join('\n'));
         setSpinning(false);
@@ -137,15 +140,18 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
+      const target = event.target as HTMLElement | null;
       if (
-        target.closest('input, textarea, select, [contenteditable]') ||
+        target?.closest('input, textarea, select, [contenteditable]') ||
         event.metaKey ||
         event.ctrlKey ||
         event.altKey
       )
         return;
       if (event.code === 'Space') {
+        // A focused button, link or switch takes Space itself; spinning from here would
+        // hide that control from keyboard users (Space on Full screen must not draw a winner).
+        if (target?.closest('button, a[href], summary, [role="button"], [role="radio"], [role="switch"]')) return;
         event.preventDefault();
         spin();
       } else if (event.key.toLowerCase() === 'f') {
@@ -283,7 +289,7 @@ export default function SpinWheel({ ui }: ToolProps<UI>) {
             </div>
             <div class="mt-3 grid grid-cols-2 gap-2">
               <Stat label={ui.entriesRemaining} value={entries.length} />
-              <Stat label={ui.spinsThisSession} value={history.length} />
+              <Stat label={ui.spinsThisSession} value={spins} />
             </div>
             <p class="mt-3 text-xs leading-5 text-subtle">{ui.cryptoNote}</p>
           </section>
