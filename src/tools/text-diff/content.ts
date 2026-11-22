@@ -13,6 +13,11 @@ const uiEn = {
   swap: 'Swap',
   clear: 'Clear',
   autosaved: 'Saved in this browser only',
+  notSaved:
+    'This text is too large to keep in this browser, so it will not survive a refresh. Copy it somewhere safe if you need it later.',
+  comparing: 'Comparing…',
+  coarserNotice:
+    'These two texts are too different for a {requested} comparison in a browser, so the differences below are shown line by line. Added and removed count lines here.',
   added: 'Added',
   removed: 'Removed',
   similarity: 'Similarity',
@@ -69,6 +74,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: 'Either works. Paste anything from a single sentence to a multi-page document; the comparison updates as you type for typical document lengths, though very large files take a moment longer on slower devices.',
       },
       {
+        q: 'What happens with two very long texts that are almost completely different?',
+        a: 'The comparison runs in your browser with a fixed memory budget, so it can never freeze or crash the tab. Two long texts with little in common would need far more memory than a character- or word-level comparison can have; in that case the tool says so and shows the differences line by line instead. The added, removed and similarity figures then count lines, not words or characters.',
+      },
+      {
         q: 'Is there a limit to how much I can compare?',
         a: "No. There's no sign-up, no daily limit, and no feature paywalled behind a paid plan — word- and character-level comparison are both free and unlimited.",
       },
@@ -122,6 +131,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: '네. 문장 하나부터 여러 페이지 분량의 문서까지 비교할 수 있습니다. 일반적인 문서 길이라면 입력하는 즉시 결과가 갱신되며, 매우 큰 파일은 느린 기기에서 시간이 조금 더 걸릴 수 있습니다.',
       },
       {
+        q: '아주 길고 거의 다른 두 텍스트를 비교하면 어떻게 되나요?',
+        a: '비교는 브라우저 안에서 정해진 메모리 한도로 실행되므로 탭이 멈추거나 꺼지지 않습니다. 공통점이 거의 없는 긴 텍스트 두 개는 글자·단어 단위 비교에 필요한 메모리를 훨씬 넘기 때문에, 이때는 그 사실을 알려드리고 줄 단위로 차이를 보여드립니다. 이 경우 추가·삭제·일치율은 글자나 단어가 아니라 줄을 셉니다.',
+      },
+      {
         q: '사용 횟수나 글자수 제한이 있나요?',
         a: '없습니다. 가입이 필요 없고 일일 사용 횟수 제한도 없으며, 단어·글자 단위 비교 모두 무료로 무제한 사용할 수 있습니다.',
       },
@@ -138,6 +151,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       swap: '바꾸기',
       clear: '지우기',
       autosaved: '이 브라우저에만 저장됨',
+      notSaved:
+        '텍스트가 너무 커서 이 브라우저에 저장하지 못했습니다. 새로고침하면 사라지니 필요하면 따로 복사해 두세요.',
+      comparing: '비교하는 중…',
+      coarserNotice:
+        '두 텍스트가 너무 많이 달라서 브라우저에서 {requested} 비교를 마치지 못했습니다. 그래서 아래 차이는 줄 단위로 표시하고, 추가·삭제 개수도 줄을 셉니다.',
       added: '추가',
       removed: '삭제',
       similarity: '일치율',

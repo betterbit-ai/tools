@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diffText, tokenize } from './logic';
+import { DIFF_WORK_BUDGET, diffText, diffTextSteps, tokenize } from './logic';
 
 /** Reconstructs the "after" text by concatenating equal + insert chunks (should equal b, normalized). */
 function rebuildAfter(chunks: { op: string; value: string }[]): string {
@@ -151,5 +151,66 @@ describe('diffText', () => {
     const result = diffText(a, b, 'line');
     expect(rebuildBefore(result.chunks)).toBe(a);
     expect(rebuildAfter(result.chunks)).toBe(b);
+  });
+});
+
+/** Drains a diff job, collecting the progress values it reported. */
+function runSteps(a: string, b: string, mode: 'line' | 'word' | 'char', budget?: number) {
+  const job = budget === undefined ? diffTextSteps(a, b, mode) : diffTextSteps(a, b, mode, budget);
+  const progress: number[] = [];
+  let step = job.next();
+  while (!step.done) {
+    progress.push(step.value);
+    step = job.next();
+  }
+  return { run: step.value, progress };
+}
+
+describe('diffTextSteps', () => {
+  it('reports the same result as the synchronous diff for ordinary text', () => {
+    const a = '나는 학교에 간다\n오늘은 맑음';
+    const b = '나는 집에 간다\n오늘은 흐림';
+    for (const mode of ['line', 'word', 'char'] as const) {
+      const { run } = runSteps(a, b, mode);
+      expect(run?.computedIn).toBe(mode);
+      expect(run?.result).toEqual(diffText(a, b, mode));
+    }
+  });
+
+  it('yields progress while comparing', () => {
+    const a = 'abcdefghij'.repeat(40);
+    const b = 'abcdefghij'.repeat(40).replace('jj', 'jjX');
+    const { progress } = runSteps(a, b, 'char');
+    expect(progress.length).toBeGreaterThan(0);
+    expect(progress.every((value) => value > 0 && value <= 1)).toBe(true);
+  });
+
+  it('falls back to line granularity instead of overrunning its memory budget', () => {
+    const a = `${'가'.repeat(3000)}\n끝`;
+    const b = `${'나'.repeat(3000)}\n끝`;
+    const { run } = runSteps(a, b, 'char', 500);
+    expect(run?.computedIn).toBe('line');
+    expect(run?.result.identical).toBe(false);
+    expect(rebuildBefore(run!.result.chunks)).toBe(a);
+    expect(rebuildAfter(run!.result.chunks)).toBe(b);
+  });
+
+  it('returns null only when even the line-level fallback exceeds the budget', () => {
+    const a = Array.from({ length: 60 }, (_, i) => `왼쪽 ${i}`).join('\n');
+    const b = Array.from({ length: 60 }, (_, i) => `오른쪽 ${i}`).join('\n');
+    const { run } = runSteps(a, b, 'line', 20);
+    expect(run).toBeNull();
+  });
+
+  it('keeps a default budget that ordinary document comparisons never reach', () => {
+    const document = Array.from(
+      { length: 400 },
+      (_, i) => `Line ${i}: the quick brown fox jumps over the lazy dog.`,
+    ).join('\n');
+    const edited = document.replace(/Line 1\d:/g, 'Line 1X:').replace('fox', 'cat');
+    const { run } = runSteps(document, edited, 'char');
+    expect(run?.computedIn).toBe('char');
+    expect(run?.result.identical).toBe(false);
+    expect(DIFF_WORK_BUDGET).toBeGreaterThan(0);
   });
 });

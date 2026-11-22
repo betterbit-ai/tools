@@ -56,7 +56,22 @@ interface TokenDiff {
   unchanged: number;
 }
 
-function diffTokens(a: string[], b: string[]): TokenDiff {
+/**
+ * How much of the edit-script search one comparison may do, measured in recorded frontier
+ * entries (the diff's working set). Two long, almost entirely different inputs need
+ * O((n+m)²) of them — gigabytes for a 30,000-character compare — so the search stops at a
+ * budget the page can afford and the caller falls back to a coarser granularity. Comparisons
+ * of the same document with real edits stay far below this (a rewritten 500-line page needs
+ * a few hundred entries).
+ */
+export const DIFF_WORK_BUDGET = 1_000_000;
+
+/**
+ * Myers' O(ND) diff as a generator: it yields the fraction of `budget` used after each
+ * frontier round, so a caller can repaint progress and let the browser breathe between rounds.
+ * Returns null when the budget runs out first.
+ */
+function* diffTokensSteps(a: string[], b: string[], budget: number): Generator<number, TokenDiff | null> {
   const n = a.length;
   const m = b.length;
   if (n === 0 && m === 0) return { chunks: [], added: 0, removed: 0, unchanged: 0 };
@@ -65,6 +80,7 @@ function diffTokens(a: string[], b: string[]): TokenDiff {
   const v = new Map<number, number>([[1, 0]]);
   const trace: Map<number, number>[] = [];
   let found = false;
+  let work = 0;
 
   for (let d = 0; d <= max && !found; d++) {
     for (let k = -d; k <= d; k += 2) {
@@ -85,6 +101,9 @@ function diffTokens(a: string[], b: string[]): TokenDiff {
       if (x >= n && y >= m) found = true;
     }
     trace.push(new Map(v));
+    work += v.size;
+    if (work > budget) return null;
+    yield Math.min(1, work / budget);
     if (found) break;
   }
 
@@ -133,14 +152,55 @@ function diffTokens(a: string[], b: string[]): TokenDiff {
   return { chunks, added, removed, unchanged };
 }
 
-export function diffText(a: string, b: string, mode: DiffMode): DiffResult {
+function toResult(diff: TokenDiff, lengthA: number, lengthB: number): DiffResult {
+  const { chunks, added, removed, unchanged } = diff;
+  const identical = added === 0 && removed === 0;
+  const totalLen = lengthA + lengthB;
+  const similarity = totalLen === 0 ? 100 : Math.round(((2 * unchanged) / totalLen) * 100);
+  return { chunks, added, removed, unchanged, identical, similarity };
+}
+
+export interface DiffRun {
+  result: DiffResult;
+  /**
+   * The granularity the chunks were really computed in. Equal to the requested mode unless that
+   * comparison would have needed more memory than the budget allows, in which case the texts were
+   * compared line by line — the caller must say so rather than present it as the requested mode.
+   */
+  computedIn: DiffMode;
+}
+
+/**
+ * Asynchronous diff: yields progress and can be abandoned between rounds. When the requested
+ * granularity would exceed `budget`, it falls back to line granularity and reports `computedIn`,
+ * so a very large comparison degrades visibly instead of freezing or crashing the page.
+ * Returns null only when even a line-level comparison exceeds the budget.
+ */
+export function* diffTextSteps(
+  a: string,
+  b: string,
+  mode: DiffMode,
+  budget: number = DIFF_WORK_BUDGET,
+): Generator<number, DiffRun | null> {
   const tokensA = tokenize(a, mode);
   const tokensB = tokenize(b, mode);
-  const { chunks, added, removed, unchanged } = diffTokens(tokensA, tokensB);
+  const fine = yield* diffTokensSteps(tokensA, tokensB, budget);
+  if (fine) return { result: toResult(fine, tokensA.length, tokensB.length), computedIn: mode };
 
-  const identical = added === 0 && removed === 0;
-  const totalLen = tokensA.length + tokensB.length;
-  const similarity = totalLen === 0 ? 100 : Math.round(((2 * unchanged) / totalLen) * 100);
+  if (mode === 'line') return null;
+  const linesA = tokenize(a, 'line');
+  const linesB = tokenize(b, 'line');
+  const coarse = yield* diffTokensSteps(linesA, linesB, budget);
+  if (!coarse) return null;
+  return { result: toResult(coarse, linesA.length, linesB.length), computedIn: 'line' };
+}
 
-  return { chunks, added, removed, unchanged, identical, similarity };
+/** Synchronous diff for small inputs and unit tests — never degrades, so it can be slow. */
+export function diffText(a: string, b: string, mode: DiffMode): DiffResult {
+  const run = diffTextSteps(a, b, mode, Number.POSITIVE_INFINITY);
+  let step = run.next();
+  while (!step.done) step = run.next();
+  const result = step.value;
+  if (!result) throw new RangeError('diff budget exhausted');
+  return result.result;
 }
