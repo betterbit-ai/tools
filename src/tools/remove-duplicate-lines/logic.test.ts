@@ -47,6 +47,19 @@ describe('remove-duplicate-lines', () => {
     });
   });
 
+  it('ignores the byte-order mark an Excel CSV copy starts with', () => {
+    // A BOM on the first line must not make that entry look different from the same text below.
+    expect(splitLines('\uFEFF김민수\n이서연')).toEqual(['김민수', '이서연']);
+    const result = removeDuplicateLines('\uFEFF김민수\n이서연\n김민수\n이서연\n최유진');
+    expect(result).toMatchObject({
+      text: '김민수\n이서연\n최유진',
+      inputLines: 5,
+      outputLines: 3,
+      duplicatesRemoved: 2,
+    });
+    expect(result.text.includes('\uFEFF')).toBe(false);
+  });
+
   it('sorts retained lines naturally when requested', () => {
     expect(
       removeDuplicateLines('item 10\nitem 2\nitem 1\nitem 2', {

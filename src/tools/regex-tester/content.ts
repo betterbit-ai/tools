@@ -27,6 +27,13 @@ const uiEn = {
   noMatches: 'No matches in the test text.',
   errorLabel: 'Pattern error',
   tooManyMatches: 'Showing the first 1,000 matches. Narrow the pattern or test text to inspect fewer results.',
+  slowPattern:
+    'This pattern did not finish within 1.5 seconds on this text, so the check was stopped. A pattern that repeats a repeat, such as (a+)+, gets dramatically slower with every extra character. Shorten the test text or simplify the pattern.',
+  slowResult: 'Stopped before a result',
+  workerBlocked:
+    'This browser did not let the check run in the background, so it runs on the page itself. A very slow pattern can freeze the page until it finishes.',
+  noWorkerLong:
+    'This browser did not let the check run in the background, and the test text is over 20,000 characters, so it was not checked.',
   matchListLabel: 'Match details',
   matchLabel: 'Match {n}',
   indexLabel: 'Index {start}–{end}',
@@ -82,7 +89,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Build regexes in small steps',
-        body: 'Start with an exact literal, then add one character class, quantifier, anchor, or group at a time. For validation, anchors usually matter: ^\\d+$ accepts a string made entirely of digits, while \\d+ finds a digit sequence anywhere in the text. A greedy .* can consume farther than expected; .*? is its lazy form.\n\nRegular expressions with nested, ambiguous repetition can take a very long time on certain input. Examples include (a+)+ and (\\w+\\s?)*. JavaScript cannot cancel a RegExp that is already running, so test a short sample first and make the input larger gradually. This interface limits rendered match details to 1,000 so a broad global pattern does not create an unmanageable result list.',
+        body: 'Start with an exact literal, then add one character class, quantifier, anchor, or group at a time. For validation, anchors usually matter: ^\\d+$ accepts a string made entirely of digits, while \\d+ finds a digit sequence anywhere in the text. A greedy .* can consume farther than expected; .*? is its lazy form.\n\nRegular expressions with nested, ambiguous repetition can take a very long time on certain input. Examples include (a+)+ and (\\w+\\s?)*. JavaScript cannot cancel a RegExp that is already running, so this tester runs every check in a background worker and stops waiting after 1.5 seconds: instead of a frozen tab you get a message naming the pattern problem, and typing in any field still works. This interface limits rendered match details to 1,000 so a broad global pattern does not create an unmanageable result list.',
       },
     ],
     faq: [
@@ -143,7 +150,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '작게 시작해 정규식을 확장하세요',
-        body: '처음에는 정확한 문자 하나를 매치시키고, 문자 클래스·수량자·앵커·그룹을 하나씩 더하는 방식이 안전합니다. 유효성 검사에는 앵커가 중요합니다. ^\\d+$는 문자열 전체가 숫자인지 검사하지만, \\d+는 문장 어딘가의 숫자만 찾아냅니다. .*는 가능한 길게 잡고, .*?는 가능한 짧게 잡는 lazy 형태입니다.\n\n(a+)+나 (\\w+\\s?)*처럼 반복 안에 모호한 반복이 있는 패턴은 특정 입력에서 매우 오래 걸릴 수 있습니다. 실행을 시작한 JavaScript RegExp는 중간에 취소할 수 없으므로 짧은 예시부터 테스트하고 입력을 조금씩 늘리세요. 이 도구는 너무 넓은 g 패턴이 결과 화면을 과도하게 만들지 않도록 매치 상세를 최대 1,000개까지 표시합니다.',
+        body: '처음에는 정확한 문자 하나를 매치시키고, 문자 클래스·수량자·앵커·그룹을 하나씩 더하는 방식이 안전합니다. 유효성 검사에는 앵커가 중요합니다. ^\\d+$는 문자열 전체가 숫자인지 검사하지만, \\d+는 문장 어딘가의 숫자만 찾아냅니다. .*는 가능한 길게 잡고, .*?는 가능한 짧게 잡는 lazy 형태입니다.\n\n(a+)+나 (\\w+\\s?)*처럼 반복 안에 모호한 반복이 있는 패턴은 특정 입력에서 매우 오래 걸릴 수 있습니다. 실행을 시작한 JavaScript RegExp는 중간에 취소할 수 없기 때문에, 이 도구는 매 확인을 백그라운드에서 실행하고 1.5초가 지나면 기다리기를 멈춥니다. 화면이 멈추는 대신 어떤 패턴 문제인지 알려 주고, 그동안에도 입력칸은 그대로 쓸 수 있습니다. 너무 넓은 g 패턴이 결과 화면을 과도하게 만들지 않도록 매치 상세는 최대 1,000개까지 표시합니다.',
       },
     ],
     faq: [
@@ -194,6 +201,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       noMatches: '테스트 문자열에 일치하는 부분이 없습니다.',
       errorLabel: '패턴 오류',
       tooManyMatches: '처음 1,000개 매치만 보여줍니다. 패턴이나 테스트 문자열 범위를 좁혀 확인하세요.',
+      slowPattern:
+        '이 패턴은 입력한 글에서 1.5초 안에 끝나지 않아 확인을 중단했습니다. (a+)+처럼 반복 안에 반복이 있는 패턴은 글자가 한두 개만 늘어도 급격히 느려집니다. 테스트 문자열을 줄이거나 패턴을 단순화하세요.',
+      slowResult: '결과를 내기 전에 중단됨',
+      workerBlocked:
+        '이 브라우저에서는 검사를 백그라운드에서 실행할 수 없어 화면에서 직접 확인합니다. 아주 느린 패턴은 확인이 끝날 때까지 화면이 잠시 멈출 수 있습니다.',
+      noWorkerLong:
+        '이 브라우저에서는 검사를 백그라운드에서 실행할 수 없고 테스트 문자열이 20,000자를 넘어 확인하지 않았습니다.',
       matchListLabel: '매치 상세',
       matchLabel: '매치 {n}',
       indexLabel: '인덱스 {start}–{end}',

@@ -43,6 +43,25 @@ describe('remove-line-breaks', () => {
     ).toBe('apple, banana, 귤');
   });
 
+  it('does not leave a trailing space when the paste ends with a newline', () => {
+    // Every copy from a PDF or an email ends with a newline; the stray space reached the clipboard.
+    for (const input of ['한 문장입니다.\n', '한 문장입니다.\r\n', 'a\nb\n\n']) {
+      expect(removeLineBreaks(input, PDF_CLEANUP_OPTIONS).text).not.toMatch(/\s$/);
+    }
+    expect(removeLineBreaks('a\nb\n\n', PDF_CLEANUP_OPTIONS).text).toBe('a b');
+    expect(removeLineBreaks('- 하나\n- 둘\n', PDF_CLEANUP_OPTIONS).text).toBe('- 하나\n- 둘');
+    // A blank line inside the text still separates paragraphs, but adds no space when it does not.
+    expect(removeLineBreaks('a\nb\n\nc\n', PDF_CLEANUP_OPTIONS).text).toBe('a b\n\nc');
+    expect(removeLineBreaks('a\n\nb', { ...PDF_CLEANUP_OPTIONS, preserveParagraphs: false }).text).toBe('a b');
+  });
+
+  it('drops the byte-order mark a CSV or PDF copy starts with', () => {
+    const result = removeLineBreaks('\uFEFF국민연금은 4.75%입니다.\n다음 줄입니다.', PDF_CLEANUP_OPTIONS);
+    expect(result.text.startsWith('국민연금')).toBe(true);
+    expect(result.text.includes('\uFEFF')).toBe(false);
+    expect(result.inputLineBreaks).toBe(1);
+  });
+
   it('handles empty input, emoji and large text without changing user characters', () => {
     expect(removeLineBreaks('', PDF_CLEANUP_OPTIONS)).toMatchObject({ text: '', removedLineBreaks: 0 });
     expect(removeLineBreaks('👍🏽\n안녕하세요\n世界', PDF_CLEANUP_OPTIONS).text).toBe('👍🏽 안녕하세요 世界');

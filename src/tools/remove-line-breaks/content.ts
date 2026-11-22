@@ -53,7 +53,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Use the replacement that matches your destination',
-        body: 'Space is the safe default for prose: “first line” followed by “second line” becomes “first line second line”. Nothing is useful for identifiers, phone numbers or URLs that were wrapped in the middle. Custom joins a copied column with a separator such as “, ” or “ | ”. The tool recognizes CRLF (Windows), CR (older Mac), LF (Unix), and Unicode line-separator characters before applying the same rule.\n\nFor PDF copy, the preset also rejoins a hyphen only when a Latin letter before the break is followed by a lowercase Latin letter, so “infor-” plus “mation” becomes “information” while “well-” plus “Known” stays unchanged.',
+        body: 'Space is the safe default for prose: “first line” followed by “second line” becomes “first line second line”. Nothing is useful for identifiers, phone numbers or URLs that were wrapped in the middle. Custom joins a copied column with a separator such as “, ” or “ | ”. The tool recognizes CRLF (Windows), CR (older Mac), LF (Unix), and Unicode line-separator characters before applying the same rule.\n\nFor PDF copy, the preset also rejoins a hyphen only when a Latin letter before the break is followed by a lowercase Latin letter, so “infor-” plus “mation” becomes “information” while “well-” plus “Known” stays unchanged. A final newline left at the end of a paste, and the invisible byte-order mark a CSV or PDF copy starts with, are dropped instead of becoming a stray space or character in the result.',
       },
       {
         heading: 'Lists need different treatment from prose',
@@ -105,7 +105,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '용도에 맞는 줄바꿈 처리 방법',
-        body: '일반 문장이나 번역기에 넣을 글은 “공백”이 가장 안전합니다. “첫 번째 줄”과 “둘째 줄”이 “첫 번째 줄 둘째 줄”로 이어집니다. 전화번호·URL·상품 코드처럼 중간에서 잘린 값을 붙일 때는 “아무것도 없음”을 쓰면 됩니다. 여러 줄 목록을 한 줄로 만들 때는 “사용자 지정”에 쉼표와 공백(“, ”)이나 파이프(|)를 넣으세요.\n\n이 도구는 Windows의 CRLF, Unix·macOS의 LF, 오래된 Mac의 CR, 유니코드 줄·문단 구분 문자를 먼저 같은 줄바꿈으로 인식합니다. CRLF는 문자 2개여도 줄바꿈 1개로 처리합니다.',
+        body: '일반 문장이나 번역기에 넣을 글은 “공백”이 가장 안전합니다. “첫 번째 줄”과 “둘째 줄”이 “첫 번째 줄 둘째 줄”로 이어집니다. 전화번호·URL·상품 코드처럼 중간에서 잘린 값을 붙일 때는 “아무것도 없음”을 쓰면 됩니다. 여러 줄 목록을 한 줄로 만들 때는 “사용자 지정”에 쉼표와 공백(“, ”)이나 파이프(|)를 넣으세요.\n\n이 도구는 Windows의 CRLF, Unix·macOS의 LF, 오래된 Mac의 CR, 유니코드 줄·문단 구분 문자를 먼저 같은 줄바꿈으로 인식합니다. CRLF는 문자 2개여도 줄바꿈 1개로 처리합니다. 붙여넣은 글의 끝에 남은 마지막 줄바꿈과, CSV·PDF 복사본 앞에 붙는 보이지 않는 BOM 문자는 결과에 빈칸이나 글자로 남기지 않고 지웁니다.',
       },
       {
         heading: '목록과 하이픈으로 나뉜 영어 단어',
