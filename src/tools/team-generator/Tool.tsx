@@ -3,6 +3,7 @@ import {
   Button,
   CopyButton,
   Field,
+  FieldGroup,
   Kbd,
   Notice,
   NumberInput,
@@ -14,6 +15,7 @@ import {
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import {
+  formatScore,
   formatTeams,
   generateTeams,
   parseParticipants,
@@ -181,7 +183,7 @@ export default function TeamGenerator({ ui }: ToolProps<UI>) {
                 step={1}
               />
             </Field>
-            <Field label={ui.modeLabel} hint={mode === 'balanced' ? ui.balancedHint : ui.randomHint}>
+            <FieldGroup label={ui.modeLabel} hint={mode === 'balanced' ? ui.balancedHint : ui.randomHint}>
               <Segmented
                 value={mode}
                 onValue={(value) => {
@@ -194,7 +196,7 @@ export default function TeamGenerator({ ui }: ToolProps<UI>) {
                   { value: 'balanced', label: ui.balancedMode },
                 ]}
               />
-            </Field>
+            </FieldGroup>
           </div>
           <div class="mt-5 flex flex-wrap items-center gap-3">
             <Button variant="primary" size="lg" onClick={generate} disabled={!!validationError}>
@@ -230,7 +232,7 @@ export default function TeamGenerator({ ui }: ToolProps<UI>) {
                   </div>
                   {team.score !== null && (
                     <p class="mt-1 text-xs text-muted">
-                      {ui.skillLabel}: {team.score}
+                      {ui.skillLabel}: {formatScore(team.score)}
                     </p>
                   )}
                   <ul class="mt-2 grid gap-1 text-sm text-fg">
@@ -248,7 +250,7 @@ export default function TeamGenerator({ ui }: ToolProps<UI>) {
           </div>
           {range !== null && (
             <div class="mt-3">
-              <Stat label={ui.skillSpreadLabel} value={range} />
+              <Stat label={ui.skillSpreadLabel} value={formatScore(range)} />
             </div>
           )}
         </div>

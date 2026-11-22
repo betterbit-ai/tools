@@ -18,11 +18,20 @@ export interface Team {
   score: number | null;
 }
 
-const SCORE_LINE = /^(.*?),\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*$/;
+const SCORE_LINE = /^(.*?)[,\uFF0C\t]\s*(-?(?:\d+(?:\.\d+)?|\.\d+))\s*(?:점|pts?\.?|points?)?\s*$/i;
 
 /**
- * Reads one participant per line. A trailing numeric value after the final comma
- * is treated as an optional relative skill score (for example, "민지, 4.5").
+ * Score totals are shown to six decimal places, so binary floating-point noise (4.1 + 3.2 =
+ * 7.300000000000001) never reaches the team table, the copied text or the spread figure.
+ */
+function roundScore(value: number): number {
+  return Math.round(value * 1e6) / 1e6;
+}
+
+/**
+ * Reads one participant per line. A trailing numeric value after the last comma, full-width
+ * comma or tab is an optional relative skill score — "민지, 4.5", "민지\t4.5" and "민지, 4.5점"
+ * all parse, so a roster pasted straight from a spreadsheet keeps its scores.
  */
 export function parseParticipants(input: string): Participant[] {
   return input
@@ -131,7 +140,7 @@ export function generateTeams(
       const team = teams[teamIndex];
       if (!team) return;
       team.members.push(participant);
-      team.score = (team.score ?? 0) + (participant.score ?? 0);
+      team.score = roundScore((team.score ?? 0) + (participant.score ?? 0));
     });
     cursor = end;
   }
@@ -140,13 +149,18 @@ export function generateTeams(
 
 export function scoreRange(teams: Team[]): number | null {
   const scores = teams.map((team) => team.score).filter((score): score is number => score !== null);
-  return scores.length ? Math.max(...scores) - Math.min(...scores) : null;
+  return scores.length ? Math.max(0, roundScore(Math.max(...scores) - Math.min(...scores))) : null;
+}
+
+/** Formats a score total for display and copying, without trailing floating-point noise. */
+export function formatScore(score: number): string {
+  return String(roundScore(score));
 }
 
 export function formatTeams(teams: Team[], teamLabel: string, scoreLabel?: string): string {
   return teams
     .map((team, index) => {
-      const heading = `${teamLabel} ${index + 1}${team.score !== null && scoreLabel ? ` (${scoreLabel}: ${team.score})` : ''}`;
+      const heading = `${teamLabel} ${index + 1}${team.score !== null && scoreLabel ? ` (${scoreLabel}: ${formatScore(team.score)})` : ''}`;
       return `${heading}\n${team.members.map((member) => member.name).join('\n')}`;
     })
     .join('\n\n');

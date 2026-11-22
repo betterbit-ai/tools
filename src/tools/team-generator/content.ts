@@ -4,7 +4,8 @@ import type { ToolContent } from '../types';
 const uiEn = {
   defaultRoster: 'Alex, 4\nSam, 3\nJordan, 2\nTaylor, 5\nCasey, 1\nMorgan, 4',
   rosterLabel: 'Participants',
-  rosterHint: 'Use one line per person. For skill balance, add a relative score after a comma, such as “Alex, 4”.',
+  rosterHint:
+    'Use one line per person. For skill balance, add a relative score after a comma or tab, such as “Alex, 4” — a pasted spreadsheet column of scores works as it is.',
   participantCount: '{n} participants · up to {max}',
   maxParticipants: '200',
   restoreSample: 'Restore sample',
@@ -33,7 +34,7 @@ const uiEn = {
   tooManyParticipantsError: 'Use no more than 200 participants at once.',
   nameTooLongError: 'Keep each participant name to 100 characters or fewer.',
   invalidTeamCountError: 'Choose a whole number of teams from 2 through the number of participants.',
-  missingScoresError: 'To balance skill, add a numeric score after a comma for every participant.',
+  missingScoresError: 'To balance skill, add a numeric score after a comma or tab for every participant.',
   cryptoError: 'This browser does not provide Web Crypto, so teams cannot be shuffled here.',
 };
 export type UI = typeof uiEn;
@@ -66,7 +67,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'What “Balance skill” does',
-        body: 'Use scores only when the group agrees on a relative scale such as 1–5 or 1–10. Enter the score after the last comma on every line, such as “Alex, 4”. The generator considers higher scores first and places each person onto an eligible team with the lowest current score total, while preserving the same one-person maximum difference in team size. It displays each team’s score total and the difference between the highest and lowest totals. This is a transparent greedy balance, not a claim that personal skill can be measured perfectly.',
+        body: 'Use scores only when the group agrees on a relative scale such as 1–5 or 1–10. Enter the score after a comma or tab on every line, such as “Alex, 4”, a name-then-score pair copied from a spreadsheet, or “Alex, 4.5” for half points. The generator considers higher scores first and places each person onto an eligible team with the lowest current score total, while preserving the same one-person maximum difference in team size. It displays each team’s score total and the difference between the highest and lowest totals, to the decimal places you entered. This is a transparent greedy balance, not a claim that personal skill can be measured perfectly.',
       },
       {
         heading: 'Keep a reusable roster on this device',
@@ -80,7 +81,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'How do I make balanced teams by skill?',
-        a: 'Put a relative numeric score after a comma on every participant line, such as “Alex, 4”, then select Balance skill. The tool assigns higher scores first to the eligible team with the lowest current score total and shows every final total and the total-score spread.',
+        a: 'Put a relative numeric score after a comma or tab on every participant line — “Alex, 4” or a spreadsheet’s name-and-score pair — then select Balance skill. The tool assigns higher scores first to the eligible team with the lowest current score total and shows every final total and the total-score spread.',
+      },
+      {
+        q: 'Can I paste the roster straight from a spreadsheet?',
+        a: 'Yes. Copying two columns from Excel, Google Sheets or Numbers gives a name and a score separated by a tab on each line, and that is read exactly like “Alex, 4”. A trailing “pt”, “pts” or “point(s)” after the score is ignored, so “Alex, 4 pts” also works.',
       },
       {
         q: 'Do all participants need a score?',
@@ -103,7 +108,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     keywords: ['팀 나누기', '랜덤 팀 나누기', '조 편성', '랜덤 조 편성', '실력 균형 팀', '팀 생성기'],
     howTo: [
       '참가자를 한 줄에 한 명씩 붙여 넣고 팀 수를 고르세요.',
-      '완전 무작위로 섞으려면 랜덤을 고르고, 실력을 맞추려면 모든 이름 뒤에 쉼표와 상대 점수를 넣고 실력 균형을 고르세요.',
+      '완전 무작위로 섞으려면 랜덤을 고르고, 실력을 맞추려면 모든 이름 뒤에 쉼표(또는 탭)와 상대 점수를 넣고 실력 균형을 고르세요.',
       '팀 만들기를 누르거나 입력칸 밖에서 R 키를 눌러 다시 섞으세요.',
       '팀별 명단과 실력 합계를 확인한 뒤 결과 복사로 단체 채팅이나 문서에 붙여 넣으세요.',
     ],
@@ -114,7 +119,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '실력 균형은 어떻게 계산하나요',
-        body: '실력을 함께 고려해야 할 때만 모두가 합의한 상대 점수 척도(예: 1~5, 1~10)를 사용하세요. 각 줄의 마지막에 “민지, 4”처럼 쉼표 뒤에 점수를 적으면 됩니다. 이 도구는 높은 점수부터 보고 현재 점수 합계가 가장 낮은, 아직 자리가 있는 팀에 배정합니다. 이때도 팀별 인원 차이는 최대 1명을 넘지 않습니다. 결과에서 팀별 실력 합계와 가장 높은 합계·낮은 합계의 차이를 보여 줍니다. 사람의 실력을 완벽하게 수치화한다는 뜻이 아니라, 공개한 규칙으로 대략적인 균형을 맞추는 방식입니다.',
+        body: '실력을 함께 고려해야 할 때만 모두가 합의한 상대 점수 척도(예: 1~5, 1~10)를 사용하세요. 각 줄의 마지막에 “민지, 4”처럼 쉼표 뒤에 점수를 적거나, 스프레드시트에서 이름과 점수 두 열을 복사해 그대로 붙여 넣으면 탭으로 구분된 값도 점수로 읽습니다. “민지, 4.5점”처럼 소수와 ‘점’을 붙여도 됩니다. 이 도구는 높은 점수부터 보고 현재 점수 합계가 가장 낮은, 아직 자리가 있는 팀에 배정합니다. 이때도 팀별 인원 차이는 최대 1명을 넘지 않습니다. 결과에서 팀별 실력 합계와 가장 높은 합계·낮은 합계의 차이를 입력한 소수 자리까지 보여 줍니다. 사람의 실력을 완벽하게 수치화한다는 뜻이 아니라, 공개한 규칙으로 대략적인 균형을 맞추는 방식입니다.',
       },
       {
         heading: '명단은 이 브라우저에만 저장',
@@ -128,7 +133,11 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '실력 균형 팀은 어떻게 만드나요?',
-        a: '모든 참가자 이름 뒤에 “민지, 4”처럼 쉼표와 상대 점수를 적은 뒤 실력 균형을 고르세요. 높은 점수부터 현재 실력 합계가 가장 낮은 팀에 배정하고, 결과에 각 팀의 합계와 팀 간 합계 차이를 표시합니다.',
+        a: '모든 참가자 이름 뒤에 “민지, 4”처럼 쉼표와 상대 점수를 적거나, 스프레드시트의 이름·점수 두 열을 그대로 붙여 넣은 뒤 실력 균형을 고르세요. 높은 점수부터 현재 실력 합계가 가장 낮은 팀에 배정하고, 결과에 각 팀의 합계와 팀 간 합계 차이를 표시합니다.',
+      },
+      {
+        q: '스프레드시트에 있는 명단을 그대로 붙여 넣어도 되나요?',
+        a: '네. 엑셀이나 구글 스프레드시트에서 이름과 점수 두 열을 복사하면 한 줄에 이름과 점수가 탭으로 구분되어 들어가는데, 이를 “민지, 4”와 똑같이 읽습니다. 점수 뒤에 붙은 ‘점’이나 ‘pts’, ‘점수’도 무시하고 숫자만 사용합니다.',
       },
       {
         q: '실력 점수를 모두 입력해야 하나요?',
@@ -142,7 +151,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       defaultRoster: '민지, 4\n서준, 3\n지우, 2\n도윤, 5\n하은, 1\n예준, 4',
       rosterLabel: '참가자 명단',
-      rosterHint: '한 줄에 한 명씩 넣으세요. 실력 균형에는 “민지, 4”처럼 이름 뒤에 쉼표와 상대 점수를 붙이세요.',
+      rosterHint:
+        '한 줄에 한 명씩 넣으세요. 실력 균형에는 “민지, 4”처럼 이름 뒤에 쉼표나 탭과 상대 점수를 붙이면 되고, 스프레드시트에서 점수 열을 함께 복사해 붙여 넣어도 됩니다.',
       participantCount: '{n}명 · 최대 {max}명',
       maxParticipants: '200',
       restoreSample: '예시 복원',
@@ -171,7 +181,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       tooManyParticipantsError: '한 번에 참가자는 200명 이하로 입력하세요.',
       nameTooLongError: '참가자 이름은 100자 이하로 입력하세요.',
       invalidTeamCountError: '팀 수는 2 이상, 참가자 수 이하의 정수로 입력하세요.',
-      missingScoresError: '실력 균형을 쓰려면 모든 참가자 이름 뒤에 쉼표와 숫자 점수를 입력하세요.',
+      missingScoresError: '실력 균형을 쓰려면 모든 참가자 이름 뒤에 쉼표나 탭과 숫자 점수를 입력하세요.',
       cryptoError: '이 브라우저에서는 Web Crypto를 사용할 수 없어 팀을 섞을 수 없습니다.',
     },
   },

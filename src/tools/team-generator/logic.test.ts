@@ -3,6 +3,7 @@ import {
   MAX_NAME_LENGTH,
   MAX_PARTICIPANTS,
   formatTeams,
+  formatScore,
   generateTeams,
   parseParticipants,
   scoreRange,
@@ -77,6 +78,39 @@ describe('team-generator', () => {
     expect(teams.map((team) => team.score).sort()).toEqual([17, 17]);
     expect(scoreRange(teams)).toBe(0);
     expect(formatTeams(teams, 'Team', 'Skill')).toContain('Team 1 (Skill: 17)');
+  });
+
+  it('reads a roster pasted from a spreadsheet (tab-separated) as names with scores', () => {
+    expect(parseParticipants('김민수\t4.5\n이서연\t3\n박지훈\t2.5')).toEqual([
+      { name: '김민수', score: 4.5 },
+      { name: '이서연', score: 3 },
+      { name: '박지훈', score: 2.5 },
+    ]);
+  });
+
+  it('accepts Korean and English score suffixes and full-width commas', () => {
+    expect(parseParticipants('민지, 4.5점\n서준，3\nAlex, 2 pts\nSam, 1 point')).toEqual([
+      { name: '민지', score: 4.5 },
+      { name: '서준', score: 3 },
+      { name: 'Alex', score: 2 },
+      { name: 'Sam', score: 1 },
+    ]);
+  });
+
+  it('still treats a comma inside a name as part of the name', () => {
+    expect(parseParticipants('Kim, Alex\nKim, Alex, 3')).toEqual([
+      { name: 'Kim, Alex', score: null },
+      { name: 'Kim, Alex', score: 3 },
+    ]);
+  });
+
+  it('shows score totals without binary floating-point noise', () => {
+    const teams = generateTeams(parseParticipants('가, 4.1\n나, 3.2\n다, 2.1\n라, 1.1'), 2, 'balanced', () => 0.5);
+    const totals = teams.map((team) => team.score!).sort();
+    expect(totals).toEqual([5.2, 5.3]);
+    expect(scoreRange(teams)).toBe(0.1);
+    expect(formatTeams(teams, 'Team', 'Skill')).toContain('Skill: 5.3');
+    expect(formatScore(7.300000000000001)).toBe('7.3');
   });
 
   it('shuffles a copy and rejects invalid random sources', () => {
