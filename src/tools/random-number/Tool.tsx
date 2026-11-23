@@ -31,7 +31,9 @@ export default function RandomNumber({ locale, ui, preset }: ToolProps<UI>) {
   const [values, setValues] = useState<number[]>([]);
   const [error, setError] = useState<ValidationError | 'crypto' | null>(null);
   const [ready, setReady] = useState(false);
-  const hasGeneratedInitialResult = useRef(false);
+  // The result must always belong to the settings on screen: presets and edited bounds redraw.
+  const drawnFor = useRef<string | null>(null);
+  const drawTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const update = (patch: Partial<RandomSettings>) => setSettings((current) => ({ ...current, ...patch }));
   const generate = useCallback(() => {
@@ -65,12 +67,33 @@ export default function RandomNumber({ locale, ui, preset }: ToolProps<UI>) {
     safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
   }, [ready, settings]);
 
-  // A fresh page has a useful result immediately; restored settings get a fresh draw after loading.
+  // A fresh page has a useful result immediately; any later settings change redraws shortly after,
+  // so the numbers on screen always come from the range and count shown beside them.
   useEffect(() => {
-    if (!ready || hasGeneratedInitialResult.current) return;
-    hasGeneratedInitialResult.current = true;
-    generate();
-  }, [ready, generate]);
+    if (!ready) return;
+    const key = JSON.stringify(settings);
+    if (drawnFor.current === key) return;
+    const first = drawnFor.current === null;
+    drawnFor.current = key;
+    // Cancelling here rather than in a cleanup keeps a redraw alive when a re-render happens with
+    // unchanged settings (typing the same number again), which used to drop the pending draw.
+    if (drawTimer.current !== null) clearTimeout(drawTimer.current);
+    if (first) {
+      generate();
+      return;
+    }
+    drawTimer.current = setTimeout(() => {
+      drawTimer.current = null;
+      generate();
+    }, 120);
+  }, [ready, settings, generate]);
+
+  useEffect(
+    () => () => {
+      if (drawTimer.current !== null) clearTimeout(drawTimer.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -109,6 +132,7 @@ export default function RandomNumber({ locale, ui, preset }: ToolProps<UI>) {
   return (
     <Panel>
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           generate();

@@ -52,7 +52,7 @@ export const meta: ToolMeta = {
   category: 'calculator',
   icon: 'sparkle',
   added: '2026-10-11',
-  updated: '2026-10-18',
+  updated: '2026-11-23',
   edges: ['usability'],
   competitors: [
     {

@@ -32,7 +32,8 @@ const uiEn = {
   logoError: 'This logo could not be read. Choose another image file.',
   logoTypeError: 'Choose a PNG, JPG, WebP, or SVG logo file.',
   logoSizeError: 'Choose a logo smaller than 5 MB.',
-  privacyNote: 'The text, Wi-Fi password, and logo stay on this device. Only your settings are saved in this browser.',
+  privacyNote:
+    'Your address, text, and Wi-Fi password stay in this tab and are never saved. Only the options below are remembered in this browser.',
   previewHeading: 'QR code preview',
   previewAlt: 'Generated QR code',
   moduleCount: '{count} × {count} modules',
@@ -42,7 +43,10 @@ const uiEn = {
     'This is a static code: it has no scan limit or expiry, but its content cannot be changed after printing.',
   emptyError: 'Enter a website address or text to make a QR code.',
   wifiNameError: 'Enter the Wi-Fi network name (SSID).',
-  tooLongError: 'This content is too long for the selected correction level. Shorten it or choose a lower level.',
+  tooLongError:
+    'Level {level} holds at most {limit} bytes, and this content is longer. Shorten it or choose a lower correction level.',
+  byteCount: '{bytes} of {limit} bytes at level {level}',
+  byteCountOver: 'Longer than the {limit} bytes level {level} holds',
   colorError: 'Use a darker code color and a lighter background color with stronger contrast.',
   generationError: 'This QR code could not be generated. Shorten the content and try again.',
   downloadError: 'The PNG could not be created in this browser. Download the SVG instead.',
@@ -94,7 +98,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Is my Wi-Fi password or logo uploaded?',
-        a: 'No. The QR payload, Wi-Fi password, and selected logo are processed in your browser and are not sent to a server. The logo remains only in the current browser tab; the text settings can be saved in this browser so a refresh does not discard them.',
+        a: 'No. The QR payload, Wi-Fi password, and selected logo are processed in your browser and are not sent to a server. The logo remains only in the current browser tab, and neither the address nor the password is written to storage; only the options such as colours and correction level are remembered.',
       },
       {
         q: 'Which QR error-correction level should I use?',
@@ -148,7 +152,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '와이파이 비밀번호나 로고가 서버에 올라가나요?',
-        a: '아니요. QR코드 내용, 와이파이 비밀번호, 선택한 로고는 모두 브라우저 안에서 처리하며 서버로 전송하지 않습니다. 로고는 현재 브라우저 탭에만 남고, 입력 설정만 이 브라우저에 저장되어 새로고침 후에도 복원될 수 있습니다.',
+        a: '아니요. QR코드 내용, 와이파이 비밀번호, 선택한 로고는 모두 브라우저 안에서 처리하며 서버로 전송하지 않습니다. 로고는 현재 브라우저 탭에만 남고, 주소·비밀번호는 저장하지 않으며 색상·오류 복원 수준 같은 옵션만 기억합니다.',
       },
       {
         q: 'QR코드 오류 복원 수준은 무엇을 골라야 하나요?',
@@ -195,7 +199,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       logoTypeError: 'PNG, JPG, WebP, SVG 로고 파일을 선택하세요.',
       logoSizeError: '5MB보다 작은 로고를 선택하세요.',
       privacyNote:
-        '입력한 텍스트·와이파이 비밀번호·로고는 이 기기 밖으로 나가지 않습니다. 설정만 이 브라우저에 저장합니다.',
+        '주소·텍스트·와이파이 비밀번호는 이 탭 안에서만 쓰고 저장하지 않습니다. 아래에서 고른 옵션만 이 브라우저에 기억합니다.',
       previewHeading: 'QR코드 미리보기',
       previewAlt: '생성된 QR코드',
       moduleCount: '{count} × {count} 모듈',
@@ -204,7 +208,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       staticNote: '정적 QR코드라 스캔 제한이나 만료는 없지만, 인쇄 후에는 담긴 내용을 바꿀 수 없습니다.',
       emptyError: 'QR코드로 만들 웹사이트 주소나 텍스트를 입력하세요.',
       wifiNameError: '와이파이 네트워크 이름(SSID)을 입력하세요.',
-      tooLongError: '선택한 오류 복원 수준에 비해 내용이 너무 깁니다. 내용을 줄이거나 더 낮은 수준을 선택하세요.',
+      tooLongError:
+        '{level} 수준은 최대 {limit}바이트까지 담을 수 있는데 이 내용은 더 깁니다. 내용을 줄이거나 오류 복원 수준을 낮은 단계로 바꾸세요.',
+      byteCount: '{level} 수준에서 {bytes} / {limit}바이트',
+      byteCountOver: '{level} 수준의 {limit}바이트를 넘었습니다',
       colorError: '코드는 더 어둡게, 배경은 더 밝게 설정해 대비를 높이세요.',
       generationError: 'QR코드를 만들 수 없습니다. 내용을 줄인 뒤 다시 시도하세요.',
       downloadError: '이 브라우저에서 PNG를 만들 수 없습니다. SVG를 저장해 사용하세요.',

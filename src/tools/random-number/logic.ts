@@ -3,10 +3,12 @@
  * module stays independent of the browser's Web Crypto API and easy to test.
  */
 
-export const MIN_VALUE = -1_000_000_000;
-export const MAX_VALUE = 1_000_000_000;
+export const MIN_VALUE = -1_000_000_000_000_000;
+export const MAX_VALUE = 1_000_000_000_000_000;
 export const MAX_COUNT = 10_000;
 const UINT32_RANGE = 0x1_0000_0000;
+/** 2⁵³: the widest range a JavaScript number can still count through exactly. */
+const SAFE_RANGE = 2 ** 53;
 
 export type SortOrder = 'draw' | 'asc' | 'desc';
 export type RandomSource = () => number;
@@ -71,22 +73,39 @@ function isSortOrder(value: unknown): value is SortOrder {
 /**
  * Selects one integer in the inclusive range without modulo bias. `source`
  * must return an unsigned 32-bit integer, as supplied by crypto.getRandomValues.
+ * Ranges wider than 2³² values draw two words and use 53 random bits, so any
+ * exact whole-number range a caller can type still works.
  */
 export function randomInteger(min: number, max: number, source: RandomSource): number {
   const span = max - min + 1;
-  if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min > max || span > UINT32_RANGE) {
-    throw new RangeError('Expected an inclusive safe-integer range no wider than 2³² values.');
+  if (!Number.isSafeInteger(min) || !Number.isSafeInteger(max) || min > max || span > SAFE_RANGE) {
+    throw new RangeError('Expected an inclusive safe-integer range no wider than 2⁵³ values.');
   }
 
-  const limit = Math.floor(UINT32_RANGE / span) * span;
-  let value: number;
-  do {
-    value = source();
-    if (!Number.isInteger(value) || value < 0 || value >= UINT32_RANGE) {
-      throw new RangeError('Random source must return an unsigned 32-bit integer.');
-    }
-  } while (value >= limit);
+  if (span <= UINT32_RANGE) {
+    const limit = Math.floor(UINT32_RANGE / span) * span;
+    let value = draw32(source);
+    while (value >= limit) value = draw32(source);
+    return min + (value % span);
+  }
+
+  const limit = Math.floor(SAFE_RANGE / span) * span;
+  let value = draw53(source);
+  while (value >= limit) value = draw53(source);
   return min + (value % span);
+}
+
+function draw32(source: RandomSource): number {
+  const value = source();
+  if (!Number.isInteger(value) || value < 0 || value >= UINT32_RANGE) {
+    throw new RangeError('Random source must return an unsigned 32-bit integer.');
+  }
+  return value;
+}
+
+/** 53 exact random bits from two 32-bit words: 21 high bits plus a full low word. */
+function draw53(source: RandomSource): number {
+  return (draw32(source) >>> 11) * UINT32_RANGE + draw32(source);
 }
 
 export function generateNumbers(settings: RandomSettings, source: RandomSource): GenerationResult {

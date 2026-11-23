@@ -37,6 +37,40 @@ export function parseAreaNumber(value: number | string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** Unit words people copy from a listing, longest first so "제곱미터" wins over "미터". */
+const AREA_UNIT_WORDS: { pattern: RegExp; unit: AreaUnit }[] = [
+  { pattern: /(?:제곱미터|스퀘어미터|square\s*met(?:er|re)s?|sqm|m2)$/i, unit: 'squareMeters' },
+  { pattern: /(?:평수|평형|평|pyeong|py)$/i, unit: 'pyeong' },
+];
+
+export interface AreaInput {
+  value: number;
+  unit: AreaUnit;
+}
+
+/**
+ * Reads what someone actually types or pastes into an area field: "84", "84.5",
+ * "1,000", "８４．５", "84㎡", "34평". A unit word in the text wins over the
+ * selected unit, so pasting a listing's "34평" needs no extra click.
+ */
+export function parseAreaInput(text: string, defaultUnit: AreaUnit): AreaInput | null {
+  const normalized = text.normalize('NFKC').trim();
+  if (!normalized) return null;
+
+  const match = AREA_UNIT_WORDS.find((entry) => entry.pattern.test(normalized));
+  const digits = match ? normalized.replace(match.pattern, '') : normalized;
+  const value = parseAreaNumber(digits);
+  return value === null ? null : { value, unit: match?.unit ?? defaultUnit };
+}
+
+/** Reads a square-metre field, converting a pasted pyeong value: "34평" → 112.4㎡. */
+export function parseSquareMeters(text: string): number | null {
+  const parsed = parseAreaInput(text, 'squareMeters');
+  if (!parsed) return null;
+  const area = calculateArea(parsed.value, parsed.unit);
+  return area ? area.squareMeters : null;
+}
+
 function isValidArea(value: number | null): value is number {
   return value !== null && value >= 0 && value <= MAX_AREA;
 }

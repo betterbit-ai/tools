@@ -63,11 +63,41 @@ describe('random-number', () => {
   });
 
   it('keeps large valid boundaries exact', () => {
-    const result = generateNumbers(
-      { ...defaults, min: MIN_VALUE, max: MAX_VALUE, count: 2 },
-      sourceFrom([0, 2_000_000_000]),
+    // The widest supported range: an all-zero 53-bit draw is exactly the minimum...
+    expect(generateNumbers({ ...defaults, min: MIN_VALUE, max: MAX_VALUE, count: 1 }, sourceFrom([0, 0]))).toEqual({
+      ok: true,
+      values: [MIN_VALUE],
+    });
+    // ...and the largest 53-bit draw is past the last full span, so it is redrawn, not skewed.
+    expect(
+      generateNumbers(
+        { ...defaults, min: MIN_VALUE, max: MAX_VALUE, count: 1 },
+        sourceFrom([0xffff_ffff, 0xffff_ffff, 0, 0]),
+      ),
+    ).toEqual({ ok: true, values: [MIN_VALUE] });
+  });
+
+  it('draws inside ordinary large ranges up to a quadrillion', () => {
+    // 1 to 1,000,000,000,000 — a range a real search box asks for (lottery-style, timestamps).
+    const result = generateNumbers({ ...defaults, min: 1, max: 1_000_000_000_000, count: 1 }, sourceFrom([0, 7]));
+    expect(result).toEqual({ ok: true, values: [8] });
+    expect(validateSettings({ ...defaults, min: MIN_VALUE, max: MAX_VALUE })).toBeNull();
+    expect(validateSettings({ ...defaults, min: -1e12, max: 1e12 })).toBeNull();
+  });
+
+  it('uses 53 bits instead of 32 once the range is wider than 2³²', () => {
+    // Exactly 2³² + 1 values: the old 32-bit path threw here.
+    expect(randomInteger(0, 4_294_967_296, sourceFrom([0, 5]))).toBe(5);
+    // The high word carries the upper bits, so a low-word draw alone cannot reach the top value.
+    expect(randomInteger(0, 4_294_967_296, sourceFrom([2_048, 0]))).toBe(4_294_967_296);
+    // A draw past the last full span is rejected and redrawn, keeping every value equally likely.
+    expect(randomInteger(0, 4_294_967_296, sourceFrom([0xffff_ffff, 0xffff_ffff, 0, 3]))).toBe(3);
+  });
+
+  it('refuses a range wider than the numbers it can count through exactly', () => {
+    expect(() => randomInteger(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, sourceFrom([0, 0]))).toThrow(
+      RangeError,
     );
-    expect(result).toEqual({ ok: true, values: [MIN_VALUE, MAX_VALUE] });
   });
 
   it('preserves Unicode separators when formatting output for copying', () => {

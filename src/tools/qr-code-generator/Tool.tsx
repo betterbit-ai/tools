@@ -3,6 +3,7 @@ import {
   Button,
   Dropzone,
   Field,
+  FieldGroup,
   Notice,
   Panel,
   Segmented,
@@ -12,16 +13,19 @@ import {
   Toggle,
 } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
+import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   ERROR_CORRECTION_LEVELS,
+  MAX_BYTES,
   buildPayload,
   type ContentType,
   type ErrorCorrectionLevel,
   type QrSettings,
   type WifiSecurity,
   isHexColor,
+  utf8Bytes,
   validateLogo,
   validateSettings,
 } from './logic';
@@ -40,17 +44,35 @@ const DEFAULT_SETTINGS: QrSettings = {
   background: '#ffffff',
 };
 
-function isSettings(value: unknown): value is QrSettings {
+/**
+ * Only these choices are remembered. The address, text, and Wi-Fi password are what the
+ * visitor came to encode, so they are not written into storage the tool never needs to keep.
+ */
+const REMEMBERED: (keyof QrSettings)[] = [
+  'type',
+  'wifiSecurity',
+  'wifiHidden',
+  'errorCorrection',
+  'foreground',
+  'background',
+];
+
+function rememberedSettings(settings: Partial<QrSettings>): Partial<QrSettings> {
+  return Object.fromEntries(REMEMBERED.map((key) => [key, settings[key]])) as Partial<QrSettings>;
+}
+
+/** Checks the remembered options only: content is deliberately absent from storage. */
+function isRememberedSettings(value: unknown): value is Partial<QrSettings> {
   if (!value || typeof value !== 'object') return false;
   const settings = value as Partial<QrSettings>;
   return (
-    (settings.type === 'url' || settings.type === 'text' || settings.type === 'wifi') &&
-    typeof settings.value === 'string' &&
-    typeof settings.wifiSsid === 'string' &&
-    typeof settings.wifiPassword === 'string' &&
-    (settings.wifiSecurity === 'WPA' || settings.wifiSecurity === 'WEP' || settings.wifiSecurity === 'nopass') &&
-    typeof settings.wifiHidden === 'boolean' &&
-    ERROR_CORRECTION_LEVELS.includes(settings.errorCorrection as ErrorCorrectionLevel) &&
+    (settings.type === undefined || settings.type === 'url' || settings.type === 'text' || settings.type === 'wifi') &&
+    (settings.wifiSecurity === undefined ||
+      settings.wifiSecurity === 'WPA' ||
+      settings.wifiSecurity === 'WEP' ||
+      settings.wifiSecurity === 'nopass') &&
+    (settings.wifiHidden === undefined || typeof settings.wifiHidden === 'boolean') &&
+    (settings.errorCorrection === undefined || ERROR_CORRECTION_LEVELS.includes(settings.errorCorrection)) &&
     (settings.foreground === undefined || isHexColor(settings.foreground)) &&
     (settings.background === undefined || isHexColor(settings.background))
   );
@@ -89,31 +111,37 @@ async function downloadPng(svg: string, filename: string): Promise<void> {
   }
 }
 
-export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
+export default function QrCodeGenerator({ locale, ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<QrSettings>(DEFAULT_SETTINGS);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const [logoName, setLogoName] = useState('');
   const [logoError, setLogoError] = useState<'invalid-type' | 'too-large' | 'read-failed' | null>(null);
   const [downloadError, setDownloadError] = useState(false);
+  // Nothing to encode yet is not an error; only say so once the visitor has typed and cleared it.
+  const [contentTouched, setContentTouched] = useState(false);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(safeStorage.get(STORAGE_KEY) ?? 'null');
-      if (isSettings(saved)) setSettings({ ...DEFAULT_SETTINGS, ...saved });
+      if (isRememberedSettings(saved)) setSettings({ ...DEFAULT_SETTINGS, ...rememberedSettings(saved) });
     } catch {
       /* Ignore malformed local browser data. */
     }
   }, []);
 
   useEffect(() => {
-    safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
+    safeStorage.set(STORAGE_KEY, JSON.stringify(rememberedSettings(settings)));
   }, [settings]);
 
   const update = (patch: Partial<QrSettings>) => setSettings((current) => ({ ...current, ...patch }));
   const correction = logoDataUrl ? 'H' : settings.errorCorrection;
   const checkedSettings = { ...settings, errorCorrection: correction };
   const validation = validateSettings(checkedSettings);
-  const payload = useMemo(() => (validation ? '' : buildPayload(settings)), [settings, validation]);
+  const payload = useMemo(() => buildPayload(settings), [settings]);
+  // How full the code is, capped at the limit so a 1 MB paste costs nothing to measure.
+  const byteLimit = MAX_BYTES[correction];
+  const bytes = useMemo(() => utf8Bytes(payload, byteLimit).length, [payload, byteLimit]);
+
   const rendered = useMemo(() => {
     if (validation) return null;
     try {
@@ -125,11 +153,13 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
   const previewUrl = rendered ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(rendered.svg)}` : '';
   const errorText =
     validation === 'empty'
-      ? ui.emptyError
+      ? contentTouched
+        ? ui.emptyError
+        : null
       : validation === 'missing-wifi-name'
         ? ui.wifiNameError
         : validation === 'too-long'
-          ? ui.tooLongError
+          ? ui.tooLongError.replaceAll('{limit}', formatNumber(byteLimit, locale)).replaceAll('{level}', correction)
           : validation === 'low-contrast'
             ? ui.colorError
             : !rendered && payload
@@ -157,7 +187,7 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
     <Panel>
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0 space-y-5">
-          <Field label={ui.typeLabel}>
+          <FieldGroup label={ui.typeLabel}>
             <Segmented<ContentType>
               value={settings.type}
               onValue={(type) => update({ type })}
@@ -168,12 +198,18 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
                 { value: 'wifi', label: ui.wifiType },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           {settings.type === 'wifi' ? (
             <div class="grid gap-3 sm:grid-cols-2">
               <Field label={ui.wifiNameLabel}>
-                <TextInput value={settings.wifiSsid} onInput={(e) => update({ wifiSsid: e.currentTarget.value })} />
+                <TextInput
+                  value={settings.wifiSsid}
+                  onInput={(e) => {
+                    setContentTouched(true);
+                    update({ wifiSsid: e.currentTarget.value });
+                  }}
+                />
               </Field>
               <Field label={ui.wifiSecurityLabel}>
                 <Select<WifiSecurity>
@@ -210,7 +246,10 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
             >
               <Textarea
                 value={settings.value}
-                onInput={(e) => update({ value: e.currentTarget.value })}
+                onInput={(e) => {
+                  setContentTouched(true);
+                  update({ value: e.currentTarget.value });
+                }}
                 placeholder={settings.type === 'url' ? ui.urlPlaceholder : ui.textPlaceholder}
                 spellcheck={false}
                 class="min-h-36"
@@ -218,15 +257,29 @@ export default function QrCodeGenerator({ ui }: ToolProps<UI>) {
             </Field>
           )}
 
+          <p class="text-xs text-subtle" aria-live="polite">
+            {bytes > byteLimit
+              ? ui.byteCountOver
+                  .replaceAll('{limit}', formatNumber(byteLimit, locale))
+                  .replaceAll('{level}', correction)
+              : ui.byteCount
+                  .replaceAll('{bytes}', formatNumber(bytes, locale))
+                  .replaceAll('{limit}', formatNumber(byteLimit, locale))
+                  .replaceAll('{level}', correction)}
+          </p>
+
           <div class="grid gap-3 sm:grid-cols-2">
-            <Field label={ui.errorCorrectionLabel} hint={logoDataUrl ? ui.logoCorrectionHint : ui.errorCorrectionHint}>
+            <FieldGroup
+              label={ui.errorCorrectionLabel}
+              hint={logoDataUrl ? ui.logoCorrectionHint : ui.errorCorrectionHint}
+            >
               <Segmented<ErrorCorrectionLevel>
                 value={correction}
                 onValue={(errorCorrection) => update({ errorCorrection })}
                 label={ui.errorCorrectionLabel}
                 options={ERROR_CORRECTION_LEVELS.map((value) => ({ value, label: value }))}
               />
-            </Field>
+            </FieldGroup>
             <Field label={ui.foregroundLabel} hint={ui.colorHint}>
               <TextInput
                 type="color"

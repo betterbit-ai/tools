@@ -3,7 +3,9 @@ import {
   calculateArea,
   compareAreas,
   MAX_AREA,
+  parseAreaInput,
   parseAreaNumber,
+  parseSquareMeters,
   PYEONG_PER_SQUARE_METER,
   SQUARE_METERS_PER_PYEONG,
 } from './logic';
@@ -60,5 +62,39 @@ describe('parseAreaNumber', () => {
     expect(parseAreaNumber(' １２,３４５．６ ')).toBe(12_345.6);
     expect(parseAreaNumber('')).toBeNull();
     expect(parseAreaNumber(NaN)).toBeNull();
+  });
+});
+
+describe('parseAreaInput', () => {
+  it('reads plain, grouped, decimal, and full-width numbers in the selected unit', () => {
+    expect(parseAreaInput('84', 'squareMeters')).toEqual({ value: 84, unit: 'squareMeters' });
+    expect(parseAreaInput('59.9', 'squareMeters')).toEqual({ value: 59.9, unit: 'squareMeters' });
+    expect(parseAreaInput('1,000', 'pyeong')).toEqual({ value: 1000, unit: 'pyeong' });
+    expect(parseAreaInput('８４．５', 'squareMeters')).toEqual({ value: 84.5, unit: 'squareMeters' });
+  });
+
+  it('takes the unit written in pasted text over the selected one', () => {
+    expect(parseAreaInput('84㎡', 'pyeong')).toEqual({ value: 84, unit: 'squareMeters' });
+    expect(parseAreaInput('84 m2', 'pyeong')).toEqual({ value: 84, unit: 'squareMeters' });
+    expect(parseAreaInput('84제곱미터', 'pyeong')).toEqual({ value: 84, unit: 'squareMeters' });
+    expect(parseAreaInput('34평', 'squareMeters')).toEqual({ value: 34, unit: 'pyeong' });
+    expect(parseAreaInput('34 평수', 'squareMeters')).toEqual({ value: 34, unit: 'pyeong' });
+  });
+
+  it('rejects prose, a bare unit word, and an area outside the guardrail', () => {
+    expect(parseAreaInput('전용 84', 'squareMeters')).toBeNull();
+    expect(parseAreaInput('평', 'pyeong')).toBeNull();
+    expect(parseAreaInput('', 'squareMeters')).toBeNull();
+    // A readable but impossible area stops at the calculator, which owns the guardrail.
+    expect(calculateArea(parseAreaInput('-1', 'pyeong')!.value, 'pyeong')).toBeNull();
+  });
+});
+
+describe('parseSquareMeters', () => {
+  it('converts a pasted pyeong figure so both comparison fields stay in square metres', () => {
+    expect(parseSquareMeters('112')).toBe(112);
+    expect(parseSquareMeters('112㎡')).toBe(112);
+    expect(parseSquareMeters('34평')).toBe(112.3966942149);
+    expect(parseSquareMeters('전용')).toBeNull();
   });
 });

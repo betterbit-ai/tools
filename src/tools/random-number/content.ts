@@ -25,7 +25,7 @@ const uiEn = {
   countResultLabel: 'Generated',
   rangeResultLabel: 'Range',
   cryptoNote: 'Generated locally with crypto.getRandomValues(); no numbers are sent to a server.',
-  invalidBoundsError: 'Enter whole-number bounds from −1,000,000,000 to 1,000,000,000.',
+  invalidBoundsError: 'Enter whole-number bounds from −1,000,000,000,000,000 to 1,000,000,000,000,000.',
   invalidCountError: 'Enter a whole-number count from 1 to 10,000.',
   rangeOrderError: 'The minimum cannot be greater than the maximum.',
   tooManyUniqueError: 'This range does not contain enough different numbers for a no-repeat draw.',
@@ -69,13 +69,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Bulk lists without a giant range in memory',
-        body: 'You can generate up to 10,000 integers at once, including negative values, within a supported inclusive range from −1,000,000,000 to 1,000,000,000. For no-repeat batches, the generator uses a partial shuffle that stores only the values selected so far rather than building an array for the entire range. Choose ascending order for a tidy list, or draw order when the sequence itself matters.',
+        body: 'You can generate up to 10,000 integers at once, including negative values, within a supported inclusive range from −1,000,000,000,000,000 to 1,000,000,000,000,000 (a quadrillion either way). For no-repeat batches, the generator uses a partial shuffle that stores only the values selected so far rather than building an array for the entire range. Choose ascending order for a tidy list, or draw order when the sequence itself matters.',
       },
     ],
     faq: [
       {
         q: 'How do I generate a random number between two values?',
-        a: 'Enter the lower value in Minimum and the upper value in Maximum, then select Generate numbers. Both values are included: a 1–100 draw can return 1 or 100, and the tool also accepts negative integers down to −1,000,000,000.',
+        a: 'Enter the lower value in Minimum and the upper value in Maximum, then select Generate numbers. Both values are included: a 1–100 draw can return 1 or 100, and the tool also accepts negative integers down to −1,000,000,000,000,000.',
       },
       {
         q: 'How can I generate random numbers with no repeats?',
@@ -130,13 +130,13 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '큰 범위도 전체 목록을 만들지 않고 한 번에 생성합니다',
-        body: '−1,000,000,000부터 1,000,000,000까지의 정수 범위에서 한 번에 최대 10,000개를 생성할 수 있으며, 음수도 지원합니다. 중복 없는 결과는 범위 전체를 배열로 만들어 두지 않고 실제로 뽑은 번호만 저장하는 부분 셔플 방식으로 만듭니다. 엑셀에 붙여넣을 때는 한 줄에 하나씩 복사하고, 번호를 보기 좋게 정리할 때는 오름차순 또는 내림차순을 선택하세요.',
+        body: '−1,000,000,000,000,000부터 1,000,000,000,000,000까지의 정수 범위에서 한 번에 최대 10,000개를 생성할 수 있으며, 음수도 지원합니다. 중복 없는 결과는 범위 전체를 배열로 만들어 두지 않고 실제로 뽑은 번호만 저장하는 부분 셔플 방식으로 만듭니다. 엑셀에 붙여넣을 때는 한 줄에 하나씩 복사하고, 번호를 보기 좋게 정리할 때는 오름차순 또는 내림차순을 선택하세요.',
       },
     ],
     faq: [
       {
         q: '원하는 범위에서 랜덤 숫자는 어떻게 뽑나요?',
-        a: '최솟값과 최댓값을 입력하고 숫자 생성을 누르면 됩니다. 두 끝값을 모두 포함하므로 1~100에서는 1과 100도 나올 수 있으며, −1,000,000,000까지의 음수 정수도 입력할 수 있습니다.',
+        a: '최솟값과 최댓값을 입력하고 숫자 생성을 누르면 됩니다. 두 끝값을 모두 포함하므로 1~100에서는 1과 100도 나올 수 있으며, −1,000,000,000,000,000까지의 음수 정수도 입력할 수 있습니다.',
       },
       {
         q: '중복 없는 랜덤 숫자는 어떻게 생성하나요?',
@@ -179,7 +179,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       countResultLabel: '생성 개수',
       rangeResultLabel: '범위',
       cryptoNote: 'crypto.getRandomValues()로 브라우저에서 생성하며 서버로 전송하지 않습니다.',
-      invalidBoundsError: '−1,000,000,000부터 1,000,000,000까지의 정수 범위를 입력하세요.',
+      invalidBoundsError: '−1,000,000,000,000,000부터 1,000,000,000,000,000까지의 정수 범위를 입력하세요.',
       invalidCountError: '1부터 10,000까지의 정수 개수를 입력하세요.',
       rangeOrderError: '최솟값은 최댓값보다 클 수 없습니다.',
       tooManyUniqueError: '이 범위에는 중복 없이 뽑을 수 있는 서로 다른 숫자가 충분하지 않습니다.',
