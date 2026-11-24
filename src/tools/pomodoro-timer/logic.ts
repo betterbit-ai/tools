@@ -45,6 +45,8 @@ export interface PomodoroState {
   selectedTaskId: string | null;
   sessions: SessionRecord[];
   lastCompletedPhase: Phase | null;
+  /** When the phase that just finished was due to end; lets the alert fire once per completion. */
+  lastCompletedAt: number | null;
   settings: PomodoroSettings;
 }
 
@@ -70,6 +72,7 @@ export function idle(settings: PomodoroSettings = DEFAULT_SETTINGS): PomodoroSta
     selectedTaskId: null,
     sessions: [],
     lastCompletedPhase: null,
+    lastCompletedAt: null,
     settings: clampSettings(settings),
   };
 }
@@ -105,6 +108,7 @@ export function start(state: PomodoroState, now: number): PomodoroState {
     endAt: now + remaining(state, now),
     pausedRemainingMs: null,
     lastCompletedPhase: null,
+    lastCompletedAt: null,
   };
 }
 
@@ -114,11 +118,26 @@ export function pause(state: PomodoroState, now: number): PomodoroState {
 }
 
 export function reset(state: PomodoroState): PomodoroState {
-  return { ...state, status: 'idle', endAt: null, pausedRemainingMs: null, lastCompletedPhase: null };
+  return {
+    ...state,
+    status: 'idle',
+    endAt: null,
+    pausedRemainingMs: null,
+    lastCompletedPhase: null,
+    lastCompletedAt: null,
+  };
 }
 
 export function choosePhase(state: PomodoroState, phase: Phase): PomodoroState {
-  return { ...state, phase, status: 'idle', endAt: null, pausedRemainingMs: null, lastCompletedPhase: null };
+  return {
+    ...state,
+    phase,
+    status: 'idle',
+    endAt: null,
+    pausedRemainingMs: null,
+    lastCompletedPhase: null,
+    lastCompletedAt: null,
+  };
 }
 
 export function updateSettings(state: PomodoroState, settings: Partial<PomodoroSettings>): PomodoroState {
@@ -136,9 +155,12 @@ export function settle(state: PomodoroState, now: number): PomodoroState {
   const finished = state.phase;
   const completedFocus = state.completedFocus + (finished === 'focus' ? 1 : 0);
   const task = state.tasks.find((entry) => entry.id === state.selectedTaskId)?.title ?? '';
+  // A throttled background tab notices the end late; the interval's own end time is when it really
+  // finished, so the session log and the completion alert use that instead of the detection time.
+  const completedAt = state.endAt ?? now;
   const record: SessionRecord | null =
     finished === 'focus'
-      ? { id: now, task, completedAt: now, durationMs: phaseDurationMs('focus', state.settings) }
+      ? { id: completedAt, task, completedAt, durationMs: phaseDurationMs('focus', state.settings) }
       : null;
   return {
     ...state,
@@ -149,17 +171,21 @@ export function settle(state: PomodoroState, now: number): PomodoroState {
     completedFocus,
     sessions: record ? [...state.sessions, record].slice(-MAX_SESSIONS) : state.sessions,
     lastCompletedPhase: finished,
+    lastCompletedAt: completedAt,
   };
 }
 
 export function skip(state: PomodoroState): PomodoroState {
+  // Skipping a focus interval is counted for choosing the break that follows it (a skipped fourth
+  // focus still leads to the long break), but it is not added to the completed-focus count.
   return {
     ...state,
     status: 'idle',
-    phase: nextPhase(state.phase, state.completedFocus, state.settings.rounds),
+    phase: nextPhase(state.phase, state.completedFocus + (state.phase === 'focus' ? 1 : 0), state.settings.rounds),
     endAt: null,
     pausedRemainingMs: null,
     lastCompletedPhase: null,
+    lastCompletedAt: null,
   };
 }
 
@@ -245,6 +271,8 @@ export function isPomodoroState(value: unknown): value is PomodoroState {
         session.durationMs > 0,
     ) &&
     (state.selectedTaskId === null || state.tasks.some((task) => task.id === state.selectedTaskId)) &&
-    (state.lastCompletedPhase === null || ['focus', 'shortBreak', 'longBreak'].includes(state.lastCompletedPhase))
+    (state.lastCompletedPhase === null || ['focus', 'shortBreak', 'longBreak'].includes(state.lastCompletedPhase)) &&
+    // Absent in states saved before this field existed; treated as "nothing completed yet".
+    (state.lastCompletedAt === undefined || state.lastCompletedAt === null || isValidTimestamp(state.lastCompletedAt))
   );
 }

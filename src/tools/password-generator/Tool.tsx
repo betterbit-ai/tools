@@ -3,6 +3,7 @@ import {
   Button,
   CopyButton,
   Field,
+  FieldGroup,
   Kbd,
   Notice,
   NumberInput,
@@ -67,6 +68,7 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<PasswordSettings>(DEFAULT_SETTINGS);
   const [password, setPassword] = useState('');
   const [error, setError] = useState<ValidationError | 'crypto' | null>(null);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [ready, setReady] = useState(false);
   const update = (patch: Partial<PasswordSettings>) => setSettings((current) => ({ ...current, ...patch }));
 
@@ -219,7 +221,7 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
                     onValue={(wordCount) => update({ wordCount: wordCount === '' ? Number.NaN : wordCount })}
                   />
                 </Field>
-                <Field label={ui.separatorLabel}>
+                <FieldGroup label={ui.separatorLabel}>
                   <Segmented
                     label={ui.separatorLabel}
                     value={settings.separator}
@@ -230,7 +232,7 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
                       { value: '·', label: ui.separatorDot },
                     ]}
                   />
-                </Field>
+                </FieldGroup>
               </div>
             )}
             <div class="mt-5 flex flex-wrap items-center gap-3">
@@ -245,7 +247,13 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
           <div class="rounded-lg border border-line bg-surface-2 p-4">
             <div class="flex items-start justify-between gap-3">
               <p class="text-sm font-medium text-fg">{ui.resultHeading}</p>
-              <CopyButton text={password} label={ui.copy} copiedLabel={ui.copied} />
+              <CopyButton
+                text={password}
+                label={ui.copy}
+                copiedLabel={ui.copied}
+                onSuccess={() => setCopyFailed(false)}
+                onError={() => setCopyFailed(true)}
+              />
             </div>
             {errorText ? (
               <div class="mt-3">
@@ -258,6 +266,11 @@ export default function PasswordGenerator({ ui }: ToolProps<UI>) {
               >
                 {password}
               </output>
+            )}
+            {copyFailed && (
+              <div class="mt-3">
+                <Notice tone="danger">{ui.copyError}</Notice>
+              </div>
             )}
             <div class="mt-3 grid grid-cols-2 gap-2">
               <Stat label={ui.entropyLabel} value={`${Math.round(entropy)} ${ui.bits}`} emphasis />

@@ -4,7 +4,8 @@ import type { ToolContent } from '../types';
 const uiEn = {
   intro: 'All four calculations update as you type — no button needed.',
   autosaved: 'Your numbers are saved in this browser',
-  invalidNumberError: 'Enter a finite number in both fields.',
+  invalidNumberError: 'Use numbers only in both fields — for example 1,250 or 12.5.',
+  emptyNumberError: 'Enter a number in both fields to see the result.',
   resultTooLargeError: 'These values produce a result that is too large to display.',
   type1Heading: 'Percent of a number',
   type1PercentLabel: 'Percent (%)',
@@ -166,7 +167,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       intro: '네 가지 계산이 입력하는 즉시 모두 갱신됩니다 — 버튼을 누를 필요가 없습니다.',
       autosaved: '입력한 숫자는 이 브라우저에 저장됩니다',
-      invalidNumberError: '두 칸에 유한한 숫자를 입력하세요.',
+      invalidNumberError: '두 칸 모두 숫자만 입력하세요 — 예: 1,250 또는 12.5.',
+      emptyNumberError: '두 칸에 숫자를 입력하면 결과가 표시됩니다.',
       resultTooLargeError: '입력한 값으로는 표시할 수 없을 만큼 큰 결과가 나옵니다.',
       type1Heading: '숫자의 퍼센트',
       type1PercentLabel: '퍼센트(%)',

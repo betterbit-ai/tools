@@ -92,9 +92,19 @@ function parseCycleLength(value: number | string | undefined): number | null {
   if (typeof value === 'number') return Number.isInteger(value) && value >= 20 && value <= 45 ? value : null;
   if (typeof value !== 'string') return 28;
   const normalized = value.normalize('NFKC').trim();
+  // An emptied field means "I do not know my cycle", which the page documents as the 28-day default.
+  if (normalized === '') return 28;
   if (!/^\d{1,2}$/.test(normalized)) return null;
   const parsed = Number(normalized);
   return parsed >= 20 && parsed <= 45 ? parsed : null;
+}
+
+export type CycleReading = { status: 'ok'; days: number } | { status: 'invalid' };
+
+/** Reads the average-cycle field: empty means the documented 28-day default, anything else must be 20–45. */
+export function readCycleLength(value: number | string | undefined): CycleReading {
+  const days = parseCycleLength(value);
+  return days === null ? { status: 'invalid' } : { status: 'ok', days };
 }
 
 /**

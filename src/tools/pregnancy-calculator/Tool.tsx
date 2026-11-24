@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Field, Notice, NumberInput, Panel, Segmented, Stat, TextInput } from '../../components/ui';
+import { Field, FieldGroup, Notice, NumberInput, Panel, Segmented, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculatePregnancy, isValidDate, todayIso, type DatingMethod, type EmbryoAge } from './logic';
+import {
+  calculatePregnancy,
+  daysBetween,
+  isValidDate,
+  normalizeDateInput,
+  readCycleLength,
+  todayIso,
+  type DatingMethod,
+  type EmbryoAge,
+} from './logic';
 
 const STORAGE_KEY = 'tools:pregnancy-calculator:state';
 
@@ -48,6 +57,8 @@ function restoreState(): State {
 export default function PregnancyCalculator({ locale, ui }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(DEFAULT_STATE);
+  // "Today" is refreshed so a tab left open overnight does not keep yesterday's week count.
+  const [today, setToday] = useState(() => todayIso(Date.now()));
 
   useEffect(() => {
     setState(restoreState());
@@ -58,10 +69,22 @@ export default function PregnancyCalculator({ locale, ui }: ToolProps<UI>) {
     if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
   }, [ready, state]);
 
+  useEffect(() => {
+    const refresh = () => setToday(todayIso(Date.now()));
+    const timer = window.setInterval(refresh, 60_000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, []);
+
   const update = (patch: Partial<State>) => setState((current) => ({ ...current, ...patch }));
+  const cycle = readCycleLength(state.cycleLength);
+  const cycleDays = cycle.status === 'ok' ? cycle.days : null;
   const result = useMemo(
-    () => calculatePregnancy({ ...state, asOf: todayIso(Date.now()) }),
-    [state.method, state.date, state.cycleLength, state.embryoAge],
+    () => (cycleDays === null ? null : calculatePregnancy({ ...state, cycleLength: cycleDays, asOf: today })),
+    [state.method, state.date, state.embryoAge, cycleDays, today],
   );
   const n = (value: number) => formatNumber(value, locale, 0);
   const formatLong = (date: string) =>
@@ -76,20 +99,31 @@ export default function PregnancyCalculator({ locale, ui }: ToolProps<UI>) {
     conception: ui.conceptionDateLabel,
     ivf: ui.transferDateLabel,
   };
-  const invalid = state.date !== '' && !result;
+  const dateMissing = state.date === '';
+  const cycleInvalid = state.method === 'lmp' && cycle.status === 'invalid';
+  const futureDated = !dateMissing && isValidDate(state.date) && daysBetween(today, normalizeDateInput(state.date)) > 0;
   const gestationalAge = result?.gestationalAge;
-  const ageValue = gestationalAge
-    ? ui.gestationalAgeValue
-        .replace('{weeks}', n(gestationalAge.weeks))
-        .replace('{days}', n(gestationalAge.remainingDays))
-    : ui.notStarted;
+  const weeks = (count: number) => (count === 1 ? ui.ageWeeksOne : ui.ageWeeks).replace('{n}', n(count));
+  const days = (count: number) => (count === 1 ? ui.ageDaysOne : ui.ageDays).replace('{n}', n(count));
+  const ageValue =
+    futureDated || !gestationalAge
+      ? ui.notStarted
+      : ui.gestationalAgeValue
+          .replace('{weeks}', weeks(gestationalAge.weeks))
+          .replace('{days}', days(gestationalAge.remainingDays));
   const dueCountdown = !result
     ? ''
     : result.daysUntilDue > 0
-      ? ui.daysUntilDueValue.replace('{days}', n(result.daysUntilDue))
+      ? (result.daysUntilDue === 1 ? ui.daysUntilDueValueOne : ui.daysUntilDueValue).replace(
+          '{days}',
+          n(result.daysUntilDue),
+        )
       : result.daysUntilDue === 0
         ? ui.dueToday
-        : ui.daysPastDueValue.replace('{days}', n(Math.abs(result.daysUntilDue)));
+        : (Math.abs(result.daysUntilDue) === 1 ? ui.daysPastDueValueOne : ui.daysPastDueValue).replace(
+            '{days}',
+            n(Math.abs(result.daysUntilDue)),
+          );
 
   return (
     <Panel>
@@ -128,7 +162,8 @@ export default function PregnancyCalculator({ locale, ui }: ToolProps<UI>) {
             </Field>
           )}
           {state.method === 'ivf' && (
-            <Field label={ui.embryoAgeLabel} hint={ui.embryoAgeHint}>
+            // A group of radios: a <label> here would repeat its text inside every radio's name.
+            <FieldGroup label={ui.embryoAgeLabel} hint={ui.embryoAgeHint}>
               <Segmented<'3' | '5'>
                 label={ui.embryoAgeLabel}
                 value={String(state.embryoAge) as '3' | '5'}
@@ -138,15 +173,20 @@ export default function PregnancyCalculator({ locale, ui }: ToolProps<UI>) {
                   { value: '5', label: ui.day5 },
                 ]}
               />
-            </Field>
+            </FieldGroup>
           )}
-          {invalid && <Notice tone="danger">{ui.invalidInput}</Notice>}
+          {cycleInvalid ? (
+            <Notice tone="danger">{ui.invalidCycle}</Notice>
+          ) : (
+            !dateMissing && !result && <Notice tone="danger">{ui.invalidInput}</Notice>
+          )}
+          {futureDated && <Notice tone="info">{ui.futureDateNotice}</Notice>}
           <Notice tone="info">{ui.privateNotice}</Notice>
         </div>
 
         <div class="flex flex-col gap-3">
           {!result ? (
-            <Notice tone="info">{invalid ? ui.invalidInput : ui.enterDate}</Notice>
+            dateMissing && <Notice tone="info">{ui.enterDate}</Notice>
           ) : (
             <>
               <div class="grid grid-cols-2 gap-2" aria-live="polite">
@@ -155,7 +195,7 @@ export default function PregnancyCalculator({ locale, ui }: ToolProps<UI>) {
                 <Stat label={ui.gestationalAgeLabel} value={ageValue} />
                 <Stat
                   label={ui.trimesterLabel}
-                  value={gestationalAge ? ui[`trimester${gestationalAge.trimester}`] : ui.notStarted}
+                  value={gestationalAge && !futureDated ? ui[`trimester${gestationalAge.trimester}`] : ui.notStarted}
                 />
                 <Stat label={ui.estimatedConceptionLabel} value={formatLong(result.estimatedConceptionDate)} />
                 <Stat label={ui.estimatedLmpLabel} value={formatLong(result.gestationalStartDate)} />

@@ -1,22 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import {
-  Button,
-  Field,
-  Kbd,
-  Notice,
-  NumberInput,
-  Panel,
-  Segmented,
-  Stat,
-  TextInput,
-  Toggle,
-  cx,
-} from '../../components/ui';
+import { Button, Field, Kbd, Notice, Panel, Segmented, Stat, TextInput, Toggle, cx } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   MAX_MINUTES,
+  MAX_ROUNDS,
   MAX_TASKS,
   addTask,
   choosePhase,
@@ -42,6 +31,42 @@ const STATE_KEY = 'tools:pomodoro-timer:state';
 const NOTIFICATIONS_KEY = 'tools:pomodoro-timer:notifications';
 const MAX_STORED_STATE_BYTES = 128 * 1024;
 
+/**
+ * A minute/round field that keeps the text the visitor is typing instead of snapping a cleared
+ * field back to the minimum, which turned "50" typed after Ctrl+A into "150".
+ */
+function NumberSetting(props: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  const [text, setText] = useState(String(props.value));
+  useEffect(() => {
+    setText(String(props.value));
+  }, [props.value]);
+  return (
+    <Field label={props.label}>
+      <TextInput
+        inputMode="numeric"
+        value={text}
+        onInput={(event) => {
+          const digits = (event.currentTarget as HTMLInputElement).value.replace(/[^\d]/g, '');
+          setText(digits);
+          if (digits === '') return; // An empty field keeps the current setting; blur restores the number.
+          const parsed = Number(digits);
+          if (!Number.isFinite(parsed)) return;
+          const clamped = Math.min(props.max, Math.max(props.min, Math.trunc(parsed)));
+          props.onChange(clamped);
+          setText(String(clamped));
+        }}
+        onBlur={() => setText(String(props.value))}
+      />
+    </Field>
+  );
+}
+
 export default function PomodoroTimer({ ui }: ToolProps<UI>) {
   const [state, setState] = useState<PomodoroState>(idle);
   const [now, setNow] = useState(() => Date.now());
@@ -50,6 +75,7 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
   const audio = useRef<AudioContext | null>(null);
   const baseTitle = useRef('');
   const lastCompletion = useRef<number | null>(null);
+  const [notice, setNotice] = useState<{ text: string; tone: 'info' | 'danger' } | null>(null);
 
   useEffect(() => {
     baseTitle.current = document.title;
@@ -58,8 +84,11 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
       const saved = serialized && serialized.length <= MAX_STORED_STATE_BYTES ? JSON.parse(serialized) : null;
       if (isPomodoroState(saved)) {
         const current = Date.now();
+        const restored = settle(saved, current);
+        // A phase that ended while the page was closed is shown, not announced again on load.
+        lastCompletion.current = restored.lastCompletedAt ?? null;
         setNow(current);
-        setState(settle(saved, current));
+        setState(restored);
       }
     } catch {
       /* Storage is optional and corrupt data is ignored. */
@@ -84,19 +113,27 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
   }, [state.status]);
 
   const unlockAudio = () => {
-    if (!audio.current && typeof AudioContext !== 'undefined') audio.current = new AudioContext();
-    void audio.current?.resume();
+    if (typeof AudioContext === 'undefined') {
+      setNotice({ text: ui.soundUnavailable, tone: 'danger' });
+      return;
+    }
+    try {
+      if (!audio.current) audio.current = new AudioContext();
+      void audio.current.resume().catch(() => setNotice({ text: ui.soundUnavailable, tone: 'danger' }));
+    } catch {
+      setNotice({ text: ui.soundUnavailable, tone: 'danger' });
+    }
   };
 
   useEffect(() => {
-    if (!state.lastCompletedPhase || lastCompletion.current === state.sessions.at(-1)?.id) return;
-    const completionId = state.sessions.at(-1)?.id ?? now;
-    lastCompletion.current = completionId;
+    const completedAt = state.lastCompletedAt ?? null;
+    if (completedAt === null || !state.lastCompletedPhase || lastCompletion.current === completedAt) return;
+    lastCompletion.current = completedAt;
     beep(audio.current);
     if (notifications && 'Notification' in window && Notification.permission === 'granted') {
       new Notification(ui.notificationTitle, { body: ui.notificationBody.replace('{phase}', ui[state.phase]) });
     }
-  }, [notifications, now, state.lastCompletedPhase, state.phase, state.sessions, ui]);
+  }, [notifications, state.lastCompletedAt, state.lastCompletedPhase, state.phase, ui]);
 
   const left = remaining(state, now);
   const display = formatClock(left);
@@ -124,6 +161,9 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
       )
         return;
       if (event.code === 'Space') {
+        // A focused button or radio keeps its own Space activation; otherwise the shortcut would
+        // press Start/Pause instead of the control the visitor tabbed to.
+        if (target.closest('button, a[href], summary, [role="button"]')) return;
         event.preventDefault();
         toggle();
       } else if (event.key === 'r' || event.key === 'R') {
@@ -142,13 +182,21 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
     if (!enabled) {
       setNotifications(false);
       safeStorage.set(NOTIFICATIONS_KEY, 'off');
+      setNotice(null);
       return;
     }
-    if (!('Notification' in window)) return;
+    if (!('Notification' in window)) {
+      setNotifications(false);
+      safeStorage.set(NOTIFICATIONS_KEY, 'off');
+      setNotice({ text: ui.notificationsUnsupported, tone: 'danger' });
+      return;
+    }
     const permission = await Notification.requestPermission();
     const granted = permission === 'granted';
     setNotifications(granted);
     safeStorage.set(NOTIFICATIONS_KEY, granted ? 'on' : 'off');
+    // A denied request used to leave the switch off again with no explanation.
+    setNotice(granted ? null : { text: ui.notificationsBlocked, tone: 'info' });
   };
 
   const addDraft = () => {
@@ -282,6 +330,7 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
           </div>
           <Toggle checked={notifications} onChecked={updateNotification} label={ui.notifications} />
           <p class="text-xs text-subtle">{ui.notificationHint}</p>
+          {notice && <Notice tone={notice.tone}>{notice.text}</Notice>}
         </aside>
       </div>
 
@@ -289,40 +338,34 @@ export default function PomodoroTimer({ ui }: ToolProps<UI>) {
         <legend class="text-sm font-medium text-fg">{ui.settings}</legend>
         <p class="mt-1 text-xs text-subtle">{ui.settingsHint}</p>
         <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label={ui.focusMinutes}>
-            <NumberInput
-              value={state.settings.focusMinutes}
-              min={1}
-              max={MAX_MINUTES}
-              onValue={(value) => setState((previous) => updateSettings(previous, { focusMinutes: Number(value) }))}
-            />
-          </Field>
-          <Field label={ui.shortBreakMinutes}>
-            <NumberInput
-              value={state.settings.shortBreakMinutes}
-              min={1}
-              max={MAX_MINUTES}
-              onValue={(value) =>
-                setState((previous) => updateSettings(previous, { shortBreakMinutes: Number(value) }))
-              }
-            />
-          </Field>
-          <Field label={ui.longBreakMinutes}>
-            <NumberInput
-              value={state.settings.longBreakMinutes}
-              min={1}
-              max={MAX_MINUTES}
-              onValue={(value) => setState((previous) => updateSettings(previous, { longBreakMinutes: Number(value) }))}
-            />
-          </Field>
-          <Field label={ui.rounds}>
-            <NumberInput
-              value={state.settings.rounds}
-              min={1}
-              max={12}
-              onValue={(value) => setState((previous) => updateSettings(previous, { rounds: Number(value) }))}
-            />
-          </Field>
+          <NumberSetting
+            label={ui.focusMinutes}
+            value={state.settings.focusMinutes}
+            min={1}
+            max={MAX_MINUTES}
+            onChange={(focusMinutes) => setState((previous) => updateSettings(previous, { focusMinutes }))}
+          />
+          <NumberSetting
+            label={ui.shortBreakMinutes}
+            value={state.settings.shortBreakMinutes}
+            min={1}
+            max={MAX_MINUTES}
+            onChange={(shortBreakMinutes) => setState((previous) => updateSettings(previous, { shortBreakMinutes }))}
+          />
+          <NumberSetting
+            label={ui.longBreakMinutes}
+            value={state.settings.longBreakMinutes}
+            min={1}
+            max={MAX_MINUTES}
+            onChange={(longBreakMinutes) => setState((previous) => updateSettings(previous, { longBreakMinutes }))}
+          />
+          <NumberSetting
+            label={ui.rounds}
+            value={state.settings.rounds}
+            min={1}
+            max={MAX_ROUNDS}
+            onChange={(rounds) => setState((previous) => updateSettings(previous, { rounds }))}
+          />
         </div>
       </fieldset>
 

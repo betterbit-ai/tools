@@ -13,7 +13,9 @@ import {
   normalizeTask,
   pause,
   remaining,
+  reset,
   settle,
+  skip,
   start,
   updateSettings,
 } from './logic';
@@ -45,6 +47,43 @@ describe('Pomodoro timing', () => {
     expect(state.sessions[0]).toMatchObject({ task: '한국어 계획 🧠', durationMs: 60_000 });
     state = choosePhase(state, 'shortBreak');
     expect(settle(start(state, 60_000), 6 * 60_000).sessions).toHaveLength(1);
+  });
+
+  it('marks every finished phase, including a break, so each one can alert once', () => {
+    let state = updateSettings(idle(), { focusMinutes: 1, shortBreakMinutes: 1, rounds: 2 });
+    state = settle(start(state, 0), 60_000);
+    expect(state.lastCompletedPhase).toBe('focus');
+    expect(state.lastCompletedAt).toBe(60_000);
+    state = settle(start(state, 60_000), 120_000);
+    expect(state.lastCompletedPhase).toBe('shortBreak');
+    expect(state.lastCompletedAt).toBe(120_000);
+    expect(state.sessions).toHaveLength(1);
+  });
+
+  it('records the interval end, not the late detection of a throttled tab', () => {
+    const running = start(idle(), 0);
+    // The tab wakes up five minutes after the interval ended.
+    const state = settle(running, 30 * 60_000);
+    expect(state.sessions[0]?.completedAt).toBe(25 * 60_000);
+    expect(state.lastCompletedAt).toBe(25 * 60_000);
+  });
+
+  it('prepares a short break when the first focus interval is skipped', () => {
+    expect(skip(idle()).phase).toBe('shortBreak');
+    expect(skip(skip(idle())).phase).toBe('focus');
+    // A skipped fourth focus still leads to the long break.
+    let state = updateSettings(idle(), { rounds: 4 });
+    state = { ...state, completedFocus: 3 };
+    expect(skip(state).phase).toBe('longBreak');
+    expect(skip(state).completedFocus).toBe(3);
+  });
+
+  it('clears the completion mark when the next interval starts or the timer is reset', () => {
+    const completed = settle(start(idle(), 0), 25 * 60_000);
+    expect(start(completed, 30 * 60_000).lastCompletedAt).toBeNull();
+    expect(start(reset(completed), 30 * 60_000).lastCompletedAt).toBeNull();
+    expect(reset(completed).lastCompletedPhase).toBeNull();
+    expect(skip(completed).lastCompletedAt).toBeNull();
   });
 });
 
@@ -89,6 +128,11 @@ describe('Pomodoro settings and tasks', () => {
     expect(formatClock(65_000)).toBe('01:05');
     expect(isPomodoroState(start(idle(), 123))).toBe(true);
     expect(isPomodoroState({ ...idle(), status: 'running', endAt: null })).toBe(false);
+    expect(isPomodoroState({ ...idle(), lastCompletedAt: Number.NaN })).toBe(false);
+    // States saved before the completion mark existed are still restored.
+    const legacy = { ...idle() } as Record<string, unknown>;
+    delete legacy.lastCompletedAt;
+    expect(isPomodoroState(legacy)).toBe(true);
     expect(
       isPomodoroState({
         ...idle(),

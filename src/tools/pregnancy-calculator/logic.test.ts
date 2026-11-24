@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, calculatePregnancy, gestationalAgeForDays, isValidDate, normalizeDateInput } from './logic';
+import {
+  addDays,
+  calculatePregnancy,
+  daysBetween,
+  gestationalAgeForDays,
+  isValidDate,
+  normalizeDateInput,
+  readCycleLength,
+} from './logic';
 
 describe('pregnancy date validation', () => {
   it('accepts real leap dates and normalizes full-width Unicode date input', () => {
@@ -49,5 +57,42 @@ describe('calculatePregnancy', () => {
     expect(calculatePregnancy({ method: 'lmp', date: '2026-01-01', cycleLength: '２８', asOf })?.dueDate).toBe(
       '2026-10-08',
     );
+  });
+
+  it('treats an emptied cycle field as the documented 28-day default', () => {
+    expect(calculatePregnancy({ method: 'lmp', date: '2026-01-01', cycleLength: '', asOf })?.dueDate).toBe(
+      '2026-10-08',
+    );
+    expect(calculatePregnancy({ method: 'lmp', date: '2026-01-01', cycleLength: '  ', asOf })?.dueDate).toBe(
+      '2026-10-08',
+    );
+  });
+
+  it('keeps a date in the future distinguishable from today', () => {
+    expect(daysBetween('2026-10-13', '2026-10-14')).toBe(1);
+    expect(daysBetween('2026-10-13', '2026-10-13')).toBe(0);
+    expect(daysBetween('2026-10-13', '2026-10-12')).toBe(-1);
+  });
+});
+
+describe('readCycleLength', () => {
+  it('reads the range the page documents', () => {
+    expect(readCycleLength(28)).toEqual({ status: 'ok', days: 28 });
+    expect(readCycleLength(20)).toEqual({ status: 'ok', days: 20 });
+    expect(readCycleLength(45)).toEqual({ status: 'ok', days: 45 });
+    expect(readCycleLength('32')).toEqual({ status: 'ok', days: 32 });
+  });
+
+  it('uses the 28-day default when the field is left empty', () => {
+    expect(readCycleLength('')).toEqual({ status: 'ok', days: 28 });
+    expect(readCycleLength(undefined)).toEqual({ status: 'ok', days: 28 });
+  });
+
+  it('reports a cycle it cannot use instead of silently changing the estimate', () => {
+    expect(readCycleLength(19)).toEqual({ status: 'invalid' });
+    expect(readCycleLength(46)).toEqual({ status: 'invalid' });
+    expect(readCycleLength(28.5)).toEqual({ status: 'invalid' });
+    expect(readCycleLength('abc')).toEqual({ status: 'invalid' });
+    expect(readCycleLength('-28')).toEqual({ status: 'invalid' });
   });
 });

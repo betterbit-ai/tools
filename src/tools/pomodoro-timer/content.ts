@@ -31,6 +31,11 @@ const uiEn = {
   notificationHint: 'Your browser asks permission only when you turn this on.',
   notificationTitle: 'Pomodoro timer',
   notificationBody: 'Session complete. Next: {phase}.',
+  notificationsUnsupported:
+    'This browser does not support notifications. The timer still changes phase and plays a sound.',
+  notificationsBlocked:
+    'Notifications are blocked for this site, so the switch stays off. Allow notifications in your browser settings. The timer still changes phase and plays a sound.',
+  soundUnavailable: 'This browser could not play the timer sound. The phase change is still shown on screen.',
   settings: 'Session settings',
   settingsHint: 'Changing a setting resets the current timer.',
   focusMinutes: 'Focus (minutes)',
@@ -188,6 +193,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       notificationHint: '스위치를 켤 때만 브라우저가 알림 권한을 요청합니다.',
       notificationTitle: '뽀모도로 타이머',
       notificationBody: '세션이 끝났습니다. 다음 세션: {phase}.',
+      notificationsUnsupported: '이 브라우저는 알림을 지원하지 않습니다. 타이머는 단계를 바꾸고 소리를 냅니다.',
+      notificationsBlocked:
+        '이 사이트의 알림이 차단되어 있어 스위치가 다시 꺼집니다. 브라우저 설정에서 알림을 허용하세요. 알림이 없어도 타이머는 단계를 바꾸고 소리를 냅니다.',
+      soundUnavailable: '이 브라우저에서는 알림음을 재생할 수 없습니다. 단계 전환은 화면에 표시됩니다.',
       settings: '세션 설정',
       settingsHint: '설정을 바꾸면 현재 타이머가 초기화됩니다.',
       focusMinutes: '집중(분)',

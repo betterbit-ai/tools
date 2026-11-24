@@ -17,15 +17,22 @@ function loadSettings(): ClockSettings {
 }
 
 export default function OnlineClock({ locale, ui }: ToolProps<UI>) {
-  const [now, setNow] = useState(() => new Date());
-  const [settings, setSettings] = useState<ClockSettings>(loadSettings);
+  // Null until the page is running in the browser: the static HTML is rendered at build time, so a
+  // time baked into it would be presented as "now" hours or days later (and forever without JS).
+  const [now, setNow] = useState<Date | null>(null);
+  // The saved display settings are read after hydration, never during the first render: the static
+  // HTML cannot know them, and a value read only in the initial state left the wrong format button
+  // highlighted (the clock showed 12-hour time while "24-hour" stayed marked as selected).
+  const [settings, setSettings] = useState<ClockSettings>(DEFAULT_CLOCK_SETTINGS);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
   const [fullScreenError, setFullScreenError] = useState(false);
   const displayRef = useRef<HTMLDivElement>(null);
   const browserLocale = locale === 'ko' ? 'ko-KR' : 'en-US';
-  const display = makeClockDisplay(now, browserLocale, settings);
-  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-  const copiedTime = display.period ? `${display.time} ${display.period}` : display.time;
+  const display = now ? makeClockDisplay(now, browserLocale, settings) : null;
+  const placeholder = settings.showSeconds ? '--:--:--' : '--:--';
+  const zone = now ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC') : '—';
+  const copiedTime = display ? (display.period ? `${display.time} ${display.period}` : display.time) : '';
 
   // Schedule against the next second boundary so the visible seconds do not drift.
   useEffect(() => {
@@ -34,13 +41,32 @@ export default function OnlineClock({ locale, ui }: ToolProps<UI>) {
       setNow(new Date());
       timer = window.setTimeout(tick, 1_000 - (Date.now() % 1_000) + 10);
     };
+    // A hidden tab is throttled (and a slept device pauses it), so re-read the clock the moment the
+    // visitor is looking again instead of waiting for the next scheduled tick.
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      window.clearTimeout(timer);
+      tick();
+    };
     tick();
-    return () => clearTimeout(timer);
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('pageshow', refresh);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('pageshow', refresh);
+    };
   }, []);
 
   useEffect(() => {
-    safeStorage.set(SETTINGS_KEY, JSON.stringify(settings));
-  }, [settings]);
+    setSettings(loadSettings());
+    setSettingsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    // Only after the stored value is in place, so the defaults never overwrite it.
+    if (settingsLoaded) safeStorage.set(SETTINGS_KEY, JSON.stringify(settings));
+  }, [settingsLoaded, settings]);
 
   useEffect(() => {
     const updateFullscreen = () => setFullScreen(document.fullscreenElement === displayRef.current);
@@ -89,13 +115,13 @@ export default function OnlineClock({ locale, ui }: ToolProps<UI>) {
         <div
           role="timer"
           aria-live="off"
-          aria-label={`${ui.currentTime}: ${copiedTime}`}
+          aria-label={display ? `${ui.currentTime}: ${copiedTime}` : ui.currentTime}
           class="mt-3 flex flex-wrap items-baseline justify-center gap-x-3 tabular font-semibold tracking-tight leading-none text-[clamp(3.75rem,17vw,10rem)] text-fg [:fullscreen_&]:text-[min(24vw,38vh)]"
         >
-          <span>{display.time}</span>
-          {display.period && <span class="text-[0.3em] text-muted">{display.period}</span>}
+          <span>{display ? display.time : placeholder}</span>
+          {display?.period && <span class="text-[0.3em] text-muted">{display.period}</span>}
         </div>
-        {settings.showDate && <p class="mt-4 text-[15px] text-muted">{display.date}</p>}
+        {display && settings.showDate && <p class="mt-4 text-[15px] text-muted">{display.date}</p>}
 
         <div class="mt-6 flex flex-wrap justify-center gap-2">
           <Button variant="primary" size="lg" onClick={() => void toggleFullscreen()}>
@@ -109,7 +135,7 @@ export default function OnlineClock({ locale, ui }: ToolProps<UI>) {
 
       <div class="mt-6 grid gap-3 sm:grid-cols-2">
         <Stat label={ui.timeZone} value={zone} />
-        <Stat label={ui.utcOffset} value={utcOffsetFor(now)} />
+        <Stat label={ui.utcOffset} value={now ? utcOffsetFor(now) : '—'} />
       </div>
 
       <section class="mt-6 border-t border-line pt-6" aria-label={ui.settings}>

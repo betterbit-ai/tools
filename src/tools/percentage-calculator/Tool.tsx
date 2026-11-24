@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Field, NumberInput, Notice, Panel, Stat } from '../../components/ui';
+import { Field, Notice, Panel, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -7,35 +7,36 @@ import type { UI } from './content';
 import {
   absoluteChange,
   findWhole,
-  isCompleteNumberInput,
   percentChange,
   percentOf,
-  restoreNumberInput,
+  readNumberText,
+  restoreNumberText,
   whatPercent,
+  type NumberReading,
 } from './logic';
 
 const STORAGE_KEY = 'tools:percentage-calculator:state';
 
 interface PersistedState {
-  t1Percent: number | '';
-  t1Base: number | '';
-  t2Part: number | '';
-  t2Whole: number | '';
-  t3Part: number | '';
-  t3Percent: number | '';
-  t4From: number | '';
-  t4To: number | '';
+  t1Percent: string;
+  t1Base: string;
+  t2Part: string;
+  t2Whole: string;
+  t3Part: string;
+  t3Percent: string;
+  t4From: string;
+  t4To: string;
 }
 
 const DEFAULT_STATE: PersistedState = {
-  t1Percent: 20,
-  t1Base: 50,
-  t2Part: 10,
-  t2Whole: 50,
-  t3Part: 10,
-  t3Percent: 25,
-  t4From: 50,
-  t4To: 75,
+  t1Percent: '20',
+  t1Base: '50',
+  t2Part: '10',
+  t2Whole: '50',
+  t3Part: '10',
+  t3Percent: '25',
+  t4From: '50',
+  t4To: '75',
 };
 
 const STATE_KEYS: (keyof PersistedState)[] = [
@@ -53,13 +54,25 @@ function restoreState(saved: unknown): PersistedState {
   if (!saved || typeof saved !== 'object') return DEFAULT_STATE;
   const values = saved as Record<string, unknown>;
   return STATE_KEYS.reduce<PersistedState>(
-    (restored, key) => ({ ...restored, [key]: restoreNumberInput(values[key], DEFAULT_STATE[key]) }),
+    (restored, key) => ({ ...restored, [key]: restoreNumberText(values[key], DEFAULT_STATE[key]) }),
     DEFAULT_STATE,
   );
 }
 
-/** Safe number for arithmetic while a field is incomplete. The incomplete state is never shown as a result. */
-const safeNumber = (v: number | ''): number => (v === '' || Number.isNaN(v) ? 0 : v);
+/** A card has a result only when both fields read as numbers; otherwise it says why not. */
+type CardStatus = 'ready' | 'empty' | 'invalid';
+
+function cardStatus(readings: [NumberReading, NumberReading]): CardStatus {
+  if (readings[0].status === 'invalid' || readings[1].status === 'invalid') return 'invalid';
+  if (readings[0].status === 'empty' || readings[1].status === 'empty') return 'empty';
+  return 'ready';
+}
+
+function bothValid(
+  readings: [NumberReading, NumberReading],
+): readings is [{ status: 'valid'; value: number }, { status: 'valid'; value: number }] {
+  return readings[0].status === 'valid' && readings[1].status === 'valid';
+}
 
 export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
@@ -85,26 +98,42 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
   const n = (v: number) => formatNumber(v, locale, 4);
   const signed = (v: number) => `${v > 0 ? '+' : ''}${n(v)}`;
 
-  const t1Invalid = !isCompleteNumberInput(state.t1Percent) || !isCompleteNumberInput(state.t1Base);
-  const t1Percent = safeNumber(state.t1Percent);
-  const t1Base = safeNumber(state.t1Base);
-  const t1Result = useMemo(() => percentOf(t1Percent, t1Base), [t1Percent, t1Base]);
+  // Every field keeps the text the visitor typed; only a readable number becomes a result, and a
+  // field that cannot be read says so instead of quietly calculating with 0.
+  const t1Readings: [NumberReading, NumberReading] = [readNumberText(state.t1Percent), readNumberText(state.t1Base)];
+  const t2Readings: [NumberReading, NumberReading] = [readNumberText(state.t2Part), readNumberText(state.t2Whole)];
+  const t3Readings: [NumberReading, NumberReading] = [readNumberText(state.t3Part), readNumberText(state.t3Percent)];
+  const t4Readings: [NumberReading, NumberReading] = [readNumberText(state.t4From), readNumberText(state.t4To)];
 
-  const t2Invalid = !isCompleteNumberInput(state.t2Part) || !isCompleteNumberInput(state.t2Whole);
-  const t2Part = safeNumber(state.t2Part);
-  const t2Whole = safeNumber(state.t2Whole);
-  const t2Result = useMemo(() => whatPercent(t2Part, t2Whole), [t2Part, t2Whole]);
+  const t1 = bothValid(t1Readings) ? { percent: t1Readings[0].value, base: t1Readings[1].value } : null;
+  const t2 = bothValid(t2Readings) ? { part: t2Readings[0].value, whole: t2Readings[1].value } : null;
+  const t3 = bothValid(t3Readings) ? { part: t3Readings[0].value, percent: t3Readings[1].value } : null;
+  const t4 = bothValid(t4Readings) ? { from: t4Readings[0].value, to: t4Readings[1].value } : null;
 
-  const t3Invalid = !isCompleteNumberInput(state.t3Part) || !isCompleteNumberInput(state.t3Percent);
-  const t3Part = safeNumber(state.t3Part);
-  const t3Percent = safeNumber(state.t3Percent);
-  const t3Result = useMemo(() => findWhole(t3Part, t3Percent), [t3Part, t3Percent]);
+  const t1Result = useMemo(() => (t1 ? percentOf(t1.percent, t1.base) : NaN), [t1?.percent, t1?.base]);
+  const t2Result = useMemo(() => (t2 ? whatPercent(t2.part, t2.whole) : NaN), [t2?.part, t2?.whole]);
+  const t3Result = useMemo(() => (t3 ? findWhole(t3.part, t3.percent) : NaN), [t3?.part, t3?.percent]);
+  const t4Percent = useMemo(() => (t4 ? percentChange(t4.from, t4.to) : NaN), [t4?.from, t4?.to]);
+  const t4Absolute = useMemo(() => (t4 ? absoluteChange(t4.from, t4.to) : NaN), [t4?.from, t4?.to]);
 
-  const t4Invalid = !isCompleteNumberInput(state.t4From) || !isCompleteNumberInput(state.t4To);
-  const t4From = safeNumber(state.t4From);
-  const t4To = safeNumber(state.t4To);
-  const t4Percent = useMemo(() => percentChange(t4From, t4To), [t4From, t4To]);
-  const t4Absolute = useMemo(() => absoluteChange(t4From, t4To), [t4From, t4To]);
+  const notice = (status: CardStatus) =>
+    status === 'invalid' ? (
+      <Notice tone="danger">{ui.invalidNumberError}</Notice>
+    ) : status === 'empty' ? (
+      <Notice tone="info">{ui.emptyNumberError}</Notice>
+    ) : null;
+
+  const field = (label: string, key: keyof PersistedState) => (
+    <Field label={label}>
+      <TextInput
+        inputMode="decimal"
+        autoComplete="off"
+        spellcheck={false}
+        value={state[key]}
+        onInput={(event) => update({ [key]: event.currentTarget.value } as Partial<PersistedState>)}
+      />
+    </Field>
+  );
 
   return (
     <Panel>
@@ -117,16 +146,12 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
         <div class="rounded-lg border border-line bg-surface-2 p-4">
           <p class="text-sm font-medium text-fg">{ui.type1Heading}</p>
           <div class="mt-3 grid grid-cols-2 gap-3">
-            <Field label={ui.type1PercentLabel}>
-              <NumberInput value={state.t1Percent} onValue={(v) => update({ t1Percent: v })} />
-            </Field>
-            <Field label={ui.type1BaseLabel}>
-              <NumberInput value={state.t1Base} onValue={(v) => update({ t1Base: v })} />
-            </Field>
+            {field(ui.type1PercentLabel, 't1Percent')}
+            {field(ui.type1BaseLabel, 't1Base')}
           </div>
           <div class="mt-3">
-            {t1Invalid ? (
-              <Notice tone="danger">{ui.invalidNumberError}</Notice>
+            {!t1 ? (
+              notice(cardStatus(t1Readings))
             ) : !Number.isFinite(t1Result) ? (
               <Notice tone="danger">{ui.resultTooLargeError}</Notice>
             ) : (
@@ -135,11 +160,11 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               </div>
             )}
           </div>
-          {!t1Invalid && Number.isFinite(t1Result) && (
+          {t1 && Number.isFinite(t1Result) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type1Formula
-                .replaceAll('{percent}', n(t1Percent))
-                .replaceAll('{base}', n(t1Base))
+                .replaceAll('{percent}', n(t1.percent))
+                .replaceAll('{base}', n(t1.base))
                 .replaceAll('{result}', n(t1Result))}
             </p>
           )}
@@ -148,16 +173,12 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
         <div class="rounded-lg border border-line bg-surface-2 p-4">
           <p class="text-sm font-medium text-fg">{ui.type2Heading}</p>
           <div class="mt-3 grid grid-cols-2 gap-3">
-            <Field label={ui.type2PartLabel}>
-              <NumberInput value={state.t2Part} onValue={(v) => update({ t2Part: v })} />
-            </Field>
-            <Field label={ui.type2WholeLabel}>
-              <NumberInput value={state.t2Whole} onValue={(v) => update({ t2Whole: v })} />
-            </Field>
+            {field(ui.type2PartLabel, 't2Part')}
+            {field(ui.type2WholeLabel, 't2Whole')}
           </div>
           <div class="mt-3">
-            {t2Invalid ? (
-              <Notice tone="danger">{ui.invalidNumberError}</Notice>
+            {!t2 ? (
+              notice(cardStatus(t2Readings))
             ) : Number.isNaN(t2Result) ? (
               <Notice tone="danger">{ui.zeroWholeError}</Notice>
             ) : !Number.isFinite(t2Result) ? (
@@ -168,11 +189,11 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               </div>
             )}
           </div>
-          {!t2Invalid && Number.isFinite(t2Result) && (
+          {t2 && Number.isFinite(t2Result) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type2Formula
-                .replaceAll('{part}', n(t2Part))
-                .replaceAll('{whole}', n(t2Whole))
+                .replaceAll('{part}', n(t2.part))
+                .replaceAll('{whole}', n(t2.whole))
                 .replaceAll('{result}', n(t2Result))}
             </p>
           )}
@@ -181,16 +202,12 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
         <div class="rounded-lg border border-line bg-surface-2 p-4">
           <p class="text-sm font-medium text-fg">{ui.type3Heading}</p>
           <div class="mt-3 grid grid-cols-2 gap-3">
-            <Field label={ui.type3PartLabel}>
-              <NumberInput value={state.t3Part} onValue={(v) => update({ t3Part: v })} />
-            </Field>
-            <Field label={ui.type3PercentLabel}>
-              <NumberInput value={state.t3Percent} onValue={(v) => update({ t3Percent: v })} />
-            </Field>
+            {field(ui.type3PartLabel, 't3Part')}
+            {field(ui.type3PercentLabel, 't3Percent')}
           </div>
           <div class="mt-3">
-            {t3Invalid ? (
-              <Notice tone="danger">{ui.invalidNumberError}</Notice>
+            {!t3 ? (
+              notice(cardStatus(t3Readings))
             ) : Number.isNaN(t3Result) ? (
               <Notice tone="danger">{ui.zeroPercentError}</Notice>
             ) : !Number.isFinite(t3Result) ? (
@@ -201,11 +218,11 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               </div>
             )}
           </div>
-          {!t3Invalid && Number.isFinite(t3Result) && (
+          {t3 && Number.isFinite(t3Result) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type3Formula
-                .replaceAll('{part}', n(t3Part))
-                .replaceAll('{percent}', n(t3Percent))
+                .replaceAll('{part}', n(t3.part))
+                .replaceAll('{percent}', n(t3.percent))
                 .replaceAll('{result}', n(t3Result))}
             </p>
           )}
@@ -214,16 +231,12 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
         <div class="rounded-lg border border-line bg-surface-2 p-4">
           <p class="text-sm font-medium text-fg">{ui.type4Heading}</p>
           <div class="mt-3 grid grid-cols-2 gap-3">
-            <Field label={ui.type4FromLabel}>
-              <NumberInput value={state.t4From} onValue={(v) => update({ t4From: v })} />
-            </Field>
-            <Field label={ui.type4ToLabel}>
-              <NumberInput value={state.t4To} onValue={(v) => update({ t4To: v })} />
-            </Field>
+            {field(ui.type4FromLabel, 't4From')}
+            {field(ui.type4ToLabel, 't4To')}
           </div>
           <div class="mt-3">
-            {t4Invalid ? (
-              <Notice tone="danger">{ui.invalidNumberError}</Notice>
+            {!t4 ? (
+              notice(cardStatus(t4Readings))
             ) : Number.isNaN(t4Percent) ? (
               <Notice tone="danger">{ui.zeroFromError}</Notice>
             ) : !Number.isFinite(t4Percent) || !Number.isFinite(t4Absolute) ? (
@@ -235,11 +248,11 @@ export default function PercentageCalculator({ locale, ui }: ToolProps<UI>) {
               </div>
             )}
           </div>
-          {!t4Invalid && Number.isFinite(t4Percent) && Number.isFinite(t4Absolute) && (
+          {t4 && Number.isFinite(t4Percent) && Number.isFinite(t4Absolute) && (
             <p class="mt-2 font-mono text-xs text-subtle">
               {ui.type4Formula
-                .replaceAll('{from}', n(t4From))
-                .replaceAll('{to}', n(t4To))
+                .replaceAll('{from}', n(t4.from))
+                .replaceAll('{to}', n(t4.to))
                 .replaceAll('{result}', signed(t4Percent))}
             </p>
           )}

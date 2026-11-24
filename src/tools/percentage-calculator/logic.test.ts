@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   absoluteChange,
   findWhole,
-  isCompleteNumberInput,
   percentChange,
   percentOf,
-  restoreNumberInput,
+  readNumberText,
+  restoreNumberText,
   round,
   whatPercent,
 } from './logic';
@@ -36,19 +36,58 @@ describe('round', () => {
   });
 });
 
-describe('number input state', () => {
-  it('requires a complete finite number before calculating', () => {
-    expect(isCompleteNumberInput(0)).toBe(true);
-    expect(isCompleteNumberInput('')).toBe(false);
-    expect(isCompleteNumberInput(NaN)).toBe(false);
-    expect(isCompleteNumberInput(Infinity)).toBe(false);
+describe('saved field values', () => {
+  it('discards corrupt saved values while preserving blank saved fields', () => {
+    expect(restoreNumberText(12.5, '20')).toBe('12.5');
+    expect(restoreNumberText('', '20')).toBe('');
+    expect(restoreNumberText('12.5', '20')).toBe('12.5');
+    expect(restoreNumberText('1,250', '20')).toBe('1,250');
+    expect(restoreNumberText('twelve', '20')).toBe('20');
+    expect(restoreNumberText(Infinity, '20')).toBe('20');
+    expect(restoreNumberText(null, '20')).toBe('20');
+  });
+});
+
+describe('readNumberText (what a visitor types into a field)', () => {
+  it('reads plain, decimal and negative numbers', () => {
+    expect(readNumberText('240')).toEqual({ status: 'valid', value: 240 });
+    expect(readNumberText('12.5')).toEqual({ status: 'valid', value: 12.5 });
+    expect(readNumberText('-50')).toEqual({ status: 'valid', value: -50 });
   });
 
-  it('discards corrupt saved values while preserving blank saved fields', () => {
-    expect(restoreNumberInput(12.5, 20)).toBe(12.5);
-    expect(restoreNumberInput('', 20)).toBe('');
-    expect(restoreNumberInput('12.5', 20)).toBe(20);
-    expect(restoreNumberInput(Infinity, 20)).toBe(20);
+  it('reads thousands separators pasted from a spreadsheet or typed in Korea', () => {
+    expect(readNumberText('1,250')).toEqual({ status: 'valid', value: 1250 });
+    expect(readNumberText('1,234,567.5')).toEqual({ status: 'valid', value: 1234567.5 });
+  });
+
+  it('reads a decimal comma as a decimal point', () => {
+    expect(readNumberText('12,5')).toEqual({ status: 'valid', value: 12.5 });
+  });
+
+  it('reads full-width digits from a Korean IME', () => {
+    expect(readNumberText('２４０')).toEqual({ status: 'valid', value: 240 });
+    expect(readNumberText('１，２５０')).toEqual({ status: 'valid', value: 1250 });
+  });
+
+  it('treats an unfinished entry as empty rather than wrong', () => {
+    expect(readNumberText('')).toEqual({ status: 'empty' });
+    expect(readNumberText('   ')).toEqual({ status: 'empty' });
+    expect(readNumberText('-')).toEqual({ status: 'empty' });
+    expect(readNumberText('.')).toEqual({ status: 'empty' });
+    expect(readNumberText(',')).toEqual({ status: 'empty' });
+  });
+
+  it('reads a number whose decimal point has just been typed', () => {
+    expect(readNumberText('12.')).toEqual({ status: 'valid', value: 12 });
+    expect(readNumberText('1,250.')).toEqual({ status: 'valid', value: 1250 });
+  });
+
+  it('reports text that is not a number instead of silently reading it as 0', () => {
+    expect(readNumberText('abc')).toEqual({ status: 'invalid' });
+    expect(readNumberText('12abc')).toEqual({ status: 'invalid' });
+    expect(readNumberText('1 250')).toEqual({ status: 'valid', value: 1250 });
+    expect(readNumberText('1.2.3')).toEqual({ status: 'invalid' });
+    expect(readNumberText('∞')).toEqual({ status: 'invalid' });
   });
 });
 
