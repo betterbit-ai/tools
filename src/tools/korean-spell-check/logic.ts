@@ -36,6 +36,12 @@ interface Rule {
   replacement: string | ((match: RegExpExecArray) => string);
 }
 
+/** A Hangul syllable with the final consonant ㄹ, the ending that precedes “수 있다”. */
+function endsWithRieul(character: string): boolean {
+  const code = character.charCodeAt(0);
+  return code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 === 8;
+}
+
 // These are intentionally high-confidence forms. Korean grammar and many spacing
 // choices depend on context, so ambiguous forms are not changed automatically.
 const RULES: Rule[] = [
@@ -54,7 +60,10 @@ const RULES: Rule[] = [
   {
     id: 'spacing-halsu',
     pattern: /([가-힣])수(있|없)/g,
-    replacement: (match) => `${match[1]} 수 ${match[2]}`,
+    // Only “-(으)ㄹ 수 있다/없다” takes this space: the syllable before 수 ends in ㄹ.
+    // Without that check a noun ending in 수 (“접수있다”, “점수있어요”) had its first
+    // syllable separated into “접 수 있다”, which is wrong text, not a correction.
+    replacement: (match) => (endsWithRieul(match[1] ?? '') ? `${match[1]} 수 ${match[2]}` : (match[0] ?? '')),
   },
   { id: 'spacing-geotgat', pattern: /것같/g, replacement: '것 같' },
   { id: 'punctuation-space', pattern: /\s+([,.!?…])/g, replacement: '$1' },
@@ -74,6 +83,8 @@ export function findIssues(text: string): SpellIssue[] {
           : rule.replacement === '$1'
             ? match[1]
             : rule.replacement;
+      // A rule that leaves the text untouched is not a suggestion.
+      if (replacement === original) continue;
       candidates.push({
         rule: rule.id,
         start: match.index,

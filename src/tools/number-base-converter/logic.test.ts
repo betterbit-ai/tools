@@ -34,6 +34,22 @@ describe('parseInteger', () => {
     expect(parseInteger('-000A', 16)).toMatchObject({ ok: true, value: -10n, normalized: '-A' });
   });
 
+  it('reads thousands separators from a spreadsheet or a formatted number', () => {
+    expect(parseInteger('1,234,567', 10)).toMatchObject({ ok: true, value: 1234567n, normalized: '1234567' });
+    expect(parseInteger('-1,000', 10)).toMatchObject({ ok: true, value: -1000n, normalized: '-1000' });
+    expect(parseInteger('FFF,FFF', 16)).toMatchObject({ ok: true, value: 16777215n });
+  });
+
+  it('rejects a comma that is not between groups of three digits', () => {
+    expect(parseInteger('1,5', 10)).toEqual({ ok: false, code: 'invalidGrouping' });
+    expect(parseInteger('12,34', 10)).toEqual({ ok: false, code: 'invalidGrouping' });
+    expect(parseInteger('1234,567', 10)).toEqual({ ok: false, code: 'invalidGrouping' });
+    expect(parseInteger('1,,234', 10)).toEqual({ ok: false, code: 'invalidGrouping' });
+    expect(parseInteger(',123', 10)).toEqual({ ok: false, code: 'invalidGrouping' });
+    expect(parseInteger('1,234,', 10)).toEqual({ ok: false, code: 'invalidGrouping' });
+    expect(parseInteger('1,299', 8)).toEqual({ ok: false, code: 'invalidGrouping' });
+  });
+
   it('reports empty input, lone signs and prefixes, and an input above the cap', () => {
     expect(parseInteger('', 10)).toEqual({ ok: false, code: 'empty' });
     expect(parseInteger('-', 10)).toEqual({ ok: false, code: 'missingDigits' });

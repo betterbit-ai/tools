@@ -1,10 +1,22 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, NumberInput, Panel, Segmented, Stat, Textarea, Toggle } from '../../components/ui';
+import {
+  Button,
+  CopyButton,
+  Field,
+  FieldGroup,
+  Notice,
+  Panel,
+  Segmented,
+  Stat,
+  TextInput,
+  Textarea,
+  Toggle,
+} from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { type IpsumLanguage, type IpsumUnit, type OutputFormat, generateIpsum } from './logic';
+import { type IpsumLanguage, type IpsumUnit, type OutputFormat, generateIpsum, maxCountFor } from './logic';
 
 const STORAGE_KEY = 'tools:lorem-ipsum:settings';
 
@@ -30,6 +42,19 @@ function defaultSettings(locale: string): StoredSettings {
   return locale === 'ko' ? { ...defaults, language: 'korean', startWithClassic: false } : defaults;
 }
 
+let seedTick = 0;
+/** A distinct seed even when two clicks land in the same millisecond. */
+function nextSeed(): number {
+  seedTick = (seedTick + 1) % 1000;
+  return Date.now() * 1000 + seedTick;
+}
+
+/** Reads the amount field as a whole number: "50" → 50, "5 0" and "abc" → null. */
+function readAmount(text: string): number | null {
+  const trimmed = text.trim();
+  return /^\d+$/.test(trimmed) ? Number(trimmed) : null;
+}
+
 function storedSettings(value: string | null): StoredSettings | null {
   if (!value) return null;
   try {
@@ -42,7 +67,10 @@ function storedSettings(value: string | null): StoredSettings | null {
       (parsed.format === 'plain' || parsed.format === 'html') &&
       typeof parsed.seed === 'number'
     ) {
-      return parsed as StoredSettings;
+      return {
+        ...(parsed as StoredSettings),
+        count: Math.min(maxCountFor(parsed.unit as IpsumUnit), Math.max(1, Math.round(parsed.count))),
+      };
     }
   } catch {
     // Ignore malformed local storage and keep the useful defaults.
@@ -52,10 +80,16 @@ function storedSettings(value: string | null): StoredSettings | null {
 
 export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
   const [settings, setSettings] = useState<StoredSettings>(() => defaultSettings(locale));
+  // The amount field keeps what the user typed. Reading it into a number on every
+  // keystroke used to rewrite a cleared field to 1, so typing 20 afterwards left 120.
+  const [amountText, setAmountText] = useState(() => String(defaultSettings(locale).count));
 
   useEffect(() => {
     const saved = storedSettings(safeStorage.get(STORAGE_KEY));
-    if (saved) setSettings(saved);
+    if (saved) {
+      setSettings(saved);
+      setAmountText(String(saved.count));
+    }
   }, []);
 
   useEffect(() => {
@@ -68,7 +102,7 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
       const target = event.target as HTMLElement | null;
       if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
       event.preventDefault();
-      setSettings((current) => ({ ...current, seed: Date.now() }));
+      setSettings((current) => ({ ...current, seed: nextSeed() }));
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -81,6 +115,24 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
   const n = (value: number) => formatNumber(value, locale);
   const update = <K extends keyof StoredSettings>(key: K, value: StoredSettings[K]) =>
     setSettings((current) => ({ ...current, [key]: value }));
+  const maxCount = maxCountFor(settings.unit);
+  const typedAmount = readAmount(amountText);
+  const amountOutOfRange = typedAmount === null || typedAmount < 1 || typedAmount > maxCount;
+
+  /** Keeps the typed text, and uses the nearest allowed amount so the output never disagrees with the field. */
+  const onAmountInput = (raw: string) => {
+    setAmountText(raw);
+    const parsed = readAmount(raw);
+    if (parsed !== null) update('count', Math.min(maxCount, Math.max(1, parsed)));
+  };
+
+  /** Each unit has its own ceiling, so switching units keeps the amount inside the new one. */
+  const changeUnit = (unit: IpsumUnit) => {
+    const limit = maxCountFor(unit);
+    const count = Math.min(limit, Math.max(1, settings.count));
+    setSettings((current) => ({ ...current, unit, count }));
+    setAmountText(String(count));
+  };
 
   return (
     <Panel>
@@ -98,7 +150,7 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
             class="min-h-64 flex-1 bg-bg font-mono text-sm leading-6 lg:min-h-[420px]"
           />
           <div class="mt-3 flex flex-wrap items-center gap-2">
-            <Button variant="primary" size="sm" onClick={() => update('seed', Date.now())}>
+            <Button variant="primary" size="sm" onClick={() => update('seed', nextSeed())}>
               {ui.regenerate}
             </Button>
             <CopyButton text={result.text} label={ui.copy} copiedLabel={ui.copied} />
@@ -107,7 +159,7 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
         </div>
 
         <div class="flex min-w-0 flex-col gap-5">
-          <Field label={ui.languageLabel}>
+          <FieldGroup label={ui.languageLabel}>
             <Segmented
               value={settings.language}
               onValue={(value) => update('language', value)}
@@ -117,12 +169,12 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
                 { value: 'korean', label: ui.korean },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
-          <Field label={ui.unitLabel}>
+          <FieldGroup label={ui.unitLabel}>
             <Segmented
               value={settings.unit}
-              onValue={(value) => update('unit', value)}
+              onValue={(value) => changeUnit(value)}
               label={ui.unitLabel}
               options={[
                 { value: 'paragraphs', label: ui.paragraphs },
@@ -131,18 +183,23 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
                 { value: 'characters', label: ui.characters },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
-          <Field label={ui.amountLabel} hint={ui.amountHint}>
-            <NumberInput
-              value={settings.count}
-              onValue={(value) => update('count', value === '' ? 1 : value)}
-              min={1}
-              max={100}
-              step={1}
+          <Field label={ui.amountLabel} hint={ui.amountHint.replace('{max}', n(maxCount))}>
+            <TextInput
+              value={amountText}
+              onInput={(event) => onAmountInput((event.currentTarget as HTMLInputElement).value)}
+              onBlur={() => setAmountText(String(settings.count))}
+              inputMode="numeric"
+              autocomplete="off"
+              aria-invalid={amountOutOfRange}
+              class="tabular"
               placeholder={ui.amountPlaceholder}
             />
           </Field>
+          {amountOutOfRange && (
+            <Notice>{ui.amountOutOfRange.replace('{max}', n(maxCount)).replace('{n}', n(settings.count))}</Notice>
+          )}
 
           {settings.language === 'latin' ? (
             <Toggle
@@ -154,7 +211,7 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
             <p class="text-xs leading-5 text-subtle">{ui.koreanHint}</p>
           )}
 
-          <Field label={ui.formatLabel}>
+          <FieldGroup label={ui.formatLabel}>
             <Segmented
               value={settings.format}
               onValue={(value) => update('format', value)}
@@ -164,7 +221,7 @@ export default function LoremIpsum({ locale, ui }: ToolProps<UI>) {
                 { value: 'html', label: ui.html },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           <div class="grid grid-cols-3 gap-2" aria-live="polite">
             <Stat label={ui.resultWords} value={n(result.words)} emphasis />

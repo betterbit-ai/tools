@@ -3,7 +3,8 @@ import type { ToolContent } from '../types';
 
 const uiEn = {
   inputLabel: 'Number to convert',
-  inputHint: 'Whole numbers only. Spaces and underscores are allowed; 0b, 0o and 0x prefixes match bases 2, 8 and 16.',
+  inputHint:
+    'Whole numbers only. Spaces, underscores and thousands commas are allowed; 0b, 0o and 0x prefixes match bases 2, 8 and 16.',
   fromBaseLabel: 'Input base',
   targetBaseLabel: 'Extra result base',
   baseLabel: 'Base',
@@ -25,6 +26,7 @@ const uiEn = {
   errorTooLong: 'Use 10,000 digits or fewer.',
   errorInvalidCharacter: '“{character}” is not an ASCII digit or letter. Use 0–9 and A–Z only.',
   errorInvalidDigit: '“{character}” is not available in the selected input base.',
+  errorInvalidGrouping: 'Use a comma only between groups of three digits, such as 1,234,567.',
 };
 export type UI = typeof uiEn;
 
@@ -64,7 +66,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Input rules',
-        body: 'Spaces and underscores are accepted as visual separators, so 1111 1111 and 1111_1111 are both valid binary input. A leading minus sign is supported. Standard prefixes also work when they match the selected base: 0b for binary, 0o for octal and 0x for hexadecimal. The converter deliberately rejects non-ASCII lookalike digits and invalid characters instead of removing them, because silently changing a pasted value can hide an error.',
+        body: 'Spaces, underscores and thousands commas are accepted as visual separators, so 1111 1111, 1111_1111 and 1,234,567 are all valid input. A comma must sit between groups of three digits, so 1,5 is reported instead of turning a decimal comma into a different number. A leading minus sign is supported. Standard prefixes also work when they match the selected base: 0b for binary, 0o for octal and 0x for hexadecimal. The converter deliberately rejects non-ASCII lookalike digits and invalid characters instead of removing them, because silently changing a pasted value can hide an error.',
       },
     ],
     faq: [
@@ -124,7 +126,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '입력 규칙',
-        body: '읽기 쉽게 넣은 공백과 밑줄은 무시하므로 1111 1111과 1111_1111은 모두 같은 2진수입니다. 앞의 마이너스 기호도 사용할 수 있습니다. 선택한 진법과 맞으면 2진수 0b, 8진수 0o, 16진수 0x 접두사도 인식합니다. 붙여 넣은 값이 조용히 달라지지 않도록 전각 숫자나 한글, 허용되지 않는 문자는 자동으로 지우지 않고 오류로 알려줍니다.',
+        body: '읽기 쉽게 넣은 공백, 밑줄, 천 단위 쉼표는 무시하므로 1111 1111, 1111_1111, 1,234,567은 모두 올바른 입력입니다. 쉼표는 세 자리씩 묶은 자리에만 쓸 수 있어서 1,5처럼 소수 쉼표로 쓴 값은 다른 숫자로 바꾸지 않고 오류로 알려 줍니다. 앞의 마이너스 기호도 사용할 수 있습니다. 선택한 진법과 맞으면 2진수 0b, 8진수 0o, 16진수 0x 접두사도 인식합니다. 붙여 넣은 값이 조용히 달라지지 않도록 전각 숫자나 한글, 허용되지 않는 문자는 자동으로 지우지 않고 오류로 알려줍니다.',
       },
     ],
     faq: [
@@ -152,7 +154,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       inputLabel: '변환할 수',
       inputHint:
-        '정수만 입력할 수 있습니다. 공백과 밑줄을 쓸 수 있고, 2·8·16진법에서는 각각 0b·0o·0x 접두사도 인식합니다.',
+        '정수만 입력할 수 있습니다. 공백, 밑줄, 천 단위 쉼표를 쓸 수 있고, 2·8·16진법에서는 각각 0b·0o·0x 접두사도 인식합니다.',
       fromBaseLabel: '입력 진법',
       targetBaseLabel: '추가 결과 진법',
       baseLabel: '진법',
@@ -174,6 +176,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       errorTooLong: '10,000자리 이하로 입력하세요.',
       errorInvalidCharacter: '“{character}”은(는) ASCII 숫자나 영문자가 아닙니다. 0~9와 A~Z만 사용하세요.',
       errorInvalidDigit: '“{character}”은(는) 선택한 입력 진법에서 쓸 수 없는 숫자입니다.',
+      errorInvalidGrouping: '쉼표는 1,234,567처럼 세 자리씩 묶은 자리에만 쓸 수 있습니다.',
     },
   },
 };

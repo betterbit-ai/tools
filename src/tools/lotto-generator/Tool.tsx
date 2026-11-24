@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, Kbd, Notice, Panel, Segmented, Stat } from '../../components/ui';
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
+import { Button, CopyButton, FieldGroup, Kbd, Notice, Panel, Segmented, Stat } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -31,7 +31,6 @@ export default function LottoGenerator({ locale, ui }: ToolProps<UI>) {
   const [games, setGames] = useState<number[][]>([]);
   const [error, setError] = useState<LottoError | 'crypto' | null>(null);
   const [ready, setReady] = useState(false);
-  const generatedInitialResult = useRef(false);
 
   const generate = useCallback(() => {
     try {
@@ -62,9 +61,11 @@ export default function LottoGenerator({ locale, ui }: ToolProps<UI>) {
     if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(settings));
   }, [ready, settings]);
 
+  // A draw always matches the balls and line count on screen: any change to the
+  // settings draws again, so a line can never keep showing a number the user just
+  // excluded (or miss one they just fixed).
   useEffect(() => {
-    if (!ready || generatedInitialResult.current) return;
-    generatedInitialResult.current = true;
+    if (!ready) return;
     generate();
   }, [generate, ready]);
 
@@ -160,7 +161,7 @@ export default function LottoGenerator({ locale, ui }: ToolProps<UI>) {
           </div>
 
           <div class="mt-5 border-t border-line pt-4">
-            <Field label={ui.gameCountLabel} hint={ui.gameCountHint}>
+            <FieldGroup label={ui.gameCountLabel} hint={ui.gameCountHint}>
               <Segmented
                 label={ui.gameCountLabel}
                 value={String(settings.gameCount)}
@@ -170,7 +171,7 @@ export default function LottoGenerator({ locale, ui }: ToolProps<UI>) {
                 }}
                 options={gameCountOptions.map((count) => ({ value: String(count), label: String(count) }))}
               />
-            </Field>
+            </FieldGroup>
             <div class="mt-5 flex flex-wrap items-center gap-3">
               <Button variant="primary" size="lg" onClick={generate}>
                 {ui.generate}

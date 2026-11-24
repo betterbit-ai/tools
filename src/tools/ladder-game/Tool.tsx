@@ -66,8 +66,32 @@ function ladderPath(ladder: Ladder, participant: number, height: number): string
 }
 
 function labelText(value: string): string {
-  const characters = Array.from(value.trim());
-  return characters.length > 13 ? `${characters.slice(0, 12).join('')}…` : value.trim();
+  const trimmed = value.trim();
+  const limit = LANE_WIDTH - 12;
+  if (estimatedLabelWidth(trimmed) <= limit) return trimmed;
+  let text = '';
+  for (const character of trimmed) {
+    if (estimatedLabelWidth(`${text}${character}…`) > limit) break;
+    text += character;
+  }
+  return `${text}…`;
+}
+
+/**
+ * Rough width of a name at the 13px label size: East Asian characters are full
+ * width, Latin ones about 0.57em. Long names are trimmed to this budget so two
+ * neighbouring names can never overlap on the board.
+ */
+function estimatedLabelWidth(text: string): number {
+  let width = 0;
+  for (const character of text) {
+    width += /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe30-\ufe4f\uff00-\uff60\uffe0-\uffe6]/u.test(
+      character,
+    )
+      ? 13
+      : 7.4;
+  }
+  return width;
 }
 
 function clampLabel(value: string): string {

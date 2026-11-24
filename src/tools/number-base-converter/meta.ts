@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'converter',
   icon: 'calculator',
   added: '2026-10-15',
-  updated: '2026-10-15',
+  updated: '2026-11-24',
   edges: ['usability', 'features', 'accuracy'],
   competitors: [
     {

@@ -24,6 +24,19 @@ describe('checkText', () => {
     expect(checkText('왠지 모르겠지만 바래지는 색도 있다.').correctedText).toBe('왠지 모르겠지만 바래지는 색도 있다.');
   });
 
+  it('does not separate a noun that ends in 수 from its own syllable', () => {
+    // “접수/점수/가수 + 있다” is not the bound noun 수: the syllable before 수
+    // does not end in ㄹ, so no space belongs there.
+    const text = '접수있다고 합니다. 점수있어요? 가수있네요.';
+    expect(checkText(text)).toEqual({ issues: [], correctedText: text });
+  });
+
+  it('spaces “-(으)ㄹ 수 있다/없다” after a ㄹ ending', () => {
+    expect(checkText('할수있다').correctedText).toBe('할 수 있다');
+    expect(checkText('볼수없어요').correctedText).toBe('볼 수 없어요');
+    expect(checkText('먹을수있습니다').correctedText).toBe('먹을 수 있습니다');
+  });
+
   it('handles large input while preserving every repeated correction', () => {
     const input = '되요 '.repeat(2_000);
     const result = checkText(input);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_COUNT, generateIpsum } from './logic';
+import { MAX_COUNT, generateIpsum, maxCountFor } from './logic';
 
 const latin = (overrides = {}) =>
   generateIpsum(
@@ -43,6 +43,18 @@ describe('generateIpsum', () => {
     expect(latin({ count: -4 }).words).toBe(1);
     expect(latin({ count: 3.8 }).words).toBe(3);
     expect(latin({ count: Number.POSITIVE_INFINITY }).words).toBe(1);
-    expect(latin({ count: MAX_COUNT + 50 }).words).toBe(MAX_COUNT);
+    expect(latin({ unit: 'paragraphs', count: MAX_COUNT + 50 }).paragraphs).toBe(MAX_COUNT);
+    expect(latin({ count: 10_000 }).words).toBe(2_000);
+  });
+
+  it('gives each unit a ceiling an everyday request fits inside', () => {
+    expect(maxCountFor('paragraphs')).toBe(MAX_COUNT);
+    expect(maxCountFor('sentences')).toBe(500);
+    expect(maxCountFor('words')).toBe(2_000);
+    expect(maxCountFor('characters')).toBe(10_000);
+    const long = latin({ unit: 'characters', count: 5_000 });
+    expect(long.characters).toBe(5_000);
+    expect(latin({ unit: 'characters', count: 99_999 }).characters).toBe(10_000);
+    expect(latin({ unit: 'sentences', count: 400 }).words).toBeGreaterThan(400 * 8);
   });
 });

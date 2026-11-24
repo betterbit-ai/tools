@@ -9,6 +9,7 @@ const uiEn = {
   sampleText: '몇일 뒤에 메세지를 보낼수있어요 ! 웬지 금새 설레임이 생겼어요.',
   clear: 'Clear',
   autosaved: 'Saved only in this browser',
+  saveFailed: 'Too long to keep in this browser — it will be lost on refresh',
   outputLabel: 'Suggested text',
   outputHint: 'Review each suggestion before using it; context-sensitive grammar is not guessed.',
   emptyOutput: 'Suggested text will appear here.',
@@ -25,6 +26,7 @@ const uiEn = {
   cleanNotice: 'No listed high-confidence patterns were found.',
   applied: '{n} suggestion(s) applied.',
   suggestions: 'Suggestions to review',
+  suggestionsCapped: 'Showing the first {shown} of {total} suggestions. Apply all still corrects every one.',
   applyOne: 'Apply',
   reasonDoeYo: '“돼요” is the standard contracted form of “되어요”.',
   reasonMyeochil: 'The standard spelling for “a few days” is “며칠”.',
@@ -69,7 +71,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'What this checker can verify',
-        body: 'This is a conservative, rule-based checker for specific high-confidence forms: 되요 → 돼요, 몇일 → 며칠, 웬지 → 왠지, a small set of standard loanwords, spaces in forms such as “할 수 있다”, and a space before punctuation. Each match is listed before it is applied. Korean spelling and spacing often depend on meaning and grammatical analysis, so this tool deliberately does not auto-change ambiguous forms such as 바래 or try to restore every missing space in a sentence. Use a context-aware Korean proofreader or an official language resource for formal documents.',
+        body: 'This is a conservative, rule-based checker for specific high-confidence forms: 되요 → 돼요, 몇일 → 며칠, 웬지 → 왠지, a small set of standard loanwords, the space in “-(으)ㄹ 수 있다” (only after a ㄹ ending, so 접수있다 is left alone), and a space before punctuation. Each match is listed before it is applied. Korean spelling and spacing often depend on meaning and grammatical analysis, so this tool deliberately does not auto-change ambiguous forms such as 바래 or try to restore every missing space in a sentence. Use a context-aware Korean proofreader or an official language resource for formal documents.',
       },
       {
         heading: 'Private checking, including drafts',
@@ -113,7 +115,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '이 검사기가 확인하는 범위',
-        body: '이 도구는 되요 → 돼요, 몇일 → 며칠, 웬지 → 왠지처럼 근거가 분명한 표기, 일부 외래어 표기, “할 수 있다” 같은 띄어쓰기, 문장 부호 앞 공백을 규칙으로 확인합니다. 찾은 항목은 원문·교정안·이유를 함께 보여 주며, 확인 전에는 자동으로 바꾸지 않습니다. 한국어 맞춤법과 띄어쓰기는 문장 뜻과 품사에 따라 달라지는 경우가 많습니다. 그래서 이 도구는 바래처럼 문맥 없이는 판단하기 어려운 표현을 바꾸지 않고, 띄어쓴 적 없는 모든 문장에 임의로 공백을 넣지도 않습니다. 공문서·논문·지원서처럼 정확성이 중요한 글은 문맥을 분석하는 검사기나 국립국어원 공식 질의로 한 번 더 확인해야 합니다.',
+        body: '이 도구는 되요 → 돼요, 몇일 → 며칠, 웬지 → 왠지처럼 근거가 분명한 표기, 일부 외래어 표기, “할 수 있다”처럼 ㄹ 받침 뒤에 오는 “수”의 띄어쓰기(접수있다처럼 명사 뒤의 수는 건드리지 않습니다), 문장 부호 앞 공백을 규칙으로 확인합니다. 찾은 항목은 원문·교정안·이유를 함께 보여 주며, 확인 전에는 자동으로 바꾸지 않습니다. 한국어 맞춤법과 띄어쓰기는 문장 뜻과 품사에 따라 달라지는 경우가 많습니다. 그래서 이 도구는 바래처럼 문맥 없이는 판단하기 어려운 표현을 바꾸지 않고, 띄어쓴 적 없는 모든 문장에 임의로 공백을 넣지도 않습니다. 공문서·논문·지원서처럼 정확성이 중요한 글은 문맥을 분석하는 검사기나 국립국어원 공식 질의로 한 번 더 확인해야 합니다.',
       },
       {
         heading: '글은 브라우저 안에서만 처리합니다',
@@ -146,6 +148,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       sampleText: '몇일 뒤에 메세지를 보낼수있어요 ! 웬지 금새 설레임이 생겼어요.',
       clear: '지우기',
       autosaved: '이 브라우저에만 저장됨',
+      saveFailed: '글이 너무 길어 브라우저에 저장하지 못했습니다. 새로고침하면 사라집니다.',
       outputLabel: '교정 제안',
       outputHint: '문맥에 따라 달라지는 표현은 추측하지 않습니다. 적용 전에 제안을 확인하세요.',
       emptyOutput: '교정 제안이 여기에 표시됩니다.',
@@ -162,6 +165,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       cleanNotice: '확인하는 범위의 항목을 찾지 못했습니다.',
       applied: '{n}개 항목을 적용했습니다.',
       suggestions: '확인할 제안',
+      suggestionsCapped: '제안 {total}개 중 {shown}개만 표시합니다. 전체 적용은 모든 항목에 적용됩니다.',
       applyOne: '적용',
       reasonDoeYo: '“되어요”의 준말은 “돼요”입니다.',
       reasonMyeochil: '날짜를 나타내는 표준 표기는 “며칠”입니다.',

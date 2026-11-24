@@ -16,7 +16,8 @@ const uiEn = {
   words: 'Words',
   characters: 'Characters',
   amountLabel: 'Amount',
-  amountHint: 'Use 1–100. The result updates immediately.',
+  amountHint: 'Use 1–{max} for this mode. The result updates immediately.',
+  amountOutOfRange: 'Use a whole number from 1 to {max}. The text below uses {n}.',
   amountPlaceholder: '3',
   classicOpening: 'Start with the classic opening',
   koreanHint: 'Korean mode uses natural Korean sentences with no connected story.',
@@ -40,7 +41,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     keywords: ['dummy text generator', 'placeholder text', 'Korean lorem', 'lipsum generator', 'HTML filler text'],
     howTo: [
       'Choose Latin or Korean text style.',
-      'Choose paragraphs, sentences, words, or characters and enter an amount from 1 to 100.',
+      'Choose paragraphs, sentences, words, or characters and enter an amount (up to 100 paragraphs, 500 sentences, 2,000 words or 10,000 characters).',
       'For Latin text, choose whether to begin with the familiar opening.',
       'Select plain text or HTML paragraph tags, then copy the live result.',
       'Choose “Generate another” when you need a different arrangement at the same length.',
@@ -52,7 +53,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Choose an amount without estimating',
-        body: 'Paragraph mode creates 3 to 5 sentences per paragraph, useful for article and landing-page mockups. Sentence mode is useful for lists, notifications and cards. Word mode produces exactly the requested number of space-separated words, which is useful for testing labels or short descriptions. Character mode returns exactly the requested number of Unicode characters from the generated text, including spaces and punctuation.\n\nThe limit is 100 in every mode so the browser stays responsive and the preview remains easy to copy. The counters show the generated plain text, even when HTML format is selected; <p> tags are formatting added for pasting into markup, not part of the requested placeholder length.',
+        body: 'Paragraph mode creates 3 to 5 sentences per paragraph, useful for article and landing-page mockups. Sentence mode is useful for lists, notifications and cards. Word mode produces exactly the requested number of space-separated words, which is useful for testing labels or short descriptions. Character mode returns exactly the requested number of Unicode characters from the generated text, including spaces and punctuation.\n\nLimits keep the browser responsive: up to 100 paragraphs, 500 sentences, 2,000 words and 10,000 characters. The counters show the generated plain text, even when HTML format is selected; <p> tags are formatting added for pasting into markup, not part of the requested placeholder length.',
       },
       {
         heading: 'Why the familiar opening is optional',
@@ -66,7 +67,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Does character mode return an exact length?',
-        a: 'Yes. Character mode returns exactly the requested 1–100 Unicode characters in the generated plain text, including spaces and punctuation. HTML paragraph tags are added only after that count when HTML format is selected.',
+        a: 'Yes. Character mode returns exactly the requested 1–10,000 Unicode characters in the generated plain text, including spaces and punctuation. HTML paragraph tags are added only after that count when HTML format is selected.',
       },
       {
         q: 'Is Lorem Ipsum real Latin?',
@@ -93,7 +94,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     keywords: ['한글 더미 텍스트', '로렘 입숨 생성기', '더미 문장', '플레이스홀더 텍스트', 'lorem generator'],
     howTo: [
       '한글 또는 라틴 텍스트 스타일을 선택합니다.',
-      '문단, 문장, 단어, 글자 수 중 기준을 고르고 1~100 사이의 수를 입력합니다.',
+      '문단, 문장, 단어, 글자 수 중 기준을 고르고 수량을 입력합니다(문단 100개, 문장 500개, 단어 2,000개, 글자 10,000자까지).',
       '라틴 텍스트는 익숙한 첫 문장으로 시작할지 선택합니다.',
       '일반 텍스트 또는 HTML 문단 태그 형식을 고른 뒤 표시된 결과를 복사합니다.',
       '같은 분량의 다른 문장이 필요하면 “다른 내용 생성”을 누릅니다.',
@@ -105,7 +106,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '필요한 분량을 바로 맞춥니다',
-        body: '문단 기준은 긴 본문이나 상세 페이지를 채울 때 편리하며, 문단마다 3~5개의 문장이 들어갑니다. 문장 기준은 카드 설명, 알림, 목록을 시험할 때 적합합니다. 단어 기준은 짧은 라벨과 설명의 길이를 맞출 때 쓰며 요청한 수만큼 공백으로 나뉜 단어를 만듭니다. 글자 수 기준은 공백과 문장부호를 포함한 유니코드 글자를 정확히 요청한 수만큼 돌려줍니다.\n\n모든 기준은 1~100까지 지원합니다. 이 범위 안에서는 설정을 바꾸는 즉시 결과가 표시되어 생성 버튼을 먼저 누를 필요가 없습니다. HTML 형식을 골라도 통계는 태그를 붙이기 전의 본문을 기준으로 표시하므로, 실제로 채울 글의 분량을 확인할 수 있습니다.',
+        body: '문단 기준은 긴 본문이나 상세 페이지를 채울 때 편리하며, 문단마다 3~5개의 문장이 들어갑니다. 문장 기준은 카드 설명, 알림, 목록을 시험할 때 적합합니다. 단어 기준은 짧은 라벨과 설명의 길이를 맞출 때 쓰며 요청한 수만큼 공백으로 나뉜 단어를 만듭니다. 글자 수 기준은 공백과 문장부호를 포함한 유니코드 글자를 정확히 요청한 수만큼 돌려줍니다.\n\n문단은 100개, 문장은 500개, 단어는 2,000개, 글자는 10,000자까지 지원합니다. 이 범위 안에서는 설정을 바꾸는 즉시 결과가 표시되어 생성 버튼을 먼저 누를 필요가 없습니다. HTML 형식을 골라도 통계는 태그를 붙이기 전의 본문을 기준으로 표시하므로, 실제로 채울 글의 분량을 확인할 수 있습니다.',
       },
       {
         heading: '로렘 입숨의 첫 문장과 HTML 형식',
@@ -119,7 +120,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '글자 수를 정확히 맞출 수 있나요?',
-        a: '가능합니다. 글자 수 기준은 공백과 문장부호를 포함한 유니코드 글자를 1~100자 범위에서 요청한 수만큼 생성합니다. HTML 형식의 p 태그는 본문 글자 수를 맞춘 뒤에만 추가됩니다.',
+        a: '가능합니다. 글자 수 기준은 공백과 문장부호를 포함한 유니코드 글자를 1~10,000자 범위에서 요청한 수만큼 생성합니다. HTML 형식의 p 태그는 본문 글자 수를 맞춘 뒤에만 추가됩니다.',
       },
       {
         q: '로렘 입숨은 실제 라틴어인가요?',
@@ -149,7 +150,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       words: '단어',
       characters: '글자 수',
       amountLabel: '생성 수',
-      amountHint: '1~100까지 입력할 수 있으며 결과가 바로 바뀝니다.',
+      amountHint: '이 기준에서는 1~{max}까지 입력할 수 있으며 결과가 바로 바뀝니다.',
+      amountOutOfRange: '1~{max} 사이의 정수로 입력하세요. 아래 텍스트는 {n} 기준입니다.',
       amountPlaceholder: '3',
       classicOpening: '익숙한 첫 문장으로 시작',
       koreanHint: '한글 모드는 자연스러운 문장을 섞어 이야기 흐름 없이 만듭니다.',

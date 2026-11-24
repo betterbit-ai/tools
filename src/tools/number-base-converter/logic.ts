@@ -9,7 +9,8 @@ export const MAX_DIGITS = 10_000;
 export const STANDARD_BASES = [2, 8, 10, 16] as const;
 
 export type StandardBase = (typeof STANDARD_BASES)[number];
-export type ParseErrorCode = 'empty' | 'missingDigits' | 'tooLong' | 'invalidCharacter' | 'invalidDigit';
+export type ParseErrorCode =
+  'empty' | 'missingDigits' | 'tooLong' | 'invalidCharacter' | 'invalidDigit' | 'invalidGrouping';
 
 export interface ParseSuccess {
   ok: true;
@@ -45,6 +46,28 @@ function compactInput(input: string): string {
   return input.replace(/[\t\n\r _]/g, '');
 }
 
+/**
+ * Reads “1,234,567” the way a spreadsheet or a Korean number field writes it.
+ * A comma counts as a grouping separator only between groups of exactly three
+ * digits that are valid in the chosen base; anything else (“1,5”, “12,34”)
+ * stays an error instead of silently becoming a different number.
+ */
+function stripGroupingCommas(value: string, base: number): { ok: true; value: string } | { ok: false } {
+  if (!value.includes(',')) return { ok: true, value };
+  const groups = value.split(',');
+  const [first, ...rest] = groups;
+  if (!first || first.length > 3 || !rest.length) return { ok: false };
+  if (groups.some((group) => !group)) return { ok: false };
+  for (const group of rest) {
+    if (group.length !== 3) return { ok: false };
+    for (const character of group) {
+      const digit = digitValue(character);
+      if (digit === -1 || digit >= base) return { ok: false };
+    }
+  }
+  return { ok: true, value: groups.join('') };
+}
+
 function prefixLength(value: string, base: number): number {
   const prefix = value.slice(0, 2).toLowerCase();
   if ((base === 2 && prefix === '0b') || (base === 8 && prefix === '0o') || (base === 16 && prefix === '0x')) return 2;
@@ -66,6 +89,11 @@ export function parseInteger(input: string, base: number): ParseResult {
 
   value = value.slice(prefixLength(value, base));
   if (!value) return { ok: false, code: 'missingDigits' };
+
+  const grouped = stripGroupingCommas(value, base);
+  if (!grouped.ok) return { ok: false, code: 'invalidGrouping' };
+  value = grouped.value;
+
   if (value.length > MAX_DIGITS) return { ok: false, code: 'tooLong' };
 
   let result = 0n;

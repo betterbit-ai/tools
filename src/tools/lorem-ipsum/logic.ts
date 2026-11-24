@@ -1,6 +1,21 @@
 /** Pure placeholder-text generation. No DOM or browser state. */
 
 export const MAX_COUNT = 100;
+/**
+ * What one request may contain, per unit. Paragraphs stay at 100 (a page of filler), but
+ * characters go to 10,000 because “500 characters” or “1,000 characters” is an everyday
+ * request for Korean placeholder text and was silently cut to 100 before.
+ */
+export const MAX_COUNTS: Record<IpsumUnit, number> = {
+  paragraphs: MAX_COUNT,
+  sentences: 500,
+  words: 2_000,
+  characters: 10_000,
+};
+
+export function maxCountFor(unit: IpsumUnit): number {
+  return MAX_COUNTS[unit];
+}
 export type IpsumLanguage = 'latin' | 'korean';
 export type IpsumUnit = 'paragraphs' | 'sentences' | 'words' | 'characters';
 export type OutputFormat = 'plain' | 'html';
@@ -44,9 +59,9 @@ const KOREAN_SENTENCES = [
   '오늘의 작은 변화가 내일의 더 좋은 선택으로 이어질 수 있습니다.',
 ];
 
-function normalizedCount(count: number): number {
+function normalizedCount(count: number, max: number): number {
   if (!Number.isFinite(count)) return 1;
-  return Math.min(MAX_COUNT, Math.max(1, Math.floor(count)));
+  return Math.min(max, Math.max(1, Math.floor(count)));
 }
 
 /** Small deterministic generator so generation remains testable with a supplied seed. */
@@ -115,7 +130,7 @@ function countWords(text: string): number {
 }
 
 export function generateIpsum(options: IpsumOptions, seed = 1): IpsumResult {
-  const count = normalizedCount(options.count);
+  const count = normalizedCount(options.count, maxCountFor(options.unit));
   const next = random(seed);
   let plainText: string;
 

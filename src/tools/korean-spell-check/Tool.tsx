@@ -1,16 +1,27 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Button, CopyButton, Field, Kbd, Notice, Panel, Stat, Textarea } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
+import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import { applyIssues, checkText, type RuleId, type SpellIssue } from './logic';
 
 const TEXT_KEY = 'tools:korean-spell-check:text';
 
-export default function KoreanSpellCheck({ ui }: ToolProps<UI>) {
+/** A document with thousands of matches must not render thousands of buttons. */
+const SUGGESTION_LIMIT = 100;
+
+/** Shows an invisible space as ␣ so a spacing-only suggestion does not read “! → !”. */
+function visibleSpaces(text: string): string {
+  return text.replace(/^ +| +$/g, (spaces) => '␣'.repeat(spaces.length));
+}
+
+export default function KoreanSpellCheck({ locale, ui }: ToolProps<UI>) {
   const [text, setText] = useState('');
   const [appliedCount, setAppliedCount] = useState(0);
+  const [saveFailed, setSaveFailed] = useState(false);
   const result = useMemo(() => checkText(text), [text]);
+  const shownIssues = result.issues.slice(0, SUGGESTION_LIMIT);
   const reasons: Record<RuleId, string> = {
     'doe-yo': ui.reasonDoeYo,
     myeochil: ui.reasonMyeochil,
@@ -35,8 +46,12 @@ export default function KoreanSpellCheck({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const id = window.setTimeout(() => {
-      if (text) safeStorage.set(TEXT_KEY, text);
-      else safeStorage.remove(TEXT_KEY);
+      if (!text) {
+        safeStorage.remove(TEXT_KEY);
+        setSaveFailed(false);
+        return;
+      }
+      setSaveFailed(!safeStorage.trySet(TEXT_KEY, text));
     }, 300);
     return () => window.clearTimeout(id);
   }, [text]);
@@ -85,7 +100,7 @@ export default function KoreanSpellCheck({ ui }: ToolProps<UI>) {
             <Button size="sm" variant="ghost" onClick={() => setText('')} disabled={!text}>
               {ui.clear}
             </Button>
-            <span class="ml-auto text-xs text-subtle">{ui.autosaved}</span>
+            <span class="ml-auto text-xs text-subtle">{saveFailed ? ui.saveFailed : ui.autosaved}</span>
           </div>
 
           <div class="mt-5 border-t border-line pt-5">
@@ -106,8 +121,8 @@ export default function KoreanSpellCheck({ ui }: ToolProps<UI>) {
 
         <div class="flex min-w-0 flex-col gap-5">
           <div class="grid grid-cols-2 gap-2" aria-live="polite">
-            <Stat label={ui.issues} value={result.issues.length} emphasis />
-            <Stat label={ui.characters} value={Array.from(text).length} />
+            <Stat label={ui.issues} value={formatNumber(result.issues.length, locale)} emphasis />
+            <Stat label={ui.characters} value={formatNumber(Array.from(text).length, locale)} />
           </div>
 
           {!text ? (
@@ -123,11 +138,19 @@ export default function KoreanSpellCheck({ ui }: ToolProps<UI>) {
           {result.issues.length > 0 && (
             <div>
               <h2 class="mb-2 text-sm font-medium text-fg">{ui.suggestions}</h2>
+              {result.issues.length > shownIssues.length && (
+                <p class="mb-2 text-xs leading-5 text-subtle">
+                  {ui.suggestionsCapped
+                    .replace('{shown}', formatNumber(shownIssues.length, locale))
+                    .replace('{total}', formatNumber(result.issues.length, locale))}
+                </p>
+              )}
               <ul class="max-h-[390px] space-y-2 overflow-auto" aria-label={ui.suggestions}>
-                {result.issues.map((issue) => (
+                {shownIssues.map((issue) => (
                   <li key={`${issue.start}-${issue.rule}`} class="rounded-md border border-line bg-surface-2 p-3">
                     <p class="break-words text-sm font-medium text-fg">
-                      {issue.original} <span class="text-muted">→</span> {issue.replacement}
+                      <span class="whitespace-pre">{visibleSpaces(issue.original)}</span>{' '}
+                      <span class="text-muted">→</span> {visibleSpaces(issue.replacement)}
                     </p>
                     <p class="mt-1 text-xs leading-5 text-muted">{reasons[issue.rule]}</p>
                     <Button size="sm" variant="ghost" class="mt-2" onClick={() => applyOne(issue)}>

@@ -49,6 +49,7 @@ function errorMessage(code: ParseErrorCode, character: string | undefined, ui: U
   if (code === 'empty') return ui.errorEmpty;
   if (code === 'missingDigits') return ui.errorMissingDigits;
   if (code === 'tooLong') return ui.errorTooLong;
+  if (code === 'invalidGrouping') return ui.errorInvalidGrouping;
   if (code === 'invalidDigit') return ui.errorInvalidDigit.replace('{character}', character ?? '');
   return ui.errorInvalidCharacter.replace('{character}', character ?? '');
 }
@@ -114,7 +115,8 @@ export default function NumberBaseConverter({ ui, preset }: ToolProps<UI>) {
               autocomplete="off"
               autocapitalize="characters"
               inputMode="text"
-              maxLength={10_001}
+              aria-invalid={!result.ok}
+              aria-describedby={!result.ok ? 'number-base-converter-error' : undefined}
               class="font-mono"
             />
           </Field>
@@ -139,7 +141,7 @@ export default function NumberBaseConverter({ ui, preset }: ToolProps<UI>) {
       </div>
 
       {!result.ok && (
-        <div class="mt-4">
+        <div class="mt-4" id="number-base-converter-error">
           <Notice tone="danger">{errorMessage(result.code, result.character, ui)}</Notice>
         </div>
       )}
