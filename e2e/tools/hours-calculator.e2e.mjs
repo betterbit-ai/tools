@@ -165,7 +165,12 @@ export default async function (t) {
   await page.waitForTimeout(400);
   const beforeReload = (await stats(page))['Net hours'];
   await page.reload({ waitUntil: 'load' });
-  await page.waitForTimeout(700);
+  await page.waitForSelector('astro-island:not([ssr])', { timeout: 20_000 }).catch(() => {});
+  await page
+    .waitForFunction(() => document.querySelector('main input[type=time]')?.value === '08:00', null, {
+      timeout: 20_000,
+    })
+    .catch(() => {});
   t.assert((await times.nth(0).inputValue()) === '08:00', 'the reload lost the Monday start time');
   t.assert((await stats(page))['Net hours'] === beforeReload, 'the reload changed the weekly total');
 

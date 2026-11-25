@@ -144,7 +144,36 @@ export default async function (t) {
   t.assert((await output()) === digestOf('md5', sample), 'the 4 MB file MD5 digest is wrong');
   t.assert((await page.locator('main').innerText()).includes('sample-4mb.bin'), 'the chosen file is not named');
 
-  // ── 9. A 40 MB MD5 reports progress, can be cancelled, and never freezes the page.
+  // ── 9. The Korean page and a 375 px dark screen.
+  await t.open('/ko/hash-generator');
+  await page.waitForTimeout(500);
+  await page
+    .getByRole('radio', { name: /텍스트|Text/ })
+    .first()
+    .click();
+  await page.getByRole('radio', { name: 'SHA-256', exact: true }).click();
+  await page.waitForTimeout(300);
+  await page.locator('main textarea').fill('abc');
+  await page.waitForTimeout(700);
+  t.assert((await page.locator('main output').innerText()) === sha256('abc'), 'the Korean page hashes differently');
+  t.assert((await page.locator('main').innerText()).includes('해시'), 'the Korean page has no hash heading');
+
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.waitForTimeout(400);
+  const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  t.assert(wide <= 1, `the page scrolls sideways by ${wide}px at 375px`);
+  t.assert(!t.errors.page.length, `page error: ${t.errors.page[0]}`);
+
+  // The heavy file work runs last: a single-process test browser that has just hashed 100 MB
+  // cannot load another page, and the Korean and mobile checks above do not need that memory.
+  await t.open('/hash-generator');
+  await page.waitForTimeout(600);
+  await page.getByRole('radio', { name: 'File', exact: true }).click();
+  await page.getByRole('radio', { name: 'MD5', exact: true }).click();
+  await page.waitForTimeout(300);
+
+  // ── 10. A 40 MB MD5 reports progress, can be cancelled, and never freezes the page.
   const scratch = mkdtempSync(join(tmpdir(), 'hash-e2e-'));
   const bigPath = join(scratch, 'large-40mb.bin');
   const big = Buffer.alloc(40 * 1024 * 1024);
@@ -199,25 +228,5 @@ export default async function (t) {
     'a file over the limit is refused without an explanation',
   );
 
-  // ── 11. The Korean page and a 375 px dark screen.
-  await t.open('/ko/hash-generator');
-  await page.waitForTimeout(500);
-  await page
-    .getByRole('radio', { name: /텍스트|Text/ })
-    .first()
-    .click();
-  await page.getByRole('radio', { name: 'SHA-256', exact: true }).click();
-  await page.waitForTimeout(300);
-  await page.locator('main textarea').fill('abc');
-  await page.waitForTimeout(700);
-  t.assert((await page.locator('main output').innerText()) === sha256('abc'), 'the Korean page hashes differently');
-  t.assert((await page.locator('main').innerText()).includes('해시'), 'the Korean page has no hash heading');
-
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.emulateMedia({ colorScheme: 'dark' });
-  await page.waitForTimeout(400);
-  const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  t.assert(wide <= 1, `the page scrolls sideways by ${wide}px at 375px`);
-  t.assert(!t.errors.page.length, `page error: ${t.errors.page[0]}`);
   rmSync(scratch, { recursive: true, force: true });
 }

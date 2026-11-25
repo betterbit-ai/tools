@@ -129,13 +129,19 @@ export default async function (t) {
   await type('서울 종로');
   await page.waitForTimeout(500);
   await page.reload({ waitUntil: 'load' });
-  await page.waitForTimeout(700);
+  await page.waitForSelector('astro-island:not([ssr])', { timeout: 20_000 }).catch(() => {});
+  await page
+    .waitForFunction(() => document.querySelector('#hangul-romanization-input')?.value === '서울 종로', null, {
+      timeout: 20_000,
+    })
+    .catch(() => {});
   t.assert((await field.inputValue()) === '서울 종로', `the reload lost the input: "${await field.inputValue()}"`);
   t.assert((await output(page)) === 'Seoul Jongno', `the reload changed the result: "${await output(page)}"`);
   await page.getByRole('button', { name: 'Clear' }).click();
   await page.waitForTimeout(500);
   await page.reload({ waitUntil: 'load' });
-  await page.waitForTimeout(700);
+  await page.waitForSelector('astro-island:not([ssr])', { timeout: 20_000 }).catch(() => {});
+  await page.waitForTimeout(800);
   t.assert((await field.inputValue()) === '', 'Clear did not remove the saved input');
 
   // ── 9. The Korean page uses the same rules and its own labels.

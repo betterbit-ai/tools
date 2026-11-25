@@ -226,7 +226,12 @@ export default async function (t) {
   t.assert(/GPA \(4\.5\): \d\.\d\d/.test(copied), `the copied summary is wrong: ${JSON.stringify(copied)}`);
   await page.waitForTimeout(300);
   await page.reload({ waitUntil: 'load' });
-  await page.waitForTimeout(700);
+  await page.waitForSelector('astro-island:not([ssr])', { timeout: 20_000 }).catch(() => {});
+  await page
+    .waitForFunction(() => document.querySelector('main tbody input[type=text]')?.value === 'Alpha', null, {
+      timeout: 20_000,
+    })
+    .catch(() => {});
   t.assert((await rows.count()) === 3, 'the reload lost a course row');
   t.assert((await cell(0).name.inputValue()) === 'Alpha', 'the reload lost a course name');
   t.assert((await cell(0).credits.inputValue()) === '4', 'the reload lost the credits');
