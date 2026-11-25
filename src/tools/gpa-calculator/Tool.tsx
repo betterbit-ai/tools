@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, CopyButton, Notice, NumberInput, Panel, Select, Stat, TextInput } from '../../components/ui';
+import { Button, CopyButton, Notice, Panel, Select, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculateGpa, GRADES, type Grade } from './logic';
+import { calculateGpa, GRADES, parseCreditsText, type Grade } from './logic';
 
 const STORAGE_KEY = 'tools:gpa-calculator:state';
 const MAX_ROWS = 100;
@@ -12,7 +12,8 @@ const MAX_ROWS = 100;
 interface CourseRow {
   id: number;
   name: string;
-  credits: number | '';
+  /** Kept as typed text: a controlled number input moved the caret while "3.5" was being typed. */
+  creditsText: string;
   grade: Grade;
 }
 
@@ -24,9 +25,9 @@ interface State {
 function defaultState(): State {
   return {
     courses: [
-      { id: 1, name: '', credits: 3, grade: 'A+' },
-      { id: 2, name: '', credits: 3, grade: 'B+' },
-      { id: 3, name: '', credits: 2, grade: 'A0' },
+      { id: 1, name: '', creditsText: '3', grade: 'A+' },
+      { id: 2, name: '', creditsText: '3', grade: 'B+' },
+      { id: 3, name: '', creditsText: '2', grade: 'A0' },
     ],
     nextId: 4,
   };
@@ -47,7 +48,13 @@ function restoreState(): State {
       .map((course, index) => ({
         id: typeof course.id === 'number' && Number.isInteger(course.id) ? course.id : index + 1,
         name: typeof course.name === 'string' ? course.name.slice(0, 120) : '',
-        credits: typeof course.credits === 'number' && Number.isFinite(course.credits) ? course.credits : ('' as const),
+        // Older saves kept a number; newer ones keep the typed text so "3.5" survives editing.
+        creditsText:
+          typeof course.creditsText === 'string'
+            ? course.creditsText.slice(0, 12)
+            : typeof course.credits === 'number' && Number.isFinite(course.credits)
+              ? String(course.credits)
+              : '',
         grade: isGrade(course.grade) ? course.grade : 'A0',
       }));
     if (!courses.length) return fallback;
@@ -61,6 +68,7 @@ function restoreState(): State {
 export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<State>(defaultState);
+  const [storageOk, setStorageOk] = useState(true);
 
   useEffect(() => {
     setState(restoreState());
@@ -68,16 +76,18 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
+    if (ready) setStorageOk(safeStorage.trySet(STORAGE_KEY, JSON.stringify(state)));
   }, [ready, state]);
 
-  const result = useMemo(
-    () =>
-      state.courses.every((course) => course.credits !== '')
-        ? calculateGpa(state.courses.map(({ credits, grade }) => ({ credits: Number(credits), grade })))
-        : null,
-    [state.courses],
-  );
+  const result = useMemo(() => {
+    const credits: number[] = [];
+    for (const course of state.courses) {
+      const parsed = parseCreditsText(course.creditsText);
+      if (!('value' in parsed)) return null;
+      credits.push(parsed.value);
+    }
+    return calculateGpa(state.courses.map((course, index) => ({ credits: credits[index], grade: course.grade })));
+  }, [state.courses]);
   const updateCourse = (id: number, patch: Partial<Omit<CourseRow, 'id'>>) => {
     setState((current) => ({
       ...current,
@@ -89,7 +99,7 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
       if (current.courses.length >= MAX_ROWS) return current;
       return {
         nextId: current.nextId + 1,
-        courses: [...current.courses, { id: current.nextId, name: '', credits: 3, grade: 'A0' }],
+        courses: [...current.courses, { id: current.nextId, name: '', creditsText: '3', grade: 'A0' }],
       };
     });
   };
@@ -116,11 +126,11 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
     <Panel>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <p class="text-sm text-muted">{ui.intro}</p>
-        <span class="shrink-0 text-xs text-subtle">{ui.autosaved}</span>
+        <span class="shrink-0 text-xs text-subtle">{storageOk ? ui.autosaved : ui.notSaved}</span>
       </div>
 
       <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
-        <div>
+        <div class="min-w-0">
           <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p class="text-sm font-medium text-fg">{ui.coursesHeading}</p>
@@ -136,7 +146,7 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
             </div>
           </div>
 
-          <div class="mt-3 overflow-x-auto rounded-md border border-line">
+          <div class="mt-3 overflow-x-auto [contain:paint] rounded-md border border-line">
             <table class="w-full min-w-[32rem] border-collapse text-left text-sm">
               <thead class="bg-surface-2 text-xs text-muted">
                 <tr>
@@ -150,7 +160,7 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
               </thead>
               <tbody class="divide-y divide-line">
                 {state.courses.map((course) => (
-                  <tr>
+                  <tr key={course.id}>
                     <td class="px-2 py-2">
                       <TextInput
                         value={course.name}
@@ -161,13 +171,13 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
                       />
                     </td>
                     <td class="px-2 py-2">
-                      <NumberInput
-                        value={course.credits}
+                      <TextInput
+                        value={course.creditsText}
+                        class="tabular"
+                        inputMode="decimal"
+                        autoComplete="off"
                         aria-label={ui.creditsAria}
-                        min="0.5"
-                        max="100"
-                        step="0.5"
-                        onValue={(credits) => updateCourse(course.id, { credits })}
+                        onInput={(event) => updateCourse(course.id, { creditsText: event.currentTarget.value })}
                       />
                     </td>
                     <td class="px-2 py-2">
@@ -194,9 +204,10 @@ export default function GpaCalculator({ locale, ui }: ToolProps<UI>) {
               </tbody>
             </table>
           </div>
+          <p class="mt-2 text-xs text-subtle">{ui.creditsHint}</p>
         </div>
 
-        <div class="flex flex-col gap-3">
+        <div class="min-w-0 flex flex-col gap-3">
           <div class="flex items-center justify-between gap-3">
             <p class="text-sm font-medium text-fg">{ui.resultHeading}</p>
             <CopyButton text={copyText} label={ui.copy} copiedLabel={ui.copied} />

@@ -145,6 +145,11 @@ const CLUSTERS: Record<string, string[]> = {
   ㅀ: ['ㄹ', 'ㅎ'],
   ㅄ: ['ㅂ', 'ㅅ'],
 };
+/** The ㅎ that moves onto a following vowel is silent, so the next syllable keeps ㅇ (no initial). */
+const H_FINALS: Record<string, string> = { ㅎ: '', ㄶ: 'ㄴ', ㅀ: 'ㄹ' };
+/** ㅎ before ㄱ/ㄷ/ㅈ/ㅅ merges with it: 좋다 [조타], 않소 [안쏘]. */
+const ASPIRATED_INITIALS: Record<string, string> = { ㄱ: 'ㅋ', ㄷ: 'ㅌ', ㅈ: 'ㅊ', ㅅ: 'ㅆ' };
+
 const PASSPORT_SURNAMES: Record<string, string> = {
   김: 'Kim',
   이: 'Lee',
@@ -175,6 +180,66 @@ const PASSPORT_SURNAMES: Record<string, string> = {
   백: 'Baek',
   허: 'Heo',
   노: 'Roh',
+  하: 'Ha',
+  곽: 'Kwak',
+  성: 'Sung',
+  차: 'Cha',
+  주: 'Joo',
+  우: 'Woo',
+  구: 'Koo',
+  민: 'Min',
+  진: 'Jin',
+  지: 'Ji',
+  엄: 'Eom',
+  채: 'Chae',
+  원: 'Won',
+  천: 'Chun',
+  방: 'Bang',
+  공: 'Kong',
+  현: 'Hyun',
+  함: 'Ham',
+  변: 'Byun',
+  염: 'Yeom',
+  여: 'Yeo',
+  추: 'Chu',
+  도: 'Do',
+  소: 'So',
+  석: 'Seok',
+  선: 'Sun',
+  설: 'Seol',
+  마: 'Ma',
+  길: 'Gil',
+  연: 'Yeon',
+  위: 'Wi',
+  표: 'Pyo',
+  명: 'Myung',
+  기: 'Ki',
+  반: 'Ban',
+  라: 'Ra',
+  왕: 'Wang',
+  금: 'Keum',
+  옥: 'Ok',
+  육: 'Yook',
+  인: 'In',
+  맹: 'Maeng',
+  제: 'Je',
+  모: 'Mo',
+  탁: 'Tak',
+  국: 'Kook',
+  어: 'Eo',
+  은: 'Eun',
+  편: 'Pyun',
+};
+
+/** Two-syllable family names are written as one word, not as two one-syllable names. */
+const COMPOUND_SURNAMES: Record<string, string> = {
+  남궁: 'Namgung',
+  황보: 'Hwangbo',
+  제갈: 'Jegal',
+  선우: 'Seonu',
+  독고: 'Dokgo',
+  사공: 'Sagong',
+  서문: 'Seomun',
 };
 
 interface Syllable {
@@ -194,7 +259,7 @@ function decompose(char: string): Syllable | null {
 }
 
 function initialForLiaison(final: string, vowel: string): string {
-  if (final === 'ㅎ') return '';
+  if (final === 'ㅎ') return 'ㅇ';
   if (final === 'ㄷ' && vowel === 'i') return 'ㅈ';
   if (final === 'ㅌ' && vowel === 'i') return 'ㅊ';
   return final;
@@ -208,8 +273,22 @@ function applySoundChanges(syllables: Syllable[]): void {
     if (!current.final) continue;
     if (next.initial === 'ㅇ') {
       const parts = CLUSTERS[current.final] ?? [current.final];
-      current.final = parts.length === 2 ? parts[0] : '';
-      next.initial = initialForLiaison(parts.at(-1)!, next.vowel);
+      const moved = parts.at(-1)!;
+      if (moved === 'ㅎ') {
+        // The ㅎ is silent: 않아 keeps its ㄴ (ana), 싫어 lets the ㄹ start the next syllable (sireo).
+        const kept = parts.length === 2 ? parts[0] : '';
+        current.final = kept === 'ㄹ' ? '' : kept;
+        next.initial = kept === 'ㄹ' ? 'ㄹ' : 'ㅇ';
+      } else {
+        current.final = parts.length === 2 ? parts[0] : '';
+        next.initial = initialForLiaison(moved, next.vowel);
+      }
+      continue;
+    }
+    // 좋다 → jota, 많다 → manta, 싫소 → silsso: the ㅎ merges into the next consonant.
+    if (current.final in H_FINALS && ASPIRATED_INITIALS[next.initial]) {
+      current.final = H_FINALS[current.final];
+      next.initial = ASPIRATED_INITIALS[next.initial];
       continue;
     }
     // 종로 → Jongno, 신라 → Silla, 독립문 → Dongnimmun.
@@ -238,7 +317,9 @@ function applySoundChanges(syllables: Syllable[]): void {
 function romanizeWord(word: string, mode: RomanizationMode): string {
   const syllables = [...word].map(decompose).filter((syllable): syllable is Syllable => syllable !== null);
   if (mode === 'standard') applySoundChanges(syllables);
-  return syllables.map(({ initial, vowel, final }) => `${INITIAL_RR[initial]}${vowel}${FINAL_RR[final]}`).join('');
+  return syllables
+    .map(({ initial, vowel, final }) => `${INITIAL_RR[initial] ?? ''}${vowel}${FINAL_RR[final] ?? ''}`)
+    .join('');
 }
 
 function titleCase(value: string): string {
@@ -251,9 +332,15 @@ export function romanize(input: string, mode: RomanizationMode = 'standard', cap
   return normalized.replace(/[\uac00-\ud7a3]+/gu, (word, offset: number) => {
     if (mode === 'name') {
       const letters = [...word];
-      if (letters.length < 2) return romanizeWord(word, mode);
-      const surname = PASSPORT_SURNAMES[letters[0]] ?? titleCase(romanizeWord(letters[0], mode));
-      const givenName = romanizeWord(letters.slice(1).join(''), mode);
+      // A family name typed on its own is still that family name: 이 → Lee, not "I".
+      if (letters.length === 1) {
+        const surname = PASSPORT_SURNAMES[letters[0]] ?? titleCase(romanizeWord(word, mode));
+        return capitalize ? surname : surname.toLowerCase();
+      }
+      const compound = letters.length > 2 ? COMPOUND_SURNAMES[letters.slice(0, 2).join('')] : undefined;
+      const surname = compound ?? PASSPORT_SURNAMES[letters[0]] ?? titleCase(romanizeWord(letters[0], mode));
+      const givenName = romanizeWord(letters.slice(compound ? 2 : 1).join(''), mode);
+      if (!givenName) return capitalize ? surname : surname.toLowerCase();
       return capitalize ? `${surname} ${titleCase(givenName)}` : `${surname.toLowerCase()} ${givenName}`;
     }
     const result = romanizeWord(word, mode);

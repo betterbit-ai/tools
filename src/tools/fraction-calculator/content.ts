@@ -4,6 +4,7 @@ import type { ToolContent } from '../types';
 const uiEn = {
   intro: 'Exact fraction arithmetic updates as you type — no calculate button needed.',
   autosaved: 'Saved in this browser',
+  notSaved: 'Not saved — this browser is blocking local storage',
   firstLabel: 'First number',
   secondLabel: 'Second number',
   inputHint: 'Use 3/4, 1 2/3, -5, or 0.125',
@@ -162,6 +163,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       intro: '정확한 분수 계산이 입력하는 즉시 갱신됩니다 — 계산 버튼이 필요 없습니다.',
       autosaved: '이 브라우저에 저장됨',
+      notSaved: '저장 안 됨 — 이 브라우저가 로컬 저장을 막고 있습니다',
       firstLabel: '첫 번째 수',
       secondLabel: '두 번째 수',
       inputHint: '3/4, 1 2/3, -5, 0.125처럼 입력',

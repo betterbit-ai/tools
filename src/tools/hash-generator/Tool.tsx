@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   Button,
   CopyButton,
@@ -15,7 +15,7 @@ import { safeStorage } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { hashBytes, hashText } from './hash';
+import { hashBytesWithProgress, hashFileWithProgress } from './hash';
 import { digestByteLength, hashesMatch, type HashAlgorithm } from './logic';
 
 const INPUT_KEY = 'tools:hash-generator:input';
@@ -35,7 +35,9 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
   const [digest, setDigest] = useState('');
   const [expected, setExpected] = useState('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'error'>('idle');
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<'file-size' | 'file-read' | 'web-crypto' | null>(null);
+  const [storage, setStorage] = useState<'ok' | 'blocked'>('ok');
   const requestId = useRef(0);
 
   useEffect(() => {
@@ -51,7 +53,8 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (input.length <= MAX_PERSISTED_LENGTH) safeStorage.set(INPUT_KEY, input);
+      if (input.length > MAX_PERSISTED_LENGTH) return;
+      setStorage(safeStorage.trySet(INPUT_KEY, input) ? 'ok' : 'blocked');
     }, 300);
     return () => clearTimeout(timeout);
   }, [input]);
@@ -64,25 +67,38 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
       requestId.current++;
       setDigest('');
       setStatus('idle');
+      setProgress(null);
       return;
     }
     const id = ++requestId.current;
+    const isCancelled = () => id !== requestId.current;
     const timeout = setTimeout(
       () => {
         setStatus('processing');
+        setProgress(null);
         setError(null);
         const source = mode === 'file' ? file : null;
+        const onProgress = (fraction: number) => {
+          if (!isCancelled()) setProgress(fraction);
+        };
         const work = source
-          ? source.arrayBuffer().then((buffer) => hashBytes(algorithm, new Uint8Array(buffer)))
-          : hashText(algorithm, input);
+          ? hashFileWithProgress(algorithm, source, onProgress, isCancelled)
+          : hashBytesWithProgress(algorithm, new TextEncoder().encode(input), onProgress, isCancelled);
         void work
           .then((nextDigest) => {
-            if (id !== requestId.current) return;
+            if (isCancelled()) return;
+            setProgress(null);
+            if (nextDigest === null) {
+              setDigest('');
+              setStatus('idle');
+              return;
+            }
             setDigest(nextDigest);
             setStatus('idle');
           })
           .catch(() => {
-            if (id !== requestId.current) return;
+            if (isCancelled()) return;
+            setProgress(null);
             setDigest('');
             setStatus('error');
             setError(source ? 'file-read' : 'web-crypto');
@@ -92,6 +108,13 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
     );
     return () => clearTimeout(timeout);
   }, [algorithm, file, input, mode]);
+
+  const cancel = () => {
+    requestId.current++;
+    setDigest('');
+    setStatus('idle');
+    setProgress(null);
+  };
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -120,7 +143,12 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
   };
 
   const comparison = digest ? hashesMatch(digest, expected) : null;
-  const inputBytes = mode === 'file' ? (file?.size ?? 0) : new TextEncoder().encode(input).length;
+  const inputBytes = useMemo(
+    () => (mode === 'file' ? (file?.size ?? 0) : new TextEncoder().encode(input).length),
+    [mode, file, input],
+  );
+  const tooLongToSave = mode === 'text' && input.length > MAX_PERSISTED_LENGTH;
+  const saveLabel = storage === 'blocked' ? ui.notSaved : tooLongToSave ? ui.tooLongToSave : ui.autosaved;
 
   return (
     <Panel>
@@ -183,7 +211,7 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
                 <Button size="sm" variant="ghost" onClick={clearText} disabled={!input}>
                   {ui.clear}
                 </Button>
-                <span class="ml-auto text-xs text-subtle">{ui.autosaved}</span>
+                <span class="ml-auto text-xs text-subtle">{saveLabel}</span>
               </div>
             </>
           )}
@@ -206,13 +234,22 @@ export default function HashGenerator({ locale, ui }: ToolProps<UI>) {
             class="min-h-28 overflow-auto break-all rounded-lg border border-line bg-bg p-4 font-mono text-sm leading-6 text-fg"
           >
             {status === 'processing' ? (
-              <span class="text-subtle">{ui.processing}</span>
+              <span class="text-subtle">
+                {progress === null || progress >= 1
+                  ? ui.processing
+                  : ui.progress.replace('{percent}', String(Math.max(1, Math.floor(progress * 100))))}
+              </span>
             ) : digest ? (
               digest
             ) : (
               <span class="text-subtle">{ui.emptyDigest}</span>
             )}
           </output>
+          {status === 'processing' && (
+            <Button size="sm" variant="ghost" class="self-start" onClick={cancel}>
+              {ui.cancel}
+            </Button>
+          )}
 
           <Field label={ui.expectedLabel} hint={ui.expectedHint}>
             <TextInput

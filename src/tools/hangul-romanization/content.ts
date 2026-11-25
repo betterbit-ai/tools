@@ -12,6 +12,7 @@ const uiEn = {
   tryExample: 'Try an example',
   clear: 'Clear',
   autosaved: 'Saved in this browser only',
+  notSaved: 'Not saved — this browser is blocking local storage',
   modeLabel: 'Conversion type',
   standardMode: 'Official RR',
   nameMode: 'Passport name',
@@ -52,7 +53,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: 'What Revised Romanization writes',
-        body: 'Revised Romanization (RR) is South Korea’s official Romanization system. It was introduced in 2000 and is the system used for many road signs, maps and public names. It uses ordinary Latin letters rather than the breves and apostrophes found in McCune–Reischauer: 서울 is Seoul, 부산 is Busan and 경복궁 is Gyeongbokgung. The current Korean notice is Ministry of Culture, Sports and Tourism Notice No. 2024-27.\n\nRR follows Korean pronunciation at a syllable boundary, not a simple one-character substitution. This is why 종로 becomes Jongno and 신라 becomes Silla. The converter handles common liaison, nasalisation, ㄴ/ㄹ lateralisation and ㄷ/ㅌ + 이 palatalisation, so 한국어 becomes Hangugeo and 같이 becomes gachi. A spelling alone cannot resolve every compound-word or dictionary-pronunciation exception, so check official names against their published form.',
+        body: 'Revised Romanization (RR) is South Korea’s official Romanization system. It was introduced in 2000 and is the system used for many road signs, maps and public names. It uses ordinary Latin letters rather than the breves and apostrophes found in McCune–Reischauer: 서울 is Seoul, 부산 is Busan and 경복궁 is Gyeongbokgung. The current Korean notice is Ministry of Culture, Sports and Tourism Notice No. 2024-27.\n\nRR follows Korean pronunciation at a syllable boundary, not a simple one-character substitution. This is why 종로 becomes Jongno and 신라 becomes Silla. The converter handles common liaison, nasalisation, ㄴ/ㄹ lateralisation, ㄷ/ㅌ + 이 palatalisation and ㅎ aspiration, so 한국어 becomes Hangugeo, 같이 becomes gachi and 좋다 becomes jota. A spelling alone cannot resolve every compound-word or dictionary-pronunciation exception, so check official names against their published form.',
       },
       {
         heading: 'Korean names and passport spelling',
@@ -105,7 +106,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     sections: [
       {
         heading: '국어의 로마자 표기법은 발음을 반영합니다',
-        body: '국어의 로마자 표기법은 우리말을 로마자로 적는 대한민국의 공식 기준입니다. 2000년에 시행되었고, 현재 고시는 문화체육관광부 고시 제2024-27호입니다. 서울은 Seoul, 부산은 Busan, 경복궁은 Gyeongbokgung처럼 특수기호 없이 영문자로 적습니다. 국립국어원은 로마자 표기 용례를 공개하고 있어 지명이나 공공 표기는 해당 용례를 함께 확인할 수 있습니다.\n\n이 표기법은 글자 하나씩을 바꾸는 방식이 아니라 음절 경계에서 나는 소리를 반영합니다. 그래서 종로는 Jongro가 아니라 Jongno, 신라는 Silra가 아니라 Silla가 됩니다. 이 도구는 연음, 비음화, ㄴ·ㄹ 유음화, ㄷ·ㅌ 뒤 ‘이’의 구개음화를 처리해 한국어는 Hangugeo, 같이는 gachi로 변환합니다. 합성어 경계나 사전에만 있는 발음은 한글 표기만으로 확정할 수 없으므로 공식 지명·상호는 공개 표기를 우선하세요.',
+        body: '국어의 로마자 표기법은 우리말을 로마자로 적는 대한민국의 공식 기준입니다. 2000년에 시행되었고, 현재 고시는 문화체육관광부 고시 제2024-27호입니다. 서울은 Seoul, 부산은 Busan, 경복궁은 Gyeongbokgung처럼 특수기호 없이 영문자로 적습니다. 국립국어원은 로마자 표기 용례를 공개하고 있어 지명이나 공공 표기는 해당 용례를 함께 확인할 수 있습니다.\n\n이 표기법은 글자 하나씩을 바꾸는 방식이 아니라 음절 경계에서 나는 소리를 반영합니다. 그래서 종로는 Jongro가 아니라 Jongno, 신라는 Silra가 아니라 Silla가 됩니다. 이 도구는 연음, 비음화, ㄴ·ㄹ 유음화, ㄷ·ㅌ 뒤 ‘이’의 구개음화, ㅎ의 축약을 처리해 한국어는 Hangugeo, 같이는 gachi, 좋다는 jota로 변환합니다. 합성어 경계나 사전에만 있는 발음은 한글 표기만으로 확정할 수 없으므로 공식 지명·상호는 공개 표기를 우선하세요.',
       },
       {
         heading: '여권 영문 이름은 일반 로마자 변환과 다릅니다',
@@ -149,6 +150,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       tryExample: '예시 입력',
       clear: '지우기',
       autosaved: '이 브라우저에만 저장됨',
+      notSaved: '저장 안 됨 — 이 브라우저가 로컬 저장을 막고 있습니다',
       modeLabel: '변환 방식',
       standardMode: '국어 로마자',
       nameMode: '여권 이름',

@@ -31,6 +31,7 @@ function isSavedWeek(value: unknown): value is ShiftInput[] {
 export default function HoursCalculator({ ui }: ToolProps<UI>) {
   const [shifts, setShifts] = useState<ShiftInput[]>(standardWeek);
   const [restored, setRestored] = useState(false);
+  const [storageOk, setStorageOk] = useState(true);
   const days = [ui.monday, ui.tuesday, ui.wednesday, ui.thursday, ui.friday, ui.saturday, ui.sunday];
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function HoursCalculator({ ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (restored) safeStorage.set(STORAGE_KEY, JSON.stringify(shifts));
+    if (restored) setStorageOk(safeStorage.trySet(STORAGE_KEY, JSON.stringify(shifts)));
   }, [restored, shifts]);
 
   const total = useMemo(() => calculateWeek(shifts), [shifts]);
@@ -122,7 +123,16 @@ export default function HoursCalculator({ ui }: ToolProps<UI>) {
                   <div class="min-w-0 text-right sm:text-left">
                     <span class="mb-1 block text-left text-[11px] text-subtle sm:hidden">{ui.dailyTotal}</span>
                     <span class="block truncate text-sm tabular text-fg">
-                      {result ? formatMinutes(result.netMinutes) : hasInput ? ui.invalid : ui.empty}
+                      {result ? (
+                        <>
+                          {formatMinutes(result.netMinutes)}
+                          {result.overnight && <span class="ml-1 text-[11px] text-subtle">{ui.overnightTag}</span>}
+                        </>
+                      ) : hasInput ? (
+                        ui.invalid
+                      ) : (
+                        ui.empty
+                      )}
                     </span>
                   </div>
                 </div>
@@ -150,7 +160,7 @@ export default function HoursCalculator({ ui }: ToolProps<UI>) {
           <Field label={ui.calculationLabel} hint={ui.calculationHint}>
             <span class="block text-sm text-fg">{ui.formula}</span>
           </Field>
-          <p class="text-xs text-subtle">{ui.saved}</p>
+          <p class="text-xs text-subtle">{storageOk ? ui.saved : ui.notSaved}</p>
         </div>
       </div>
     </Panel>

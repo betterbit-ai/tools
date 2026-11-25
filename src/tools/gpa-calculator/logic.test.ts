@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { calculateGpa, gradePoint, isValidCourse, MAX_COURSES, MAX_CREDITS_PER_COURSE } from './logic';
+import {
+  calculateGpa,
+  gradePoint,
+  isValidCourse,
+  MAX_COURSES,
+  MAX_CREDITS_PER_COURSE,
+  parseCreditsText,
+} from './logic';
 
 describe('calculateGpa', () => {
   it('weights each grade by its credits on all three scales', () => {
@@ -65,5 +72,27 @@ describe('grade tables', () => {
     const course = { credits: 3, grade: 'A+' as const, name: '미적분 😀' };
     expect(isValidCourse(course)).toBe(true);
     expect(calculateGpa([course])).toMatchObject({ gpas: { '4.5': 4.5, '4.3': 4.3, '4.0': 4 } });
+  });
+});
+
+describe('parseCreditsText', () => {
+  it('reads a half-credit course typed or pasted the way people write it', () => {
+    expect(parseCreditsText('3.5')).toEqual({ value: 3.5 });
+    expect(parseCreditsText('0.5')).toEqual({ value: 0.5 });
+    expect(parseCreditsText(' 3 ')).toEqual({ value: 3 });
+    expect(parseCreditsText('3,5')).toEqual({ value: 3.5 });
+    expect(parseCreditsText('3.')).toEqual({ value: 3 });
+    expect(parseCreditsText('.5')).toEqual({ value: 0.5 });
+  });
+
+  it('reports an empty or unusable value instead of silently reading it as 0', () => {
+    expect(parseCreditsText('')).toEqual({ error: 'empty' });
+    expect(parseCreditsText('   ')).toEqual({ error: 'empty' });
+    expect(parseCreditsText('0')).toEqual({ error: 'invalid' });
+    expect(parseCreditsText('abc')).toEqual({ error: 'invalid' });
+    expect(parseCreditsText('1e5')).toEqual({ error: 'invalid' });
+    expect(parseCreditsText('-3')).toEqual({ error: 'invalid' });
+    expect(parseCreditsText(String(MAX_CREDITS_PER_COURSE + 1))).toEqual({ error: 'invalid' });
+    expect(parseCreditsText('99999999999999999999')).toEqual({ error: 'invalid' });
   });
 });

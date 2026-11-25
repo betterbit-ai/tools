@@ -29,6 +29,7 @@ const operators: Record<Operation, string> = { add: '+', subtract: '−', multip
 export default function FractionCalculator({ ui }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<SavedState>(DEFAULT_STATE);
+  const [storageOk, setStorageOk] = useState(true);
 
   useEffect(() => {
     try {
@@ -41,7 +42,7 @@ export default function FractionCalculator({ ui }: ToolProps<UI>) {
   }, []);
 
   useEffect(() => {
-    if (ready) safeStorage.set(STORAGE_KEY, JSON.stringify(state));
+    if (ready) setStorageOk(safeStorage.trySet(STORAGE_KEY, JSON.stringify(state)));
   }, [ready, state]);
 
   const first = useMemo(() => parseFraction(state.first), [state.first]);
@@ -64,7 +65,7 @@ export default function FractionCalculator({ ui }: ToolProps<UI>) {
     <Panel>
       <div class="flex items-center justify-between gap-3">
         <p class="text-sm text-muted">{ui.intro}</p>
-        <span class="shrink-0 text-xs text-subtle">{ui.autosaved}</span>
+        <span class="shrink-0 text-xs text-subtle">{storageOk ? ui.autosaved : ui.notSaved}</span>
       </div>
 
       <div class="mt-5 grid gap-5 lg:grid-cols-[1fr_300px]">

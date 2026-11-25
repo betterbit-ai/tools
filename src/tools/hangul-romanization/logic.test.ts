@@ -18,9 +18,32 @@ describe('hangul-romanization', () => {
     expect(romanize('\u1100\u1161')).toBe('Ga');
   });
 
+  it('never writes a placeholder when a silent ㅎ moves onto a vowel', () => {
+    expect(romanize('좋아요')).toBe('Joayo');
+    expect(romanize('싫어요')).toBe('Sireoyo');
+    expect(romanize('않아')).toBe('Ana');
+  });
+
+  it('merges ㅎ into a following ㄱ, ㄷ, ㅈ or ㅅ', () => {
+    expect(romanize('좋다')).toBe('Jota');
+    expect(romanize('많다')).toBe('Manta');
+    expect(romanize('싫다')).toBe('Silta');
+    expect(romanize('않다')).toBe('Anta');
+    expect(romanize('괜찮다')).toBe('Gwaenchanta');
+    expect(romanize('좋고')).toBe('Joko');
+  });
+
   it('offers a passport-friendly name format without sound changes between given-name syllables', () => {
     expect(romanize('김민수', 'name')).toBe('Kim Minsu');
     expect(romanize('박복남', 'name')).toBe('Park Boknam');
+  });
+
+  it('keeps a family name typed alone, and writes a two-syllable family name as one word', () => {
+    expect(romanize('이', 'name')).toBe('Lee');
+    expect(romanize('최', 'name', false)).toBe('choi');
+    expect(romanize('남궁민수', 'name')).toBe('Namgung Minsu');
+    expect(romanize('제갈공명', 'name')).toBe('Jegal Gongmyeong');
+    expect(romanize('김', 'name')).toBe('Kim');
   });
 
   it('handles empty and large input without losing characters', () => {

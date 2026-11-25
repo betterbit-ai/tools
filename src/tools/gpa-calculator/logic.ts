@@ -106,6 +106,20 @@ export function calculateGpa(courses: GpaCourse[]): GpaResult | null {
   return { gpas, qualityPoints, gpaCredits, passCredits, courseCount: courses.length };
 }
 
+/**
+ * Reads a credit value from what a person typed. A half-credit course is ordinary in many
+ * countries, so "3.5" and ",5" style decimals are accepted, and an unfinished "3." stays valid
+ * while the rest is being typed. Empty or out-of-table values are reported, never coerced to 0.
+ */
+export function parseCreditsText(text: string): { value: number } | { error: 'empty' | 'invalid' } {
+  const cleaned = text.trim().replace(/\s+/g, '').replace(',', '.');
+  if (!cleaned) return { error: 'empty' };
+  if (!/^[+]?(\d+(\.\d*)?|\.\d+)$/.test(cleaned)) return { error: 'invalid' };
+  const value = Number(cleaned);
+  if (!Number.isFinite(value) || value <= 0 || value > MAX_CREDITS_PER_COURSE) return { error: 'invalid' };
+  return { value };
+}
+
 /** A course must have a positive, finite credit value and a supported grade. */
 export function isValidCourse(course: GpaCourse): boolean {
   return (

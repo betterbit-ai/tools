@@ -4,8 +4,10 @@ import type { ToolContent } from '../types';
 const uiEn = {
   intro: 'Enter courses once to compare their credit-weighted GPA on three common scales.',
   autosaved: 'Saved in this browser',
+  notSaved: 'Not saved — this browser is blocking local storage',
   coursesHeading: 'Courses',
   coursesHint: 'P grades count as completed credits but are excluded from GPA.',
+  creditsHint: 'Credits can be a decimal, such as 3.5 for a half-credit course.',
   courseName: 'Course',
   courseNameAria: 'Course name',
   courseNamePlaceholder: 'Optional',
@@ -159,8 +161,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       intro: '과목을 한 번 입력하면 세 가지 만점 기준의 이수학점 가중 평점을 비교할 수 있습니다.',
       autosaved: '이 브라우저에 저장됨',
+      notSaved: '저장 안 됨 — 이 브라우저가 로컬 저장을 막고 있습니다',
       coursesHeading: '수강 과목',
       coursesHint: 'P는 이수학점에만 포함되고 평점 계산에서는 제외됩니다.',
+      creditsHint: '이수학점은 3.5처럼 소수로도 입력할 수 있습니다.',
       courseName: '과목명',
       courseNameAria: '과목명',
       courseNamePlaceholder: '선택 입력',

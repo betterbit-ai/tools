@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, Notice, Panel, Segmented, Textarea, Toggle } from '../../components/ui';
+import { Button, CopyButton, Field, FieldGroup, Notice, Panel, Segmented, Textarea, Toggle } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -17,6 +17,7 @@ export default function HangulRomanization({ ui }: ToolProps<UI>) {
   const [text, setText] = useState('');
   const [mode, setMode] = useState<RomanizationMode>('standard');
   const [capitalize, setCapitalize] = useState(true);
+  const [storageOk, setStorageOk] = useState(true);
 
   useEffect(() => {
     setText(safeStorage.get(TEXT_KEY) ?? '');
@@ -27,8 +28,12 @@ export default function HangulRomanization({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const id = setTimeout(() => {
-      if (text) safeStorage.set(TEXT_KEY, text);
-      else safeStorage.remove(TEXT_KEY);
+      if (!text) {
+        safeStorage.remove(TEXT_KEY);
+        setStorageOk(true);
+        return;
+      }
+      setStorageOk(safeStorage.trySet(TEXT_KEY, text));
     }, 300);
     return () => clearTimeout(id);
   }, [text]);
@@ -67,12 +72,12 @@ export default function HangulRomanization({ ui }: ToolProps<UI>) {
             <Button size="sm" variant="ghost" onClick={clear} disabled={!text}>
               {ui.clear}
             </Button>
-            <span class="ml-auto text-xs text-subtle">{ui.autosaved}</span>
+            <span class="ml-auto text-xs text-subtle">{storageOk ? ui.autosaved : ui.notSaved}</span>
           </div>
         </div>
 
         <div class="flex min-w-0 flex-col gap-5">
-          <Field label={ui.modeLabel}>
+          <FieldGroup label={ui.modeLabel}>
             <Segmented
               value={mode}
               onValue={setMode}
@@ -82,7 +87,7 @@ export default function HangulRomanization({ ui }: ToolProps<UI>) {
                 { value: 'name', label: ui.nameMode },
               ]}
             />
-          </Field>
+          </FieldGroup>
           <Toggle checked={capitalize} onChecked={setCapitalize} label={ui.capitalize} />
           {mode === 'name' ? <Notice>{ui.passportNotice}</Notice> : null}
           {showNoHangul ? <Notice tone="danger">{ui.noHangul}</Notice> : null}

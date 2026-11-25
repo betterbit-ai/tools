@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { bytesToHex, digestByteLength, hashesMatch, md5Hex, normalizeExpectedHash, webCryptoName } from './logic';
+import {
+  bytesToHex,
+  createMd5,
+  digestByteLength,
+  hashesMatch,
+  md5Final,
+  md5Hex,
+  md5Update,
+  normalizeExpectedHash,
+  webCryptoName,
+} from './logic';
 
 const encoder = new TextEncoder();
 
@@ -50,5 +60,29 @@ describe('digest helpers', () => {
     ).toBe(true);
     expect(hashesMatch(hash, 'deadbeef')).toBe(false);
     expect(hashesMatch(hash, '  ')).toBeNull();
+  });
+});
+
+describe('incremental MD5', () => {
+  it('gives the same digest however the input is split', () => {
+    const message = new TextEncoder().encode('Betterbit checksum '.repeat(500));
+    const expected = md5Hex(message);
+    for (const split of [1, 55, 56, 57, 63, 64, 65, 127, 1024, message.length - 1]) {
+      const state = createMd5();
+      md5Update(state, message.subarray(0, split));
+      md5Update(state, message.subarray(split));
+      expect(bytesToHex(md5Final(state))).toBe(expected);
+    }
+  });
+
+  it('handles a file read in many small chunks and an empty first chunk', () => {
+    const message = new TextEncoder().encode('a'.repeat(64 * 1024 + 13));
+    const expected = md5Hex(message);
+    const state = createMd5();
+    md5Update(state, new Uint8Array(0));
+    for (let offset = 0; offset < message.length; offset += 1000) {
+      md5Update(state, message.subarray(offset, offset + 1000));
+    }
+    expect(bytesToHex(md5Final(state))).toBe(expected);
   });
 });

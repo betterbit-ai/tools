@@ -66,75 +66,133 @@ const MD5_CONSTANTS = Array.from(
 /**
  * RFC 1321 MD5 for legacy checksum compatibility. New security-sensitive work
  * must use a modern construction; this implementation only produces the digest.
+ *
+ * The state is incremental so a large file can be hashed a chunk at a time without
+ * freezing the page or holding two copies of it in memory.
  */
-export function md5Bytes(input: Uint8Array): Uint8Array {
-  const bitLength = input.length * 8;
-  const paddedLength = Math.ceil((input.length + 9) / 64) * 64;
-  const bytes = new Uint8Array(paddedLength);
-  bytes.set(input);
-  bytes[input.length] = 0x80;
+export interface Md5State {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  block: Uint8Array;
+  blockLength: number;
+  totalBytes: number;
+}
 
-  // RFC 1321 appends the message bit length as a little-endian 64-bit integer.
+export function createMd5(): Md5State {
+  return {
+    a: 0x67452301,
+    b: 0xefcdab89,
+    c: 0x98badcfe,
+    d: 0x10325476,
+    block: new Uint8Array(64),
+    blockLength: 0,
+    totalBytes: 0,
+  };
+}
+
+function processBlock(state: Md5State, bytes: Uint8Array, offset: number): void {
+  const words = new Uint32Array(16);
+  for (let i = 0; i < 16; i++) {
+    const index = offset + i * 4;
+    words[i] = bytes[index] | (bytes[index + 1] << 8) | (bytes[index + 2] << 16) | (bytes[index + 3] << 24);
+  }
+
+  let a = state.a;
+  let b = state.b;
+  let c = state.c;
+  let d = state.d;
+
+  for (let i = 0; i < 64; i++) {
+    let f: number;
+    let g: number;
+    if (i < 16) {
+      f = (b & c) | (~b & d);
+      g = i;
+    } else if (i < 32) {
+      f = (d & b) | (~d & c);
+      g = (5 * i + 1) % 16;
+    } else if (i < 48) {
+      f = b ^ c ^ d;
+      g = (3 * i + 5) % 16;
+    } else {
+      f = c ^ (b | ~d);
+      g = (7 * i) % 16;
+    }
+
+    const nextD = d;
+    d = c;
+    c = b;
+    b = (b + rotateLeft((a + f + MD5_CONSTANTS[i] + words[g]) >>> 0, MD5_SHIFTS[i])) >>> 0;
+    a = nextD;
+  }
+
+  state.a = (state.a + a) >>> 0;
+  state.b = (state.b + b) >>> 0;
+  state.c = (state.c + c) >>> 0;
+  state.d = (state.d + d) >>> 0;
+}
+
+/** Feeds bytes into the state; complete 64-byte blocks are compressed as they arrive. */
+function feed(state: Md5State, chunk: Uint8Array, countBytes: boolean): void {
+  if (countBytes) state.totalBytes += chunk.length;
+  let offset = 0;
+
+  if (state.blockLength > 0) {
+    const take = Math.min(64 - state.blockLength, chunk.length);
+    state.block.set(chunk.subarray(0, take), state.blockLength);
+    state.blockLength += take;
+    offset = take;
+    if (state.blockLength === 64) {
+      processBlock(state, state.block, 0);
+      state.blockLength = 0;
+    }
+  }
+
+  while (offset + 64 <= chunk.length) {
+    processBlock(state, chunk, offset);
+    offset += 64;
+  }
+
+  if (offset < chunk.length) {
+    state.block.set(chunk.subarray(offset), 0);
+    state.blockLength = chunk.length - offset;
+  }
+}
+
+export function md5Update(state: Md5State, chunk: Uint8Array): void {
+  feed(state, chunk, true);
+}
+
+/** Appends the RFC 1321 padding and length, then returns the 16-byte digest. */
+export function md5Final(state: Md5State): Uint8Array {
+  const bitLength = state.totalBytes * 8;
+  const padLength = state.blockLength < 56 ? 56 - state.blockLength : 120 - state.blockLength;
+  const tail = new Uint8Array(padLength + 8);
+  tail[0] = 0x80;
+
   const low = bitLength >>> 0;
   const high = Math.floor(bitLength / 2 ** 32) >>> 0;
-  const lengthOffset = paddedLength - 8;
+  const lengthOffset = tail.length - 8;
   for (let i = 0; i < 4; i++) {
-    bytes[lengthOffset + i] = (low >>> (i * 8)) & 0xff;
-    bytes[lengthOffset + 4 + i] = (high >>> (i * 8)) & 0xff;
+    tail[lengthOffset + i] = (low >>> (i * 8)) & 0xff;
+    tail[lengthOffset + 4 + i] = (high >>> (i * 8)) & 0xff;
   }
 
-  let a0 = 0x67452301;
-  let b0 = 0xefcdab89;
-  let c0 = 0x98badcfe;
-  let d0 = 0x10325476;
-
-  for (let offset = 0; offset < bytes.length; offset += 64) {
-    const words = new Uint32Array(16);
-    for (let i = 0; i < 16; i++) {
-      const index = offset + i * 4;
-      words[i] = bytes[index] | (bytes[index + 1] << 8) | (bytes[index + 2] << 16) | (bytes[index + 3] << 24);
-    }
-
-    let a = a0;
-    let b = b0;
-    let c = c0;
-    let d = d0;
-
-    for (let i = 0; i < 64; i++) {
-      let f: number;
-      let g: number;
-      if (i < 16) {
-        f = (b & c) | (~b & d);
-        g = i;
-      } else if (i < 32) {
-        f = (d & b) | (~d & c);
-        g = (5 * i + 1) % 16;
-      } else if (i < 48) {
-        f = b ^ c ^ d;
-        g = (3 * i + 5) % 16;
-      } else {
-        f = c ^ (b | ~d);
-        g = (7 * i) % 16;
-      }
-
-      const nextD = d;
-      d = c;
-      c = b;
-      b = (b + rotateLeft((a + f + MD5_CONSTANTS[i] + words[g]) >>> 0, MD5_SHIFTS[i])) >>> 0;
-      a = nextD;
-    }
-
-    a0 = (a0 + a) >>> 0;
-    b0 = (b0 + b) >>> 0;
-    c0 = (c0 + c) >>> 0;
-    d0 = (d0 + d) >>> 0;
-  }
+  feed(state, tail, false);
 
   const output = new Uint8Array(16);
-  for (const [wordIndex, word] of [a0, b0, c0, d0].entries()) {
+  for (const [wordIndex, word] of [state.a, state.b, state.c, state.d].entries()) {
     for (let byte = 0; byte < 4; byte++) output[wordIndex * 4 + byte] = (word >>> (byte * 8)) & 0xff;
   }
   return output;
+}
+
+export function md5Bytes(input: Uint8Array): Uint8Array {
+  const state = createMd5();
+  md5Update(state, input);
+  return md5Final(state);
 }
 
 export function md5Hex(input: Uint8Array): string {
