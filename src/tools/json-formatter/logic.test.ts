@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { computeStats, formatJson, lineColumnAt, minifyJson, parseJsonSafe, sortKeysDeep } from './logic';
+import {
+  computeStats,
+  findUnsafeIntegers,
+  formatJson,
+  lineColumnAt,
+  minifyJson,
+  parseJsonSafe,
+  sortKeysDeep,
+} from './logic';
 
 describe('parseJsonSafe', () => {
   it('parses a normal object', () => {
@@ -211,5 +219,25 @@ describe('computeStats', () => {
 
     const stats = computeStats(value, '');
     expect(stats).toMatchObject({ depth: 20_000, keys: 0, values: 1 });
+  });
+});
+
+describe('findUnsafeIntegers', () => {
+  it('reports an integer that JSON.parse cannot keep and what the output shows instead', () => {
+    expect(findUnsafeIntegers('{"id": 12345678901234567890, "small": 42}')).toEqual([
+      { literal: '12345678901234567890', shown: '12345678901234567000' },
+    ]);
+  });
+
+  it('leaves numbers that survive exactly, fractions, exponents and quoted digits alone', () => {
+    expect(findUnsafeIntegers('{"a": 9007199254740991, "b": 1e30, "c": 12.5, "d": "12345678901234567890"}')).toEqual(
+      [],
+    );
+  });
+
+  it('reports a negative id once even when it appears twice', () => {
+    expect(findUnsafeIntegers('{"a": -9223372036854775808, "b": -9223372036854775808}')).toEqual([
+      { literal: '-9223372036854775808', shown: '-9223372036854776000' },
+    ]);
   });
 });

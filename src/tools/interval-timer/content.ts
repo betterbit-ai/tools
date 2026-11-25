@@ -54,7 +54,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     name: 'Interval Timer',
     keywords: ['tabata timer', 'HIIT timer', 'workout timer', 'interval workout', 'boxing round timer', 'EMOM timer'],
     howTo: [
-      'Choose Tabata, HIIT, Boxing, or edit the interval values.',
+      'Choose Tabata, HIIT, Boxing, or edit the interval values; the settings and presets lock while a session runs.',
       'Turn on voice cues or phase-change sound if you want hands-free guidance.',
       'Press Start or Space to begin the get-ready countdown.',
       'Use S to skip a phase, R to reset, or Pause to hold the current phase.',
@@ -92,7 +92,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Which keyboard shortcuts does the interval timer support?',
-        a: 'Space starts or pauses the timer, R resets it, and S skips to the next phase. The shortcuts are ignored while you are editing a number field.',
+        a: 'Space starts or pauses the timer, R resets it, and S skips to the next phase. Space is left to the control you are on while a button, radio or switch has focus, and the shortcuts are ignored while you are editing a number field.',
       },
     ],
     ui: uiEn,
@@ -107,7 +107,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     name: '인터벌 타이머',
     keywords: ['타바타 타이머', '인터벌 타이머', 'HIIT 타이머', '운동 타이머', '복싱 라운드 타이머', '홈트 타이머'],
     howTo: [
-      '타바타, HIIT, 복싱을 고르거나 인터벌 값을 직접 수정합니다.',
+      '타바타, HIIT, 복싱을 고르거나 인터벌 값을 직접 수정합니다. 세션이 도는 동안에는 설정과 프리셋이 잠깁니다.',
       '화면을 보지 않고 진행하려면 음성 안내 또는 전환음을 켭니다.',
       '시작 버튼이나 스페이스바를 눌러 준비 카운트다운을 시작합니다.',
       'S로 다음 단계를 건너뛰고, R로 초기화하며, 일시정지로 현재 단계를 멈춥니다.',
@@ -145,7 +145,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '인터벌 타이머 단축키는 무엇인가요?',
-        a: '스페이스바는 시작·일시정지, R은 초기화, S는 다음 단계 건너뛰기입니다. 숫자 입력칸을 편집할 때는 단축키가 작동하지 않습니다.',
+        a: '스페이스바는 시작·일시정지, R은 초기화, S는 다음 단계 건너뛰기입니다. 버튼·라디오·스위치에 포커스가 있을 때 스페이스바는 그 컨트롤에 그대로 쓰이고, 숫자 입력칸을 편집할 때는 단축키가 작동하지 않습니다.',
       },
     ],
     ui: {

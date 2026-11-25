@@ -28,10 +28,15 @@ export type JwtTimeStatus = 'expired' | 'not-active' | 'active' | 'no-expiration
 
 const BASE64URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
-/** Removes an Authorization header's optional Bearer scheme before decoding. */
+/**
+ * Removes an Authorization header's optional Bearer scheme, then any line wrapping.
+ * Tokens are pasted from YAML files, shells and chat, where a long token arrives over two or
+ * three lines; base64url never contains whitespace, so removing it cannot change a real token.
+ */
 export function normalizeToken(input: string): string {
   const trimmed = input.trim();
-  return /^bearer\s+/i.test(trimmed) ? trimmed.replace(/^bearer\s+/i, '').trim() : trimmed;
+  const withoutScheme = /^bearer\s+/i.test(trimmed) ? trimmed.replace(/^bearer\s+/i, '') : trimmed;
+  return withoutScheme.replace(/\s+/g, '');
 }
 
 /**
@@ -74,6 +79,26 @@ export function getJwtTimeStatus(timeClaims: JwtTimeClaim[], nowMilliseconds = D
   if (exp !== null && exp !== undefined && nowMilliseconds >= exp) return 'expired';
   if (nbf !== null && nbf !== undefined && nowMilliseconds < nbf) return 'not-active';
   return exp === null || exp === undefined ? 'no-expiration' : 'active';
+}
+
+/**
+ * Writes the gap between a claim and now in the largest unit that keeps it readable.
+ * A token that expires next week says "in 7 days", not "in 604,800 seconds", and an expired one
+ * says how long ago, which is what tells a user whether they are looking at a stale token.
+ */
+export function formatClaimDistance(milliseconds: number, locale: string): string {
+  const seconds = Math.round(milliseconds / 1000);
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['year', 31_536_000],
+    ['month', 2_592_000],
+    ['week', 604_800],
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+    ['second', 1],
+  ];
+  const [unit, size] = units.find(([, size]) => Math.abs(seconds) >= size) ?? ['second', 1];
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'always' }).format(Math.round(seconds / size), unit);
 }
 
 function decodeJsonObject(

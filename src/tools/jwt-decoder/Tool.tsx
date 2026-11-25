@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Button, CopyButton, Field, Kbd, Notice, Panel, Textarea } from '../../components/ui';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { decodeJwt, getJwtTimeStatus, type JwtErrorReason, type JwtTimeStatus } from './logic';
+import { decodeJwt, formatClaimDistance, getJwtTimeStatus, type JwtErrorReason, type JwtTimeStatus } from './logic';
 
 const SAMPLE_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRlbW8ta2V5LTEifQ.eyJzdWIiOiJ1c2VyLTEyMyIsIm5hbWUiOiJIYW5hIEtpbSIsInJvbGUiOiJlZGl0b3IiLCJpYXQiOjE3NjcyMjU2MDAsIm5iZiI6MTc2NzIyNTYwMCwiZXhwIjoxODkzNDU2MDAwLCJpc3MiOiJodHRwczovL2V4YW1wbGUudGVzdCJ9.demo-signature';
@@ -27,7 +27,6 @@ const STATUS_KEY: Record<JwtTimeStatus, keyof UI> = {
 export default function JwtDecoder({ locale, ui }: ToolProps<UI>) {
   const [token, setToken] = useState('');
   const [now, setNow] = useState(Date.now());
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const result = useMemo(() => decodeJwt(token), [token]);
 
   useEffect(() => {
@@ -38,17 +37,23 @@ export default function JwtDecoder({ locale, ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
+      const target = event.target as HTMLElement | null;
       if (
         event.key !== '/' ||
-        target.closest('input, textarea, select, [contenteditable]') ||
+        (target &&
+          typeof target.closest === 'function' &&
+          target.closest('input, textarea, select, [contenteditable]')) ||
         event.metaKey ||
         event.ctrlKey
       ) {
         return;
       }
+      // The token field is found by its id: a ref to a Preact component wrapper is not the DOM node,
+      // so the documented shortcut did nothing.
+      const field = document.getElementById('jwt-token');
+      if (!(field instanceof HTMLTextAreaElement)) return;
       event.preventDefault();
-      inputRef.current?.focus();
+      field.focus();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -66,7 +71,7 @@ export default function JwtDecoder({ locale, ui }: ToolProps<UI>) {
         <div class="flex flex-col gap-3">
           <Field label={ui.inputLabel} hint={ui.inputHint}>
             <Textarea
-              ref={inputRef}
+              id="jwt-token"
               value={token}
               onInput={(event) => setToken(event.currentTarget.value)}
               placeholder={ui.inputPlaceholder}
@@ -164,8 +169,7 @@ function TimeClaim(props: {
     hourCycle: 'h23',
     timeZone: 'UTC',
   }).format(date);
-  const seconds = Math.round((claim.milliseconds - now) / 1000);
-  const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(seconds, 'second');
+  const relative = formatClaimDistance(claim.milliseconds - now, locale);
   return (
     <div class="rounded-md bg-surface-2 px-3 py-2.5">
       <div class="flex items-baseline justify-between gap-2">

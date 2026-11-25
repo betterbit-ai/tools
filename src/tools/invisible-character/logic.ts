@@ -28,6 +28,20 @@ export function normalizeCount(count: number): number {
   return Math.min(MAX_COUNT, Math.max(1, Math.trunc(count)));
 }
 
+/**
+ * Reads what the visitor typed without rewriting their text. An empty or unfinished entry is not an
+ * error, it simply waits; a value outside the copyable range is reported instead of being silently
+ * replaced, because the field is theirs and the number that is actually copied is shown beside it.
+ */
+export function parseCountInput(text: string): { count: number; outOfRange: boolean } {
+  const typed = text.trim();
+  if (typed === '') return { count: 1, outOfRange: false };
+  const numeric = Number(typed);
+  if (!Number.isFinite(numeric)) return { count: 1, outOfRange: true };
+  const whole = Math.trunc(numeric);
+  return { count: normalizeCount(whole), outOfRange: whole < 1 || whole > MAX_COUNT };
+}
+
 export function getInvisibleCharacter(id: InvisibleCharacterId): InvisibleCharacter {
   return INVISIBLE_CHARACTERS.find((item) => item.id === id) ?? INVISIBLE_CHARACTERS[0];
 }

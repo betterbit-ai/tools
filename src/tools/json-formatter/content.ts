@@ -21,6 +21,9 @@ const uiEn = {
   download: 'Download .json',
   clear: 'Clear',
   autosaved: 'Saved in this browser only',
+  draftNotSaved: 'Too large to save in this browser — this draft will be lost on refresh.',
+  unsafeNumber:
+    'JavaScript numbers cannot hold every digit of {count} integer(s) here, so the formatted result shows {pairs}. If the exact digits matter (order numbers, user IDs), keep the original text.',
   valid: 'Valid JSON',
   errorLabel: 'Syntax error',
   jumpToError: 'Jump to error',
@@ -106,6 +109,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: 'Yes — turn on “Sort keys A–Z”. It recursively sorts every object’s keys (ordinal, A–Z) while leaving array order untouched, which is useful for producing a stable, diff-friendly copy of two JSON files that only differ in key order.',
       },
       {
+        q: 'Why did a 19-digit number change?',
+        a: 'JSON numbers are read as JavaScript doubles, which hold about 15–17 significant digits. An ID such as 12345678901234567890 becomes 12345678901234567000, and the tool now says so above the result instead of presenting the rounded value as exact. If the exact digits matter, keep them in the source or store them as strings.',
+      },
+      {
         q: 'How large a JSON file can this handle?',
         a: 'There is no fixed application limit. The practical size depends on available device memory and the browser, and very large documents can still take time to parse or format. Tree view initially shows 50 children at a time and keeps deeper branches collapsed; use “Show more” only where you need to inspect more data.',
       },
@@ -168,6 +175,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
         a: '네. "키 정렬(A-Z)"을 켜면 모든 객체의 키를 재귀적으로 알파벳순(A-Z)으로 정렬하고 배열 순서는 그대로 둡니다. 키 순서만 다른 두 JSON 파일을 비교할 때, 안정적이고 diff하기 쉬운 사본을 만드는 데 유용합니다.',
       },
       {
+        q: '19자리 숫자가 바뀌어 보이는 이유는 무엇인가요?',
+        a: 'JSON 숫자는 자바스크립트 배정도 부동소수점으로 읽혀 유효 숫자 15~17자리까지만 정확합니다. 12345678901234567890 같은 ID는 12345678901234567000으로 표시되며, 이 도구는 그 사실을 결과 위에 알려 줍니다. 정확한 자릿수가 필요하면 원본을 그대로 두거나 문자열로 다루세요.',
+      },
+      {
         q: '얼마나 큰 JSON 파일까지 처리할 수 있나요?',
         a: '도구에 정해 둔 용량 제한은 없습니다. 다만 실제 처리 한계는 기기의 메모리와 브라우저에 따라 다르고, 매우 큰 문서는 파싱이나 포맷팅에 시간이 걸릴 수 있습니다. 트리 뷰는 처음 50개 항목을 보여 주고 깊은 가지를 접어 두므로, 필요한 곳에서만 “더 보기”로 항목을 펼치면 됩니다.',
       },
@@ -196,6 +207,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       download: '.json 다운로드',
       clear: '지우기',
       autosaved: '이 브라우저에만 저장됨',
+      draftNotSaved: '이 브라우저에 저장하기에 너무 큽니다. 새로고침하면 이 초안은 사라집니다.',
+      unsafeNumber:
+        '자바스크립트 숫자로는 정수 {count}개의 자릿수를 그대로 유지할 수 없어 결과에 {pairs}처럼 표시됩니다. 주문번호·사용자 ID처럼 정확한 자릿수가 중요하면 원본을 그대로 두세요.',
       valid: '유효한 JSON',
       errorLabel: '구문 오류',
       jumpToError: '오류로 이동',

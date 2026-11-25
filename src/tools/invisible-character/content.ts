@@ -33,6 +33,10 @@ const uiEn = {
   otherCharacter: 'Other character',
   count: '{n} occurrence(s)',
   generatedDescription: '{n} selected character(s) ready to copy.',
+  overLimit:
+    'Only 1–{max} characters can be generated at once. Your typed value is kept; the preview and copy use the limit.',
+  copyFailed: 'Your browser blocked the clipboard. Select the character in the preview and copy it manually.',
+  moreCharacters: '…and {n} more code points.',
 };
 export type UI = typeof uiEn;
 
@@ -154,6 +158,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       otherCharacter: '다른 문자',
       count: '{n}회',
       generatedDescription: '선택한 문자 {n}개를 복사할 수 있습니다.',
+      overLimit:
+        '한 번에 1~{max}개까지 만들 수 있습니다. 입력한 값은 그대로 두고, 미리보기와 복사에는 한도가 적용됩니다.',
+      copyFailed: '브라우저가 클립보드를 막았습니다. 미리보기에서 문자를 선택해 직접 복사하세요.',
+      moreCharacters: '…외 {n}개 코드 포인트',
     },
   },
 };

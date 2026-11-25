@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { CopyButton, Field, Notice, NumberInput, Panel, Segmented, Stat, Textarea } from '../../components/ui';
+import {
+  CopyButton,
+  Field,
+  FieldGroup,
+  Notice,
+  Panel,
+  Segmented,
+  Stat,
+  Textarea,
+  TextInput,
+} from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -10,8 +20,12 @@ import {
   inspectText,
   makeInvisibleText,
   normalizeCount,
+  parseCountInput,
   type InvisibleCharacterId,
 } from './logic';
+
+/** Rows shown in the detector before it says how many code points are left. */
+const MAX_ROWS = 60;
 
 const SETTINGS_KEY = 'tools:invisible-character:settings';
 const IDS: InvisibleCharacterId[] = ['hangul-filler', 'braille-blank', 'zero-width-space', 'word-joiner'];
@@ -22,27 +36,31 @@ function isCharacterId(value: unknown): value is InvisibleCharacterId {
 
 export default function InvisibleCharacter({ locale, ui }: ToolProps<UI>) {
   const [characterId, setCharacterId] = useState<InvisibleCharacterId>('hangul-filler');
-  const [count, setCount] = useState(1);
+  const [countText, setCountText] = useState('1');
   const [pastedText, setPastedText] = useState('');
   const [settingsReady, setSettingsReady] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(safeStorage.get(SETTINGS_KEY) ?? '{}') as { characterId?: unknown; count?: unknown };
       if (isCharacterId(saved.characterId)) setCharacterId(saved.characterId);
-      if (typeof saved.count === 'number') setCount(normalizeCount(saved.count));
+      if (typeof saved.count === 'number') setCountText(String(saved.count));
     } catch {
       safeStorage.remove(SETTINGS_KEY);
     }
     setSettingsReady(true);
   }, []);
 
+  const selected = getInvisibleCharacter(characterId);
+  const typedCount = parseCountInput(countText);
+  const count = typedCount.count;
+
   useEffect(() => {
     if (!settingsReady) return;
-    safeStorage.set(SETTINGS_KEY, JSON.stringify({ characterId, count: normalizeCount(count) }));
+    safeStorage.set(SETTINGS_KEY, JSON.stringify({ characterId, count }));
   }, [characterId, count, settingsReady]);
 
-  const selected = getInvisibleCharacter(characterId);
   const generated = useMemo(() => makeInvisibleText(characterId, count), [characterId, count]);
   const inspection = useMemo(() => inspectText(pastedText), [pastedText]);
   const n = (value: number) => formatNumber(value, locale);
@@ -63,14 +81,14 @@ export default function InvisibleCharacter({ locale, ui }: ToolProps<UI>) {
     <Panel>
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div class="min-w-0 space-y-5">
-          <Field label={ui.characterLabel}>
+          <FieldGroup label={ui.characterLabel}>
             <Segmented
               value={characterId}
               onValue={setCharacterId}
               label={ui.characterLabel}
               options={IDS.map((id) => ({ value: id, label: labels[id] }))}
             />
-          </Field>
+          </FieldGroup>
 
           <div class="rounded-lg border border-line bg-surface-2 p-4">
             <div class="flex flex-wrap items-baseline justify-between gap-2">
@@ -81,14 +99,16 @@ export default function InvisibleCharacter({ locale, ui }: ToolProps<UI>) {
           </div>
 
           <Field label={ui.quantityLabel} hint={ui.quantityHint}>
-            <NumberInput
-              value={count}
-              min={1}
-              max={MAX_COUNT}
-              step={1}
-              onValue={(value) => setCount(value === '' ? 1 : normalizeCount(value))}
+            <TextInput
+              value={countText}
+              inputMode="numeric"
+              autocomplete="off"
+              aria-invalid={typedCount.outOfRange ? 'true' : undefined}
+              onInput={(event) => setCountText((event.currentTarget as HTMLInputElement).value)}
+              onBlur={() => setCountText(String(count))}
             />
           </Field>
+          {typedCount.outOfRange && <Notice tone="danger">{ui.overLimit.replace('{max}', n(MAX_COUNT))}</Notice>}
 
           <div class="rounded-lg border border-line bg-bg p-4">
             <h2 class="text-sm font-medium text-fg">{ui.preview}</h2>
@@ -101,7 +121,16 @@ export default function InvisibleCharacter({ locale, ui }: ToolProps<UI>) {
               {ui.previewEnd}
             </p>
           </div>
-          <CopyButton text={generated} label={ui.copy} copiedLabel={ui.copied} size="md" variant="primary" />
+          <CopyButton
+            text={generated}
+            label={ui.copy}
+            copiedLabel={ui.copied}
+            size="md"
+            variant="primary"
+            onSuccess={() => setCopyFailed(false)}
+            onError={() => setCopyFailed(true)}
+          />
+          {copyFailed && <Notice tone="danger">{ui.copyFailed}</Notice>}
         </div>
 
         <div class="flex flex-col gap-5">
@@ -132,7 +161,7 @@ export default function InvisibleCharacter({ locale, ui }: ToolProps<UI>) {
             <div>
               <h2 class="mb-2 text-sm font-medium text-fg">{ui.detectedCharacters}</h2>
               <ul class="grid gap-2 sm:grid-cols-2">
-                {inspection.entries.map((entry) => (
+                {inspection.entries.slice(0, MAX_ROWS).map((entry) => (
                   <li class="flex items-center justify-between gap-3 rounded-md border border-line bg-surface-2 px-3 py-2 text-sm">
                     <span class="min-w-0 text-fg">{entry.id ? labels[entry.id] : ui.otherCharacter}</span>
                     <span class="shrink-0 text-right font-mono text-xs text-muted">

@@ -6,6 +6,7 @@ import {
   inspectText,
   makeInvisibleText,
   normalizeCount,
+  parseCountInput,
 } from './logic';
 
 describe('invisible-character generation', () => {
@@ -54,5 +55,18 @@ describe('invisible-character inspection', () => {
         { character: '😀', codePoint: 'U+1F600', count: 1, id: undefined },
       ],
     });
+  });
+});
+
+describe('parseCountInput', () => {
+  it('keeps a half-typed or emptied field waiting instead of rewriting it', () => {
+    expect(parseCountInput('')).toEqual({ count: 1, outOfRange: false });
+    expect(parseCountInput('12')).toEqual({ count: 12, outOfRange: false });
+  });
+
+  it('reports a value outside 1–10,000 while copying the nearest allowed count', () => {
+    expect(parseCountInput('25000')).toEqual({ count: MAX_COUNT, outOfRange: true });
+    expect(parseCountInput('0')).toEqual({ count: 1, outOfRange: true });
+    expect(parseCountInput('abc')).toEqual({ count: 1, outOfRange: true });
   });
 });

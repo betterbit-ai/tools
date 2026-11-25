@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Button, CopyButton, Dropzone, Notice, Panel, Segmented, Stat, Textarea, Toggle } from '../../components/ui';
 import { downloadBlob, safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
@@ -10,6 +10,7 @@ import {
   computeStats,
   formatJson,
   minifyJson,
+  findUnsafeIntegers,
   parseJsonSafe,
   sortKeysDeep,
 } from './logic';
@@ -61,7 +62,7 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
   const [sortKeys, setSortKeys] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('pretty');
   const [fileError, setFileError] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     setText(safeStorage.get(STORAGE_KEY) ?? SAMPLE);
@@ -72,8 +73,13 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const id = setTimeout(() => {
-      if (text) safeStorage.set(STORAGE_KEY, text);
-      else safeStorage.remove(STORAGE_KEY);
+      if (!text) {
+        safeStorage.remove(STORAGE_KEY);
+        setSaveFailed(false);
+        return;
+      }
+      // A long document can exceed the storage quota; the label must not keep claiming it is saved.
+      setSaveFailed(!safeStorage.trySet(STORAGE_KEY, text));
     }, 300);
     return () => clearTimeout(id);
   }, [text]);
@@ -96,11 +102,14 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
   }, [sorted, viewMode, indent]);
 
   const stats = useMemo(() => (parsed.ok ? computeStats(parsed.value, text) : null), [parsed, text]);
+  const unsafeIntegers = useMemo(() => (parsed.ok ? findUnsafeIntegers(text) : []), [parsed, text]);
 
   const jumpToError = () => {
     if (parsed.ok) return;
-    const ta = textareaRef.current;
-    if (!ta) return;
+    // Looked up by id: a ref on the shared Textarea component is not the DOM node, so the documented
+    // "Jump to error" button used to do nothing at all.
+    const ta = document.getElementById('json-input');
+    if (!(ta instanceof HTMLTextAreaElement)) return;
     const idx = Math.max(0, Math.min(parsed.error.index, text.length));
     ta.focus();
     ta.setSelectionRange(idx, Math.min(idx + 1, text.length));
@@ -136,21 +145,37 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
           {fileError && <Notice tone="danger">{fileError}</Notice>}
           <Textarea
             id="json-input"
-            ref={textareaRef}
             value={text}
             onInput={(e) => setText((e.currentTarget as HTMLTextAreaElement).value)}
             placeholder={ui.placeholder}
             spellcheck={false}
+            /* No soft wrap: wrapping a megabyte of JSON (or one minified line) made the browser lay
+               out the whole text on every paste and keystroke — 1 MB took ~40 s and the tab looked
+               frozen. Formatted JSON lines are short anyway; long ones scroll sideways. */
+            wrap="off"
             class="min-h-[280px] lg:min-h-[400px] flex-1 w-full font-mono text-sm"
           />
           <div class="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="ghost" onClick={() => setText('')} disabled={!text}>
               {ui.clear}
             </Button>
-            <span class="ml-auto text-xs text-subtle">{ui.autosaved}</span>
+            <span class="ml-auto text-xs text-subtle">{saveFailed ? ui.draftNotSaved : ui.autosaved}</span>
           </div>
           {parsed.ok ? (
-            <Notice tone="success">{ui.valid}</Notice>
+            <>
+              <Notice tone="success">{ui.valid}</Notice>
+              {unsafeIntegers.length > 0 && (
+                <Notice tone="danger">
+                  {fillTemplate(ui.unsafeNumber, {
+                    pairs: unsafeIntegers
+                      .slice(0, 3)
+                      .map((entry) => `${entry.literal} → ${entry.shown}`)
+                      .join(', '),
+                    count: unsafeIntegers.length,
+                  })}
+                </Notice>
+              )}
+            </>
           ) : (
             <Notice tone="danger">
               <span class="font-medium">{ui.errorLabel}: </span>
@@ -213,7 +238,9 @@ export default function JsonFormatter({ locale, ui }: ToolProps<UI>) {
             {viewMode === 'tree' && parsed.ok ? (
               <JsonTree value={sorted} ui={ui} />
             ) : (
-              <pre class="whitespace-pre-wrap break-all font-mono text-sm leading-6 text-fg">
+              /* No soft wrap here either: a 1 MB minified result took ~10 s to lay out with
+                 `whitespace-pre-wrap`, against under 0.7 s without it. Long lines scroll. */
+              <pre class="whitespace-pre font-mono text-sm leading-6 text-fg">
                 {resultText || <span class="text-subtle">{ui.emptyOutput}</span>}
               </pre>
             )}

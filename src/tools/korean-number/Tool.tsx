@@ -21,6 +21,7 @@ function errorMessage(code: AmountParseError, ui: UI): string {
 
 export default function KoreanNumber({ ui }: ToolProps<UI>) {
   const [ready, setReady] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [input, setInput] = useState(DEFAULT_AMOUNT);
   useEffect(() => {
     setInput(safeStorage.get(STORAGE_KEY) ?? DEFAULT_AMOUNT);
@@ -62,33 +63,46 @@ export default function KoreanNumber({ ui }: ToolProps<UI>) {
           <p class="mt-1 text-xs leading-5 text-subtle">{ui.resultsHint}</p>
         </div>
       </div>
-      {!result.ok ? (
-        <div class="mt-5">
-          <Notice tone="danger">{errorMessage(result.code, ui)}</Notice>
-        </div>
-      ) : (
-        <div class="mt-6 border-t border-line pt-5" aria-live="polite">
-          <div class="grid gap-3 sm:grid-cols-2">
-            {[
-              [ui.plainLabel, result.plain],
-              [ui.amountLabel, result.amount],
-              [ui.geumLabel, result.geum],
-              [ui.ilgeumLabel, result.ilgeum],
-            ].map(([label, value]) => (
-              <article class="min-w-0 rounded-lg border border-line bg-surface-2 p-3">
-                <div class="flex items-start justify-between gap-3">
-                  <h2 class="text-sm font-medium text-fg">{label}</h2>
-                  <CopyButton text={value} label={ui.copy} copiedLabel={ui.copied} />
-                </div>
-                <p class="mt-3 break-words text-lg font-medium leading-7 text-fg">{value}</p>
-              </article>
-            ))}
-          </div>
-          <div class="mt-4">
-            <Notice>{ui.notice}</Notice>
-          </div>
+      {copyFailed && (
+        <div class="mt-4">
+          <Notice tone="danger">{ui.copyFailed}</Notice>
         </div>
       )}
+      {/* The live region stays mounted from the first render: a region created together with its
+          content is not announced, so a screen reader heard nothing while the amount changed. */}
+      <div class="mt-5" aria-live="polite">
+        {!result.ok ? (
+          <Notice tone="danger">{errorMessage(result.code, ui)}</Notice>
+        ) : (
+          <div class="border-t border-line pt-5">
+            <div class="grid gap-3 sm:grid-cols-2">
+              {[
+                [ui.plainLabel, result.plain],
+                [ui.amountLabel, result.amount],
+                [ui.geumLabel, result.geum],
+                [ui.ilgeumLabel, result.ilgeum],
+              ].map(([label, value]) => (
+                <article class="min-w-0 rounded-lg border border-line bg-surface-2 p-3">
+                  <div class="flex items-start justify-between gap-3">
+                    <h2 class="text-sm font-medium text-fg">{label}</h2>
+                    <CopyButton
+                      text={value}
+                      label={ui.copy}
+                      copiedLabel={ui.copied}
+                      onSuccess={() => setCopyFailed(false)}
+                      onError={() => setCopyFailed(true)}
+                    />
+                  </div>
+                  <p class="mt-3 break-words text-lg font-medium leading-7 text-fg">{value}</p>
+                </article>
+              ))}
+            </div>
+            <div class="mt-4">
+              <Notice>{ui.notice}</Notice>
+            </div>
+          </div>
+        )}
+      </div>
     </Panel>
   );
 }

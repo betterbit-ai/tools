@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Field, Kbd, Notice, NumberInput, Panel, Stat, Toggle, cx } from '../../components/ui';
+import { Button, Field, Kbd, Notice, Panel, Stat, TextInput, Toggle, cx } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
   DEFAULT_SETTINGS,
-  MAX_ROUNDS,
-  MAX_SECONDS,
   advance,
   formatClock,
   idle,
@@ -26,6 +24,16 @@ const STATE_KEY = 'tools:interval-timer:state';
 const SOUND_KEY = 'tools:interval-timer:sound';
 const VOICE_KEY = 'tools:interval-timer:voice';
 
+/** The settings as the text a visitor types, so a half-typed or emptied field is never rewritten. */
+function draftsOf(settings: IntervalSettings): Record<keyof IntervalSettings, string> {
+  return {
+    prepSeconds: String(settings.prepSeconds),
+    workSeconds: String(settings.workSeconds),
+    restSeconds: String(settings.restSeconds),
+    rounds: String(settings.rounds),
+  };
+}
+
 const PRESETS: { id: string; settings: IntervalSettings }[] = [
   { id: 'tabata', settings: { prepSeconds: 5, workSeconds: 20, restSeconds: 10, rounds: 8 } },
   { id: 'hiit', settings: { prepSeconds: 5, workSeconds: 40, restSeconds: 20, rounds: 8 } },
@@ -39,6 +47,7 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
   const [sound, setSound] = useState(true);
   const [voice, setVoice] = useState(false);
   const [restored, setRestored] = useState(false);
+  const [drafts, setDrafts] = useState(() => draftsOf(idle(settingsFromPreset(preset)).settings));
   const [voiceUnavailable, setVoiceUnavailable] = useState(false);
   const audio = useRef<AudioContext | null>(null);
   const baseTitle = useRef('');
@@ -49,8 +58,14 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
     try {
       const saved = JSON.parse(safeStorage.get(STATE_KEY) ?? 'null');
       if (isIntervalTimerState(saved)) {
-        if (saved.status === 'running' || saved.status === 'paused') setState(settle(saved, Date.now()));
-        else if (!hasPreset) setState(saved);
+        if (saved.status === 'running' || saved.status === 'paused') {
+          const resumed = settle(saved, Date.now());
+          setState(resumed);
+          setDrafts(draftsOf(resumed.settings));
+        } else if (!hasPreset) {
+          setState(saved);
+          setDrafts(draftsOf(saved.settings));
+        }
       }
     } catch {
       /* Ignore corrupted local data. */
@@ -137,17 +152,29 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
 
   const applySettings = useCallback((settings: IntervalSettings) => {
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
-    setState(idle(settings));
+    const safe = sanitizeSettings(settings);
+    setState(idle(safe));
+    setDrafts(draftsOf(safe));
   }, []);
 
-  const updateSetting = (key: keyof IntervalSettings, value: number | '') => {
-    applySettings(sanitizeSettings({ ...state.settings, [key]: value === '' ? 0 : value }));
+  /**
+   * Keeps exactly what was typed and applies the value where it is used. An emptied field waits
+   * instead of snapping to the minimum (which turned "20" into "120"), and a value that is too long
+   * is clamped for the session while the typed text stays visible until the field is left.
+   */
+  const updateSetting = (key: keyof IntervalSettings, text: string) => {
+    setDrafts((current) => ({ ...current, [key]: text }));
+    const typed = Number(text.trim());
+    if (text.trim() === '' || !Number.isFinite(typed)) return;
+    setState(idle(sanitizeSettings({ ...state.settings, [key]: typed })));
   };
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
+      const target = event.target as HTMLElement | null;
       if (
+        !target ||
+        typeof target.closest !== 'function' ||
         target.closest('input, textarea, select, [contenteditable]') ||
         event.metaKey ||
         event.ctrlKey ||
@@ -155,6 +182,8 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
       )
         return;
       if (event.code === 'Space') {
+        // A focused control keeps its own Space: Reset has to reset, not start the timer.
+        if (target.closest('button, a, [role=button], [role=radio], [role=switch], [role=tab]')) return;
         event.preventDefault();
         toggle();
       } else if (event.key === 'r' || event.key === 'R') reset();
@@ -163,6 +192,23 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [reset, skip, toggle]);
+
+  // A throttled tab wakes up late; read the clock once the page is visible again instead of waiting
+  // for the next (also throttled) tick.
+  useEffect(() => {
+    const sync = () => {
+      if (document.visibilityState !== 'visible') return;
+      const time = Date.now();
+      setNow(time);
+      setState((current) => settle(current, time));
+    };
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('focus', sync);
+    return () => {
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('focus', sync);
+    };
+  }, []);
 
   const settingsLocked = state.status === 'running' || state.status === 'paused';
   const selectedPreset =
@@ -216,6 +262,7 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
               <Button
                 key={presetItem.id}
                 size="sm"
+                disabled={settingsLocked}
                 onClick={() => applySettings(presetItem.settings)}
                 class={cx(selectedPreset === presetItem.id && 'border-accent text-accent')}
               >
@@ -224,6 +271,7 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
             ))}
             <Button
               size="sm"
+              disabled={settingsLocked}
               onClick={() => applySettings(DEFAULT_SETTINGS)}
               class={cx(selectedPreset === 'custom' && 'border-accent text-accent')}
             >
@@ -233,38 +281,24 @@ export default function IntervalTimer({ ui, preset }: ToolProps<UI>) {
           <fieldset disabled={settingsLocked} class="mt-6 border-t border-line pt-6 disabled:opacity-60">
             <legend class="text-sm font-medium text-fg">{ui.settings}</legend>
             <div class="mt-3 grid gap-3 sm:grid-cols-2">
-              <Field label={ui.prepSeconds} hint={ui.secondsHint}>
-                <NumberInput
-                  value={state.settings.prepSeconds}
-                  min={0}
-                  max={MAX_SECONDS}
-                  onValue={(value) => updateSetting('prepSeconds', value)}
-                />
-              </Field>
-              <Field label={ui.workSeconds} hint={ui.secondsHint}>
-                <NumberInput
-                  value={state.settings.workSeconds}
-                  min={1}
-                  max={MAX_SECONDS}
-                  onValue={(value) => updateSetting('workSeconds', value)}
-                />
-              </Field>
-              <Field label={ui.restSeconds} hint={ui.secondsHint}>
-                <NumberInput
-                  value={state.settings.restSeconds}
-                  min={0}
-                  max={MAX_SECONDS}
-                  onValue={(value) => updateSetting('restSeconds', value)}
-                />
-              </Field>
-              <Field label={ui.rounds} hint={ui.roundsHint}>
-                <NumberInput
-                  value={state.settings.rounds}
-                  min={1}
-                  max={MAX_ROUNDS}
-                  onValue={(value) => updateSetting('rounds', value)}
-                />
-              </Field>
+              {(
+                [
+                  ['prepSeconds', ui.prepSeconds, ui.secondsHint],
+                  ['workSeconds', ui.workSeconds, ui.secondsHint],
+                  ['restSeconds', ui.restSeconds, ui.secondsHint],
+                  ['rounds', ui.rounds, ui.roundsHint],
+                ] as [keyof IntervalSettings, string, string][]
+              ).map(([key, label, hint]) => (
+                <Field key={key} label={label} hint={hint}>
+                  <TextInput
+                    value={drafts[key]}
+                    inputMode="numeric"
+                    autocomplete="off"
+                    onInput={(event) => updateSetting(key, (event.currentTarget as HTMLInputElement).value)}
+                    onBlur={() => setDrafts((current) => ({ ...current, [key]: String(state.settings[key]) }))}
+                  />
+                </Field>
+              ))}
             </div>
           </fieldset>
         </section>

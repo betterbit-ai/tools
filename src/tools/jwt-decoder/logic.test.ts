@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_TOKEN_LENGTH, decodeJwt, getJwtTimeStatus, normalizeToken } from './logic';
+import { MAX_TOKEN_LENGTH, decodeJwt, formatClaimDistance, getJwtTimeStatus, normalizeToken } from './logic';
 
 const VALID_TOKEN =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiLtmY3quLjrj5kiLCJpYXQiOjE3MDQwNjcyMDAsIm5iZiI6MTcwNDA2NzE0MCwiZXhwIjoxNzA0MDY3MjYwfQ.signature';
@@ -53,5 +53,25 @@ describe('JWT token normalization', () => {
     expect(normalizeToken('  BEARER a.b.c  ')).toBe('a.b.c');
     expect(normalizeToken('bearer-token.a.b')).toBe('bearer-token.a.b');
     expect(normalizeToken('토큰.a.b')).toBe('토큰.a.b');
+  });
+
+  it('joins a token that was pasted over several lines by a YAML file or a chat window', () => {
+    expect(normalizeToken('Bearer abc.def\n  ghi\njkl')).toBe('abc.defghijkl');
+    expect(decodeJwt('Bearer eyJhbGciOiJIUzI1NiJ9\n.eyJzdWIiOiJhIn0\n.sig').status).toBe('decoded');
+  });
+});
+
+describe('claim distance wording', () => {
+  it('uses the largest unit that keeps the distance readable', () => {
+    expect(formatClaimDistance(604_800_000, 'en')).toBe('in 1 week');
+    expect(formatClaimDistance(-259_200_000, 'en')).toBe('3 days ago');
+    expect(formatClaimDistance(3_600_000, 'en')).toBe('in 1 hour');
+    expect(formatClaimDistance(-45_000, 'en')).toBe('45 seconds ago');
+    expect(formatClaimDistance(2_592_000_000, 'en')).toBe('in 1 month');
+  });
+
+  it('localizes the wording instead of printing raw seconds', () => {
+    expect(formatClaimDistance(-259_200_000, 'ko')).toContain('3일');
+    expect(formatClaimDistance(604_800_000, 'ko')).not.toContain('초');
   });
 });

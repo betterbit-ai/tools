@@ -244,6 +244,68 @@ export function parseJsonSafe(input: string): ParseResult {
   }
 }
 
+/**
+ * Integer literals that JavaScript cannot hold exactly. JSON.parse turns every number into a
+ * double, so a 19-digit order or user id comes back as a different number — and formatting it
+ * would present the changed digits as if they were the document's. The scanner reports the literal
+ * next to the value a reader would actually see, so the page can say what happened instead of
+ * quietly rewriting an identifier.
+ */
+export interface UnsafeInteger {
+  /** The digits exactly as they appear in the input. */
+  literal: string;
+  /** What the formatted output shows instead. */
+  shown: string;
+}
+
+export function findUnsafeIntegers(raw: string): UnsafeInteger[] {
+  const unsafe: UnsafeInteger[] = [];
+  const seen = new Set<string>();
+  let index = 0;
+  let inString = false;
+  let escaped = false;
+
+  while (index < raw.length) {
+    const character = raw[index];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (character === '\\') escaped = true;
+      else if (character === '"') inString = false;
+      index += 1;
+      continue;
+    }
+    if (character === '"') {
+      inString = true;
+      index += 1;
+      continue;
+    }
+    if (character === '-' || (character >= '0' && character <= '9')) {
+      const start = index;
+      if (character === '-') index += 1;
+      const digitsStart = index;
+      while (index < raw.length && raw[index] >= '0' && raw[index] <= '9') index += 1;
+      const literal = raw.slice(start, index);
+      const next = raw[index];
+      // Fractions and exponents are doubles by definition and are not reported as lost digits.
+      if (next === '.' || next === 'e' || next === 'E') {
+        while (index < raw.length && /[0-9eE+.-]/.test(raw[index])) index += 1;
+        continue;
+      }
+      if (index - digitsStart >= 15 && !seen.has(literal)) {
+        const shown = JSON.stringify(Number(literal)) ?? 'null';
+        if (shown !== literal) {
+          seen.add(literal);
+          unsafe.push({ literal, shown });
+        }
+      }
+      continue;
+    }
+    index += 1;
+  }
+
+  return unsafe;
+}
+
 export type IndentOption = 2 | 4 | 'tab';
 
 export function formatJson(value: unknown, indent: IndentOption): string {
