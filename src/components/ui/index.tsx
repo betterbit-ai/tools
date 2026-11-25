@@ -4,12 +4,7 @@
  * add it here (generic, token-based) — don't style one-offs inside a tool.
  * See docs/DESIGN_SYSTEM.md.
  */
-import type {
-  ButtonHTMLAttributes,
-  ComponentChildren,
-  InputHTMLAttributes,
-  TextareaHTMLAttributes,
-} from 'preact';
+import type { ButtonHTMLAttributes, ComponentChildren, InputHTMLAttributes, TextareaHTMLAttributes } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { cx, inputClass } from './cx';
 

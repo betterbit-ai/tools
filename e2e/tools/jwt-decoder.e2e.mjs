@@ -30,9 +30,7 @@ function relative(seconds, locale = 'en') {
   ];
   const [unit, size] = units.find(([, size]) => Math.abs(seconds) >= size) ?? ['second', 1];
   const value = Math.round(seconds / size);
-  return new Intl.RelativeTimeFormat(locale, { numeric: 'always' })
-    .format(value, unit)
-    .replace(/\s+/g, ' ');
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'always' }).format(value, unit).replace(/\s+/g, ' ');
 }
 
 export default async function (t) {
