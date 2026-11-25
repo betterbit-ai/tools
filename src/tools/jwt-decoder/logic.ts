@@ -98,7 +98,24 @@ export function formatClaimDistance(milliseconds: number, locale: string): strin
     ['second', 1],
   ];
   const [unit, size] = units.find(([, size]) => Math.abs(seconds) >= size) ?? ['second', 1];
-  return new Intl.RelativeTimeFormat(locale, { numeric: 'always' }).format(Math.round(seconds / size), unit);
+  let value = Math.round(seconds / size);
+  let chosen = unit;
+  // A rounded value that reaches the next unit is written as that unit: 3,599 seconds is
+  // "in 1 hour", not "in 60 minutes".
+  const upgrade: Partial<Record<Intl.RelativeTimeFormatUnit, [Intl.RelativeTimeFormatUnit, number]>> = {
+    second: ['minute', 60],
+    minute: ['hour', 60],
+    hour: ['day', 24],
+    day: ['week', 7],
+    week: ['month', 4],
+    month: ['year', 12],
+  };
+  while (chosen !== 'year' && Math.abs(value) >= (upgrade[chosen]?.[1] ?? Infinity)) {
+    const [nextUnit, factor] = upgrade[chosen]!;
+    value = Math.round(value / factor);
+    chosen = nextUnit;
+  }
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'always' }).format(value, chosen);
 }
 
 function decodeJsonObject(

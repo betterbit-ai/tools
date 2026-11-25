@@ -70,6 +70,12 @@ describe('claim distance wording', () => {
     expect(formatClaimDistance(2_592_000_000, 'en')).toBe('in 1 month');
   });
 
+  it('does not round up into the next unit (3,599 s is not "in 60 minutes")', () => {
+    expect(formatClaimDistance(3_599_000, 'en')).toBe('in 1 hour');
+    expect(formatClaimDistance(3_599_000, 'ko')).toBe('1시간 후');
+    expect(formatClaimDistance(-86_399_000, 'en')).toBe('1 day ago');
+  });
+
   it('localizes the wording instead of printing raw seconds', () => {
     expect(formatClaimDistance(-259_200_000, 'ko')).toContain('3일');
     expect(formatClaimDistance(604_800_000, 'ko')).not.toContain('초');
