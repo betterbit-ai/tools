@@ -52,6 +52,19 @@ export function delimiterCharacter(choice: DelimiterChoice, input: string): stri
 
 /** Detect separators outside RFC 4180 quoted fields. Comma is the safe fallback. */
 export function detectDelimiter(input: string): string {
+  let delimiter = ',';
+  let largest = 0;
+  for (const [candidate, count] of delimiterCounts(input)) {
+    if (count > largest) {
+      delimiter = candidate;
+      largest = count;
+    }
+  }
+  return delimiter;
+}
+
+/** How often each candidate separator appears outside quoted fields. */
+function delimiterCounts(input: string): Map<string, number> {
   const counts = new Map<string, number>([
     [',', 0],
     [';', 0],
@@ -68,15 +81,36 @@ export function detectDelimiter(input: string): string {
     }
     if (!quoted && counts.has(char)) counts.set(char, (counts.get(char) ?? 0) + 1);
   }
-  let delimiter = ',';
-  let largest = 0;
+  return counts;
+}
+
+const CHOICE_FOR_CHARACTER: Record<string, Exclude<DelimiterChoice, 'auto'>> = {
+  ',': 'comma',
+  ';': 'semicolon',
+  '\t': 'tab',
+  '|': 'pipe',
+};
+
+/**
+ * The separator a file really uses when the visitor picked a different one, so the page can say why
+ * the result has one column instead of quietly returning the line as a single field.
+ */
+export function delimiterSuggestion(input: string, choice: DelimiterChoice): Exclude<DelimiterChoice, 'auto'> | null {
+  if (choice === 'auto') return null;
+  const counts = delimiterCounts(input);
+  const chosen = counts.get(DELIMITERS[choice]) ?? 0;
+  let best = '';
+  let bestCount = 0;
   for (const [candidate, count] of counts) {
-    if (count > largest) {
-      delimiter = candidate;
-      largest = count;
+    if (candidate !== DELIMITERS[choice] && count > bestCount) {
+      best = candidate;
+      bestCount = count;
     }
   }
-  return delimiter;
+  if (bestCount === 0) return null;
+  // Only when the picked separator is absent, or clearly rarer than the one the file repeats.
+  if (chosen === 0 || bestCount > chosen * 4) return CHOICE_FOR_CHARACTER[best] ?? null;
+  return null;
 }
 
 /** Parse RFC 4180-style CSV, including CRLF, escaped quotes and quoted line breaks. */

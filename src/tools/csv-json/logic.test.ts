@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convert, detectDelimiter, parseCsv, quoteCsv, type ConvertOptions } from './logic';
+import { convert, delimiterSuggestion, detectDelimiter, parseCsv, quoteCsv, type ConvertOptions } from './logic';
 
 const csvOptions: ConvertOptions = { delimiter: 'auto', hasHeader: true, inferTypes: false, indent: 2 };
 
@@ -124,5 +124,23 @@ describe('JSON to CSV', () => {
   it('handles many rows without partial conversion', () => {
     const input = JSON.stringify(Array.from({ length: 20_000 }, (_, index) => ({ id: index, text: `행 ${index}` })));
     expect(convert(input, 'json-to-csv', csvOptions)).toMatchObject({ ok: true, rows: 20_000, columns: 2 });
+  });
+});
+
+describe('delimiterSuggestion', () => {
+  it('names the separator the file really uses when the chosen one is absent', () => {
+    expect(delimiterSuggestion('name\tcity\nAda\tSeoul', 'comma')).toBe('tab');
+    expect(delimiterSuggestion('name;city\nAda;Seoul', 'comma')).toBe('semicolon');
+    expect(delimiterSuggestion('a|b\n1|2', 'tab')).toBe('pipe');
+  });
+
+  it('stays quiet when the chosen separator is the one in the file, or detection was automatic', () => {
+    expect(delimiterSuggestion('name,city\nAda,Seoul', 'comma')).toBeNull();
+    expect(delimiterSuggestion('name\tcity\nAda\tSeoul', 'auto')).toBeNull();
+    expect(delimiterSuggestion('single column\nno separators', 'comma')).toBeNull();
+  });
+
+  it('ignores separators inside quoted fields', () => {
+    expect(delimiterSuggestion('name,city\n"Ada, Jr.",Seoul', 'semicolon')).toBe('comma');
   });
 });

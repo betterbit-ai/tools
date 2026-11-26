@@ -98,7 +98,9 @@ export function rgbToOklch(color: RgbColor): OklchColor {
   const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
   const blueYellow = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
   const chroma = Math.hypot(a, blueYellow);
-  const hue = chroma < 0.00000001 ? 0 : (Math.atan2(blueYellow, a) * 180) / Math.PI;
+  // A grey holds no hue at all. Below the precision this page prints, the angle is floating-point
+  // noise, so report the powerless hue as 0 rather than a number such as 89.9°.
+  const hue = chroma < 0.00005 ? 0 : (Math.atan2(blueYellow, a) * 180) / Math.PI;
   return { l: lightness * 100, c: chroma, h: (hue + 360) % 360 };
 }
 

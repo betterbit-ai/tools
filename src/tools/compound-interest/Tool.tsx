@@ -1,13 +1,59 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { BarChart, Button, Field, Notice, NumberInput, Panel, Segmented, Select, Stat } from '../../components/ui';
+import { BarChart, Button, Field, Notice, Panel, Segmented, Select, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculateCompoundInterest, type CompoundFrequency, type ContributionTiming } from './logic';
+import {
+  compoundInputIssue,
+  parseCompoundNumber,
+  calculateCompoundInterest,
+  type CompoundFrequency,
+  type ContributionTiming,
+} from './logic';
 import { defaultCompoundInterestState, restoreCompoundInterestState, type CompoundInterestState } from './state';
 
 const STORAGE_KEY = 'tools:compound-interest:state';
+
+/**
+ * A numeric field that keeps the text the visitor typed and reports only a readable number.
+ *
+ * The shared number input re-renders a partial value, so a decimal point typed into a rate field
+ * vanished: "5.5" arrived as 55. Keeping the text here means "5." stays "5." while the projection
+ * already uses 5, and a field that holds text is reported instead of being read as blank.
+ */
+function NumberField(props: {
+  value: number | '';
+  onValue: (value: number | '') => void;
+  label: string;
+  hint?: string;
+}) {
+  const [text, setText] = useState(() => (props.value === '' ? '' : String(props.value)));
+
+  // Follow the value when something else changes it (Reset, a restored session), but never
+  // rewrite what the visitor is in the middle of typing.
+  useEffect(() => {
+    if (props.value === '') return;
+    if (parseCompoundNumber(text) !== props.value) setText(String(props.value));
+  }, [props.value, text]);
+
+  return (
+    <Field label={props.label} hint={props.hint}>
+      <TextInput
+        value={text}
+        inputMode="decimal"
+        autocomplete="off"
+        spellcheck={false}
+        class="tabular"
+        onInput={(event) => {
+          const typed = (event.currentTarget as HTMLInputElement).value;
+          setText(typed);
+          props.onValue(parseCompoundNumber(typed) ?? '');
+        }}
+      />
+    </Field>
+  );
+}
 
 export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
   const initialState = useMemo(() => defaultCompoundInterestState(locale), [locale]);
@@ -30,6 +76,19 @@ export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
 
   const update = (patch: Partial<CompoundInterestState>) => setState((current) => ({ ...current, ...patch }));
   const result = useMemo(() => calculateCompoundInterest(state), [state]);
+  const issue = useMemo(() => compoundInputIssue(state), [state]);
+  const issueText =
+    issue === 'amount'
+      ? ui.amountRange
+      : issue === 'rate'
+        ? ui.rateRange
+        : issue === 'years'
+          ? ui.yearsRange
+          : issue === 'missing'
+            ? ui.missingInput
+            : issue === 'settings'
+              ? ui.invalidInput
+              : null;
   const money = (value: number) => formatNumber(value, locale, 0);
   const percent = (value: number) => `${formatNumber(value * 100, locale, 2)}%`;
   const chartItems = result?.schedule.map((row) => ({ label: `${ui.year} ${row.year}`, value: row.balance })) ?? [];
@@ -54,37 +113,31 @@ export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
 
       <div class="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div class="flex flex-col gap-4">
-          <Field label={ui.principalLabel} hint={ui.principalHint}>
-            <NumberInput
-              value={state.principal}
-              min="0"
-              max="1000000000000"
-              step="1"
-              onValue={(principal) => update({ principal })}
-            />
-          </Field>
-          <Field label={ui.monthlyContributionLabel} hint={ui.monthlyContributionHint}>
-            <NumberInput
-              value={state.monthlyContribution}
-              min="0"
-              max="1000000000000"
-              step="1"
-              onValue={(monthlyContribution) => update({ monthlyContribution })}
-            />
-          </Field>
+          <NumberField
+            label={ui.principalLabel}
+            hint={ui.principalHint}
+            value={state.principal}
+            onValue={(principal) => update({ principal })}
+          />
+          <NumberField
+            label={ui.monthlyContributionLabel}
+            hint={ui.monthlyContributionHint}
+            value={state.monthlyContribution}
+            onValue={(monthlyContribution) => update({ monthlyContribution })}
+          />
           <div class="grid grid-cols-2 gap-3">
-            <Field label={ui.rateLabel} hint={ui.rateHint}>
-              <NumberInput
-                value={state.annualRate}
-                min="0"
-                max="100"
-                step="0.01"
-                onValue={(annualRate) => update({ annualRate })}
-              />
-            </Field>
-            <Field label={ui.yearsLabel} hint={ui.yearsHint}>
-              <NumberInput value={state.years} min="1" max="100" step="1" onValue={(years) => update({ years })} />
-            </Field>
+            <NumberField
+              label={ui.rateLabel}
+              hint={ui.rateHint}
+              value={state.annualRate}
+              onValue={(annualRate) => update({ annualRate })}
+            />
+            <NumberField
+              label={ui.yearsLabel}
+              hint={ui.yearsHint}
+              value={state.years}
+              onValue={(years) => update({ years })}
+            />
           </div>
           <Field label={ui.frequencyLabel} hint={ui.frequencyHint}>
             <Select<CompoundFrequency>
@@ -114,7 +167,7 @@ export default function CompoundInterest({ locale, ui }: ToolProps<UI>) {
         <div class="flex flex-col gap-3">
           <p class="text-sm font-medium text-fg">{ui.resultsHeading}</p>
           {!result ? (
-            <Notice tone="danger">{ui.invalidInput}</Notice>
+            <Notice tone="danger">{issueText}</Notice>
           ) : (
             <>
               <div class="grid grid-cols-2 gap-2" aria-live="polite">

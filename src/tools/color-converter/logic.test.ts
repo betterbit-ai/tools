@@ -60,3 +60,18 @@ describe('color spaces and contrast', () => {
     expect(contrastRatio({ r: 119, g: 119, b: 119 }, white)).toBeCloseTo(4.48, 2);
   });
 });
+
+describe('rgbToOklch', () => {
+  it('reports a powerless hue for greys instead of floating-point noise', () => {
+    for (const grey of [0, 64, 128, 200, 255]) {
+      const values = rgbToOklch({ r: grey, g: grey, b: grey });
+      expect(values.c).toBeLessThan(0.00005);
+      expect(values.h).toBe(0);
+    }
+  });
+
+  it('keeps the hue of a colour that has chroma', () => {
+    expect(rgbToOklch({ r: 255, g: 0, b: 0 }).h).toBeCloseTo(29.2, 1);
+    expect(rgbToOklch({ r: 0, g: 0, b: 255 }).h).toBeCloseTo(264.1, 1);
+  });
+});

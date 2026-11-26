@@ -131,13 +131,24 @@ export default function ColorConverter({ ui }: ToolProps<UI>) {
     const { r, g, b } = selected.conversion.color;
     setState({ source: 'hex', hex: selected.conversion.hex, r: String(r), g: String(g), b: String(b) });
   };
+  // A code that is still being typed is not a mistake: it waits as a hint, and only text that can
+  // never become a colour is announced as an error.
+  const pendingHex =
+    state.source === 'hex' &&
+    !result.ok &&
+    result.code !== 'empty' &&
+    /^#?[\da-fA-F]{0,5}$/.test(state.hex.trim()) &&
+    !/^#?[\da-fA-F]{3}$/.test(state.hex.trim());
   const error = result.ok
     ? null
     : result.code === 'empty'
       ? ui.errorEmpty
-      : result.code === 'invalidHex'
-        ? ui.errorHex
-        : ui.errorRgb;
+      : pendingHex
+        ? ui.partialHex
+        : result.code === 'invalidHex'
+          ? ui.errorHex
+          : ui.errorRgb;
+  const errorTone = result.ok || pendingHex || result.code === 'empty' ? 'info' : 'danger';
 
   return (
     <Panel>
@@ -217,7 +228,7 @@ export default function ColorConverter({ ui }: ToolProps<UI>) {
               <Stat label={ui.luminanceLabel} value={result.conversion.luminance.toFixed(4)} />
             </div>
           ) : (
-            <Notice tone="danger">{error}</Notice>
+            <Notice tone={errorTone}>{error}</Notice>
           )}
         </div>
       </div>

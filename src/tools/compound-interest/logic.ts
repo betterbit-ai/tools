@@ -127,6 +127,25 @@ export function calculateCompoundInterest(input: CompoundInterestInput): Compoun
   };
 }
 
+export type CompoundInputIssue = 'missing' | 'amount' | 'rate' | 'years' | 'settings';
+
+/**
+ * Names the first reason a projection was refused, so the page can point at the field that needs
+ * attention instead of repeating every limit at once.
+ */
+export function compoundInputIssue(input: CompoundInterestInput): CompoundInputIssue | null {
+  if (calculateCompoundInterest(input)) return null;
+  const principal = parseCompoundNumber(input.principal);
+  const contribution = parseCompoundNumber(input.monthlyContribution);
+  const rate = parseCompoundNumber(input.annualRate);
+  const years = parseCompoundNumber(input.years);
+  if (principal === null || contribution === null || rate === null || years === null) return 'missing';
+  if (principal < 0 || principal > MAX_AMOUNT || contribution < 0 || contribution > MAX_AMOUNT) return 'amount';
+  if (rate < 0 || rate > MAX_ANNUAL_RATE) return 'rate';
+  if (!Number.isInteger(years) || years < 1 || years > MAX_YEARS) return 'years';
+  return 'settings';
+}
+
 function isCompoundFrequency(value: unknown): value is CompoundFrequency {
   return value === 'annual' || value === 'quarterly' || value === 'monthly' || value === 'daily';
 }

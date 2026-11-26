@@ -63,13 +63,36 @@ export interface DataSizeResults {
   binary: { unit: DataUnit; value: number }[];
 }
 
+/** What a visitor's typed size means, so the UI can explain a value it cannot convert. */
+export type DataSizeReading =
+  { status: 'empty' } | { status: 'invalid' } | { status: 'tooLarge' } | { status: 'ok'; value: number; bytes: number };
+
+/**
+ * Reads a typed size in the chosen unit. Zero is a real answer; a negative, unreadable or
+ * unrepresentably large size is reported instead of being converted to 0 as if it were none.
+ */
+export function readDataSize(text: string, unit: DataUnit): DataSizeReading {
+  const normalized = text.normalize('NFKC').trim().replaceAll(',', '');
+  if (normalized === '') return { status: 'empty' };
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed < 0 || !isDataUnit(unit)) return { status: 'invalid' };
+  const bytes = parsed * BYTES_PER_UNIT[unit];
+  if (!Number.isFinite(bytes) || bytes > MAX_BYTES) return { status: 'tooLarge' };
+  return { status: 'ok', value: parsed, bytes };
+}
+
+/** Both formal systems from a shared byte count, so no unit labels are silently repurposed. */
+export function resultsFromBytes(bytes: number): DataSizeResults {
+  const safe = Number.isFinite(bytes) && bytes >= 0 ? bytes : 0;
+  return {
+    bits: safe * 8,
+    bytes: safe,
+    decimal: DECIMAL_UNITS.map((unit) => ({ unit, value: safe / BYTES_PER_UNIT[unit] })),
+    binary: BINARY_UNITS.map((unit) => ({ unit, value: safe / BYTES_PER_UNIT[unit] })),
+  };
+}
+
 /** Returns both formal systems from a shared byte value, so no unit labels are silently repurposed. */
 export function dataSizeResults(value: number, from: DataUnit): DataSizeResults {
-  const bytes = bytesFrom(value, from) ?? 0;
-  return {
-    bits: bytes * 8,
-    bytes,
-    decimal: DECIMAL_UNITS.map((unit) => ({ unit, value: bytes / BYTES_PER_UNIT[unit] })),
-    binary: BINARY_UNITS.map((unit) => ({ unit, value: bytes / BYTES_PER_UNIT[unit] })),
-  };
+  return resultsFromBytes(bytesFrom(value, from) ?? 0);
 }

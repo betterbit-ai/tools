@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { calculateCompoundInterest, MAX_AMOUNT, MAX_ANNUAL_RATE, MAX_YEARS, parseCompoundNumber } from './logic';
+import {
+  calculateCompoundInterest,
+  compoundInputIssue,
+  MAX_AMOUNT,
+  MAX_ANNUAL_RATE,
+  MAX_YEARS,
+  parseCompoundNumber,
+} from './logic';
 
 const base = {
   principal: 1_000,
@@ -104,5 +111,19 @@ describe('parseCompoundNumber', () => {
   it('rejects blank and non-numeric Unicode text', () => {
     expect(parseCompoundNumber('')).toBeNull();
     expect(parseCompoundNumber('복리 💸')).toBeNull();
+  });
+});
+
+describe('compoundInputIssue', () => {
+  it('names the field that stops a projection instead of repeating every limit', () => {
+    expect(compoundInputIssue(base)).toBeNull();
+    expect(compoundInputIssue({ ...base, principal: '' })).toBe('missing');
+    expect(compoundInputIssue({ ...base, monthlyContribution: 'abc' })).toBe('missing');
+    expect(compoundInputIssue({ ...base, principal: -1 })).toBe('amount');
+    expect(compoundInputIssue({ ...base, monthlyContribution: MAX_AMOUNT + 1 })).toBe('amount');
+    expect(compoundInputIssue({ ...base, annualRate: MAX_ANNUAL_RATE + 1 })).toBe('rate');
+    expect(compoundInputIssue({ ...base, years: 0 })).toBe('years');
+    expect(compoundInputIssue({ ...base, years: 2.5 })).toBe('years');
+    expect(compoundInputIssue({ ...base, frequency: 'weekly' as never })).toBe('settings');
   });
 });

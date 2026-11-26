@@ -8,6 +8,8 @@ import {
   dataSizeResults,
   isDataUnit,
   parseDataSizeNumber,
+  readDataSize,
+  resultsFromBytes,
 } from './logic';
 
 describe('convertDataSize', () => {
@@ -76,6 +78,42 @@ describe('dataSizeResults', () => {
     expect(results.binary.map((item) => item.unit)).toEqual(BINARY_UNITS);
     expect(results.bits).toBe(0);
     expect(results.bytes).toBe(0);
+  });
+});
+
+describe('readDataSize', () => {
+  it('reads decimals, grouped values and full-width digits that people actually type', () => {
+    expect(readDataSize('1.5', 'GB')).toEqual({ status: 'ok', value: 1.5, bytes: 1_500_000_000 });
+    expect(readDataSize('1,024.5', 'MB')).toEqual({ status: 'ok', value: 1024.5, bytes: 1_024_500_000 });
+    expect(readDataSize('１，０２４', 'kB')).toEqual({ status: 'ok', value: 1024, bytes: 1_024_000 });
+  });
+
+  it('treats zero as a real answer and an empty field as no answer', () => {
+    expect(readDataSize('0', 'MB')).toEqual({ status: 'ok', value: 0, bytes: 0 });
+    expect(readDataSize('', 'MB')).toEqual({ status: 'empty' });
+    expect(readDataSize('   ', 'MB')).toEqual({ status: 'empty' });
+  });
+
+  it('reports text, negatives and unit-bearing prose instead of converting them to 0', () => {
+    expect(readDataSize('abc', 'MB')).toEqual({ status: 'invalid' });
+    expect(readDataSize('-1', 'MB')).toEqual({ status: 'invalid' });
+    expect(readDataSize('1 GB', 'MB')).toEqual({ status: 'invalid' });
+    expect(readDataSize('Infinity', 'MB')).toEqual({ status: 'invalid' });
+  });
+
+  it('reports a size beyond the precisely representable range instead of showing 0', () => {
+    expect(readDataSize('100000', 'PB')).toEqual({ status: 'tooLarge' });
+    expect(readDataSize(String(MAX_BYTES), 'B')).toMatchObject({ status: 'ok' });
+    expect(readDataSize('1e300', 'TB')).toEqual({ status: 'tooLarge' });
+  });
+});
+
+describe('resultsFromBytes', () => {
+  it('describes the same byte count in both unit systems', () => {
+    const results = resultsFromBytes(1_500_000_000);
+    expect(results.decimal.find((item) => item.unit === 'GB')?.value).toBe(1.5);
+    expect(results.binary.find((item) => item.unit === 'GiB')?.value).toBeCloseTo(1.3969838619, 9);
+    expect(results.bits).toBe(12_000_000_000);
   });
 });
 

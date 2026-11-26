@@ -30,6 +30,7 @@ const uiEn = {
   copied: 'Copied',
   errorEmpty: 'Enter a HEX color to convert it.',
   errorHex: 'Use exactly 3 or 6 hexadecimal digits, with an optional #.',
+  partialHex: 'Keep typing — a HEX colour is 3 or 6 hexadecimal digits.',
   errorRgb: 'Each RGB channel must be a whole number from 0 to 255.',
   contrastHint: 'Opaque color against a solid white or black background.',
 };
@@ -167,6 +168,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       copied: '복사됨',
       errorEmpty: '변환할 HEX 색상 코드를 입력하세요.',
       errorHex: '#을 포함하거나 생략한 3자리 또는 6자리 16진수를 입력하세요.',
+      partialHex: '계속 입력하세요. HEX 색상 코드는 3자리 또는 6자리 16진수입니다.',
       errorRgb: 'RGB 채널은 각각 0부터 255까지의 정수여야 합니다.',
       contrastHint: '불투명 색을 단색 흰색 또는 검은색 배경과 비교합니다.',
     },

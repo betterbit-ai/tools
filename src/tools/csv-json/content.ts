@@ -13,12 +13,17 @@ const uiEn = {
   placeholderJson: '[\n  { "name": "Ada", "city": "Seoul" }\n]',
   outputJson: 'JSON result',
   outputCsv: 'CSV result',
-  outputHint: 'The result updates live. Copy, download, or use it as the input for the reverse direction.',
+  outputHint:
+    'The result updates as you type; a very large file converts once you pause. Copy, download, or use it as the input for the reverse direction.',
+  outputTruncated:
+    'This box shows the first {shown} of {total} characters so the page stays responsive. Copy and Download include the whole result.',
   fileTitle: 'Open a local CSV, TSV, or JSON file',
   fileHint: 'Drop, choose, or paste a file — it is read only in this browser.',
   fileReadError: 'This file could not be read. Try pasting its text instead.',
   delimiterLabel: 'Delimiter',
   delimiterAuto: 'Detect automatically',
+  delimiterMismatch:
+    'The delimiter you chose does not appear in this file. Setting Delimiter to {option} splits it into columns.',
   delimiterComma: 'Comma (,)',
   delimiterSemicolon: 'Semicolon (;)',
   delimiterTab: 'Tab',
@@ -174,12 +179,16 @@ export const content: Record<Locale, ToolContent<UI>> = {
       placeholderJson: '[\n  { "이름": "민수", "도시": "서울" }\n]',
       outputJson: 'JSON 결과',
       outputCsv: 'CSV 결과',
-      outputHint: '결과가 바로 갱신됩니다. 복사·다운로드하거나 반대 방향의 입력으로 다시 넣을 수 있습니다.',
+      outputHint:
+        '입력하는 대로 결과가 갱신되며, 아주 큰 파일은 입력을 잠시 멈추면 변환됩니다. 복사·다운로드하거나 반대 방향의 입력으로 다시 넣을 수 있습니다.',
+      outputTruncated:
+        '페이지가 느려지지 않도록 전체 {total}자 중 앞 {shown}자만 표시합니다. 복사와 다운로드에는 전체 결과가 담깁니다.',
       fileTitle: '로컬 CSV·TSV·JSON 파일 열기',
       fileHint: '파일을 끌어 놓거나 선택하거나 붙여넣으세요. 이 브라우저 안에서만 읽습니다.',
       fileReadError: '파일을 읽지 못했습니다. 내용을 텍스트로 붙여넣어 보세요.',
       delimiterLabel: '구분자',
       delimiterAuto: '자동 감지',
+      delimiterMismatch: '고른 구분자가 이 파일에 없습니다. 구분자를 {option}로 바꾸면 열로 나뉩니다.',
       delimiterComma: '쉼표 (,)',
       delimiterSemicolon: '세미콜론 (;)',
       delimiterTab: '탭',

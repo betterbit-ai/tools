@@ -16,7 +16,14 @@ import { downloadBlob, safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { convert, type ConversionError, type DelimiterChoice, type Direction, type Indent } from './logic';
+import {
+  convert,
+  delimiterSuggestion,
+  type ConversionError,
+  type DelimiterChoice,
+  type Direction,
+  type Indent,
+} from './logic';
 
 const INPUT_KEY = 'tools:csv-json:input';
 const DIRECTION_KEY = 'tools:csv-json:direction';
@@ -25,6 +32,10 @@ const HEADER_KEY = 'tools:csv-json:header';
 const TYPES_KEY = 'tools:csv-json:types';
 const INDENT_KEY = 'tools:csv-json:indent';
 const PREVIEW_ROWS = 10;
+/** Above this size the conversion waits for a pause in typing instead of running per keystroke. */
+const LARGE_INPUT = 20_000;
+/** The output box shows this much; Copy and Download still carry the whole result. */
+const OUTPUT_PREVIEW_LIMIT = 200_000;
 
 const errorKey: Record<ConversionError['code'], keyof UI> = {
   'empty-input': 'errorEmpty',
@@ -85,12 +96,42 @@ export default function CsvJson({ locale, ui }: ToolProps<UI>) {
   useEffect(() => safeStorage.set(TYPES_KEY, inferTypes ? '1' : '0'), [inferTypes]);
   useEffect(() => safeStorage.set(INDENT_KEY, String(indent)), [indent]);
 
+  // A megabyte of CSV re-parsed on every keystroke froze the tab for about a second per character.
+  // Small documents still convert as you type; large ones convert once typing pauses.
+  const [convertedInput, setConvertedInput] = useState(input);
+  useEffect(() => {
+    if (input.length <= LARGE_INPUT) {
+      setConvertedInput(input);
+      return;
+    }
+    const id = setTimeout(() => setConvertedInput(input), 250);
+    return () => clearTimeout(id);
+  }, [input]);
+
   const result = useMemo(
-    () => convert(input, direction, { delimiter, hasHeader, inferTypes, indent }),
-    [direction, hasHeader, indent, inferTypes, input, delimiter],
+    () => convert(convertedInput, direction, { delimiter, hasHeader, inferTypes, indent }),
+    [convertedInput, direction, hasHeader, indent, inferTypes, delimiter],
   );
   const output = result.ok ? result.output : '';
+  // A multi-megabyte result in a textarea costs a second of layout on every change. The box shows
+  // the beginning; Copy and Download still hand over every character.
+  const outputTruncated = output.length > OUTPUT_PREVIEW_LIMIT;
+  const shownOutput = outputTruncated ? output.slice(0, OUTPUT_PREVIEW_LIMIT) : output;
   const error = result.ok ? null : fill(ui[errorKey[result.error.code]], result.error);
+  const suggestion = useMemo(
+    () => (direction === 'csv-to-json' && result.ok ? delimiterSuggestion(input, delimiter) : null),
+    [delimiter, direction, input, result],
+  );
+  const suggestionLabel =
+    suggestion === 'comma'
+      ? ui.delimiterComma
+      : suggestion === 'semicolon'
+        ? ui.delimiterSemicolon
+        : suggestion === 'tab'
+          ? ui.delimiterTab
+          : suggestion === 'pipe'
+            ? ui.delimiterPipe
+            : '';
   const inputLabel = direction === 'csv-to-json' ? ui.inputCsv : ui.inputJson;
   const inputHint = direction === 'csv-to-json' ? ui.inputHintCsv : ui.inputHintJson;
   const outputLabel = direction === 'csv-to-json' ? ui.outputJson : ui.outputCsv;
@@ -155,7 +196,7 @@ export default function CsvJson({ locale, ui }: ToolProps<UI>) {
           <div class="flex min-w-0 flex-col gap-3">
             <Field label={outputLabel} hint={ui.outputHint}>
               <Textarea
-                value={output}
+                value={shownOutput}
                 readOnly
                 spellcheck={false}
                 class="min-h-[280px] font-mono text-sm"
@@ -163,6 +204,15 @@ export default function CsvJson({ locale, ui }: ToolProps<UI>) {
               />
             </Field>
             {error && <Notice tone="danger">{error}</Notice>}
+            {suggestion && <Notice tone="info">{fill(ui.delimiterMismatch, { option: suggestionLabel })}</Notice>}
+            {outputTruncated && (
+              <Notice tone="info">
+                {fill(ui.outputTruncated, {
+                  shown: formatNumber(OUTPUT_PREVIEW_LIMIT, locale),
+                  total: formatNumber(output.length, locale),
+                })}
+              </Notice>
+            )}
           </div>
         </div>
 
@@ -205,7 +255,9 @@ export default function CsvJson({ locale, ui }: ToolProps<UI>) {
             disabled={!result.ok || !output}
             onClick={() =>
               downloadBlob(
-                new Blob([output], {
+                // A spreadsheet reads a UTF-8 CSV without a byte-order mark as the local code page:
+                // Korean arrived as mojibake in Excel while this page's preview looked right.
+                new Blob([direction === 'csv-to-json' ? output : `\uFEFF${output}`], {
                   type: direction === 'csv-to-json' ? 'application/json' : 'text/csv;charset=utf-8',
                 }),
                 direction === 'csv-to-json' ? 'converted.json' : 'converted.csv',

@@ -40,23 +40,34 @@ function isInput(value: unknown): value is CountdownInput {
   );
 }
 
-function shareUrl(input: CountdownInput): string {
-  if (typeof window === 'undefined') return '';
-  const url = new URL(window.location.href);
-  url.search = '';
+function shareFragment(input: CountdownInput): string {
   const state = new URLSearchParams();
   state.set('date', input.date);
   if (input.time) state.set('time', input.time);
   if (input.event) state.set('event', input.event);
   // Fragments stay in the browser, unlike query strings that are sent when the
   // page is requested. Keep event details out of ordinary request logs.
-  url.hash = state.toString();
+  return state.toString();
+}
+
+function shareUrl(input: CountdownInput): string {
+  if (typeof window === 'undefined') return '';
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = shareFragment(input);
   return url.toString();
 }
 
 export default function Countdown({ ui }: ToolProps<UI>) {
   const [input, setInput] = useState<CountdownInput>(() => defaultInput(Date.now(), ui.newYear));
   const [now, setNow] = useState(() => Date.now());
+  // The static HTML was built at some earlier moment, so its countdown is not the
+  // visitor's. Show dashes until the first client render instead of a stale number.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // A URL is portable; local storage is a convenient fallback for an unshared event.
   useEffect(() => {
@@ -101,6 +112,10 @@ export default function Countdown({ ui }: ToolProps<UI>) {
       : splitRemaining(target!, now)
     : { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const url = useMemo(() => (valid ? shareUrl(input) : ''), [input, valid]);
+  // Until the client computes the absolute link, the fragment alone keeps the copy button
+  // enabled in the static HTML: a disabled attribute that only the server wrote is never
+  // cleared by hydration, which left the headline feature dead on arrival.
+  const shareText = valid ? url || `#${shareFragment(input)}` : '';
 
   const update = useCallback((change: Partial<CountdownInput>) => {
     setInput((previous) => ({ ...previous, ...change }));
@@ -196,16 +211,18 @@ export default function Countdown({ ui }: ToolProps<UI>) {
           ) : (
             <>
               <div class="mt-3 grid grid-cols-2 gap-2">
-                <Stat label={ui.days} value={parts.days} emphasis />
-                <Stat label={ui.hours} value={String(parts.hours).padStart(2, '0')} emphasis />
-                <Stat label={ui.minutes} value={String(parts.minutes).padStart(2, '0')} />
-                <Stat label={ui.seconds} value={String(parts.seconds).padStart(2, '0')} />
+                <Stat label={ui.days} value={mounted ? parts.days : '—'} emphasis />
+                <Stat label={ui.hours} value={mounted ? String(parts.hours).padStart(2, '0') : '—'} emphasis />
+                <Stat label={ui.minutes} value={mounted ? String(parts.minutes).padStart(2, '0') : '—'} />
+                <Stat label={ui.seconds} value={mounted ? String(parts.seconds).padStart(2, '0') : '—'} />
               </div>
               <div class="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
                 <span class="text-sm text-muted">{reached ? ui.elapsed : ui.dday}</span>
-                <span class={cx('tabular text-lg font-semibold', reached ? 'text-muted' : 'text-accent')}>{dday}</span>
+                <span class={cx('tabular text-lg font-semibold', reached ? 'text-muted' : 'text-accent')}>
+                  {mounted ? dday : '—'}
+                </span>
               </div>
-              {reached && <Notice tone="info">{ui.targetReached}</Notice>}
+              {mounted && reached && <Notice tone="info">{ui.targetReached}</Notice>}
             </>
           )}
         </section>
@@ -214,7 +231,7 @@ export default function Countdown({ ui }: ToolProps<UI>) {
       <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
         <p class="max-w-xl text-xs leading-5 text-muted">{ui.shareHint}</p>
         <div class="flex flex-wrap gap-2">
-          <CopyButton text={url} label={ui.share} copiedLabel={ui.copied} />
+          <CopyButton text={shareText} label={ui.share} copiedLabel={ui.copied} />
           <Button size="sm" onClick={reset}>
             {ui.reset}
           </Button>
