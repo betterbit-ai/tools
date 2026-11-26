@@ -51,9 +51,26 @@ export function parseExchangeNumber(value: string, options: { allowNegative?: bo
   return result;
 }
 
-/** Returns the quotation needed after reversing source and target currencies. */
+/**
+ * Returns the quotation needed after reversing source and target currencies.
+ *
+ * A rate of 1,350 becomes 0.0007407407…, which cannot be stored in full. Rounding it to six
+ * decimal places (0.000741) made a second reversal land on 1,349.527665 instead of the quote the
+ * visitor entered, so the inverse keeps ten significant digits and a round trip comes back to the
+ * same number.
+ */
 export function invertRate(rate: number): number | null {
-  return Number.isFinite(rate) && rate > 0 ? round(1 / rate) : null;
+  if (!Number.isFinite(rate) || rate <= 0) return null;
+  const inverted = roundSignificant(1 / rate, 10);
+  return Number.isFinite(inverted) && inverted > 0 ? inverted : null;
+}
+
+/** Plain decimal text for the rate field, so a tiny inverted quote never lands there as "1e-8". */
+export function rateToInput(value: number): string {
+  if (!Number.isFinite(value)) return '';
+  const text = String(value);
+  if (!/e/i.test(text)) return text;
+  return value.toFixed(20).replace(/\.?0+$/, '');
 }
 
 /** Calculates the actual target amount after a percentage adjustment and fixed fee. */
@@ -89,4 +106,10 @@ export function calculateExchange(input: ExchangeInput): ExchangeResult | null {
 
 function round(value: number): number {
   return Math.round((value + Number.EPSILON * Math.sign(value || 1)) * 1_000_000) / 1_000_000;
+}
+
+function roundSignificant(value: number, digits: number): number {
+  if (!Number.isFinite(value) || value === 0) return value;
+  const factor = 10 ** (digits - 1 - Math.floor(Math.log10(Math.abs(value))));
+  return Math.round(value * factor) / factor;
 }

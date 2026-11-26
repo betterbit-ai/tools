@@ -78,7 +78,7 @@ function defaultState(today: string): PersistedState {
   return {
     mode: 'diff',
     startDate: today,
-    endDate: addCalendarDelta(today, { years: 0, months: 1, weeks: 0, days: 0 }, 1),
+    endDate: addCalendarDelta(today, { years: 0, months: 1, weeks: 0, days: 0 }, 1) ?? today,
     includeStart: false,
     diffCountry: 'none',
     baseDate: today,

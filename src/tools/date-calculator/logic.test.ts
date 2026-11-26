@@ -35,6 +35,11 @@ describe('isValidDate', () => {
     expect(daysBetween('0001-01-01', '0001-01-02')).toBe(1);
     expect(addCalendarDelta('0001-01-31', { years: 0, months: 1, weeks: 0, days: 0 }, 1)).toBe('0001-02-28');
   });
+
+  it('rejects a missing date instead of throwing when a shift leaves the range', () => {
+    expect(isValidDate(null)).toBe(false);
+    expect(isValidDate(undefined)).toBe(false);
+  });
 });
 
 describe('todayIso / weekdayIndex', () => {
@@ -221,5 +226,11 @@ describe('addCalendarDelta', () => {
 
   it('combines years, months, weeks and days in one call', () => {
     expect(addCalendarDelta('2026-01-01', { years: 1, months: 2, weeks: 1, days: 3 }, 1)).toBe('2027-03-11');
+  });
+
+  it('returns null instead of throwing when the shift leaves 0001–9999', () => {
+    expect(addCalendarDelta('9999-12-30', { years: 1, months: 0, weeks: 0, days: 0 }, 1)).toBeNull();
+    expect(addCalendarDelta('9999-12-31', { years: 0, months: 0, weeks: 0, days: 1 }, 1)).toBeNull();
+    expect(addCalendarDelta('0001-01-01', { years: 0, months: 0, weeks: 0, days: 1 }, -1)).toBeNull();
   });
 });

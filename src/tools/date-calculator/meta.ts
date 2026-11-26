@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'time',
   icon: 'calendar',
   added: '2026-10-11',
-  updated: '2026-10-14',
+  updated: '2026-11-26',
   edges: ['usability'],
   competitors: [
     {

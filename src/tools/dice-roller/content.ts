@@ -56,7 +56,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ],
     howTo: [
       'Enter a dice expression such as 2d6, d20+5, or 2d6+d8−1.',
-      'Choose a quick roll for a d6, 2d6, d20, advantage, disadvantage, or a D&D ability score.',
+      'Choose a quick roll for a d6, 2d6, d20, advantage, disadvantage, or a D&D ability score; it rolls that expression right away.',
       'Select Roll dice or press R when you are not typing in a field.',
       'Read each die and the total; parentheses mark dice excluded by a keep rule.',
       'Copy the latest result, or revisit the 10 most recent rolls stored in this browser.',
@@ -109,7 +109,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     keywords: ['주사위 굴리기', '온라인 주사위', '랜덤 주사위', 'D&D 주사위', 'TRPG 주사위', 'd20 굴리기', '주사위식'],
     howTo: [
       '2d6, d20+5, 2d6+d8−1처럼 주사위식을 입력하세요.',
-      'D6, 2D6, D20, 유리한 판정, 불리한 판정, 능력치 굴림 중 빠른 굴림을 고르세요.',
+      'D6, 2D6, D20, 유리한 판정, 불리한 판정, 능력치 굴림 중 빠른 굴림을 고르면 그 식으로 바로 굴립니다.',
       '입력 중이 아닐 때 주사위 굴리기를 누르거나 R 키를 누르세요.',
       '각 주사위 눈과 합계를 확인하세요. 유지 규칙에서 제외된 눈은 괄호로 표시합니다.',
       '최신 결과를 복사하거나 이 브라우저에 저장된 최근 10회 굴림을 다시 확인하세요.',

@@ -4,7 +4,7 @@ import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
-import { calculateExchange, invertRate, parseExchangeNumber } from './logic';
+import { calculateExchange, invertRate, parseExchangeNumber, rateToInput } from './logic';
 
 const STORAGE_KEY = 'tools:exchange-rate:state';
 
@@ -75,6 +75,14 @@ export default function ExchangeRate({ locale, ui }: ToolProps<UI>) {
     [amount, rate, adjustment, fixedFee],
   );
   const n = (value: number, digits = 4) => formatNumber(value, locale, digits);
+  /**
+   * Rates keep at least six significant digits, so a small inverted quote (“0.0007407407”) still
+   * multiplies out to the gross amount the page shows, instead of reading “0.0007 × 100 = 0.0741”.
+   */
+  const rateText = (value: number) => {
+    const magnitude = value === 0 ? 0 : Math.floor(Math.log10(Math.abs(value)));
+    return n(value, Math.min(10, Math.max(4, 5 - magnitude)));
+  };
 
   const reverseQuote = () => {
     if (rate === null) return;
@@ -84,7 +92,7 @@ export default function ExchangeRate({ locale, ui }: ToolProps<UI>) {
       ...current,
       source: current.target,
       target: current.source,
-      rate: String(reversed),
+      rate: rateToInput(reversed),
       adjustment: '0',
       fixedFee: '0',
     }));
@@ -94,12 +102,12 @@ export default function ExchangeRate({ locale, ui }: ToolProps<UI>) {
     ? ui.copySummary
         .replaceAll('{amount}', n(amount!))
         .replaceAll('{source}', source)
-        .replaceAll('{rate}', n(rate!))
+        .replaceAll('{rate}', rateText(rate!))
         .replaceAll('{target}', target)
         .replaceAll('{gross}', n(result.gross))
         .replaceAll('{charges}', n(result.totalCharges))
         .replaceAll('{received}', n(result.received))
-        .replaceAll('{effective}', result.effectiveRate === null ? ui.noEffectiveRate : n(result.effectiveRate))
+        .replaceAll('{effective}', result.effectiveRate === null ? ui.noEffectiveRate : rateText(result.effectiveRate))
     : '';
 
   return (
@@ -200,7 +208,7 @@ export default function ExchangeRate({ locale, ui }: ToolProps<UI>) {
                   <Stat label={ui.receiveLabel} value={`${n(result.received)} ${target}`} emphasis />
                   <Stat
                     label={ui.effectiveRateLabel}
-                    value={result.effectiveRate === null ? ui.noEffectiveRate : n(result.effectiveRate)}
+                    value={result.effectiveRate === null ? ui.noEffectiveRate : rateText(result.effectiveRate)}
                   />
                 </div>
                 <div class="border-t border-line pt-3 space-y-1.5 text-sm">
@@ -221,7 +229,7 @@ export default function ExchangeRate({ locale, ui }: ToolProps<UI>) {
                   {ui.formula
                     .replaceAll('{amount}', n(amount!))
                     .replaceAll('{source}', source)
-                    .replaceAll('{rate}', n(rate!))
+                    .replaceAll('{rate}', rateText(rate!))
                     .replaceAll('{gross}', n(result.gross))
                     .replaceAll('{target}', target)
                     .replaceAll('{charges}', n(result.totalCharges))

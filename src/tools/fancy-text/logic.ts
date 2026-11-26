@@ -87,19 +87,51 @@ export const STYLES: FancyStyle[] = [
   { id: 'strikethrough', group: 'decorate' },
 ];
 
+/**
+ * Splits by user-perceived characters instead of UTF-16 units. Intl.Segmenter keeps joined emoji
+ * (👨‍👩‍👧), flags (🇰🇷), and accents in one piece; the fallback keeps surrogate pairs intact.
+ */
+export function splitGraphemes(input: string): string[] {
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    return Array.from(
+      new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(input),
+      ({ segment }) => segment,
+    );
+  }
+  return Array.from(input);
+}
+
 function substitute(text: string, map: Map<string, string>): string {
   return [...text].map((character) => map.get(character) ?? character).join('');
 }
 
+/** Adds a combining mark to each visible character, never inside a joined emoji or accent. */
 function addCombiningMark(text: string, mark: string): string {
-  return [...text].map((character) => (/\s/u.test(character) ? character : `${character}${mark}`)).join('');
+  return splitGraphemes(text)
+    .map((grapheme) => (/^\s+$/u.test(grapheme) ? grapheme : `${grapheme}${mark}`))
+    .join('');
+}
+
+/**
+ * Puts one space between visible characters. Existing spaces are separators, not characters, so
+ * “A B” stays “A B” instead of gaining a second space, and line breaks survive.
+ */
+function spaceOut(text: string): string {
+  return text
+    .split(/\r\n|\r|\n/)
+    .map((line) =>
+      splitGraphemes(line)
+        .filter((grapheme) => !/^\s+$/u.test(grapheme))
+        .join(' '),
+    )
+    .join('\n');
 }
 
 /** Converts a string using one chosen Unicode style. Non-Latin text is preserved by alphabet styles. */
 export function transformText(text: string, style: StyleId): string {
   switch (style) {
     case 'spaced':
-      return [...text].join(' ');
+      return spaceOut(text);
     case 'sparkles':
       return text ? `✦ ${text} ✦` : '';
     case 'brackets':
@@ -116,7 +148,7 @@ export function changesText(text: string, style: StyleId): boolean {
   return transformText(text, style) !== text;
 }
 
-/** Unicode scalar count, useful for a compact input indicator without splitting emoji surrogate pairs. */
+/** Visible-character count: a flag, a joined family emoji, or an accented letter counts as one. */
 export function characterCount(text: string): number {
-  return [...text].length;
+  return splitGraphemes(text).length;
 }

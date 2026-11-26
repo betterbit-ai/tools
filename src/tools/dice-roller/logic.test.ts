@@ -28,6 +28,14 @@ describe('parseDiceExpression', () => {
     });
   });
 
+  it('accepts the minus signs the tool itself prints', () => {
+    for (const dash of ['−', '–', '—', '－']) {
+      expect(parseDiceExpression(`2d6${dash}1`)).toMatchObject({ ok: true, value: { modifier: -1 } });
+    }
+    const printed = formatExpression({ groups: [{ count: 2, sides: 6 }], modifier: -1 });
+    expect(parseDiceExpression(printed)).toMatchObject({ ok: true, value: { modifier: -1 } });
+  });
+
   it('rejects empty, malformed, and Unicode lookalike notation', () => {
     expect(parseDiceExpression('')).toEqual({ ok: false, error: 'empty' });
     expect(parseDiceExpression('2d6 + 🎲')).toEqual({ ok: false, error: 'invalid' });

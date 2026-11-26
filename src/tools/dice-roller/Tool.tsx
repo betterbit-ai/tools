@@ -28,22 +28,26 @@ export default function DiceRoller({ ui }: ToolProps<UI>) {
   const [error, setError] = useState<DiceError | 'crypto' | null>(null);
   const [ready, setReady] = useState(false);
 
-  const roll = useCallback(() => {
-    const parsed = parseDiceExpression(expression);
-    if (!parsed.ok) {
-      setError(parsed.error);
-      return;
-    }
-    try {
-      const next = rollDice(parsed.value, cryptoSource);
-      const item = { expression: formatExpression(parsed.value), detail: formatRoll(next), total: next.total };
-      setResult(next);
-      setHistory((current) => [item, ...current].slice(0, HISTORY_LIMIT));
-      setError(null);
-    } catch {
-      setError('crypto');
-    }
-  }, [expression]);
+  const roll = useCallback(
+    (expressionOverride?: string) => {
+      const source = expressionOverride ?? expression;
+      const parsed = parseDiceExpression(source);
+      if (!parsed.ok) {
+        setError(parsed.error);
+        return;
+      }
+      try {
+        const next = rollDice(parsed.value, cryptoSource);
+        const item = { expression: formatExpression(parsed.value), detail: formatRoll(next), total: next.total };
+        setResult(next);
+        setHistory((current) => [item, ...current].slice(0, HISTORY_LIMIT));
+        setError(null);
+      } catch {
+        setError('crypto');
+      }
+    },
+    [expression],
+  );
 
   useEffect(() => {
     const savedExpression = safeStorage.get(EXPRESSION_KEY);
@@ -148,7 +152,13 @@ export default function DiceRoller({ ui }: ToolProps<UI>) {
               <p class="text-sm font-medium text-fg">{ui.presetsLabel}</p>
               <div class="mt-2 flex flex-wrap gap-2">
                 {presets.map((preset) => (
-                  <Button size="sm" onClick={() => setExpression(preset.expression)}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setExpression(preset.expression);
+                      roll(preset.expression);
+                    }}
+                  >
                     {preset.label}
                   </Button>
                 ))}

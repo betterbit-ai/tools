@@ -40,10 +40,12 @@ export type ParseResult = { ok: true; value: DiceExpression } | { ok: false; err
 /**
  * Parses a compact dice expression such as `2d6 + d8 - 1` or `4d6kh3`.
  * The grammar deliberately accepts ASCII dice notation only, so lookalike
- * Unicode digits and operators cannot be mistaken for a valid roll.
+ * Unicode digits and operators cannot be mistaken for a valid roll — except
+ * for the dash characters this tool itself prints (U+2212 and friends), which
+ * are normalized to "-" so a copied result can be rolled again.
  */
 export function parseDiceExpression(input: string): ParseResult {
-  const text = input.trim();
+  const text = input.trim().replace(/[\u2010-\u2015\u2212\uFF0D]/g, '-');
   if (!text) return { ok: false, error: 'empty' };
   if (text.length > 200 || /[^\d\s+d\-khl]/i.test(text)) return { ok: false, error: 'invalid' };
 

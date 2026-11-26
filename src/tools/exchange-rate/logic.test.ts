@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateExchange, invertRate, parseExchangeNumber } from './logic';
+import { calculateExchange, invertRate, parseExchangeNumber, rateToInput } from './logic';
 
 describe('parseExchangeNumber', () => {
   it('accepts formatted English, full-width, and Korean won input', () => {
@@ -64,9 +64,24 @@ describe('calculateExchange', () => {
 
 describe('invertRate', () => {
   it('inverts a valid quote and rejects zero, negative, and non-finite rates', () => {
-    expect(invertRate(1350)).toBeCloseTo(1 / 1350, 6);
+    expect(invertRate(1350)).toBeCloseTo(1 / 1350, 9);
     expect(invertRate(0)).toBeNull();
     expect(invertRate(-1)).toBeNull();
     expect(invertRate(Number.POSITIVE_INFINITY)).toBeNull();
+  });
+
+  it('survives a second inversion with the quote the visitor entered', () => {
+    for (const rate of [1350, 1.2, 0.000741, 1_432.57]) {
+      const back = invertRate(invertRate(rate)!);
+      expect(back).toBeCloseTo(rate, 6);
+    }
+  });
+
+  it('writes a tiny inverted quote as a plain decimal for the rate field', () => {
+    const reversed = invertRate(100_000_000)!;
+    expect(reversed).toBe(1e-8);
+    expect(rateToInput(reversed)).toBe('0.00000001');
+    expect(rateToInput(1350)).toBe('1350');
+    expect(parseExchangeNumber(rateToInput(reversed))).toBe(1e-8);
   });
 });

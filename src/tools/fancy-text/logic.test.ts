@@ -19,6 +19,17 @@ describe('transformText', () => {
     expect(transformText('A B\nC', 'strikethrough')).toBe('A̶ B̶\nC̶');
   });
 
+  it('keeps a joined emoji, a flag and an accent whole when spacing out or striking through', () => {
+    expect(transformText('🇰🇷 가족 👨‍👩‍👧', 'spaced')).toBe('🇰🇷 가 족 👨‍👩‍👧');
+    expect(transformText('🇰🇷 👨‍👩‍👧 é', 'strikethrough')).toBe('🇰🇷̶ 👨‍👩‍👧̶ é̶');
+  });
+
+  it('treats an existing space as a separator instead of doubling it', () => {
+    expect(transformText('A B', 'spaced')).toBe('A B');
+    expect(transformText('가족  사진', 'spaced')).toBe('가 족 사 진');
+    expect(transformText('A B\nC', 'spaced')).toBe('A B\nC');
+  });
+
   it('handles empty and very long input', () => {
     const text = 'ab😀'.repeat(10_000);
     expect(transformText('', 'sparkles')).toBe('');
@@ -37,7 +48,9 @@ describe('style metadata', () => {
     expect(changesText('한글', 'sparkles')).toBe(true);
   });
 
-  it('counts Unicode scalars instead of UTF-16 code units', () => {
+  it('counts a flag or a joined family emoji as one character', () => {
     expect(characterCount('A😀')).toBe(2);
+    expect(characterCount('🇰🇷 가족 👨‍👩‍👧 1')).toBe(8);
+    expect(characterCount('é')).toBe(1);
   });
 });

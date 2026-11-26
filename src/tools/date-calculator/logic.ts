@@ -24,7 +24,8 @@ function utcDate(year: number, monthIndex: number, day: number): Date {
   return date;
 }
 
-export function isValidDate(date: string): boolean {
+export function isValidDate(date: string | null | undefined): boolean {
+  if (typeof date !== 'string') return false;
   const match = DATE_PATTERN.exec(date);
   if (!match) return false;
   const [, yearText, monthText, dayText] = match;
@@ -35,9 +36,12 @@ export function isValidDate(date: string): boolean {
   return year >= 1 && parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day;
 }
 
-/** Days since a fixed epoch, computed in UTC so DST transitions never shift the count. */
+/** Days since a fixed epoch, computed in UTC so DST transitions never shift the count. NaN when the
+ *  string is not a plain YYYY-MM-DD day, so a shift that leaves years 0001–9999 cannot throw. */
 function toEpochDay(date: string): number {
-  const [, yearText, monthText, dayText] = DATE_PATTERN.exec(date)!;
+  const match = DATE_PATTERN.exec(date);
+  if (!match) return Number.NaN;
+  const [, yearText, monthText, dayText] = match;
   return utcDate(Number(yearText), Number(monthText) - 1, Number(dayText)).getTime() / 86_400_000;
 }
 
@@ -360,10 +364,14 @@ export interface CalendarDelta {
   days: number;
 }
 
-/** Adds a calendar delta to `date`. Clamps an overflowing day (e.g. Jan 31 + 1 month) to the last day of that month. */
-export function addCalendarDelta(date: string, delta: CalendarDelta, sign: 1 | -1): string {
+/** Adds a calendar delta to `date`. Clamps an overflowing day (e.g. Jan 31 + 1 month) to the last day of that month.
+ *  Returns null when the result leaves years 0001–9999 (e.g. 9999-12-30 plus one year). */
+export function addCalendarDelta(date: string, delta: CalendarDelta, sign: 1 | -1): string | null {
   const totalMonths = sign * (delta.years * 12 + delta.months);
   const totalDays = sign * (delta.weeks * 7 + delta.days);
   const withMonths = addMonthsClamped(date, totalMonths);
-  return fromEpochDay(toEpochDay(withMonths) + totalDays);
+  const epoch = toEpochDay(withMonths) + totalDays;
+  if (!Number.isFinite(epoch)) return null;
+  const result = fromEpochDay(epoch);
+  return isValidDate(result) ? result : null;
 }
