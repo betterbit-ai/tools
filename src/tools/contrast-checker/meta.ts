@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'The opened Korean search result presents a WCAG contrast-ratio checker and explains the 1:1 to 21:1 range, but does not advertise APCA, a live interface preview, or a review-summary copy action. Betterbit includes each in its first screen. (장점: 한국어로 대비율의 범위를 간단히 설명한다.)',
     },
   ],
-  related: ['color-picker', 'color-converter'],
+  related: ['palette-generator', 'color-picker', 'color-converter'],
 };

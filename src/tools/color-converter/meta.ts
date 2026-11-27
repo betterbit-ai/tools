@@ -45,5 +45,13 @@ export const meta: ToolMeta = {
         'Its opened Korean page places a Coupang Partners promotion directly above the converter and outputs HEX, RGB, and HSL only. Betterbit keeps copy-ready OKLCH and WCAG contrast results in the initial conversion panel. (장점: 한국어로 3자리 HEX와 HSL의 기초를 자세히 설명한다.)',
     },
   ],
-  related: ['json-formatter', 'regex-tester', 'url-encoder', 'color-picker', 'contrast-checker'],
+  related: [
+    'palette-generator',
+    'gradient-generator',
+    'json-formatter',
+    'regex-tester',
+    'url-encoder',
+    'color-picker',
+    'contrast-checker',
+  ],
 };

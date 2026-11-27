@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean search-visible page says it uploads files for server-side FFmpeg conversion, caps inputs at 200 MB, and retains the source until conversion plus the result for 30 minutes. (Strength: it combines video-to-MP3 and video-to-GIF conversion.) Betterbit never sends the selected local video to a service and provides a dedicated range-and-bitrate flow.',
     },
   ],
-  related: ['video-to-gif', 'video-compressor', 'audio-cutter', 'voice-recorder'],
+  related: ['audio-converter', 'video-to-gif', 'video-compressor', 'audio-cutter', 'voice-recorder'],
 };

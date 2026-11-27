@@ -278,8 +278,8 @@
 | ------------------ | ----------- | ----------------------- | ----------------------- | --- | ---- |
 | color-picker       | 색상 추출   | color picker from image | 이미지에서 추출, 팔레트 | P1  | live |
 | contrast-checker   | 명도 대비   | contrast checker        | WCAG 2 + APCA           | P1  | live |
-| gradient-generator | 그라데이션  | css gradient generator  | OKLCH 보간              | P2  | todo |
-| palette-generator  | 팔레트 생성 | color palette generator | 접근성 검증 포함        | P2  | todo |
+| gradient-generator | 그라데이션  | css gradient generator  | OKLCH 보간              | P2  | live |
+| palette-generator  | 팔레트 생성 | color palette generator | 접근성 검증 포함        | P2  | live |
 
 | color-blindness-simulator | 색각 이상 시뮬레이터 | color blindness simulator / 색맹 시뮬레이터 | 이미지를 프로타노피아·듀테라노피아·트리타노피아로 즉시 비교하고 파일은 업로드하지 않음 | P1 | todo |
 | color-name-finder | 색상 이름 찾기 | color name from hex / 색상 이름 찾기 | HEX·RGB에서 CSS·일반 색상 이름과 가장 가까운 접근성 대체색을 함께 표시 | P2 | todo |
@@ -291,7 +291,7 @@
 | --------------------- | ------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- | --- | ---- |
 | video-to-gif          | 동영상 → GIF       | video to gif                                                           | 업로드 없음                                                                   | P1  | live |
 | video-compressor      | 동영상 압축        | compress video / 동영상 용량 줄이기                                    | 업로드 없음(대용량 강점)                                                      | P1  | live |
-| audio-converter       | 오디오 변환        | mp3 converter                                                          | —                                                                             | P2  | todo |
+| audio-converter       | 오디오 변환        | mp3 converter                                                          | —                                                                             | P2  | live |
 | audio-cutter          | 오디오 자르기      | mp3 cutter / 벨소리 만들기                                             | 파형 편집                                                                     | P1  | live |
 | voice-recorder        | 음성 녹음          | online voice recorder / 녹음기                                         | 업로드 없음, mp3 저장                                                         | P1  | live |
 | screen-recorder       | 화면 녹화          | screen recorder online / 화면 녹화                                     | 설치 없음, 워터마크 없음                                                      | P1  | live |
