@@ -58,6 +58,30 @@ interface NormalizedInput {
 }
 
 /**
+ * The output pane never holds more than this many characters. An 8 MB file becomes
+ * an 11 MB Base64 string, and laying that out in the DOM (with break-all wrapping and
+ * a polite live region) killed the tab in a real browser, while 7 MB of output was
+ * still fine. Two million characters keeps any result up to about 1.5 MB of input
+ * readable in full. Copy and download always use the complete value.
+ */
+export const MAX_DISPLAY_CHARS = 2_000_000;
+
+export interface DisplaySlice {
+  text: string;
+  truncated: boolean;
+  total: number;
+}
+
+/** Keeps the first `limit` characters, without splitting a surrogate pair. */
+export function sliceForDisplay(text: string, limit = MAX_DISPLAY_CHARS): DisplaySlice {
+  if (text.length <= limit) return { text, truncated: false, total: text.length };
+  let end = Math.max(0, limit);
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+  return { text: text.slice(0, end), truncated: true, total: text.length };
+}
+
+/**
  * Removes whitespace and, when present, a RFC 2397 `data:*;base64,` prefix.
  * Retaining source indexes lets validation point to the character users see.
  */
@@ -74,6 +98,16 @@ function normalizeInput(input: string): NormalizedInput {
   }
 
   return { value: value.join(''), indices };
+}
+
+/**
+ * How many characters of Base64 actually carry data: the padding, any whitespace and a
+ * data: URI header are not payload, so size figures computed from this are honest.
+ */
+export function base64PayloadLength(input: string): number {
+  const { value } = normalizeInput(input);
+  const padding = value.endsWith('==') ? 2 : value.endsWith('=') ? 1 : 0;
+  return value.length - padding;
 }
 
 /**

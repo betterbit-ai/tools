@@ -5,8 +5,10 @@ import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
 import {
+  base64PayloadLength,
   base64ToBytes,
   bytesToBase64,
+  sliceForDisplay,
   type Base64DecodeError,
   type Base64DecodeErrorCode,
   type Base64Variant,
@@ -136,6 +138,10 @@ export default function Base64Tool({ locale, ui }: ToolProps<UI>) {
   const decodeResult = conversion?.mode === 'decode' && conversion.ok ? conversion : null;
   const conversionError = conversion && !conversion.ok ? conversion.error : null;
   const outputText = mode === 'encode' ? (encodeResult?.text ?? '') : (decodeResult?.text ?? '');
+  const outputDisplay = sliceForDisplay(outputText);
+  // Decoding counts only the characters that carry data: padding, line breaks and a data: URI
+  // header are not part of the decoded payload, so the size figures stay honest.
+  const decodeInputChars = base64PayloadLength(input);
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -288,6 +294,14 @@ export default function Base64Tool({ locale, ui }: ToolProps<UI>) {
             </Notice>
           )}
           {mode === 'decode' && decodeResult && decodeResult.text === null && <Notice tone="info">{ui.notUtf8}</Notice>}
+          {outputDisplay.truncated && (
+            <Notice tone="info">
+              {fillTemplate(ui.truncatedNotice, {
+                shown: outputDisplay.text.length.toLocaleString(locale),
+                total: outputDisplay.total.toLocaleString(locale),
+              })}
+            </Notice>
+          )}
 
           <pre
             class="min-h-[220px] lg:min-h-[340px] flex-1 overflow-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-bg p-4 font-mono text-sm leading-6 text-fg"
@@ -297,7 +311,7 @@ export default function Base64Tool({ locale, ui }: ToolProps<UI>) {
             {isProcessing ? (
               <span class="text-subtle">{ui.processing}</span>
             ) : (
-              outputText || <span class="text-subtle">{ui.emptyOutput}</span>
+              outputDisplay.text || <span class="text-subtle">{ui.emptyOutput}</span>
             )}
           </pre>
         </div>
@@ -306,7 +320,7 @@ export default function Base64Tool({ locale, ui }: ToolProps<UI>) {
       <div class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3" aria-live="polite">
         <Stat
           label={ui.statInputSize}
-          value={mode === 'encode' ? n(encodeResult?.bytesLength ?? 0) : n(input.length)}
+          value={mode === 'encode' ? n(encodeResult?.bytesLength ?? 0) : n(decodeInputChars)}
         />
         <Stat
           label={ui.statOutputSize}
@@ -324,7 +338,9 @@ export default function Base64Tool({ locale, ui }: ToolProps<UI>) {
               return inLen > 0 ? `+${Math.round((outLen / inLen - 1) * 100)}%` : '—';
             }
             const outLen = decodeResult?.bytes.length ?? 0;
-            return input.length > 0 && decodeResult ? `-${Math.round((1 - outLen / input.length) * 100)}%` : '—';
+            return decodeInputChars > 0 && decodeResult
+              ? `-${Math.round((1 - outLen / decodeInputChars) * 100)}%`
+              : '—';
           })()}
         />
       </div>

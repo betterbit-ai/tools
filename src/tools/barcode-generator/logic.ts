@@ -236,6 +236,14 @@ export function encodeBarcode(settings: Pick<BarcodeSettings, 'format' | 'value'
   return settings.format === 'CODE128' ? encodeCode128(settings.value) : encodeEan13(normalizeEan13(settings.value));
 }
 
+/**
+ * Quiet zones, in narrow modules. GS1 requires 11 modules left and 7 right for EAN-13;
+ * ISO/IEC 15417 requires at least 10X on each side of a Code 128 symbol.
+ */
+export function quietZones(format: BarcodeFormat): { left: number; right: number } {
+  return format === 'EAN13' ? { left: 11, right: 7 } : { left: 10, right: 10 };
+}
+
 function escapeXml(value: string): string {
   return value.replace(
     /[&<>"']/g,
@@ -243,15 +251,15 @@ function escapeXml(value: string): string {
   );
 }
 
-/** Renders black bars on a white background with a 10-module quiet zone on each side. */
+/** Renders black bars on a white background with the symbology's required quiet zones. */
 export function renderBarcodeSvg(settings: BarcodeSettings): RenderedBarcode | null {
   const encoded = encodeBarcode(settings);
   if (!encoded) return null;
-  const quietZone = 10;
+  const quiet = quietZones(settings.format);
   const textHeight = settings.displayValue ? 20 : 0;
-  const width = (encoded.moduleCount + quietZone * 2) * settings.moduleWidth;
+  const width = (encoded.moduleCount + quiet.left + quiet.right) * settings.moduleWidth;
   const totalHeight = settings.height + textHeight;
-  let x = quietZone * settings.moduleWidth;
+  let x = quiet.left * settings.moduleWidth;
   let bars = '';
   for (const module of encoded.modules) {
     if (module === '1') bars += `<rect x="${x}" y="0" width="${settings.moduleWidth}" height="${settings.height}"/>`;

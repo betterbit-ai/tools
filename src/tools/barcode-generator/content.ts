@@ -10,6 +10,9 @@ const uiEn = {
   ean13Hint: 'Enter 12 digits to calculate the final check digit, or 13 digits to verify it.',
   valuePlaceholder: 'ITEM-2026-001',
   moduleWidthLabel: 'Bar width',
+  moduleWidthHint: 'Pixels per narrow bar, 1–4. Thicker bars print more reliably.',
+  heightHint: 'Pixels tall, 40–240.',
+  quietZoneNote: 'White quiet zone included: {left} modules on the left, {right} on the right.',
   heightLabel: 'Bar height',
   showValue: 'Show the value below the bars',
   privacyNote: 'The value is encoded in this browser. Your last settings are saved only in this browser.',
@@ -67,7 +70,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Keep the quiet zone and use SVG for print',
-        body: 'A scanner needs clear space before and after the bars to find the symbol. Every SVG from this tool includes a white quiet zone equal to 10 narrow modules on both sides; do not crop it away or place dark artwork against it. SVG is a vector file, so the bars stay sharp when a layout app changes the size. Keep bars dark on a light background, avoid stretching only one dimension, and test-scan the final printed label because printer dots and label material affect reliability.',
+        body: 'A scanner needs clear space before and after the bars to find the symbol. Every SVG from this tool includes the white quiet zone each symbology requires — 11 narrow modules on the left and 7 on the right for EAN-13 (GS1 General Specifications), 10 on both sides for Code 128 (ISO/IEC 15417) — so do not crop it away or place dark artwork against it. SVG is a vector file, so the bars stay sharp when a layout app changes the size. Keep bars dark on a light background, avoid stretching only one dimension, and test-scan the final printed label because printer dots and label material affect reliability.',
       },
     ],
     faq: [
@@ -85,7 +88,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: 'Why should I download SVG instead of a screenshot?',
-        a: 'SVG preserves each bar as a vector rectangle, so it can be resized for a label without fuzzy interpolation. The download also keeps a 10-module white quiet zone on each side, which a cropped screenshot can accidentally remove.',
+        a: 'SVG preserves each bar as a vector rectangle, so it can be resized for a label without fuzzy interpolation. The download also keeps the white quiet zone the symbology requires, which a cropped screenshot can accidentally remove: 11 modules on the left and 7 on the right for EAN-13, 10 on both sides for Code 128.',
       },
     ],
     ui: uiEn,
@@ -116,7 +119,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '흰 여백을 남기고 인쇄에는 SVG를 쓰세요',
-        body: '스캐너는 막대의 시작과 끝을 찾기 위해 양쪽의 빈 여백이 필요합니다. 이 도구가 만드는 SVG에는 좁은 막대 10개 폭의 흰 여백을 좌우에 넣습니다. 이 부분을 자르거나 어두운 그림을 바짝 붙이지 마세요. SVG는 막대를 벡터 도형으로 저장하므로 편집 프로그램에서 크기를 바꿔도 흐려지지 않습니다. 어두운 막대와 밝은 바탕을 유지하고, 가로세로 비율을 따로 늘리지 말며, 프린터·용지에 따라 인식성이 달라질 수 있으니 최종 인쇄물을 읽어 확인하세요.',
+        body: '스캐너는 막대의 시작과 끝을 찾기 위해 양쪽의 빈 여백이 필요합니다. 이 도구가 만드는 SVG에는 형식별 규격에 맞는 흰 여백을 넣습니다. EAN-13은 왼쪽 11모듈·오른쪽 7모듈(GS1 총칙), CODE128은 좌우 10모듈(ISO/IEC 15417)입니다. 이 부분을 자르거나 어두운 그림을 바짝 붙이지 마세요. SVG는 막대를 벡터 도형으로 저장하므로 편집 프로그램에서 크기를 바꿔도 흐려지지 않습니다. 어두운 막대와 밝은 바탕을 유지하고, 가로세로 비율을 따로 늘리지 말며, 프린터·용지에 따라 인식성이 달라질 수 있으니 최종 인쇄물을 읽어 확인하세요.',
       },
     ],
     faq: [
@@ -134,7 +137,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         q: '스크린샷보다 SVG를 저장하는 편이 좋은 이유는 무엇인가요?',
-        a: 'SVG는 각 막대를 벡터 사각형으로 저장하므로 라벨 크기로 바꿔도 픽셀이 번져 인식이 나빠지지 않습니다. 내려받는 파일에는 스크린샷에서 잘리기 쉬운 좌우 10모듈의 흰 여백도 포함됩니다.',
+        a: 'SVG는 각 막대를 벡터 사각형으로 저장하므로 라벨 크기로 바꿔도 픽셀이 번져 인식이 나빠지지 않습니다. 내려받는 파일에는 스크린샷에서 잘리기 쉬운 흰 여백(EAN-13은 왼쪽 11모듈·오른쪽 7모듈)도 규격대로 포함됩니다.',
       },
     ],
     ui: {
@@ -146,6 +149,9 @@ export const content: Record<Locale, ToolContent<UI>> = {
       ean13Hint: '숫자 12자리는 검사 숫자를 계산하고, 13자리는 검사 숫자를 확인합니다.',
       valuePlaceholder: 'ITEM-2026-001',
       moduleWidthLabel: '막대 굵기',
+      moduleWidthHint: '가장 좁은 막대 1개의 너비(1~4px). 굵을수록 인쇄가 안정적입니다.',
+      heightHint: '높이 40~240px.',
+      quietZoneNote: '흰 여백 포함: 왼쪽 {left}모듈, 오른쪽 {right}모듈.',
       heightLabel: '막대 높이',
       showValue: '막대 아래에 값 표시',
       privacyNote: '입력한 값은 이 브라우저에서만 바코드로 바뀝니다. 마지막 설정도 이 브라우저에만 저장됩니다.',

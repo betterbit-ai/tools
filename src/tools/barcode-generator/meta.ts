@@ -5,7 +5,7 @@ export const meta: ToolMeta = {
   category: 'generator',
   icon: 'code',
   added: '2026-10-16',
-  updated: '2026-10-16',
+  updated: '2026-11-27',
   edges: ['usability'],
   competitors: [
     {

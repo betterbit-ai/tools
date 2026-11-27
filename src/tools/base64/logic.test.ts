@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { base64ToBytes, base64ToText, bytesToBase64, textToBase64 } from './logic';
+import {
+  base64PayloadLength,
+  base64ToBytes,
+  base64ToText,
+  bytesToBase64,
+  sliceForDisplay,
+  textToBase64,
+} from './logic';
 
 describe('bytesToBase64 / base64ToBytes round trip', () => {
   it('encodes and decodes empty input', () => {
@@ -125,5 +132,41 @@ describe('bytesToBase64 / base64ToBytes round trip', () => {
     const decoded = base64ToBytes(encoded);
     expect(decoded.ok).toBe(true);
     if (decoded.ok) expect([...decoded.bytes]).toEqual([...bytes]);
+  });
+});
+
+describe('sliceForDisplay', () => {
+  it('returns short values unchanged', () => {
+    expect(sliceForDisplay('SGVsbG8=')).toEqual({ text: 'SGVsbG8=', truncated: false, total: 8 });
+  });
+
+  it('keeps only the first limit characters and reports the full length', () => {
+    const slice = sliceForDisplay('a'.repeat(10), 4);
+    expect(slice).toEqual({ text: 'aaaa', truncated: true, total: 10 });
+  });
+
+  it('never splits a surrogate pair at the cut', () => {
+    // '🎉' is two UTF-16 code units, so a limit of 3 would cut it in half.
+    const slice = sliceForDisplay('ab🎉cd', 3);
+    expect(slice.text).toBe('ab');
+    expect(slice.truncated).toBe(true);
+    expect(slice.total).toBe(6);
+  });
+
+  it('treats an empty result as not truncated', () => {
+    expect(sliceForDisplay('')).toEqual({ text: '', truncated: false, total: 0 });
+  });
+});
+
+describe('base64PayloadLength', () => {
+  it('excludes padding, whitespace and a data: URI header', () => {
+    expect(base64PayloadLength('SGVsbG8=')).toBe(7);
+    expect(base64PayloadLength('SGVs\nbG8=\n')).toBe(7);
+    expect(base64PayloadLength('data:text/plain;base64,SGVsbG8=')).toBe(7);
+    expect(base64PayloadLength('Zm9v')).toBe(4);
+  });
+
+  it('counts URL-safe input the same way', () => {
+    expect(base64PayloadLength('SGVsbG8_')).toBe(8);
   });
 });

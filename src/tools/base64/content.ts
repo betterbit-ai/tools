@@ -41,6 +41,8 @@ const uiEn = {
   statInputSize: 'Input size',
   statOutputSize: 'Output size',
   statOverhead: 'Size change',
+  truncatedNotice:
+    'Showing the first {shown} of {total} characters to keep the page responsive. Copy and the download buttons still use the complete result.',
 };
 export type UI = typeof uiEn;
 
@@ -72,7 +74,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: 'Files, not just text',
-        body: 'Dropping a file while encoding reads its raw bytes — any file type, not only images — and Base64-encodes them exactly like a data: URI or an email attachment would. You can also paste a complete data: URI (`data:…;base64,…`) to decode just its Base64 payload. Decoding always produces a byte-for-byte result you can download, whether or not it happens to be valid UTF-8 text; when it is, you can also read and copy it as text.\n\nTo prevent a giant result from freezing the tab, encoding is limited to 8 MB of source text or file data and decoding to 12 MB of Base64 input. Nothing is uploaded: conversion runs in a background worker in this tab using the File and TextDecoder APIs built into your browser.',
+        body: 'Dropping a file while encoding reads its raw bytes — any file type, not only images — and Base64-encodes them exactly like a data: URI or an email attachment would. You can also paste a complete data: URI (`data:…;base64,…`) to decode just its Base64 payload. Decoding always produces a byte-for-byte result you can download, whether or not it happens to be valid UTF-8 text; when it is, you can also read and copy it as text.\n\nEncoding is limited to 8 MB of source text or file data and decoding to 12 MB of Base64 input, and the result pane shows the first 2,000,000 characters of a very long result so the page keeps responding — Copy and the download buttons always carry the complete value. Nothing is uploaded: conversion runs in a background worker in this tab using the File and TextDecoder APIs built into your browser.',
       },
     ],
     faq: [
@@ -99,6 +101,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: "What does the '=' padding at the end of a Base64 string mean?",
         a: "Padding fills the last group of 4 characters when the input length isn't a multiple of 3 bytes. One '=' means the last group encoded 2 bytes; two '=' means it encoded 1 byte. Padding is optional and often omitted in URL-safe contexts like JWTs.",
+      },
+      {
+        q: 'Why is only part of a very long result shown?',
+        a: 'An 8 MB file becomes an 11 MB Base64 string, and laying out millions of characters in a page can freeze it. The result pane therefore shows the first 2,000,000 characters with a count of the full length, while Copy and the download buttons still produce the complete, exact result.',
       },
       {
         q: "Why did decoding say the result isn't valid text?",
@@ -135,7 +141,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       },
       {
         heading: '텍스트뿐 아니라 파일도',
-        body: '인코딩 중 파일을 끌어다 놓으면 이미지뿐 아니라 어떤 종류의 파일이든 원본 바이트를 그대로 읽어 Base64로 바꿉니다. data: URI나 이메일 첨부파일이 내부적으로 쓰는 방식과 같습니다. `data:…;base64,…` 형태의 완전한 data: URI를 붙여넣어 헤더를 제외한 Base64 본문만 디코딩할 수도 있습니다.\n\n디코딩은 항상 바이트 그대로의 파일로 내려받을 수 있고, 그 바이트가 UTF-8 텍스트로도 유효하다면 화면에서 바로 읽고 복사할 수도 있습니다. 큰 결과 때문에 탭이 멈추지 않도록 인코딩 원본은 8MB, 디코딩 Base64 입력은 12MB로 제한합니다. 변환은 이 탭의 백그라운드 워커에서 브라우저 File·TextDecoder API로 이루어지며 서버로 전송되지 않습니다.',
+        body: '인코딩 중 파일을 끌어다 놓으면 이미지뿐 아니라 어떤 종류의 파일이든 원본 바이트를 그대로 읽어 Base64로 바꿉니다. data: URI나 이메일 첨부파일이 내부적으로 쓰는 방식과 같습니다. `data:…;base64,…` 형태의 완전한 data: URI를 붙여넣어 헤더를 제외한 Base64 본문만 디코딩할 수도 있습니다.\n\n디코딩은 항상 바이트 그대로의 파일로 내려받을 수 있고, 그 바이트가 UTF-8 텍스트로도 유효하다면 화면에서 바로 읽고 복사할 수도 있습니다. 인코딩 원본은 8MB, 디코딩 Base64 입력은 12MB로 제한하고, 아주 긴 결과는 화면에 앞 200만 자만 표시해 페이지가 멈추지 않게 합니다. 복사와 다운로드는 언제나 전체 결과를 그대로 사용합니다. 변환은 이 탭의 백그라운드 워커에서 브라우저 File·TextDecoder API로 이루어지며 서버로 전송되지 않습니다.',
       },
     ],
     faq: [
@@ -162,6 +168,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       {
         q: "Base64 끝에 붙는 '=' 기호는 무슨 뜻인가요?",
         a: "입력 길이가 3바이트의 배수가 아닐 때 마지막 4글자 묶음을 채우는 패딩입니다. '=' 1개는 마지막에 2바이트가 인코딩됐다는 뜻이고, 2개는 1바이트라는 뜻입니다. JWT처럼 URL에 쓰이는 경우에는 보통 생략합니다.",
+      },
+      {
+        q: '아주 긴 결과는 왜 일부만 보이나요?',
+        a: '8MB 파일은 Base64로 바꾸면 11MB가 되고, 수백만 자를 한 번에 화면에 그리면 브라우저가 멈출 수 있습니다. 그래서 결과 영역에는 앞 200만 자만 전체 길이와 함께 보여 주고, 복사와 다운로드 버튼은 전체 결과를 정확히 그대로 내보냅니다.',
       },
       {
         q: "디코딩했는데 '유효한 텍스트가 아니다'라고 나오는 이유는요?",
@@ -203,6 +213,8 @@ export const content: Record<Locale, ToolContent<UI>> = {
       errorInputTooLarge: '탭이 멈추지 않도록 텍스트·파일 인코딩은 8MB, Base64 디코딩 입력은 12MB까지 지원합니다.',
       errorFileRead: '파일을 읽을 수 없습니다. 파일이 아직 사용 가능한지 확인한 뒤 다시 시도하세요.',
       notUtf8: '디코딩은 됐지만 결과가 유효한 UTF-8 텍스트가 아닙니다 — 파일로 다운로드하세요.',
+      truncatedNotice:
+        '페이지가 멈추지 않도록 전체 {total}자 중 앞 {shown}자만 보여 줍니다. 복사와 다운로드는 전체 결과를 그대로 사용합니다.',
       processing: '변환 중…',
       emptyOutput: '결과가 여기에 표시됩니다.',
       statInputSize: '입력 크기',
