@@ -28,6 +28,7 @@ export const meta: ToolMeta = {
     },
   ],
   related: [
+    'base64',
     'word-counter',
     'case-converter',
     'remove-line-breaks',
