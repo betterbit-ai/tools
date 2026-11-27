@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Button, CopyButton, Field, Panel, Segmented } from '../../components/ui';
+import { Button, CopyButton, FieldGroup, Panel, Segmented } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import type { ToolProps } from '../types';
 import type { UI } from './content';
@@ -135,7 +135,7 @@ export default function CaseConverter({ ui }: ToolProps<UI>) {
         </div>
 
         <div class="flex min-w-0 flex-col gap-5">
-          <Field label={ui.writingLabel}>
+          <FieldGroup label={ui.writingLabel}>
             <Segmented
               value={format === 'title-chicago' ? 'title-ap' : format}
               onValue={updateFormat}
@@ -147,10 +147,10 @@ export default function CaseConverter({ ui }: ToolProps<UI>) {
                 { value: 'title-ap', label: ui.title },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           {format === 'title-ap' || format === 'title-chicago' ? (
-            <Field label={ui.titleStyleLabel} hint={ui.titleStyleHint}>
+            <FieldGroup label={ui.titleStyleLabel} hint={ui.titleStyleHint}>
               <Segmented
                 value={titleStyle}
                 onValue={(style) => updateFormat(style === 'chicago' ? 'title-chicago' : 'title-ap')}
@@ -160,10 +160,10 @@ export default function CaseConverter({ ui }: ToolProps<UI>) {
                   { value: 'chicago', label: ui.chicagoStyle },
                 ]}
               />
-            </Field>
+            </FieldGroup>
           ) : null}
 
-          <Field label={ui.developerLabel} hint={ui.developerHint}>
+          <FieldGroup label={ui.developerLabel} hint={ui.developerHint}>
             <Segmented
               value={isDeveloperFormat(format) ? format : null}
               onValue={updateFormat}
@@ -176,7 +176,7 @@ export default function CaseConverter({ ui }: ToolProps<UI>) {
                 { value: 'constant', label: ui.constant },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           <div>
             <label for="case-output" class="mb-1.5 block text-sm font-medium text-fg">

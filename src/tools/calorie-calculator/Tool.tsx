@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Field, Notice, NumberInput, Panel, Segmented, Select, Stat } from '../../components/ui';
+import { Field, FieldGroup, Notice, Panel, Segmented, Select, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -10,6 +10,7 @@ import {
   calculateCalorieNeeds,
   imperialToMetric,
   metricToImperial,
+  parseMeasurement,
   type ActivityLevel,
   type Goal,
   type Sex,
@@ -18,6 +19,45 @@ import {
 const STORAGE_KEY = 'tools:calorie-calculator:state';
 
 type Unit = 'metric' | 'imperial';
+
+/**
+ * A numeric field that keeps the text the visitor typed.
+ *
+ * The shared number input re-renders a partly typed value, so the decimal point never survived a
+ * keystroke: typing 175.5 left “5175” in the height field and the page said the measurements were
+ * out of range. This keeps the text as typed — “175.” stays on screen — and reads it only when it
+ * is a number.
+ */
+function NumberField(props: {
+  value: number | '';
+  onValue: (value: number | '') => void;
+  label: string;
+  hint?: string;
+}) {
+  const [text, setText] = useState(() => (props.value === '' ? '' : String(props.value)));
+
+  useEffect(() => {
+    if (props.value === '') return;
+    if (parseMeasurement(text) !== props.value) setText(String(props.value));
+  }, [props.value, text]);
+
+  return (
+    <Field label={props.label} hint={props.hint}>
+      <TextInput
+        value={text}
+        inputMode="decimal"
+        autocomplete="off"
+        spellcheck={false}
+        class="tabular"
+        onInput={(event) => {
+          const typed = (event.currentTarget as HTMLInputElement).value;
+          setText(typed);
+          props.onValue(parseMeasurement(typed) ?? '');
+        }}
+      />
+    </Field>
+  );
+}
 
 interface State {
   unit: Unit;
@@ -122,7 +162,7 @@ export default function CalorieCalculator({ locale, ui }: ToolProps<UI>) {
 
       <div class="mt-5 grid gap-6 lg:grid-cols-[1fr_300px]">
         <div class="flex flex-col gap-4">
-          <Field label={ui.sexLabel} hint={ui.sexHint}>
+          <FieldGroup label={ui.sexLabel} hint={ui.sexHint}>
             <Segmented<Sex>
               label={ui.sexLabel}
               value={state.sex}
@@ -132,65 +172,46 @@ export default function CalorieCalculator({ locale, ui }: ToolProps<UI>) {
                 { value: 'female', label: ui.female },
               ]}
             />
-          </Field>
-          <Field label={ui.ageLabel} hint={ui.ageHint}>
-            <NumberInput value={state.age} min="18" max="120" step="1" onValue={(age) => update({ age })} />
-          </Field>
+          </FieldGroup>
+          <NumberField label={ui.ageLabel} hint={ui.ageHint} value={state.age} onValue={(age) => update({ age })} />
           {state.unit === 'metric' ? (
             <div class="grid grid-cols-2 gap-3">
-              <Field label={ui.heightCmLabel} hint={ui.heightCmHint}>
-                <NumberInput
-                  value={state.heightCm}
-                  min="80"
-                  max="250"
-                  step="0.1"
-                  onValue={(heightCm) => update({ heightCm })}
-                />
-              </Field>
-              <Field label={ui.weightKgLabel} hint={ui.weightKgHint}>
-                <NumberInput
-                  value={state.weightKg}
-                  min="25"
-                  max="400"
-                  step="0.1"
-                  onValue={(weightKg) => update({ weightKg })}
-                />
-              </Field>
+              <NumberField
+                label={ui.heightCmLabel}
+                hint={ui.heightCmHint}
+                value={state.heightCm}
+                onValue={(heightCm) => update({ heightCm })}
+              />
+              <NumberField
+                label={ui.weightKgLabel}
+                hint={ui.weightKgHint}
+                value={state.weightKg}
+                onValue={(weightKg) => update({ weightKg })}
+              />
             </div>
           ) : (
             <>
               <div class="grid grid-cols-2 gap-3">
-                <Field label={ui.heightFeetLabel}>
-                  <NumberInput
-                    value={imperial.feet}
-                    min="0"
-                    step="1"
-                    onValue={(feet) =>
-                      updateImperial(isFiniteNumber(feet) ? feet : 0, imperial.inches, imperial.pounds)
-                    }
-                  />
-                </Field>
-                <Field label={ui.heightInchesLabel}>
-                  <NumberInput
-                    value={imperial.inches}
-                    min="0"
-                    step="0.1"
-                    onValue={(inches) =>
-                      updateImperial(imperial.feet, isFiniteNumber(inches) ? inches : 0, imperial.pounds)
-                    }
-                  />
-                </Field>
-              </div>
-              <Field label={ui.weightPoundsLabel}>
-                <NumberInput
-                  value={imperial.pounds}
-                  min="0"
-                  step="0.1"
-                  onValue={(pounds) =>
-                    updateImperial(imperial.feet, imperial.inches, isFiniteNumber(pounds) ? pounds : 0)
+                <NumberField
+                  label={ui.heightFeetLabel}
+                  value={imperial.feet}
+                  onValue={(feet) => updateImperial(isFiniteNumber(feet) ? feet : 0, imperial.inches, imperial.pounds)}
+                />
+                <NumberField
+                  label={ui.heightInchesLabel}
+                  value={imperial.inches}
+                  onValue={(inches) =>
+                    updateImperial(imperial.feet, isFiniteNumber(inches) ? inches : 0, imperial.pounds)
                   }
                 />
-              </Field>
+              </div>
+              <NumberField
+                label={ui.weightPoundsLabel}
+                value={imperial.pounds}
+                onValue={(pounds) =>
+                  updateImperial(imperial.feet, imperial.inches, isFiniteNumber(pounds) ? pounds : 0)
+                }
+              />
             </>
           )}
           <Field label={ui.activityLabel} hint={ui.activityHint}>

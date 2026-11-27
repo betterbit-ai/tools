@@ -7,10 +7,13 @@ describe('filterCharacters', () => {
     expect(filterCharacters('', 'all')).toHaveLength(CHARACTERS.length + 7);
   });
 
-  it('finds Korean keywords and keeps the Korean keyboard group', () => {
-    const arrows = filterCharacters('화살표', 'mieum');
-    expect(arrows.map((entry) => entry.character)).toContain('→');
-    expect(filterCharacters('화살표', 'digeut')).toEqual([]);
+  it('finds Korean keywords and English names across every group', () => {
+    expect(filterCharacters('화살표', 'mieum').map((entry) => entry.character)).toContain('→');
+    // The group picker is remembered, so a search must not be trapped inside the group it shows.
+    expect(filterCharacters('화살표', 'digeut').map((entry) => entry.character)).toContain('→');
+    expect(filterCharacters('star', 'rieul').map((entry) => entry.character)).toEqual(
+      expect.arrayContaining(['★', '☆']),
+    );
   });
 
   it('finds a Unicode code point with or without U+', () => {

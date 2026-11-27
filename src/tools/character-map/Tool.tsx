@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Button, Field, Kbd, Notice, Panel, Select, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
@@ -7,6 +7,7 @@ import type { UI } from './content';
 import { codePointOf, filterCharacters, KEYBOARD_GROUP_IDS, rememberRecent, type CharacterGroupId } from './logic';
 
 const STORAGE_KEY = 'tools:character-map:settings';
+const SEARCH_ID = 'cm-search';
 const GROUP_IDS: CharacterGroupId[] = ['all', 'popular', ...KEYBOARD_GROUP_IDS];
 
 function isGroupId(value: unknown): value is CharacterGroupId {
@@ -19,7 +20,6 @@ export default function CharacterMap({ locale, ui }: ToolProps<UI>) {
   const [recent, setRecent] = useState<string[]>([]);
   const [status, setStatus] = useState('');
   const [ready, setReady] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -44,7 +44,9 @@ export default function CharacterMap({ locale, ui }: ToolProps<UI>) {
         target instanceof HTMLElement && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
       if (event.key === '/' && !isEditable) {
         event.preventDefault();
-        searchRef.current?.focus();
+        // The shared text input does not hand back its DOM node through a ref, so the search box
+        // is found by its id; the old ref call threw “focus is not a function” and moved nothing.
+        document.getElementById(SEARCH_ID)?.focus();
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -90,7 +92,7 @@ export default function CharacterMap({ locale, ui }: ToolProps<UI>) {
         <div class="min-w-0 space-y-5">
           <Field label={ui.searchLabel} hint={ui.searchHint}>
             <TextInput
-              ref={searchRef}
+              id={SEARCH_ID}
               value={query}
               onInput={(event) => setQuery((event.currentTarget as HTMLInputElement).value)}
               placeholder={ui.searchPlaceholder}
@@ -114,7 +116,9 @@ export default function CharacterMap({ locale, ui }: ToolProps<UI>) {
               <h2 id="cm-results" class="text-sm font-medium text-fg">
                 {ui.results}
               </h2>
-              <span class="text-xs tabular text-subtle">{ui.resultCount.replace('{n}', n(results.length))}</span>
+              <span class="text-xs tabular text-subtle">
+                {(results.length === 1 ? ui.resultCountOne : ui.resultCount).replace('{n}', n(results.length))}
+              </span>
             </div>
             {results.length > 0 ? (
               <div class="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8" aria-live="polite">

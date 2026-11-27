@@ -296,19 +296,20 @@ export function codePointOf(character: string): string {
   return point === undefined ? '' : `U+${point.toString(16).toUpperCase().padStart(4, '0')}`;
 }
 
-/** Search the catalog by character, Unicode code point, English name, or Korean keyword. */
+/** Browse one group, or search the whole catalog when there is a query. */
 export function filterCharacters(query: string, group: CharacterGroupId): CharacterEntry[] {
   const normalized = query.trim().toLocaleLowerCase();
-  const candidates =
-    group === 'popular'
-      ? ALL_CHARACTERS.filter((entry) => POPULAR_CHARACTERS.has(entry.character))
-      : group === 'all'
-        ? ALL_CHARACTERS
-        : ALL_CHARACTERS.filter((entry) => entry.group === group);
 
-  if (!normalized) return candidates;
+  // A search looks through every group. The group picker is remembered between visits, so a search
+  // kept inside it answered “no characters” for a symbol that was one pick away in the list.
+  if (!normalized) {
+    if (group === 'popular') return ALL_CHARACTERS.filter((entry) => POPULAR_CHARACTERS.has(entry.character));
+    if (group === 'all') return ALL_CHARACTERS;
+    return ALL_CHARACTERS.filter((entry) => entry.group === group);
+  }
+
   const code = normalized.replace(/^u\+?/u, '').replace(/^0x/u, '');
-  return candidates.filter((entry) => {
+  return ALL_CHARACTERS.filter((entry) => {
     const haystack = [entry.character, entry.name, ...entry.keywords, codePointOf(entry.character)]
       .join(' ')
       .toLocaleLowerCase();

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { Field, Notice, NumberInput, Panel, Segmented, Stat } from '../../components/ui';
+import { Field, Notice, Panel, Segmented, Stat, TextInput } from '../../components/ui';
 import { safeStorage } from '../../lib/browser';
 import { formatNumber } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -11,12 +11,54 @@ import {
   healthyWeightRange,
   imperialToMetric,
   metricToImperial,
+  parseMeasurement,
   type BmiCategory,
+  type WeightRange,
 } from './logic';
 
 const STORAGE_KEY = 'tools:bmi-calculator:state';
 
 type Unit = 'metric' | 'imperial';
+
+const POUNDS_PER_KG = 2.2046226218;
+
+/**
+ * A numeric field that keeps the text the visitor typed.
+ *
+ * The shared number input re-renders a partly typed value, so the decimal point never survived a
+ * keystroke: typing 170.5 left “5170” in the height field and the page said the measurements were
+ * out of range. This keeps the text as typed and reads it only when it is a number.
+ */
+function NumberField(props: {
+  value: number | '';
+  onValue: (value: number | '') => void;
+  label: string;
+  hint?: string;
+}) {
+  const [text, setText] = useState(() => (props.value === '' ? '' : String(props.value)));
+
+  useEffect(() => {
+    if (props.value === '') return;
+    if (parseMeasurement(text) !== props.value) setText(String(props.value));
+  }, [props.value, text]);
+
+  return (
+    <Field label={props.label} hint={props.hint}>
+      <TextInput
+        value={text}
+        inputMode="decimal"
+        autocomplete="off"
+        spellcheck={false}
+        class="tabular"
+        onInput={(event) => {
+          const typed = (event.currentTarget as HTMLInputElement).value;
+          setText(typed);
+          props.onValue(parseMeasurement(typed) ?? '');
+        }}
+      />
+    </Field>
+  );
+}
 
 interface State {
   heightCm: number | '';
@@ -66,6 +108,11 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
   const koreanRange = useMemo(() => healthyWeightRange(state.heightCm, 'korean'), [state.heightCm]);
   const imperial = useMemo(() => metricToImperial(height, weight), [height, weight]);
   const n = (value: number) => formatNumber(value, locale, 1);
+  /** The healthy-weight range in the unit the visitor is entering, not kilograms in the US view. */
+  const rangeText = (range: WeightRange) =>
+    (state.unit === 'imperial' ? ui.weightRangeLb : ui.weightRange)
+      .replace('{min}', n(state.unit === 'imperial' ? range.min * POUNDS_PER_KG : range.min))
+      .replace('{max}', n(state.unit === 'imperial' ? range.max * POUNDS_PER_KG : range.max));
 
   const categoryLabel = (category: BmiCategory) => {
     const labels: Record<BmiCategory, string> = {
@@ -114,62 +161,42 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
         <div class="flex flex-col gap-4">
           {state.unit === 'metric' ? (
             <>
-              <Field label={ui.heightCmLabel} hint={ui.heightCmHint}>
-                <NumberInput
-                  value={state.heightCm}
-                  min="91.44"
-                  max="274.32"
-                  step="0.1"
-                  onValue={(heightCm) => update({ heightCm })}
-                />
-              </Field>
-              <Field label={ui.weightKgLabel} hint={ui.weightKgHint}>
-                <NumberInput
-                  value={state.weightKg}
-                  min="24.947"
-                  max="453.592"
-                  step="0.1"
-                  onValue={(weightKg) => update({ weightKg })}
-                />
-              </Field>
+              <NumberField
+                label={ui.heightCmLabel}
+                hint={ui.heightCmHint}
+                value={state.heightCm}
+                onValue={(heightCm) => update({ heightCm })}
+              />
+              <NumberField
+                label={ui.weightKgLabel}
+                hint={ui.weightKgHint}
+                value={state.weightKg}
+                onValue={(weightKg) => update({ weightKg })}
+              />
             </>
           ) : (
             <>
               <div class="grid grid-cols-2 gap-3">
-                <Field label={ui.heightFeetLabel}>
-                  <NumberInput
-                    value={imperial.feet}
-                    min="3"
-                    max="9"
-                    step="1"
-                    onValue={(feet) =>
-                      updateImperial(isFiniteNumber(feet) ? feet : 0, imperial.inches, imperial.pounds)
-                    }
-                  />
-                </Field>
-                <Field label={ui.heightInchesLabel}>
-                  <NumberInput
-                    value={imperial.inches}
-                    min="0"
-                    max="11"
-                    step="0.1"
-                    onValue={(inches) =>
-                      updateImperial(imperial.feet, isFiniteNumber(inches) ? inches : 0, imperial.pounds)
-                    }
-                  />
-                </Field>
-              </div>
-              <Field label={ui.weightPoundsLabel}>
-                <NumberInput
-                  value={imperial.pounds}
-                  min="55"
-                  max="1000"
-                  step="0.1"
-                  onValue={(pounds) =>
-                    updateImperial(imperial.feet, imperial.inches, isFiniteNumber(pounds) ? pounds : 0)
+                <NumberField
+                  label={ui.heightFeetLabel}
+                  value={imperial.feet}
+                  onValue={(feet) => updateImperial(isFiniteNumber(feet) ? feet : 0, imperial.inches, imperial.pounds)}
+                />
+                <NumberField
+                  label={ui.heightInchesLabel}
+                  value={imperial.inches}
+                  onValue={(inches) =>
+                    updateImperial(imperial.feet, isFiniteNumber(inches) ? inches : 0, imperial.pounds)
                   }
                 />
-              </Field>
+              </div>
+              <NumberField
+                label={ui.weightPoundsLabel}
+                value={imperial.pounds}
+                onValue={(pounds) =>
+                  updateImperial(imperial.feet, imperial.inches, isFiniteNumber(pounds) ? pounds : 0)
+                }
+              />
             </>
           )}
           <Notice tone="info">{ui.adultNotice}</Notice>
@@ -186,14 +213,8 @@ export default function BmiCalculator({ locale, ui }: ToolProps<UI>) {
                 <Stat label={ui.bmiLabel} value={n(bmi)} emphasis />
                 <Stat label={ui.whoLabel} value={categoryLabel(whoCategory)} />
                 <Stat label={ui.koreanLabel} value={categoryLabel(koreanCategory)} />
-                <Stat
-                  label={ui.whoWeightLabel}
-                  value={ui.weightRange.replace('{min}', n(whoRange.min)).replace('{max}', n(whoRange.max))}
-                />
-                <Stat
-                  label={ui.koreanWeightLabel}
-                  value={ui.weightRange.replace('{min}', n(koreanRange.min)).replace('{max}', n(koreanRange.max))}
-                />
+                <Stat label={ui.whoWeightLabel} value={rangeText(whoRange)} />
+                <Stat label={ui.koreanWeightLabel} value={rangeText(koreanRange)} />
               </div>
               <p class="font-mono text-xs text-subtle">{formula}</p>
               <Notice tone="info">{ui.screeningNotice}</Notice>

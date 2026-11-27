@@ -38,6 +38,30 @@ describe('statistics and history', () => {
     });
   });
 
+  it('always reports shares that add up to 100%', () => {
+    expect(getStats({ heads: 199, tails: 1 })).toEqual({
+      heads: 199,
+      tails: 1,
+      total: 200,
+      headsPercent: 100,
+      tailsPercent: 0,
+    });
+    expect(getStats({ heads: 1, tails: 199 })).toMatchObject({ headsPercent: 1, tailsPercent: 99 });
+    for (const [heads, tails] of [
+      [1, 1],
+      [2, 1],
+      [1, 2],
+      [3, 7],
+      [7, 3],
+      [999, 1],
+      [1, 999],
+      [12345, 6789],
+    ] as const) {
+      const stats = getStats({ heads, tails });
+      expect(stats.headsPercent + stats.tailsPercent).toBe(100);
+    }
+  });
+
   it('puts the newest result first and bounds saved history', () => {
     const full = Array.from({ length: HISTORY_LIMIT }, () => 'tails' as const);
     expect(addFlip({ history: full, heads: 100, tails: 100 }, 'heads')).toEqual({

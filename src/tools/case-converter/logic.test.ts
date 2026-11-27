@@ -10,6 +10,13 @@ describe('convertCase', () => {
   it('uses sentence starts after punctuation and line breaks', () => {
     expect(convertCase('HELLO. "HOW ARE YOU?"\nFINE!', 'sentence')).toBe('Hello. "How are you?"\nFine!');
     expect(convertCase('  HELLO', 'sentence')).toBe('  Hello');
+    expect(convertCase('first. second! third? fourth', 'sentence')).toBe('First. Second! Third? Fourth');
+  });
+
+  it('does not start a sentence inside an abbreviation or a decimal', () => {
+    expect(convertCase('the u.s. army arrived.', 'sentence')).toBe('The u.s. Army arrived.');
+    expect(convertCase('e.g. this and that. next one', 'sentence')).toBe('E.g. This and that. Next one');
+    expect(convertCase('version 1.5 is out. really.', 'sentence')).toBe('Version 1.5 is out. Really.');
   });
 
   it('applies different AP and Chicago rules to long prepositions', () => {

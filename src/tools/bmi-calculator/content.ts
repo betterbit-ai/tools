@@ -24,6 +24,7 @@ const uiEn = {
   whoWeightLabel: 'WHO healthy-weight range',
   koreanWeightLabel: 'Korean healthy-weight range',
   weightRange: '{min}–{max} kg',
+  weightRangeLb: '{min}–{max} lb',
   formula: 'BMI = {weight} kg ÷ ({height} m × {height} m) = {bmi}',
   screeningNotice:
     'BMI is a screening measure, not a diagnosis. Pregnancy, high muscle mass, and body composition can make it less representative.',
@@ -161,6 +162,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       whoWeightLabel: 'WHO 적정 체중 범위',
       koreanWeightLabel: '대한비만학회 적정 체중 범위',
       weightRange: '{min}–{max} kg',
+      weightRangeLb: '{min}–{max} lb',
       formula: 'BMI = {weight} kg ÷ ({height} m × {height} m) = {bmi}',
       screeningNotice:
         'BMI는 진단이 아닌 선별 지표입니다. 임신, 높은 근육량, 체성분에 따라 실제 상태를 충분히 반영하지 못할 수 있습니다.',

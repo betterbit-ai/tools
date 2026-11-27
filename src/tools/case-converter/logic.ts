@@ -104,8 +104,10 @@ function titleCase(input: string, style: 'ap' | 'chicago'): string {
 
 function sentenceCase(input: string): string {
   const normalized = input.toLowerCase();
+  // Only a stop followed by whitespace ends a sentence. A full stop inside an abbreviation has none
+  // after it, so “the u.s. army arrived.” no longer came back as “The u.S. Army arrived.”
   return normalized.replace(
-    /(^\s*|[.!?]+[\s"”’'»]*|(?:\r\n|\r|\n)+[ \t]*)(\p{L})/gu,
+    /(^\s*|[.!?]+(?=[\s"”’'»]*\s)[\s"”’'»]*|(?:\r\n|\r|\n)[ \t]*)(\p{L})/gu,
     (_match, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`,
   );
 }

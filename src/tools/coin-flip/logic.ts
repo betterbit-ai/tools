@@ -50,12 +50,15 @@ export function addFlip(state: CoinState, side: CoinSide): CoinState {
 
 export function getStats(state: Pick<CoinState, 'heads' | 'tails'>): FlipStats {
   const total = state.heads + state.tails;
+  // Rounding each share on its own printed 100% and 1% for a 199-to-1 tally, so the second share
+  // is the remainder of the first: the two always add up to exactly 100%.
+  const headsPercent = total ? Math.round((state.heads / total) * 100) : 0;
   return {
     heads: state.heads,
     tails: state.tails,
     total,
-    headsPercent: total ? Math.round((state.heads / total) * 100) : 0,
-    tailsPercent: total ? Math.round((state.tails / total) * 100) : 0,
+    headsPercent,
+    tailsPercent: total ? 100 - headsPercent : 0,
   };
 }
 

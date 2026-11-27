@@ -55,14 +55,15 @@ export default function CoinFlip({ ui }: ToolProps<UI>) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (
-        target.closest('input, textarea, select, [contenteditable]') ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.altKey
-      )
-        return;
+      const target = event.target as HTMLElement | null;
+      // Space belongs to whatever control has focus: pressing it on “Reset tally” reset the tally
+      // only after this handler stopped flipping, and holding it filled the tally with repeats.
+      const onControl = Boolean(
+        target?.closest?.(
+          'input, textarea, select, [contenteditable], button, a[href], summary, [role="button"], [role="link"], [role="radio"], [role="checkbox"], [role="switch"], [role="tab"]',
+        ),
+      );
+      if (onControl || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
       if (event.key === ' ') {
         event.preventDefault();
         flip();

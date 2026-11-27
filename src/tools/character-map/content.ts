@@ -4,7 +4,7 @@ import type { ToolContent } from '../types';
 const uiEn = {
   searchLabel: 'Find a special character',
   searchPlaceholder: 'Search star, 화살표, or U+2192…',
-  searchHint: 'Search by symbol, English or Korean name, or Unicode code point.',
+  searchHint: 'Search by symbol, English or Korean name, or Unicode code point — every group at once.',
   groupLabel: 'Korean keyboard group',
   all: 'All characters',
   popular: 'Popular',
@@ -22,6 +22,7 @@ const uiEn = {
   recent: 'Recent copies',
   results: 'Characters',
   resultCount: '{n} characters',
+  resultCountOne: '{n} character',
   noResults: 'No characters match this search.',
   copyHint: 'Select a character to copy it. Recent copies stay only in this browser.',
   copyCharacter: 'Copy {character}, {code}',
@@ -129,7 +130,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
     ui: {
       searchLabel: '특수문자 찾기',
       searchPlaceholder: '별, 화살표, U+2192로 검색…',
-      searchHint: '기호, 한글·영문 이름 또는 유니코드 코드로 찾습니다.',
+      searchHint: '기호, 한글·영문 이름 또는 유니코드 코드로 찾습니다. 그룹과 상관없이 전체에서 검색합니다.',
       groupLabel: '한글 키보드 자음 분류',
       all: '전체 문자',
       popular: '자주 쓰는 기호',
@@ -147,6 +148,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       recent: '최근 복사',
       results: '특수문자',
       resultCount: '{n}개',
+      resultCountOne: '{n}개',
       noResults: '검색 결과가 없습니다.',
       copyHint: '문자를 누르면 복사됩니다. 최근 복사 목록은 이 브라우저에만 저장됩니다.',
       copyCharacter: '{character} 문자 복사, {code}',
