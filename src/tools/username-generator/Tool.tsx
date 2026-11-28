@@ -148,7 +148,7 @@ export default function UsernameGenerator({ ui }: ToolProps<UI>) {
               label={platformLimit ? ui.maxLengthFixed.replace('{limit}', String(platformLimit)) : ui.maxLengthLabel}
             >
               <NumberInput
-                value={maxLength}
+                value={platformLimit ?? maxLength}
                 min={2}
                 max={40}
                 disabled={Boolean(platformLimit)}
@@ -217,7 +217,7 @@ export default function UsernameGenerator({ ui }: ToolProps<UI>) {
         {names.length > 0 && (
           <ul class="mt-3 divide-y divide-line/60" aria-label={ui.resultsTitle} aria-live="polite">
             {names.map((name) => {
-              const check = checkSuggestion(name, maxLength);
+              const check = checkSuggestion(name, platformLimit ?? maxLength);
               return (
                 <li class="flex items-center gap-2 py-2">
                   <button
@@ -230,7 +230,7 @@ export default function UsernameGenerator({ ui }: ToolProps<UI>) {
                   </button>
                   <span class="tabular shrink-0 font-mono text-xs text-subtle">
                     {check.length}
-                    {maxLength > 0 ? `/${maxLength}` : ''}
+                    {(platformLimit ?? maxLength) > 0 ? `/${platformLimit ?? maxLength}` : ''}
                   </span>
                   <button
                     type="button"

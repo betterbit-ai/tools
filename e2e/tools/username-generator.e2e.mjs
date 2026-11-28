@@ -31,6 +31,14 @@ export default async function (t) {
   t.assert(limited.length > 0, 'no names survived the X limit');
   for (const name of limited) t.assert([...name].length <= 15, `"${name}" exceeds X's 15 characters`);
   t.assert((await t.page.locator('main').innerText()).includes('15-character limit'), 'X limit was not explained');
+  t.assert(
+    (await t.page.locator('main input[type=number]').nth(1).inputValue()) === '15',
+    'the disabled length field still shows the old limit instead of the platform limit',
+  );
+  t.assert(
+    (await suggestions.locator('li').first().innerText()).includes('/15'),
+    'the character counter still uses the pre-platform limit',
+  );
   const separatorLabels = await t.page.locator('[role="radiogroup"] button').allInnerTexts();
   t.assert(!separatorLabels.includes('.'), 'X still offers a period separator it does not accept');
   t.assert(
