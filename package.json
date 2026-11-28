@@ -28,6 +28,7 @@
     "@tesseract.js-data/kor": "^1.0.0",
     "astro": "^7.3.6",
     "fflate": "^0.8.3",
+    "js-yaml": "^4.3.2",
     "jsqr": "^1.4.0",
     "korean-lunar-calendar": "^0.4.0",
     "libheif-js": "^1.23.5",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.6.4",
     "playwright-core": "1.56.1",
     "prettier": "^3.9.9",
