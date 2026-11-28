@@ -117,7 +117,7 @@ The same birth year also fixes the school timeline. Under Article 13 of the Elem
 같은 출생연도로 학제 일정도 정해집니다. 「초·중등교육법」 제13조에 따라 만 6세가 된 다음 해 3월 1일에 초등학교에 입학하므로, ${birthYear}년생은 통상 ${elementaryEntry}년 3월에 입학해 6·3·3년 과정을 마치고 ${highSchoolGraduation}년 2월에 고등학교를 졸업합니다. 만 65세가 되는 해는 ${sixtyFive}년입니다. 조기입학·입학연기·유급·유학이 있으면 학교 일정은 달라지지만 나이 계산은 그대로입니다.`,
               table: {
                 caption: `${birthYear}년생의 연도별 만 나이와 연 나이`,
-                head: ['연도', '생일 전', '생일부터', '연 나이'],
+                head: ['연도', '생일 전 만 나이', '생일부터 만 나이', '연 나이(1월 1일 기준)'],
                 rows: timeline.map((row) => [
                   String(row.year),
                   String(row.before),
