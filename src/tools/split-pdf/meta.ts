@@ -27,5 +27,5 @@ export const meta: ToolMeta = {
         'States that it uploads and processes PDFs on servers in Germany, deletes them after one hour, and funds the tool with advertising. (Strength: it can split odd/even pages and lets users choose visual cut points.)',
     },
   ],
-  related: ['merge-pdf', 'compress-pdf', 'delete-pdf-pages', 'rotate-pdf'],
+  related: ['merge-pdf', 'compress-pdf', 'delete-pdf-pages', 'rotate-pdf', 'image-to-pdf'],
 };

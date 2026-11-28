@@ -212,7 +212,7 @@
 | yaml-json         | YAML ↔ JSON      | yaml to json                               | 양방향                               | P2  | todo |
 | csv-json          | CSV ↔ JSON       | csv to json                                | 미리보기 표                          | P1  | live |
 | html-entities     | HTML 엔티티      | html encode                                | —                                    | P2  | todo |
-| user-agent        | 내 브라우저 정보 | what is my browser / user agent            | 해석된 정보 + 복사                   | P2  | todo |
+| user-agent        | 내 브라우저 정보 | what is my browser / user agent            | 해석된 정보 + 복사                   | P2  | live |
 | screen-resolution | 화면 해상도 확인 | what is my screen resolution / 해상도 확인 | DPR, 뷰포트 함께                     | P1  | live |
 
 | json-to-typescript | JSON → TypeScript | json to typescript / JSON 타입스크립트 변환 | 중첩 배열·optional 필드를 추론하고 interface·type·Zod 스키마 선택 | P1 | todo |
@@ -241,7 +241,7 @@
 | spin-wheel          | 돌림판         | spin the wheel / 돌림판              | 항목 저장, 전체화면                               | P0  | live |
 | ladder-game         | 사다리 타기    | 사다리 타기                          | 애니메이션, 결과 공유                             | P1  | live |
 | lotto-generator     | 로또 번호      | 로또 번호 생성기                     | 제외수, 고정수                                    | P1  | live |
-| username-generator  | 닉네임 생성    | username generator / 닉네임 추천     | 한글 닉네임                                       | P2  | todo |
+| username-generator  | 닉네임 생성    | username generator / 닉네임 추천     | 한글 닉네임                                       | P2  | live |
 | signature-generator | 서명 만들기    | signature generator / 서명 만들기    | 손글씨, 폰트 서명, 투명 PNG                       | P1  | live |
 
 | wifi-qr-generator | Wi-Fi QR 코드 만들기 | wifi qr code generator / 와이파이 QR코드 만들기 | SSID·보안 방식·숨김 네트워크를 전용 폼으로 입력하고 비밀번호가 기기를 떠나지 않음 | P1 | todo |
@@ -263,7 +263,7 @@
 | dead-pixel-test    | 불량화소 테스트 | dead pixel test / 불량화소           | 전체화면 색 순환                 | P1  | live |
 | speaker-test       | 스피커 테스트   | speaker test / 좌우 스피커 테스트    | 좌우, 주파수 스윕                | P1  | live |
 | typing-test        | 타자 연습       | typing test / 타자 연습              | 한글 타수, 영문 WPM              | P0  | live |
-| refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                                | P2  | todo |
+| refresh-rate-test  | 주사율 테스트   | refresh rate test / hz 확인          | —                                | P2  | live |
 | click-speed-test   | 클릭 속도       | cps test                             | 키보드 조작, 로컬 개인 최고 기록 | P2  | live |
 | reaction-time-test | 반응속도        | reaction time test / 반응속도 테스트 | 평균, 백분위                     | P2  | live |
 

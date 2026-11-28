@@ -40,5 +40,6 @@ export const meta: ToolMeta = {
     'regex-tester',
     'csv-json',
     'screen-resolution',
+    'user-agent',
   ],
 };

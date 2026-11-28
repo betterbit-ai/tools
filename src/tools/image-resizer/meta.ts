@@ -39,5 +39,6 @@ export const meta: ToolMeta = {
     'image-to-base64',
     'svg-to-png',
     'screenshot-beautifier',
+    'image-cropper',
   ],
 };

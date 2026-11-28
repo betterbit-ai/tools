@@ -41,5 +41,6 @@ export const meta: ToolMeta = {
     'color-converter',
     'csv-json',
     'screen-resolution',
+    'user-agent',
   ],
 };

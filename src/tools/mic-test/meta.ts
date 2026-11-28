@@ -36,5 +36,6 @@ export const meta: ToolMeta = {
     'speaker-test',
     'voice-recorder',
     'screen-recorder',
+    'refresh-rate-test',
   ],
 };

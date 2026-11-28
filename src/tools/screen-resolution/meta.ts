@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its indexed Korean description lists screen resolution, current viewport, DPR, color depth, orientation, and a CSS breakpoint, but not the visual viewport or its scale; those are needed to distinguish a responsive layout width from a magnified visible area. Betterbit reports both viewport types and copies the current bounded CSS media query beside DPR. (Strength: it explains common breakpoint matches for web developers.)',
     },
   ],
-  related: ['json-formatter', 'url-encoder', 'base64'],
+  related: ['json-formatter', 'url-encoder', 'base64', 'refresh-rate-test', 'user-agent'],
 };

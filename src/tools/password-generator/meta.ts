@@ -51,5 +51,5 @@ export const meta: ToolMeta = {
         'Its Korean result describes a strength estimate based on length and character types, but does not disclose the generated result space or provide a memorable-word mode in the visible result description. Betterbit labels entropy in bits, explains the 128-word selection source, and leaves generated passwords only in the browser. (장점: 생성기와 비밀번호 강도 판별기를 함께 제공한다.)',
     },
   ],
-  related: ['random-number', 'hash-generator', 'uuid-generator'],
+  related: ['random-number', 'hash-generator', 'uuid-generator', 'username-generator'],
 };

@@ -109,6 +109,7 @@ export const meta: ToolMeta = {
     'image-to-text',
     'image-to-base64',
     'svg-to-png',
+    'image-cropper',
   ],
   variants,
 };

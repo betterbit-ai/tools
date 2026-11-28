@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its current Korean page compares a five-round average with age-based guidance and warns about device latency, but its entry result description does not include a session median or fastest-to-slowest spread. Betterbit shows both alongside the average and labels its separate research percentile as only a laboratory reference. (Strength: it foregrounds an age-oriented explanation and practical same-device comparison advice.)',
     },
   ],
-  related: ['click-speed-test', 'mouse-test', 'keyboard-tester'],
+  related: ['click-speed-test', 'mouse-test', 'keyboard-tester', 'refresh-rate-test'],
 };

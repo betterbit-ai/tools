@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean page offers six fields and states that its colours fill only the page while browser bars remain; Betterbit requests the browser Fullscreen API, falls back to the full browser window, and adds three secondary-colour fields with a controllable cycle. (Strength: it also reports browser-visible display metrics such as pixel ratio and refresh rate.)',
     },
   ],
-  related: ['mic-test', 'webcam-test', 'keyboard-tester', 'mouse-test'],
+  related: ['mic-test', 'webcam-test', 'keyboard-tester', 'mouse-test', 'refresh-rate-test'],
 };
