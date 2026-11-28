@@ -58,11 +58,32 @@ export interface VariantContent {
   description: string;
   h1: string;
   intro: string;
+  /**
+   * Preset-specific body. A variant page shows these sections (and the variant
+   * FAQ) instead of the parent tool's, so each preset URL carries its own
+   * reference table and answers rather than repeating the tool page.
+   */
+  sections?: ContentSection[];
+  faq?: FaqItem[];
 }
 
 export interface FaqItem {
   q: string;
   a: string;
+}
+
+/** Data table rendered under a section heading (reference values, not decoration). */
+export interface ContentTable {
+  /** Accessible caption; also the table's visible summary line. */
+  caption: string;
+  head: string[];
+  rows: string[][];
+}
+
+export interface ContentSection {
+  heading: string;
+  body: string;
+  table?: ContentTable;
 }
 
 export interface ToolContent<UI extends Record<string, string> = Record<string, string>> {
@@ -84,7 +105,7 @@ export interface ToolContent<UI extends Record<string, string> = Record<string, 
    * Explanatory sections below the tool. Plain text paragraphs, `\n\n` separated.
    * Must contain real, specific information (formulas, limits, tips) — no filler.
    */
-  sections: { heading: string; body: string }[];
+  sections: ContentSection[];
   /** 3–8 real questions people ask. Answers self-contained (GEO: LLMs quote these). */
   faq: FaqItem[];
   /** Strings used inside the interactive component. */

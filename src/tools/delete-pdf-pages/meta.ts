@@ -24,7 +24,7 @@ export const meta: ToolMeta = {
       name: 'PDF24 (Remove PDF pages)',
       url: 'https://tools.pdf24.org/en/remove-pdf-pages',
       weakness:
-        'The English and Korean pages say files are transferred to PDF24 servers in Germany and automatically deleted after one hour; the service is funded by advertising. This tool keeps the PDF in the browser and has no advertising. (Strength: can mark odd or even pages together.)',
+        'The English and Korean pages say files are transferred to PDF24 servers in Germany and automatically deleted after one hour; the service is funded by advertising. This tool keeps the PDF in the browser and puts no ad block inside the document workflow. (Strength: can mark odd or even pages together.)',
     },
     {
       name: 'RotatePDF (PDF 페이지 삭제)',

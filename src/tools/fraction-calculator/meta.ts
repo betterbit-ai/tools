@@ -36,7 +36,7 @@ export const meta: ToolMeta = {
       name: '툴앤조이 — 분수 계산기',
       url: 'https://toolnjoy.com/fraction',
       weakness:
-        'The opened page places third-party ad blocks immediately after the result and identifies a Coupang Partners commission relationship. Betterbit contains no advertising, tracking, or affiliate block. (장점: 괄호가 있는 식과 최대 여섯 수의 연속 계산, 순환소수 입력까지 지원한다.)',
+        'The opened page places third-party ad blocks immediately after the result and identifies a Coupang Partners commission relationship. Betterbit puts no ad block, tracking script, or affiliate link inside the calculator itself. (장점: 괄호가 있는 식과 최대 여섯 수의 연속 계산, 순환소수 입력까지 지원한다.)',
     },
     {
       name: 'Softonic Tools — 분수 계산기',

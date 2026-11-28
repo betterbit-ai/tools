@@ -15,7 +15,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
       description: `${SITE_NAME} is a growing collection of small, fast, private web tools. No sign-up, no uploads — everything runs in your browser.`,
       h1: `About ${SITE_NAME}`,
       intro: 'Simple tools, done right — fast, private, and built to actually be better than the alternative.',
-      updated: '2026-11-18',
+      updated: '2026-11-28',
       sections: [
         {
           heading: 'Our mission',
@@ -29,6 +29,24 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
           heading: 'Who publishes this site',
           body: `${SITE_NAME} is published by ${ORG_NAME}. The site has no accounts. It is free to use, and advertising from Google AdSense in the content area below each tool pays part of what it costs to run; the Privacy Policy describes exactly what the site collects, ads included.`,
         },
+        {
+          heading: 'Where the Korean tools and numbers come from',
+          body: `A large part of this site exists because Korean practice differs from the English-language tools that dominate search results. The salary calculator uses the 2026 employee rates — national pension 4.75%, health insurance 3.595%, long-term care 13.14% of the health premium and employment insurance 0.9% — rather than the older 4.5% and 3.545%. The age calculator separates 만 나이, 세는 나이 and 연 나이 as they stand after the June 2023 age-unification law. The pyeong converter uses the exact 400/121 ㎡ factor, the gold converter the 3.75 g 돈, and the lunar converter the Korea Astronomy and Space Science Institute's calendar data for its month lengths.
+
+Each Korean tool names the law, notice or dataset behind its numbers on the page itself, with the date the source was checked, so a figure can be verified instead of taken on trust. Where a rule changes yearly — minimum wage, social-insurance rates, income-tax withholding — the page states which year it applies to.`,
+        },
+        {
+          heading: 'What happens when a number is wrong',
+          body: `Bugs are corrected in the code and covered by a test so the same mistake cannot return, then the page is rebuilt and the "Updated" date at the bottom of the page changes. If you report a wrong result, include the page, the inputs you entered and the figure you expected, plus the source you are comparing against — with nothing uploaded to a server, that is the only way the calculation can be reproduced.
+
+Corrections are not announced as news, but a change that alters a result people rely on — a new tax year, a new minimum wage — is described in the page's own text rather than made silently.`,
+        },
+        {
+          heading: 'Why nothing is uploaded, and what that costs you',
+          body: `Every tool runs as JavaScript in the browser, which is why a PDF, a photo or a recording never leaves the device and why there are no file-size quotas or daily limits. The trade-off is support: the site cannot see the file or text that produced a problem, so a screenshot or the exact input is what makes a bug reproducible.
+
+It also means the tools stop working when the browser's own features do — a locked phone can delay a timer alarm, and a very large PDF can exceed the memory a tab is allowed. The page for each tool states that limit rather than letting you discover it halfway through the job.`,
+        },
       ],
     },
     ko: {
@@ -36,7 +54,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
       description: `${SITE_NAME}는 가입과 업로드 없이 브라우저에서 바로 실행되는 단순하고 빠른 웹 도구 모음입니다.`,
       h1: `${SITE_NAME} 소개`,
       intro: '단순한 도구를 제대로 만듭니다 — 빠르고, 안전하고, 기존 도구보다 실제로 나은 것만 올립니다.',
-      updated: '2026-11-18',
+      updated: '2026-11-28',
       sections: [
         {
           heading: '미션',
@@ -49,6 +67,24 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         {
           heading: '운영 주체',
           body: `${SITE_NAME}는 ${ORG_NAME}가 운영합니다. 이 사이트에는 회원가입이 없습니다. 누구나 무료로 쓰며, 운영 비용의 일부는 각 도구 아래 콘텐츠 영역에 표시되는 Google AdSense 광고로 충당합니다. 사이트가 수집하는 항목은 광고를 포함해 개인정보처리방침에 적혀 있습니다.`,
+        },
+        {
+          heading: '한국 도구와 숫자의 출처',
+          body: `이 사이트의 상당 부분은 검색 결과를 차지하는 영문 도구와 한국 관행이 달라서 만들어졌습니다. 연봉 계산기는 옛 4.5%·3.545%가 아니라 2026년 근로자 요율인 국민연금 4.75%, 건강보험 3.595%, 건강보험료의 13.14%인 장기요양, 고용보험 0.9%를 씁니다. 나이 계산기는 2023년 6월 만 나이 통일법 이후의 만 나이·세는 나이·연 나이를 구분하고, 평 계산기는 정확한 400/121㎡ 기준을, 금 무게는 3.75g의 돈을, 음력 변환기는 한국천문연구원의 달력 데이터를 월 길이에 사용합니다.
+
+한국 도구는 각 페이지에 근거 법령·공고·데이터셋과 확인 날짜를 함께 적습니다. 신뢰해 달라고 요구하는 대신 직접 확인할 수 있게 하려는 것입니다. 최저임금, 사회보험 요율, 소득세 원천징수처럼 해마다 바뀌는 규정은 어느 연도 기준인지도 페이지에 표시합니다.`,
+        },
+        {
+          heading: '숫자가 틀렸을 때 어떻게 고치나',
+          body: `오류는 코드에서 고치고 같은 실수가 다시 생기지 않도록 테스트로 막은 뒤 페이지를 다시 빌드하며, 페이지 아래의 '업데이트' 날짜가 바뀝니다. 잘못된 결과를 알려 주실 때는 페이지 주소, 입력한 값, 기대한 값, 비교하신 출처를 함께 보내 주세요. 파일이 서버로 전송되지 않는 구조라 그 정보가 없으면 계산을 재현할 수 없습니다.
+
+수정은 뉴스처럼 공지하지 않지만, 사람들이 의존하는 결과를 바꾸는 변경 — 새 과세연도, 새 최저임금 — 은 조용히 덮지 않고 해당 페이지 본문에 설명합니다.`,
+        },
+        {
+          heading: '업로드가 없는 대신 생기는 제약',
+          body: `모든 도구가 브라우저에서 자바스크립트로 실행되므로 PDF, 사진, 녹음 파일이 기기 밖으로 나가지 않고 파일 크기 할당량이나 하루 제한도 없습니다. 대신 지원에 제약이 있습니다. 문제를 만든 파일이나 텍스트를 사이트가 볼 수 없으므로, 스크린샷이나 정확한 입력값이 있어야 재현할 수 있습니다.
+
+브라우저 기능이 멈추면 도구도 멈춘다는 뜻이기도 합니다. 잠긴 휴대폰은 타이머 알람을 늦출 수 있고, 아주 큰 PDF는 탭에 허용된 메모리를 넘을 수 있습니다. 각 도구 페이지에 그 한도를 적어 두어 작업 도중에 알게 되지 않도록 했습니다.`,
         },
       ],
     },
@@ -219,7 +255,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         'Reach Betterbit about a bug, a tool idea, or anything else — email hello@betterbit.org directly, no contact form.',
       h1: 'Contact',
       intro: `The fastest way to reach us is email — no contact form, no ticket system.`,
-      updated: '2026-10-07',
+      updated: '2026-11-28',
       sections: [
         {
           heading: 'Bug reports and tool ideas',
@@ -229,6 +265,24 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
           heading: 'Response time',
           body: `${SITE_NAME} is a small, independent project, so replies may take a few days. We read every email.`,
         },
+        {
+          heading: 'Reporting a wrong calculation',
+          body: `For a calculator, the page alone is not enough to reproduce a result: send the inputs you entered, the figure the page showed, the figure you expected, and the notice, payslip or official calculator you are comparing against. With the four together a rate, a cap or a rounding rule can be checked against its source and corrected in the code.
+
+Because nothing you enter is transmitted while you use a tool, the site has no log of your calculation to look at. That is deliberate — it is the same reason a private document never leaves your device — and it is why the report has to come from you.`,
+        },
+        {
+          heading: 'Business, licensing and press',
+          body: `For licensing a tool, embedding one, or asking about advertising and partnerships, write to the same address with the subject line starting with the topic. The terms page states what the site claims over its own design, text and code, and confirms that anything a tool produces belongs to you.
+
+${SITE_NAME} does not sell data, has no accounts, and does not run affiliate or sponsored content disguised as a tool; advertising is served by Google AdSense in the content area below each tool, as the Privacy Policy describes.`,
+        },
+        {
+          heading: 'What we cannot help with',
+          body: `The calculators estimate; they do not decide. A salary, severance or unemployment result is not a ruling on your case, and the site cannot give individual tax, labour or legal advice — the employment service, the tax office and a labour attorney are the authorities. Questions about a specific employer's payment belong with those offices rather than with this inbox.
+
+Bugs, broken pages and tools that should exist are always in scope: a short email with the URL and what happened is enough to start.`,
+        },
       ],
     },
     ko: {
@@ -237,7 +291,7 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         '버그 제보, 도구 제안 등 Betterbit에 문의할 내용이 있다면 hello@betterbit.org로 이메일을 보내 주세요. 별도의 문의 양식은 없습니다.',
       h1: '문의',
       intro: '가장 빠른 연락 방법은 이메일입니다 — 별도의 문의 양식이나 티켓 시스템은 없습니다.',
-      updated: '2026-10-07',
+      updated: '2026-11-28',
       sections: [
         {
           heading: '버그 제보와 도구 제안',
@@ -246,6 +300,24 @@ export const STATIC_PAGES: Record<StaticPageId, StaticPageModule> = {
         {
           heading: '답장은 조금 걸릴 수 있어요',
           body: `${SITE_NAME}는 작은 독립 프로젝트라 답장이 며칠 걸릴 수 있습니다. 보내주신 메일은 모두 읽습니다.`,
+        },
+        {
+          heading: '계산 결과가 틀렸을 때 알려 주는 방법',
+          body: `계산기는 페이지 주소만으로는 결과를 재현할 수 없습니다. 입력한 값, 페이지가 보여 준 값, 기대한 값, 비교하신 공고·급여명세서·공식 계산기를 함께 보내 주세요. 네 가지가 있으면 요율·상한·반올림 규칙을 근거와 대조해 코드에서 고칠 수 있습니다.
+
+도구를 쓰는 동안 입력값이 전송되지 않으므로 사이트에는 확인할 계산 기록이 없습니다. 사적인 문서가 기기 밖으로 나가지 않는 것과 같은 이유이며, 그래서 제보가 필요합니다.`,
+        },
+        {
+          heading: '제휴·라이선스·보도 문의',
+          body: `도구 라이선스, 다른 사이트에 넣기(임베드), 광고·제휴 문의는 같은 주소로 보내 주시고 제목 앞에 용도를 적어 주세요. 이용약관에는 사이트의 디자인·텍스트·코드에 대한 권리와, 도구가 만든 결과물이 전부 사용자 것이라는 점이 적혀 있습니다.
+
+${SITE_NAME}는 데이터를 판매하지 않고, 회원 계정이 없으며, 도구로 위장한 제휴·광고 콘텐츠를 싣지 않습니다. 광고는 개인정보처리방침에 적힌 대로 각 도구 아래 콘텐츠 영역의 Google AdSense로만 게재됩니다.`,
+        },
+        {
+          heading: '도와드릴 수 없는 것',
+          body: `계산기는 추정치이고 판정이 아닙니다. 연봉·퇴직금·실업급여 결과는 개별 사안에 대한 결정이 아니며, 이 사이트는 세무·노동·법률 상담을 하지 않습니다. 고용센터, 세무서, 노무사가 기준입니다. 특정 회사의 지급 문제는 그 기관에 문의하셔야 합니다.
+
+반대로 버그, 깨진 페이지, 있었으면 하는 도구는 언제나 환영입니다. 주소와 어떤 일이 있었는지 적은 짧은 메일이면 충분합니다.`,
         },
       ],
     },

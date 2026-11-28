@@ -24,7 +24,7 @@ export const meta: ToolMeta = {
       name: 'InventiveHQ — MD5 Generator',
       url: 'https://inventivehq.com/tools/security/md5-generator',
       weakness:
-        'The opened MD5 generator displays an “Advertisement” block directly beneath its introduction. Betterbit has no advertising and shows the selected digest and checksum match without a separate submit step. (Strength: it describes chunked 4 MB file reads for very large files.)',
+        'The opened MD5 generator displays an “Advertisement” block directly beneath its introduction. Betterbit keeps the ad area out of the hashing panel and shows the selected digest and checksum match without a separate submit step. (Strength: it describes chunked 4 MB file reads for very large files.)',
     },
     {
       name: '유틸로 — 해시·체크섬 생성기',

@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'timeanddate.com World Clock',
       url: 'https://www.timeanddate.com/worldclock/',
       weakness:
-        'The page places an “Advertising” slot between its three-city personal clock and the worldwide table, and planning lives on a separate Meeting Planner page. Betterbit has no advertising and shows the selected-city working-hours overlap in the same panel. (Strength: it provides weather, sun, and moon information plus a much larger city directory.)',
+        'The page places an “Advertising” slot between its three-city personal clock and the worldwide table, and planning lives on a separate Meeting Planner page. Betterbit keeps ad space out of the clock panel and shows the selected-city working-hours overlap in the same panel. (Strength: it provides weather, sun, and moon information plus a much larger city directory.)',
     },
     {
       name: 'WorldClock.lol Meeting Planner',

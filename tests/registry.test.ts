@@ -156,6 +156,40 @@ for (const { meta, content } of TOOL_DATA) {
     }
 
     if (meta.variants?.length) {
+      it('gives every preset page its own sections, table and FAQ', () => {
+        for (const v of meta.variants!) {
+          for (const locale of LOCALES) {
+            const vc = v.content[locale];
+            const where = `${v.slug} [${locale}]`;
+            expect(vc.sections?.length, `${where} needs its own sections`).toBeGreaterThanOrEqual(1);
+            for (const section of vc.sections!) {
+              expect(len(section.body), `${where} section "${section.heading}" too short`).toBeGreaterThanOrEqual(
+                min(locale, 200),
+              );
+              if (section.table) {
+                expect(section.table.head.length).toBeGreaterThanOrEqual(2);
+                expect(section.table.rows.length, `${where} table needs real rows`).toBeGreaterThanOrEqual(3);
+                for (const row of section.table.rows) expect(row.length).toBe(section.table.head.length);
+              }
+            }
+            expect(vc.faq?.length, `${where} needs its own FAQ`).toBeGreaterThanOrEqual(2);
+            for (const f of vc.faq!) {
+              expect(f.q, `${where} FAQ q should be a real question`).toContain('?');
+              expect(len(f.a), `${where} FAQ answer too short: ${f.q}`).toBeGreaterThanOrEqual(min(locale, 40));
+            }
+          }
+        }
+      });
+
+      it('does not repeat the same preset copy across variants of one tool', () => {
+        for (const locale of LOCALES) {
+          const bodies = meta.variants!.map((v) =>
+            (v.content[locale].sections ?? []).map((section) => `${section.heading}\n${section.body}`).join('\n'),
+          );
+          expect(new Set(bodies).size, `duplicate ${locale} variant sections in ${meta.slug}`).toBe(bodies.length);
+        }
+      });
+
       it('has valid, unique variants with distinct content', () => {
         const slugs = meta.variants!.map((v) => v.slug);
         expect(new Set(slugs).size).toBe(slugs.length);

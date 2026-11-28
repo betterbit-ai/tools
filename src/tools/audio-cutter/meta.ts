@@ -12,6 +12,36 @@ const variants: ToolVariant[] = [
         h1: 'Ringtone Maker',
         intro:
           'Open an MP3 to begin with a 30-second selection. Click the waveform to move either edge, preview it, then download the clipped MP3.',
+        sections: [
+          {
+            heading: 'Ringtone length limits and how the cut is saved',
+            body: 'A ringtone is short by design: an iPhone ringtone is limited to 40 seconds with 30 seconds as the practical length, Android accepts most common audio files without a hard rule but built-in ringtone pickers expect a short clip, and notification sounds are shorter still. The 30-second preset matches the iPhone limit and leaves margin everywhere else.\n\nThe export copies complete MP3 frames from the source instead of re-encoding, so the clip keeps the original bitrate and there is no second lossy pass. The cut lands on the nearest frame boundary — about 26 ms at 128 kbps — which is inaudible in a ringtone but is not sample-accurate.',
+            table: {
+              caption: 'Typical ringtone and alert lengths',
+              head: ['Use', 'Maximum', 'Common length'],
+              rows: [
+                ['iPhone ringtone', '40 s', '30 s'],
+                ['Android ringtone', 'No fixed limit', '30–40 s'],
+                ['Notification sound', 'A few seconds', '1–5 s'],
+                ['Alarm', 'No fixed limit', '30 s'],
+              ],
+            },
+          },
+        ],
+        faq: [
+          {
+            q: 'How long can an iPhone ringtone be?',
+            a: '40 seconds, with 30 seconds as the usual working length. iPhones store ringtones as .m4r; this tool exports MP3, which Android and desktop players accept directly.',
+          },
+          {
+            q: 'Does cutting an MP3 reduce its quality?',
+            a: 'Not here. The export copies complete MP3 frames instead of decoding and re-encoding, so the clip keeps the original bitrate and is not degraded by a second compression pass.',
+          },
+          {
+            q: 'Why is the cut not exactly at the time I typed?',
+            a: 'MP3 frames are fixed-size blocks, so the cut snaps to the nearest frame boundary — about 26 ms at 128 kbps, below the threshold of hearing for a ringtone.',
+          },
+        ],
       },
       ko: {
         title: '벨소리 만들기 — 30초 MP3 자르기, 업로드 없음',
@@ -20,6 +50,36 @@ const variants: ToolVariant[] = [
         h1: '벨소리 만들기',
         intro:
           'MP3를 열면 30초 구간이 먼저 선택됩니다. 파형에서 양 끝을 조정하고 미리 들은 뒤 잘라낸 MP3를 저장하세요.',
+        sections: [
+          {
+            heading: '벨소리 길이 제한과 잘라내는 방식',
+            body: '벨소리는 짧게 설계되어 있습니다. 아이폰 벨소리는 40초가 상한이고 실용적인 길이는 30초, 안드로이드는 대부분의 오디오 형식을 받지만 기본 벨소리 선택기는 짧은 클립을 기대하며, 알림음은 더 짧습니다. 30초 프리셋은 아이폰 한도에 맞고 다른 기기에서는 여유가 남습니다.\n\n내보내기는 원본 MP3의 프레임을 그대로 복사하며 다시 인코딩하지 않습니다. 그래서 클립이 원본 비트레이트를 유지하고 두 번째 손실 압축이 생기지 않습니다. 절단점은 가장 가까운 프레임 경계에 맞춰지며 128kbps에서 약 26ms여서 벨소리로는 들리지 않지만 샘플 단위로 정확하지는 않습니다.',
+            table: {
+              caption: '벨소리·알림음의 일반적인 길이',
+              head: ['용도', '최대 길이', '흔한 길이'],
+              rows: [
+                ['아이폰 벨소리', '40초', '30초'],
+                ['안드로이드 벨소리', '정해진 제한 없음', '30~40초'],
+                ['알림음', '수 초', '1~5초'],
+                ['알람', '정해진 제한 없음', '30초'],
+              ],
+            },
+          },
+        ],
+        faq: [
+          {
+            q: '아이폰 벨소리는 몇 초까지 가능한가요?',
+            a: '40초이고 실용적인 길이는 30초입니다. 아이폰은 .m4r 형식을 쓰며, 이 도구는 MP3로 내보내므로 안드로이드와 데스크톱 플레이어에서 바로 재생됩니다.',
+          },
+          {
+            q: 'MP3를 자르면 음질이 떨어지나요?',
+            a: '여기서는 아닙니다. 프레임을 그대로 복사하고 재인코딩하지 않으므로 원본 비트레이트가 유지되고 두 번째 압축이 생기지 않습니다.',
+          },
+          {
+            q: '입력한 시간과 정확히 맞지 않는 이유는?',
+            a: 'MP3 프레임이 고정 크기 블록이라 절단점이 가장 가까운 프레임 경계에 맞춰지기 때문입니다. 128kbps에서 약 26ms로 벨소리에서는 차이를 느끼기 어렵습니다.',
+          },
+        ],
       },
     },
   },

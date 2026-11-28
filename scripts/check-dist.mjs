@@ -53,6 +53,15 @@ if (!existsSync(DIST)) {
 
 const pages = walk(DIST).filter((f) => f.endsWith('.html'));
 const titles = new Map();
+/** URL path -> { noindex, canonical } for the sitemap cross-check below. */
+const pageSeo = new Map();
+const urlForFile = (file) => {
+  const rel = relative(DIST, file).replace(/\\/g, '/');
+  const noExt = rel.replace(/\.html$/, '');
+  if (noExt === 'index') return '/';
+  if (noExt.endsWith('/index')) return '/' + noExt.slice(0, -'/index'.length);
+  return '/' + noExt;
+};
 
 // Ads: ads.txt must publish the same publisher ID the pages load, from the site root.
 // AdSense rejects the pair when they disagree, and a mis-served ads.txt warns in the account.
@@ -105,11 +114,13 @@ for (const file of pages) {
     }
   }
 
+  let canonical = null;
   if (!noindex) {
-    const canonical = head.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+    canonical = head.match(/<link rel="canonical" href="([^"]+)"/)?.[1] ?? null;
     if (!canonical?.startsWith('https://')) fail(page, 'missing absolute canonical');
     if (!/hreflang="x-default"/.test(head)) fail(page, 'missing hreflang x-default');
   }
+  pageSeo.set(urlForFile(file), { noindex, canonical });
 
   if (!noindex && adsPub) {
     const loader = `pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-${adsPub}`;
@@ -144,6 +155,40 @@ for (const file of pages) {
   let js = 0;
   for (const f of jsFiles) js += jsClosure(join(DIST, f), seen);
   if (js > JS_BUDGET_BYTES) fail(page, `JS ${Math.round(js / 1024)} KB exceeds budget ${JS_BUDGET_BYTES / 1024} KB`);
+}
+
+// Sitemap coverage: every listed URL must be a built, indexable page whose canonical is
+// itself, and every indexable page must be listed. A 404 in the sitemap is a direct
+// quality signal to search engines and to AdSense review, so it fails the build.
+const sitemapPath = join(DIST, 'sitemap.xml');
+if (!existsSync(sitemapPath)) {
+  fail('/sitemap.xml', 'missing');
+} else {
+  const xml = readFileSync(sitemapPath, 'utf8');
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  if (locs.length === 0) fail('/sitemap.xml', 'lists no URLs');
+  const listed = new Set();
+  for (const loc of locs) {
+    let path;
+    try {
+      path = new URL(loc).pathname.replace(/\/$/, '') || '/';
+    } catch {
+      fail('/sitemap.xml', `invalid URL ${loc}`);
+      continue;
+    }
+    if (listed.has(path)) fail('/sitemap.xml', `duplicate entry ${path}`);
+    listed.add(path);
+    if (!existsSync(fileForPath(path))) fail('/sitemap.xml', `lists ${path} but no page was built (404)`);
+    const state = pageSeo.get(path);
+    if (state?.noindex) fail('/sitemap.xml', `lists noindex page ${path}`);
+    else if (state?.canonical && new URL(state.canonical).pathname.replace(/\/$/, '') !== (path === '/' ? '' : path)) {
+      fail('/sitemap.xml', `lists ${path} whose canonical points elsewhere (${state.canonical})`);
+    }
+  }
+  for (const [path, state] of pageSeo) {
+    if (!state.noindex && path !== '/404' && !listed.has(path))
+      fail(path, 'indexable page is missing from sitemap.xml');
+  }
 }
 
 // Deploy limit: every file in dist/, not just pages (e.g. a bundled .wasm).

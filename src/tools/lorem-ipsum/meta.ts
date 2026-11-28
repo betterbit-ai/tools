@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'W3Schools Lorem Ipsum Generator',
       url: 'https://www.w3schools.com/tools/tool_lorem_ipsum.php',
       weakness:
-        'The opened page requires Generate before Copy and includes a visible “REMOVE ADS” promotion alongside the tool; Betterbit shows a live result and has no advertising. (Strength: W3Schools also states that its generator runs entirely in the browser.)',
+        'The opened page requires Generate before Copy and includes a visible “REMOVE ADS” promotion alongside the tool; Betterbit shows a live result and keeps ad space out of the generator panel. (Strength: W3Schools also states that its generator runs entirely in the browser.)',
     },
     {
       name: 'Lipsum.in',

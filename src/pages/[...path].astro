@@ -17,9 +17,10 @@ import Icon from '../components/site/Icon.astro';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '../i18n/locales';
 import { t } from '../i18n/ui';
 import { localePath } from '../lib/urls';
-import { breadcrumbLd, websiteLd } from '../lib/seo';
+import { breadcrumbLd, faqLd, websiteLd } from '../lib/seo';
 import { CONTACT_EMAIL } from '../config/site';
 import { CATEGORIES, CATEGORY_IDS, type CategoryId } from '../tools/categories';
+import { CATEGORY_HUB_CONTENT } from '../tools/category-content';
 import { TOOLS } from '../tools/registry';
 import type { ToolModule, ToolVariant } from '../tools/types';
 import { homeCategorySections, popularTools, recentToolsIndex, sortByLocalizedName } from '../tools/home';
@@ -373,6 +374,7 @@ const categoryTools =
         { name: t(locale, 'breadcrumb.home'), path: localePath(locale) },
         { name: CATEGORIES[props.category].name[locale], path: localePath(locale, 'c', props.category) },
       ]),
+      faqLd(CATEGORY_HUB_CONTENT[props.category][locale].faq),
     ]}
   >
     <div class="mx-auto max-w-5xl px-4 pt-6">
@@ -389,6 +391,36 @@ const categoryTools =
         {categoryTools.map((tool) => (
           <ToolCard tool={tool} locale={locale} />
         ))}
+      </div>
+
+      <div class="mt-14 grid gap-12 max-w-3xl">
+        {CATEGORY_HUB_CONTENT[props.category][locale].sections.map((section) => (
+          <section class="prose-tool">
+            <h2>{section.heading}</h2>
+            {section.body.split('\n\n').map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+          </section>
+        ))}
+
+        <section class="prose-tool">
+          <h2>{t(locale, 'tool.faq')}</h2>
+          <div class="divide-y divide-line border-y border-line">
+            {CATEGORY_HUB_CONTENT[props.category][locale].faq.map((item) => (
+              <details class="group py-3">
+                <summary class="cursor-pointer list-none flex items-center justify-between gap-4 font-medium text-fg">
+                  {item.q}
+                  <Icon
+                    name="chevron-right"
+                    size={16}
+                    class="shrink-0 transition-transform group-open:rotate-90 text-subtle"
+                  />
+                </summary>
+                <p class="mt-2">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   </BaseLayout>

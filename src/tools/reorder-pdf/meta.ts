@@ -18,7 +18,7 @@ export const meta: ToolMeta = {
       name: 'PDF24 (Rearrange PDF Pages)',
       url: 'https://tools.pdf24.org/en/rearrange-pdf-pages',
       weakness:
-        'Its English page says PDF files are sorted in the cloud on its servers and automatically deleted only after a short period. The same page visibly labels an Advertisement and says the service is free thanks to advertising. This tool never transmits the PDF and has no advertising around the document workflow. (Strength: PDF24 has no registration or time restriction and offers a desktop app.)',
+        'Its English page says PDF files are sorted in the cloud on its servers and automatically deleted only after a short period. The same page visibly labels an Advertisement and says the service is free thanks to advertising. This tool never transmits the PDF and keeps ad space out of the document workflow. (Strength: PDF24 has no registration or time restriction and offers a desktop app.)',
     },
     {
       name: 'Love2PDF (Reorder and Rearrange PDF Pages)',
