@@ -58,8 +58,10 @@ interface WorkProgress {
 const STORAGE_KEY = 'tools:image-to-pdf:options';
 const SUPPORTED_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.gif,.bmp';
 
+const DEFAULT_OPTIONS: Options = { ...DEFAULT_PDF_OPTIONS, quality: 85 };
+
 function loadOptions(): Options {
-  const defaults: Options = { ...DEFAULT_PDF_OPTIONS, quality: 85 };
+  const defaults: Options = DEFAULT_OPTIONS;
   const raw = safeStorage.get(STORAGE_KEY);
   if (!raw) return defaults;
   try {
@@ -81,7 +83,11 @@ let nextId = 1;
 
 export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
   const [items, setItems] = useState<Item[]>([]);
-  const [opts, setOpts] = useState<Options>(loadOptions);
+  // Start from the defaults so the hydrated markup matches the server's, then restore the saved
+  // settings. Reading storage in the initialiser instead leaves every segmented control showing
+  // its default while the tool already uses the restored value.
+  const [opts, setOpts] = useState<Options>(DEFAULT_OPTIONS);
+  const [optionsRestored, setOptionsRestored] = useState(false);
   const [pdf, setPdf] = useState<{ blob: Blob; url: string; key: string } | null>(null);
   const [pdfError, setPdfError] = useState(false);
   const [buildingPdf, setBuildingPdf] = useState(false);
@@ -97,7 +103,15 @@ export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
   itemsRef.current = items;
   pdfRef.current = pdf;
 
-  useEffect(() => safeStorage.set(STORAGE_KEY, JSON.stringify(opts)), [opts]);
+  useEffect(() => {
+    setOpts(loadOptions());
+    setOptionsRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (!optionsRestored) return;
+    safeStorage.set(STORAGE_KEY, JSON.stringify(opts));
+  }, [opts, optionsRestored]);
 
   const addFiles = useCallback((files: File[]) => {
     const accepted = files.slice(0, Math.max(0, MAX_IMAGE_COUNT - itemsRef.current.length));

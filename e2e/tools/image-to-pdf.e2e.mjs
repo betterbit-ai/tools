@@ -102,6 +102,22 @@ async function waitForEnabledDownload(t, timeout = 180_000) {
 export default async function (t) {
   await t.open('/image-to-pdf');
 
+  // A restored setting must be shown in the control that restored it, not only used internally.
+  // Checked before any large photo is loaded, because a reload with a finished batch is the
+  // heaviest state this page can be in.
+  await t.page.getByRole('radio', { name: 'A4', exact: true }).click();
+  await t.page.waitForTimeout(150);
+  await t.page.reload({ waitUntil: 'load' });
+  await t.page.waitForSelector('astro-island:not([ssr])').catch(() => {});
+  let restored = 'false';
+  for (let i = 0; i < 30; i += 1) {
+    restored = (await t.page.getByRole('radio', { name: 'A4', exact: true }).getAttribute('aria-checked')) ?? 'false';
+    if (restored === 'true') break;
+    await t.page.waitForTimeout(100);
+  }
+  t.assert(restored === 'true', 'the saved page size was used but the control still showed its default');
+  await t.page.getByRole('radio', { name: 'Fit to image', exact: true }).click();
+
   const phone12 = await realisticPhoneJpeg(t, 4032, 3024, 'phone-12mp.jpg');
   const phone24 = await t.image({ width: 6000, height: 4000, type: 'image/jpeg', name: 'phone-24mp.jpg' });
   const transparent = await transparentPng(t);
@@ -223,6 +239,7 @@ export default async function (t) {
     'Letter choice did not explain Letter',
   );
   await a4.click();
+
   await t.page.setViewportSize({ width: 375, height: 812 });
   await t.page.emulateMedia({ colorScheme: 'dark' });
   const viewport = await t.page.evaluate(() => ({
