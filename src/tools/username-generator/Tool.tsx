@@ -3,6 +3,7 @@ import {
   Button,
   CopyButton,
   Field,
+  FieldGroup,
   Notice,
   NumberInput,
   Panel,
@@ -158,7 +159,7 @@ export default function UsernameGenerator({ ui }: ToolProps<UI>) {
         </div>
 
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label={ui.separatorLabel} hint={platform === 'any' ? undefined : ui.separatorHint}>
+          <FieldGroup label={ui.separatorLabel} hint={platform === 'any' ? undefined : ui.separatorHint}>
             <Segmented<Separator>
               value={separator}
               onValue={setSeparator}
@@ -175,7 +176,7 @@ export default function UsernameGenerator({ ui }: ToolProps<UI>) {
                 }[]
               }
             />
-          </Field>
+          </FieldGroup>
           <Field label={ui.digitsLabel} hint={ui.digitsHint}>
             <Select<string>
               value={String(digits)}

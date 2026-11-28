@@ -91,11 +91,11 @@ export default function RefreshRateTest({ ui }: ToolProps<UI>) {
 
   const match = stats ? matchStandardRate(stats.hz) : null;
   const headline = stats && !stats.stalled ? `${roundRate(stats.hz)}` : '—';
-  const standardLabel = match?.withinTolerance
-    ? `${match.rate} ${ui.hertz}`
-    : match
-      ? `${ui.about} ${match.rate} ${ui.hertz} (${ui.outsideTolerance})`
-      : ui.none;
+  const standardLabel = match
+    ? match.withinTolerance
+      ? `${match.rate} ${ui.hertz}`
+      : ui.closestRate.replace('{rate}', String(match.rate)).replace('{percent}', (match.relative * 100).toFixed(1))
+    : ui.none;
 
   const report = useMemo(
     () =>

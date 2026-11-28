@@ -40,8 +40,7 @@ const uiEn = {
   tableNote:
     'The table lists {count} rates this tool recognises. A reading within 2% of one of them is reported as that standard rate, because real panel timing is rarely exact: a 60 Hz signal commonly runs at 59.94 Hz.',
   none: 'No standard rate',
-  about: 'about',
-  outsideTolerance: 'outside 2%',
+  closestRate: 'closest {rate} Hz · {percent}% away',
   dash: '—',
   reportRate: 'Refresh rate',
   reportStandard: 'Nearest standard rate',
@@ -212,8 +211,7 @@ export const content: Record<Locale, ToolContent<UI>> = {
       tableNote:
         '이 도구가 인식하는 {count}개 주사율입니다. 실제 패널 타이밍은 딱 떨어지지 않아 60Hz 신호도 59.94Hz로 동작하는 경우가 흔하므로, 표준값의 2% 안에 들면 그 표준 주사율로 표시합니다.',
       none: '표준 주사율 없음',
-      about: '약',
-      outsideTolerance: '2% 밖',
+      closestRate: '가장 가까운 {rate} Hz · {percent}% 차이',
       dash: '—',
       reportRate: '주사율',
       reportStandard: '가까운 표준 주사율',

@@ -33,6 +33,10 @@ export default async function (t) {
   t.assert((await t.page.locator('main').innerText()).includes('15-character limit'), 'X limit was not explained');
   const separatorLabels = await t.page.locator('[role="radiogroup"] button').allInnerTexts();
   t.assert(!separatorLabels.includes('.'), 'X still offers a period separator it does not accept');
+  t.assert(
+    (await t.page.getByRole('radio', { name: 'None', exact: true }).count()) === 1,
+    'the separator label was repeated into the radio names',
+  );
 
   // A keyword must appear in every suggestion.
   const keyword = t.page.locator('main input[type=text]').first();
