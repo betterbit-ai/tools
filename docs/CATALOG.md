@@ -205,13 +205,13 @@
 | jwt-decoder       | JWT 디코더       | jwt decode                                 | 만료 시간 사람이 읽는 형태로         | P1  | live |
 | regex-tester      | 정규식 테스트    | regex tester                               | 매치 하이라이트, 설명                | P1  | live |
 | diff-checker-code | 코드 비교        | diff checker                               | 구문 하이라이트 diff                 | P2  | todo |
-| cron-parser       | Cron 해석        | cron expression                            | 다음 실행 시각 목록                  | P2  | todo |
+| cron-parser       | Cron 해석        | cron expression                            | 다음 실행 시각 목록, 일·요일 OR 규칙 | P2  | live |
 | color-converter   | 색상 변환        | hex to rgb                                 | OKLCH 포함, 대비율                   | P1  | live |
-| css-minifier      | CSS/JS 압축      | minify css                                 | —                                    | P2  | todo |
-| sql-formatter     | SQL 포맷터       | sql formatter                              | 방언 선택                            | P2  | todo |
-| yaml-json         | YAML ↔ JSON      | yaml to json                               | 양방향                               | P2  | todo |
+| css-minifier      | CSS/JS 압축      | minify css                                 | JS 줄바꿈 유지, gzip 실측            | P2  | live |
+| sql-formatter     | SQL 포맷터       | sql formatter                              | 6개 방언, 토큰 대조 검증             | P2  | live |
+| yaml-json         | YAML ↔ JSON      | yaml to json                               | 양방향, 날짜·병합 키 보존            | P2  | live |
 | csv-json          | CSV ↔ JSON       | csv to json                                | 미리보기 표                          | P1  | live |
-| html-entities     | HTML 엔티티      | html encode                                | —                                    | P2  | todo |
+| html-entities     | HTML 엔티티      | html encode                                | HTML5 이름 2,125개·6단계 옵션        | P2  | live |
 | user-agent        | 내 브라우저 정보 | what is my browser / user agent            | 해석된 정보 + 복사                   | P2  | live |
 | screen-resolution | 화면 해상도 확인 | what is my screen resolution / 해상도 확인 | DPR, 뷰포트 함께                     | P1  | live |
 

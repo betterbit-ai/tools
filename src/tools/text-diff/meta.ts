@@ -39,5 +39,8 @@ export const meta: ToolMeta = {
     'hangul-romanization',
     'korean-spell-check',
     'find-and-replace',
+    'html-entities',
+    'yaml-json',
+    'css-minifier',
   ],
 };

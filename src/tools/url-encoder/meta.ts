@@ -42,5 +42,6 @@ export const meta: ToolMeta = {
     'csv-json',
     'screen-resolution',
     'user-agent',
+    'html-entities',
   ],
 };

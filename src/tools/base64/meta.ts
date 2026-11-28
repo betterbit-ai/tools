@@ -34,6 +34,7 @@ export const meta: ToolMeta = {
     'data-size-converter',
     'number-base-converter',
     'url-encoder',
+    'html-entities',
     'uuid-generator',
     'hash-generator',
     'jwt-decoder',

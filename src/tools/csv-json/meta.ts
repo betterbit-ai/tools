@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'Its Korean page supports live conversion and conservative type handling, but its exposed controls end at text output and do not provide a converted-row table. Betterbit adds the visible 10-row preview without adding a second conversion step. (Strength: it explains the risk of converting 007 and 1e3 to numbers.)',
     },
   ],
-  related: ['json-formatter', 'url-encoder', 'base64', 'regex-tester'],
+  related: ['json-formatter', 'yaml-json', 'url-encoder', 'base64', 'regex-tester'],
 };

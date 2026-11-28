@@ -54,5 +54,6 @@ export const meta: ToolMeta = {
     'world-clock',
     'unix-timestamp',
     'hours-calculator',
+    'cron-parser',
   ],
 };

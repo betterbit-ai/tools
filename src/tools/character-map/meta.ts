@@ -45,5 +45,5 @@ export const meta: ToolMeta = {
         'This is an Excel-focused article that describes ㅁ/ㅇ/ㄷ shortcuts and font caveats, rather than a copyable character map with text, symbol and U+ code-point search.',
     },
   ],
-  related: ['word-counter', 'fancy-text', 'invisible-character'],
+  related: ['word-counter', 'fancy-text', 'invisible-character', 'html-entities'],
 };
