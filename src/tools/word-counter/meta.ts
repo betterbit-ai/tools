@@ -750,7 +750,7 @@ export const meta: ToolMeta = {
   category: 'text',
   icon: 'count',
   added: '2026-10-07',
-  updated: '2026-11-19',
+  updated: '2026-11-28',
   edges: ['accuracy', 'privacy', 'features'],
   competitors: [
     {

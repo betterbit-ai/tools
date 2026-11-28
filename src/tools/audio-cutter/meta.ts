@@ -90,7 +90,7 @@ export const meta: ToolMeta = {
   category: 'media',
   icon: 'speaker',
   added: '2026-10-24',
-  updated: '2026-10-24',
+  updated: '2026-11-28',
   edges: ['privacy', 'performance'],
   competitors: [
     {

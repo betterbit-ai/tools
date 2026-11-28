@@ -292,7 +292,7 @@ export const meta: ToolMeta = {
   category: 'image',
   icon: 'convert',
   added: '2026-10-08',
-  updated: '2026-10-20',
+  updated: '2026-11-28',
   edges: ['privacy', 'no-signup', 'performance', 'usability'],
   competitors: [
     {

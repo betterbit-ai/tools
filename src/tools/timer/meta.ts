@@ -175,7 +175,7 @@ export const meta: ToolMeta = {
   category: 'time',
   icon: 'timer',
   added: '2026-10-07',
-  updated: '2026-10-19',
+  updated: '2026-11-28',
   edges: ['accuracy', 'usability', 'design'],
   competitors: [
     {

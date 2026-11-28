@@ -152,7 +152,7 @@ export const meta: ToolMeta = {
   category: 'time',
   icon: 'cake',
   added: '2026-10-11',
-  updated: '2026-10-28',
+  updated: '2026-11-28',
   edges: ['usability', 'features'],
   competitors: [
     {

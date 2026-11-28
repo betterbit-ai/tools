@@ -208,7 +208,7 @@ export const meta: ToolMeta = {
   category: 'calculator',
   icon: 'calculator',
   added: '2026-10-13',
-  updated: '2026-11-20',
+  updated: '2026-11-28',
   edges: ['accuracy', 'privacy', 'usability'],
   competitors: [
     {
