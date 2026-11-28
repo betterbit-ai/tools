@@ -48,7 +48,10 @@ const COMBOS: {
  * Per-pair details for the preset pages. Each variant carries its own section and FAQ so a
  * conversion page is not a copy of the main converter with a different format name.
  */
-const DETAILS: Record<string, { en: VariantContent; ko: VariantContent }> = {
+/** Only the preset-specific fields; title, description, h1 and intro come from the combo. */
+type VariantDetails = Pick<VariantContent, 'sections' | 'faq'>;
+
+const DETAILS: Record<string, { en: VariantDetails; ko: VariantDetails }> = {
   'jpg-to-png': {
     en: {
       sections: [
