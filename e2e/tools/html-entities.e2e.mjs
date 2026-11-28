@@ -106,7 +106,12 @@ export default async function (t) {
     'Copy put the wrong text on the clipboard',
   );
 
-  // ── 11. The text and the options survive a reload.
+  // ── 11. The reference table names each character the way the encoder would write it.
+  const tableText = await page.locator('main table').innerText();
+  t.assert(tableText.includes('&copy;'), `the table does not name ©: ${tableText.slice(0, 40)}`);
+  t.assert(tableText.includes('&nbsp;'), 'the table does not name the non-breaking space');
+
+  // ── 12. The text and the options survive a reload.
   await input(page).fill('a<b>');
   await radio('Non-ASCII too').click();
   await radio('Decimal').click();
@@ -117,7 +122,7 @@ export default async function (t) {
   t.assert((await input(page).inputValue()) === 'a<b>', `a reload lost the text (${await input(page).inputValue()})`);
   t.assert((await out(page)).includes('&#60;'), `a reload lost the options (${await out(page)})`);
 
-  // ── 12. Clear empties the box and the saved text.
+  // ── 13. Clear empties the box and the saved text.
   await page.getByRole('button', { name: 'Clear', exact: true }).click();
   await page.waitForTimeout(400);
   t.assert((await input(page).inputValue()) === '', 'Clear left text behind');
@@ -126,7 +131,7 @@ export default async function (t) {
     'Clear left the text in local storage',
   );
 
-  // ── 13. The Korean page runs the same tool with Korean labels.
+  // ── 14. The Korean page runs the same tool with Korean labels.
   await t.open('/ko/html-entities');
   await page.waitForTimeout(700);
   t.assert((await page.getByRole('radio', { name: '인코딩', exact: true }).count()) === 1, 'no Korean Encode option');
@@ -138,7 +143,7 @@ export default async function (t) {
     'the Korean page did not encode',
   );
 
-  // ── 14. 375 px, dark: no sideways scrolling, no page errors.
+  // ── 15. 375 px, dark: no sideways scrolling, no page errors.
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.waitForTimeout(400);

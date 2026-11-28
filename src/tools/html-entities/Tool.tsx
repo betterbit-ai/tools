@@ -222,7 +222,7 @@ export default function HtmlEntities({ locale, ui }: ToolProps<UI>) {
                 return (
                   <tr class="border-t border-line">
                     <td class="py-1.5 pr-4">{info.char === '\u00a0' ? '␣' : info.char}</td>
-                    <td class="py-1.5 pr-4">{encodeHtml(info.char, { mode: 'minimal', format: 'named' })}</td>
+                    <td class="py-1.5 pr-4">{encodeHtml(info.char, { mode: 'non-ascii', format: 'named' })}</td>
                     <td class="py-1.5">{info.decimal}</td>
                   </tr>
                 );
