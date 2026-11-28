@@ -34,6 +34,10 @@ const uiEn = {
   pageSizeA4: 'A4',
   pageSizeLetter: 'Letter',
   pageSizeHint: 'Fit to image keeps every page the exact size and shape of its photo, with no white borders.',
+  pageSizeHintA4:
+    'A4 is 210 × 297 mm (595 × 842 pt). Each photo is scaled down to fit inside the page and centred, never cropped, and orientation follows the photo.',
+  pageSizeHintLetter:
+    'US Letter is 8.5 × 11 in (612 × 792 pt). Photos are scaled to fit and centred, never cropped, and orientation follows each photo.',
   orientationLabel: 'Orientation',
   orientationAuto: 'Auto',
   orientationPortrait: 'Portrait',
@@ -197,6 +201,10 @@ export const content: Record<Locale, ToolContent<UI>> = {
       pageSizeA4: 'A4',
       pageSizeLetter: 'Letter',
       pageSizeHint: '"이미지에 맞춤"은 페이지를 사진과 정확히 같은 크기·비율로 만들어 흰 여백이 생기지 않습니다.',
+      pageSizeHintA4:
+        'A4는 210 × 297mm(595 × 842pt)입니다. 사진은 잘리지 않고 페이지 안에 맞춰 축소·가운데 정렬되며 방향은 사진 모양을 따릅니다.',
+      pageSizeHintLetter:
+        'US Letter는 8.5 × 11인치(612 × 792pt)입니다. 사진은 잘리지 않고 페이지에 맞춰 축소·가운데 정렬되며 방향은 사진 모양을 따릅니다.',
       orientationLabel: '방향',
       orientationAuto: '자동',
       orientationPortrait: '세로',

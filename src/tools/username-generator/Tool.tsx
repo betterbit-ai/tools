@@ -17,7 +17,6 @@ import type { UI } from './content';
 import {
   applyPlatform,
   checkSuggestion,
-  DEFAULT_OPTIONS,
   generateUsernames,
   keywordFitsStyle,
   maxLengthFor,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { Button, Dropzone, Field, Notice, Panel, Segmented } from '../../components/ui';
+import { Button, Dropzone, Field, FieldGroup, Notice, Panel, Segmented } from '../../components/ui';
 import { downloadBlob, safeStorage, yieldToBrowser } from '../../lib/browser';
 import { formatBytes } from '../../lib/format';
 import type { ToolProps } from '../types';
@@ -480,7 +480,16 @@ export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
         </div>
 
         <div class="flex flex-col gap-5">
-          <Field label={ui.pageSizeLabel}>
+          <FieldGroup
+            label={ui.pageSizeLabel}
+            hint={
+              opts.pageSize === 'fit'
+                ? ui.pageSizeHint
+                : opts.pageSize === 'a4'
+                  ? ui.pageSizeHintA4
+                  : ui.pageSizeHintLetter
+            }
+          >
             <Segmented<PageSizeMode>
               label={ui.pageSizeLabel}
               value={opts.pageSize}
@@ -491,11 +500,11 @@ export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
                 { value: 'letter', label: ui.pageSizeLetter },
               ]}
             />
-          </Field>
+          </FieldGroup>
 
           {opts.pageSize !== 'fit' && (
             <>
-              <Field label={ui.orientationLabel}>
+              <FieldGroup label={ui.orientationLabel}>
                 <Segmented<Orientation>
                   label={ui.orientationLabel}
                   value={opts.orientation}
@@ -506,8 +515,8 @@ export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
                     { value: 'landscape', label: ui.orientationLandscape },
                   ]}
                 />
-              </Field>
-              <Field label={ui.marginLabel}>
+              </FieldGroup>
+              <FieldGroup label={ui.marginLabel}>
                 <Segmented<MarginMode>
                   label={ui.marginLabel}
                   value={opts.margin}
@@ -517,7 +526,7 @@ export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
                     { value: 'small', label: ui.marginSmall },
                   ]}
                 />
-              </Field>
+              </FieldGroup>
             </>
           )}
 
@@ -531,8 +540,6 @@ export default function ImageToPdf({ ui, locale }: ToolProps<UI>) {
               class="w-full accent-[var(--accent)]"
             />
           </Field>
-
-          <p class="text-xs text-subtle">{ui.pageSizeHint}</p>
         </div>
       </div>
     </Panel>

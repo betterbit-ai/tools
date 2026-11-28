@@ -55,8 +55,6 @@ const LABELS: ReportLabels = {
   deviceBot: 'bot / crawler',
   deviceTool: 'command-line client',
   deviceUnknown: 'unknown',
-  clientHints: 'Client Hints',
-  platform: 'Platform',
 };
 
 describe('parseUserAgent — browsers', () => {

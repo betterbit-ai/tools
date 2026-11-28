@@ -207,6 +207,22 @@ export default async function (t) {
   await a4.focus();
   await t.page.keyboard.press('Enter');
   t.assert((await a4.getAttribute('aria-checked')) === 'true', 'page size did not change by keyboard');
+
+  // The field label must not become part of every radio's accessible name.
+  t.assert(
+    (await t.page.getByRole('radio', { name: 'Fit to image', exact: true }).count()) === 1,
+    'the page-size label was repeated into the radio names',
+  );
+  // The explanation must follow the chosen size instead of always describing "Fit to image".
+  const mainText = await t.page.locator('main').innerText();
+  t.assert(mainText.includes('A4 is 210 × 297 mm'), 'A4 choice did not explain A4');
+  t.assert(!mainText.includes('Fit to image keeps every page'), 'A4 choice kept the Fit-to-image explanation');
+  await t.page.getByRole('radio', { name: 'Letter' }).click();
+  t.assert(
+    (await t.page.locator('main').innerText()).includes('US Letter is 8.5 × 11 in'),
+    'Letter choice did not explain Letter',
+  );
+  await a4.click();
   await t.page.setViewportSize({ width: 375, height: 812 });
   await t.page.emulateMedia({ colorScheme: 'dark' });
   const viewport = await t.page.evaluate(() => ({

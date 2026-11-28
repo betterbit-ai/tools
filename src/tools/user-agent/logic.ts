@@ -268,8 +268,6 @@ export interface ReportLabels {
   deviceBot: string;
   deviceTool: string;
   deviceUnknown: string;
-  clientHints: string;
-  platform: string;
 }
 
 const DEVICE_LABEL: Record<DeviceType, keyof ReportLabels> = {

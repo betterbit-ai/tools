@@ -171,8 +171,6 @@ export default function UserAgent({ ui }: ToolProps<UI>) {
       deviceBot: ui.deviceBot,
       deviceTool: ui.deviceTool,
       deviceUnknown: ui.deviceUnknown,
-      clientHints: ui.clientHints,
-      platform: ui.platform,
     }),
     [ui],
   );
