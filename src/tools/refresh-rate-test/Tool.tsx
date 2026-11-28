@@ -17,9 +17,6 @@ import {
 const MEASURE_MS = 5000;
 /** Live figures refresh while the test runs; the finished reading comes from the whole run. */
 const LIVE_EVERY_MS = 250;
-/** Rates worth showing as a reference table. */
-const TABLE_RATES = [30, 60, 75, 90, 120, 144, 165, 240];
-
 type Status = 'measuring' | 'done' | 'interrupted';
 
 export default function RefreshRateTest({ ui }: ToolProps<UI>) {
@@ -167,7 +164,7 @@ export default function RefreshRateTest({ ui }: ToolProps<UI>) {
         </div>
 
         <div class="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <Stat label={ui.standardRate} value={standardLabel} />
+          <Stat label={ui.standardRate} value={status === 'measuring' ? ui.dash : standardLabel} />
           <Stat
             label={ui.frameTime}
             value={stats ? `${roundMs(stats.medianIntervalMs)} ${ui.milliseconds}` : ui.dash}
@@ -208,12 +205,12 @@ export default function RefreshRateTest({ ui }: ToolProps<UI>) {
             <thead>
               <tr class="border-b border-line text-left text-xs text-subtle">
                 <th class="py-2 pr-4 font-medium">{ui.hertz}</th>
-                <th class="py-2 pr-4 font-medium">{ui.frameTime}</th>
+                <th class="py-2 pr-4 font-medium">{ui.frameBudget}</th>
                 <th class="py-2 font-medium">{ui.typicalUse}</th>
               </tr>
             </thead>
             <tbody>
-              {TABLE_RATES.map((rate) => (
+              {STANDARD_RATES.map((rate) => (
                 <tr class="border-b border-line/60 last:border-0">
                   <td class="py-2 pr-4 font-mono tabular-nums text-fg">{rate}</td>
                   <td class="py-2 pr-4 font-mono tabular-nums text-muted">
