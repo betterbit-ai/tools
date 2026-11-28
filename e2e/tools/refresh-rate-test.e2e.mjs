@@ -21,6 +21,14 @@ export default async function (t) {
   }
   t.assert(hz >= 20 && hz <= 500, `headline never became a plausible Hz reading: "${await headline()}"`);
 
+  // The standard-rate card stays a dash until the five-second sample finishes.
+  const standardCard = t.page.getByText('Nearest standard rate', { exact: true }).first().locator('..');
+  for (let i = 0; i < 40; i += 1) {
+    if (!(await standardCard.innerText()).includes('—')) break;
+    await t.page.waitForTimeout(250);
+  }
+  t.assert(!(await standardCard.innerText()).includes('—'), 'the run never finished');
+
   const frameTime = await t.page.getByText('Frame time (median)', { exact: true }).first().locator('..').innerText();
   t.assert(/[\d.]+ ms/.test(frameTime), `frame time was not reported: ${frameTime}`);
   const budget = 1000 / hz;
